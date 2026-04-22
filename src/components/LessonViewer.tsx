@@ -1,5 +1,5 @@
-import { useRef, useState, useEffect } from 'react';
-import { ArrowLeft, ArrowRight, CheckCircle2, Clock, Video, FileText, HelpCircle, Play, Pause, RotateCcw, Volume2, VolumeX } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, ArrowRight, CheckCircle2, Clock, Video, FileText, HelpCircle } from 'lucide-react';
 import { Lesson, Module, LessonProgress, QuizQuestion } from '../types';
 
 interface LessonViewerProps {
@@ -27,146 +27,38 @@ const typeLabel = {
   quiz: 'Avaliação',
 };
 
+function getEmbedUrl(url: string): { type: 'youtube' | 'vimeo' | 'direct'; src: string } {
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+  if (yt) return { type: 'youtube', src: `https://www.youtube.com/embed/${yt[1]}?rel=0` };
+  const vimeo = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeo) return { type: 'vimeo', src: `https://player.vimeo.com/video/${vimeo[1]}` };
+  return { type: 'direct', src: url };
+}
+
 function VideoPlayer({ src }: { src: string }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [playing, setPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [muted, setMuted] = useState(false);
+  const embed = getEmbedUrl(src);
 
-  const togglePlay = () => {
-    const v = videoRef.current;
-    if (!v) return;
-    if (v.paused) { v.play(); setPlaying(true); }
-    else { v.pause(); setPlaying(false); }
-  };
-
-  const rewind15 = () => {
-    const v = videoRef.current;
-    if (!v) return;
-    v.currentTime = Math.max(0, v.currentTime - 15);
-  };
-
-  const toggleMute = () => {
-    const v = videoRef.current;
-    if (!v) return;
-    v.muted = !v.muted;
-    setMuted(v.muted);
-  };
-
-  const changeVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = videoRef.current;
-    if (!v) return;
-    const val = parseFloat(e.target.value);
-    v.volume = val;
-    setVolume(val);
-    if (val === 0) { v.muted = true; setMuted(true); }
-    else { v.muted = false; setMuted(false); }
-  };
-
-  const onTimeUpdate = () => {
-    const v = videoRef.current;
-    if (!v) return;
-    setProgress(v.duration ? (v.currentTime / v.duration) * 100 : 0);
-  };
-
-  const onEnded = () => setPlaying(false);
-
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    const onMeta = () => setDuration(v.duration);
-    v.addEventListener('loadedmetadata', onMeta);
-    return () => v.removeEventListener('loadedmetadata', onMeta);
-  }, [src]);
-
-  const formatTime = (s: number) => {
-    if (!s || isNaN(s)) return '0:00';
-    const m = Math.floor(s / 60);
-    const sec = Math.floor(s % 60);
-    return `${m}:${sec.toString().padStart(2, '0')}`;
-  };
-
-  const currentTime = videoRef.current ? videoRef.current.currentTime : 0;
+  if (embed.type === 'direct') {
+    return (
+      <div className="bg-black rounded-2xl overflow-hidden mb-6">
+        <video
+          src={embed.src}
+          className="w-full aspect-video object-contain"
+          controls
+          controlsList="nodownload"
+          disablePictureInPicture
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-black rounded-2xl overflow-hidden mb-6 relative group">
-      <video
-        ref={videoRef}
-        src={src}
-        className="w-full aspect-video object-contain"
-        onTimeUpdate={onTimeUpdate}
-        onEnded={onEnded}
-        onContextMenu={(e) => e.preventDefault()}
-        controlsList="nodownload nofullscreen noremoteplayback"
-        disablePictureInPicture
-      />
-
-      {/* Custom controls overlay */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent px-4 pb-3 pt-8 opacity-0 group-hover:opacity-100 transition-opacity">
-        {/* Progress bar (read-only) */}
-        <div className="w-full h-1.5 bg-white/20 rounded-full mb-3 overflow-hidden">
-          <div
-            className="h-full bg-blue-500 rounded-full transition-all"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-
-        <div className="flex items-center gap-4">
-          {/* Rewind 15s */}
-          <button
-            onClick={rewind15}
-            title="Voltar 15 segundos"
-            className="text-white hover:text-blue-400 transition-colors flex items-center gap-1"
-          >
-            <RotateCcw className="w-5 h-5" />
-            <span className="text-xs font-bold">15</span>
-          </button>
-
-          {/* Play / Pause */}
-          <button
-            onClick={togglePlay}
-            title={playing ? 'Pausar' : 'Play'}
-            className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-blue-100 transition-colors"
-          >
-            {playing
-              ? <Pause className="w-4 h-4 text-black" />
-              : <Play className="w-4 h-4 text-black ml-0.5" />
-            }
-          </button>
-
-          {/* Volume */}
-          <div className="flex items-center gap-2 ml-1">
-            <button onClick={toggleMute} title={muted ? 'Ativar som' : 'Mutar'} className="text-white hover:text-blue-400 transition-colors">
-              {muted || volume === 0
-                ? <VolumeX className="w-5 h-5" />
-                : <Volume2 className="w-5 h-5" />
-              }
-            </button>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.05}
-              value={muted ? 0 : volume}
-              onChange={changeVolume}
-              className="w-20 h-1 accent-blue-500 cursor-pointer"
-              title="Volume"
-            />
-          </div>
-
-          <span className="text-white/70 text-xs ml-auto">
-            {formatTime(currentTime)} / {formatTime(duration)}
-          </span>
-        </div>
-      </div>
-
-      {/* Click area for play/pause on video */}
-      <div
-        className="absolute inset-0 cursor-pointer"
-        onClick={togglePlay}
-        style={{ bottom: '60px' }}
+    <div className="bg-black rounded-2xl overflow-hidden mb-6">
+      <iframe
+        src={embed.src}
+        className="w-full aspect-video"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
       />
     </div>
   );

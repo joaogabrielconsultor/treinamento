@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import {
   ArrowLeft,
   Plus,
@@ -11,8 +11,8 @@ import {
   FileText,
   HelpCircle,
   Loader2,
-  Upload,
   CheckCircle2,
+  Link,
 } from 'lucide-react';
 import { useAdminCourseEdit } from '../../hooks/useAdmin';
 import { Course, Module, Lesson, ViewType, QuizQuestion } from '../../types';
@@ -163,72 +163,30 @@ function QuizEditor({ content, onChange }: { content: string; onChange: (v: stri
   );
 }
 
-// ─── Video Upload ──────────────────────────────────────────────────────────────
-function VideoUpload({ lessonId, currentUrl, onUploaded }: {
-  lessonId: string;
+// ─── Video URL Input ───────────────────────────────────────────────────────────
+function VideoUrlInput({ currentUrl, onChange }: {
   currentUrl?: string;
-  onUploaded: (url: string) => void;
+  onChange: (url: string) => void;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleFile = async (file: File) => {
-    setUploading(true);
-    setError('');
-    const form = new FormData();
-    form.append('video', file);
-    try {
-      const token = localStorage.getItem('token') || '';
-      const res = await fetch(`/api/lessons/${lessonId}/upload-video`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: form,
-      });
-      const text = await res.text();
-      let data: { error?: string; video_url?: string };
-      try { data = JSON.parse(text); } catch { throw new Error(`Erro no servidor: ${text.slice(0, 100)}`); }
-      if (!res.ok) throw new Error(data.error || 'Erro no upload');
-      onUploaded(data.video_url!);
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Erro no upload');
-    } finally {
-      setUploading(false);
-    }
-  };
-
   return (
-    <div className="space-y-2">
-      <label className="block text-xs font-medium text-gray-500">Vídeo do treinamento</label>
-
+    <div className="space-y-1.5">
+      <label className="block text-xs font-medium text-gray-500">Link do vídeo</label>
+      <div className="relative">
+        <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+        <input
+          type="url"
+          value={currentUrl || ''}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="https://www.youtube.com/watch?v=..."
+          className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
       {currentUrl && (
-        <div className="flex items-center gap-2 text-xs text-green-600 bg-green-50 px-3 py-2 rounded-lg">
-          <CheckCircle2 className="w-3.5 h-3.5" />
-          Vídeo carregado
+        <div className="flex items-center gap-1.5 text-xs text-green-600">
+          <CheckCircle2 className="w-3.5 h-3.5" /> Link salvo
         </div>
       )}
-
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        disabled={uploading}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-blue-200 rounded-xl text-sm text-blue-600 hover:border-blue-400 hover:bg-blue-50 disabled:opacity-50 transition-colors"
-      >
-        {uploading
-          ? <><Loader2 className="w-4 h-4 animate-spin" /> Enviando...</>
-          : <><Upload className="w-4 h-4" /> {currentUrl ? 'Substituir vídeo' : 'Carregar vídeo'}</>
-        }
-      </button>
-
-      <input
-        ref={inputRef}
-        type="file"
-        accept="video/*"
-        className="hidden"
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
-      />
-
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      <p className="text-xs text-gray-400">Suporta YouTube, Vimeo ou link direto de vídeo</p>
     </div>
   );
 }
@@ -334,10 +292,9 @@ function LessonRow({
           </div>
 
           {local.lesson_type === 'video' && (
-            <VideoUpload
-              lessonId={lesson.id}
+            <VideoUrlInput
               currentUrl={local.video_url}
-              onUploaded={(url) => {
+              onChange={(url) => {
                 setLocal((p) => ({ ...p, video_url: url }));
                 setDirty(true);
               }}
