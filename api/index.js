@@ -7,6 +7,7 @@ const fileUpload = require('express-fileupload');
 const path = require('path');
 const fs = require('fs');
 const pool = require('./db');
+const initDb = require('./init-db');
 
 const app = express();
 app.use(cors());
@@ -333,16 +334,6 @@ app.use((err, req, res, next) => {
 });
 
 // ─── START ─────────────────────────────────────────────────────────────────────
-async function initDb() {
-  try {
-    const sql = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
-    await pool.query(sql);
-    console.log('Banco de dados inicializado com sucesso.');
-  } catch (err) {
-    console.error('Erro ao inicializar banco de dados:', err.message);
-  }
-}
-
 const PORT = process.env.PORT || 3001;
 initDb().then(() => {
   app.listen(PORT, '0.0.0.0', () => console.log(`Servidor rodando na porta ${PORT}`));
