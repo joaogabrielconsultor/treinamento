@@ -1,4 +1,4 @@
--- EduTrain Schema
+-- Aprova Mais Schema
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 

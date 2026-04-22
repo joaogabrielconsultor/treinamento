@@ -37,7 +37,7 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin }: S
             <BookOpen className="w-5 h-5 text-white" />
           </div>
           <div>
-            <span className="text-white font-bold text-lg leading-none">EduTrain</span>
+            <span className="text-white font-bold text-lg leading-none">Aprova Mais</span>
             <p className="text-slate-500 text-xs mt-0.5">Treinamentos</p>
           </div>
         </div>

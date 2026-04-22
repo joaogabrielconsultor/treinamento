@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: edutrain
+    name: aprova-mais
     env: node
     plan: free
     buildCommand: npm install --include=dev && npm run build
@@ -12,25 +12,25 @@ services:
         generateValue: true
       - key: DB_HOST
         fromDatabase:
-          name: edutrain-db
+          name: aprova-mais-db
           property: host
       - key: DB_PORT
         fromDatabase:
-          name: edutrain-db
+          name: aprova-mais-db
           property: port
       - key: DB_NAME
         fromDatabase:
-          name: edutrain-db
+          name: aprova-mais-db
           property: database
       - key: DB_USER
         fromDatabase:
-          name: edutrain-db
+          name: aprova-mais-db
           property: user
       - key: DB_PASSWORD
         fromDatabase:
-          name: edutrain-db
+          name: aprova-mais-db
           property: password
 
 databases:
-  - name: edutrain-db
+  - name: aprova-mais-db
     plan: free
