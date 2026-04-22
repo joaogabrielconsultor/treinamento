@@ -335,6 +335,9 @@ app.use((err, req, res, next) => {
 
 // ─── START ─────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3001;
-initDb().then(() => {
-  app.listen(PORT, '0.0.0.0', () => console.log(`Servidor rodando na porta ${PORT}`));
+console.log('DATABASE_URL definida:', !!process.env.DATABASE_URL);
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+  initDb().catch((err) => console.error('Erro ao inicializar banco:', err.message));
 });
