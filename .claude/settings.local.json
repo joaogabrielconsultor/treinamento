@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npx tsc *)",
+      "Bash(./node_modules/.bin/tsc *)",
+      "Bash(psql --version)",
+      "Bash(PGPASSWORD=postgres psql -U postgres -h localhost -c \"\\\\l\")",
+      "Bash(PGPASSWORD=\"\" psql -U postgres -h localhost -c \"\\\\l\")",
+      "Bash(PGPASSWORD=\"\" psql -U postgres -h localhost -c \"SELECT 1\")",
+      "Bash(PGPASSWORD=\"admin\" psql -U postgres -h localhost -c \"SELECT 1\")",
+      "Bash(PGPASSWORD=\"123456\" psql -U postgres -h localhost -c \"SELECT 1\")",
+      "Bash(PGPASSWORD=\"root\" psql -U postgres -h localhost -c \"SELECT 1\")",
+      "Bash(PGPASSWORD=\"1234\" psql -U postgres -h localhost -c \"SELECT 1\")",
+      "Bash(PGPASSWORD=\"postgres\" psql -U postgres -h localhost -p 5432 -c \"SELECT 1\")",
+      "Bash(PGPASSWORD=\"rozes\" psql -U postgres -h localhost -c \"SELECT 1\")",
+      "Bash(psql -U rozes -h localhost -c \"SELECT 1\")",
+      "Bash(PGPASSWORD=\"Rozes10**\" psql *)",
+      "Bash(npm init *)",
+      "Bash(npm install *)",
+      "Bash(node index.js)",
+      "Bash(curl -s http://localhost:3001/api/courses)",
+      "Bash(node api/index.js)",
+      "Bash(curl -s -X POST http://localhost:3001/api/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"admin@edutrain.com\",\"password\":\"admin123\"}')",
+      "Bash(node -e ' *)",
+      "Bash(npm uninstall *)",
+      "Bash(curl -s -X POST http://localhost:9998/test -F \"video=@C:/Windows/System32/drivers/etc/hosts;type=video/mp4\")",
+      "Bash(kill %1)",
+      "Bash(netstat -ano)",
+      "Bash(taskkill *)",
+      "Bash(git -C C:/PROJETOS/treinamento-main status)",
+      "Bash(gh auth *)",
+      "PowerShell(gh auth *)",
+      "PowerShell(git *)",
+      "PowerShell([System.Environment]::GetEnvironmentVariable\\(\"GITHUB_TOKEN\", \"User\"\\); [System.Environment]::GetEnvironmentVariable\\(\"GITHUB_TOKEN\", \"Machine\"\\); $env:GITHUB_TOKEN)",
+      "PowerShell(cmdkey *)",
+      "PowerShell(Get-StoredCredential *)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  }
+}
