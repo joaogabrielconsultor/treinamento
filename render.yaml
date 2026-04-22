@@ -3,7 +3,7 @@ services:
     name: edutrain
     env: node
     plan: free
-    buildCommand: npm install --include=dev && npm run build && npm install --prefix api
+    buildCommand: npm install --include=dev && npm run build
     startCommand: node api/index.js
     envVars:
       - key: NODE_ENV
