@@ -334,4 +334,4 @@ app.use((err, req, res, next) => {
 
 // ─── START ─────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`API rodando em http://localhost:${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`Servidor rodando na porta ${PORT}`));
