@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { BookOpen, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
 
 interface AuthPageProps {
   onSuccess: () => void;
+  signIn: (email: string, password: string) => Promise<void>;
 }
 
-export function AuthPage({ onSuccess }: AuthPageProps) {
-  const { signIn } = useAuth();
+export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);

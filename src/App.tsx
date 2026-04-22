@@ -15,7 +15,7 @@ import { useIsAdmin } from './hooks/useAdmin';
 import { ViewType, Lesson } from './types';
 
 export default function App() {
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading, signIn, signOut } = useAuth();
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
@@ -38,7 +38,7 @@ export default function App() {
   }
 
   if (!user) {
-    return <AuthPage onSuccess={() => setCurrentView('dashboard')} />;
+    return <AuthPage signIn={signIn} onSuccess={() => setCurrentView('dashboard')} />;
   }
 
   const navigate = (view: ViewType, courseId?: string) => {
