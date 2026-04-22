@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS lesson_progress (
 
 -- Admin user (senha: admin123)
 INSERT INTO users (full_name, email, password_hash, role) VALUES
-('Administrador', 'admin@edutrain.com', crypt('admin123', gen_salt('bf')), 'admin')
+('Administrador', 'admin@aprovamais.com', crypt('admin123', gen_salt('bf')), 'admin')
 ON CONFLICT (email) DO NOTHING;
 
 -- Courses
