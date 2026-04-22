@@ -12,25 +12,25 @@ services:
         generateValue: true
       - key: DB_HOST
         fromDatabase:
-          name: aprova-mais-db
+          name: edutrain-db
           property: host
       - key: DB_PORT
         fromDatabase:
-          name: aprova-mais-db
+          name: edutrain-db
           property: port
       - key: DB_NAME
         fromDatabase:
-          name: aprova-mais-db
+          name: edutrain-db
           property: database
       - key: DB_USER
         fromDatabase:
-          name: aprova-mais-db
+          name: edutrain-db
           property: user
       - key: DB_PASSWORD
         fromDatabase:
-          name: aprova-mais-db
+          name: edutrain-db
           property: password
 
 databases:
-  - name: aprova-mais-db
+  - name: edutrain-db
     plan: free
