@@ -96,6 +96,17 @@ async function initDb() {
       )
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS login_bancos (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        nome text NOT NULL,
+        login text NOT NULL,
+        senha text NOT NULL,
+        url text NOT NULL,
+        created_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+
     // Admin user
     const { rows } = await client.query("SELECT id FROM users WHERE email = 'admin@aprovamais.com'");
     if (rows.length === 0) {

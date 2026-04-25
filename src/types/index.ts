@@ -65,6 +65,15 @@ export interface Profile {
   created_at: string;
 }
 
+export interface LoginBanco {
+  id: string;
+  nome: string;
+  login: string;
+  senha: string;
+  url: string;
+  created_at: string;
+}
+
 export type ViewType =
   | 'dashboard'
   | 'catalog'
@@ -73,6 +82,7 @@ export type ViewType =
   | 'auth'
   | 'admin-users'
   | 'admin-courses'
-  | 'admin-course-edit';
+  | 'admin-course-edit'
+  | 'login-bancos';
 
 export type AuthMode = 'login';

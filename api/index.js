@@ -322,6 +322,38 @@ app.post('/api/admin/users', auth, adminOnly, async (req, res) => {
   }
 });
 
+// ─── LOGIN BANCOS ──────────────────────────────────────────────────────────────
+app.get('/api/login-bancos', auth, async (req, res) => {
+  const { rows } = await pool.query('SELECT * FROM login_bancos ORDER BY nome ASC');
+  res.json(rows);
+});
+
+app.post('/api/login-bancos', auth, adminOnly, async (req, res) => {
+  const { nome, login, senha, url } = req.body;
+  if (!nome || !login || !senha || !url) return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
+  const { rows } = await pool.query(
+    'INSERT INTO login_bancos (nome, login, senha, url) VALUES ($1,$2,$3,$4) RETURNING *',
+    [nome, login, senha, url]
+  );
+  res.json(rows[0]);
+});
+
+app.put('/api/login-bancos/:id', auth, adminOnly, async (req, res) => {
+  const { nome, login, senha, url } = req.body;
+  if (!nome || !login || !senha || !url) return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
+  const { rows } = await pool.query(
+    'UPDATE login_bancos SET nome=$1, login=$2, senha=$3, url=$4 WHERE id=$5 RETURNING *',
+    [nome, login, senha, url, req.params.id]
+  );
+  if (!rows[0]) return res.status(404).json({ error: 'Registro não encontrado' });
+  res.json(rows[0]);
+});
+
+app.delete('/api/login-bancos/:id', auth, adminOnly, async (req, res) => {
+  await pool.query('DELETE FROM login_bancos WHERE id = $1', [req.params.id]);
+  res.json({ ok: true });
+});
+
 // ─── FRONTEND (produção) ──────────────────────────────────────────────────────
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../dist')));

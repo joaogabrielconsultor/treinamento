@@ -8,6 +8,7 @@ import { LessonViewer } from './components/LessonViewer';
 import { AdminUsers } from './components/admin/AdminUsers';
 import { AdminCourses } from './components/admin/AdminCourses';
 import { AdminCourseEdit } from './components/admin/AdminCourseEdit';
+import { LoginBancos } from './components/LoginBancos';
 import { useAuth } from './hooks/useAuth';
 import { useCourses, useCourseDetail } from './hooks/useCourses';
 import { useEnrollments, useLessonProgress } from './hooks/useEnrollments';
@@ -148,6 +149,7 @@ export default function App() {
         {currentView === 'admin-course-edit' && isAdmin && adminEditCourseId && (
           <AdminCourseEdit courseId={adminEditCourseId} onNavigate={navigate} />
         )}
+        {currentView === 'login-bancos' && <LoginBancos isAdmin={isAdmin} />}
       </main>
     </div>
   );

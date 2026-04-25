@@ -1,4 +1,4 @@
-import { BookOpen, LayoutDashboard, Library, LogOut, ChevronRight, Users, GraduationCap, Shield } from 'lucide-react';
+import { BookOpen, LayoutDashboard, Library, LogOut, ChevronRight, Users, GraduationCap, Shield, Building2 } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { ViewType } from '../types';
 
@@ -13,6 +13,7 @@ interface SidebarProps {
 const navItems = [
   { view: 'dashboard' as ViewType, icon: LayoutDashboard, label: 'Dashboard' },
   { view: 'catalog' as ViewType, icon: Library, label: 'Catálogo de Cursos' },
+  { view: 'login-bancos' as ViewType, icon: Building2, label: 'Login Bancos' },
 ];
 
 const adminItems = [
