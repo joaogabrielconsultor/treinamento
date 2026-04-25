@@ -144,7 +144,7 @@ export default function App() {
           />
         )}
 
-        {currentView === 'admin-users' && isAdmin && <AdminUsers />}
+        {currentView === 'admin-users' && isAdmin && <AdminUsers currentUserEmail={user.email} />}
         {currentView === 'admin-courses' && isAdmin && <AdminCourses onNavigate={navigate} />}
         {currentView === 'admin-course-edit' && isAdmin && adminEditCourseId && (
           <AdminCourseEdit courseId={adminEditCourseId} onNavigate={navigate} />

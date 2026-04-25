@@ -16,6 +16,7 @@ app.use(fileUpload({ limits: { fileSize: 2 * 1024 * 1024 * 1024 } }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const JWT_SECRET = process.env.JWT_SECRET;
+const MASTER_ADMIN_EMAIL = 'adm@rozesstartflow.com';
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR);
 
@@ -301,6 +302,16 @@ app.get('/api/admin/users', auth, adminOnly, async (req, res) => {
 app.put('/api/admin/users/:id/role', auth, adminOnly, async (req, res) => {
   const { role } = req.body;
   if (!['user', 'admin'].includes(role)) return res.status(400).json({ error: 'Role inválido' });
+  // Apenas o master admin pode alterar funções
+  if (req.user.email !== MASTER_ADMIN_EMAIL) {
+    return res.status(403).json({ error: 'Apenas o administrador master pode alterar funções de usuários' });
+  }
+  // A função do master admin não pode ser alterada
+  const { rows: target } = await pool.query('SELECT email FROM users WHERE id = $1', [req.params.id]);
+  if (!target[0]) return res.status(404).json({ error: 'Usuário não encontrado' });
+  if (target[0].email === MASTER_ADMIN_EMAIL) {
+    return res.status(403).json({ error: 'A função do administrador master não pode ser alterada' });
+  }
   const { rows } = await pool.query('UPDATE users SET role = $1 WHERE id = $2 RETURNING id, email, full_name, role', [role, req.params.id]);
   res.json(rows[0]);
 });

@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Users, Shield, ShieldOff, BookOpen, RefreshCw, Plus, X, Eye, EyeOff } from 'lucide-react';
+import { Users, Shield, ShieldOff, BookOpen, RefreshCw, Plus, X, Eye, EyeOff, Crown } from 'lucide-react';
 import { useAdminUsers } from '../../hooks/useAdmin';
+
+const MASTER_ADMIN_EMAIL = 'adm@rozesstartflow.com';
 
 function CreateUserModal({ onClose, onCreate }: {
   onClose: () => void;
@@ -118,9 +120,11 @@ function CreateUserModal({ onClose, onCreate }: {
   );
 }
 
-export function AdminUsers() {
+export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
   const { users, loading, toggleRole, createUser, refetch } = useAdminUsers();
   const [showCreate, setShowCreate] = useState(false);
+
+  const isMasterAdmin = currentUserEmail === MASTER_ADMIN_EMAIL;
 
   if (loading) {
     return (
@@ -183,16 +187,28 @@ export function AdminUsers() {
                 .join('')
                 .toUpperCase();
               const date = new Date(user.created_at).toLocaleDateString('pt-BR');
+              const isThisMaster = user.email === MASTER_ADMIN_EMAIL;
 
               return (
                 <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-blue-700 text-sm font-bold">{initials}</span>
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${isThisMaster ? 'bg-amber-100' : 'bg-blue-100'}`}>
+                        {isThisMaster
+                          ? <Crown className="w-4 h-4 text-amber-600" />
+                          : <span className="text-blue-700 text-sm font-bold">{initials}</span>
+                        }
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-gray-900">{name}</p>
+                          {isThisMaster && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-700">
+                              <Crown className="w-2.5 h-2.5" />
+                              Master
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-gray-500">{user.email}</p>
                       </div>
                     </div>
@@ -223,26 +239,29 @@ export function AdminUsers() {
                     <span className="text-sm text-gray-500">{date}</span>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => toggleRole(user.id, user.role)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                        user.role === 'admin'
-                          ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                          : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
-                      }`}
-                    >
-                      {user.role === 'admin' ? (
-                        <>
-                          <ShieldOff className="w-3.5 h-3.5" />
-                          Remover Admin
-                        </>
-                      ) : (
-                        <>
-                          <Shield className="w-3.5 h-3.5" />
-                          Tornar Admin
-                        </>
-                      )}
-                    </button>
+                    {/* Botão só aparece para o master admin e nunca na própria linha do master */}
+                    {isMasterAdmin && !isThisMaster && (
+                      <button
+                        onClick={() => toggleRole(user.id, user.role)}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                          user.role === 'admin'
+                            ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                            : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
+                        }`}
+                      >
+                        {user.role === 'admin' ? (
+                          <>
+                            <ShieldOff className="w-3.5 h-3.5" />
+                            Remover Admin
+                          </>
+                        ) : (
+                          <>
+                            <Shield className="w-3.5 h-3.5" />
+                            Tornar Admin
+                          </>
+                        )}
+                      </button>
+                    )}
                   </td>
                 </tr>
               );

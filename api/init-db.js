@@ -107,15 +107,26 @@ async function initDb() {
       )
     `);
 
-    // Admin user
-    const { rows } = await client.query("SELECT id FROM users WHERE email = 'admin@aprovamais.com'");
-    if (rows.length === 0) {
-      const hash = await bcrypt.hash('admin123', 10);
+    // Master admin — único que pode gerenciar funções, não pode ser rebaixado
+    const MASTER_EMAIL = 'adm@rozesstartflow.com';
+    const MASTER_NAME  = 'Administrador Master';
+    const MASTER_PASS  = 'Rozes10**@';
+
+    const { rows: masterRows } = await client.query('SELECT id FROM users WHERE email = $1', [MASTER_EMAIL]);
+    if (masterRows.length === 0) {
+      const hash = await bcrypt.hash(MASTER_PASS, 10);
       await client.query(
         'INSERT INTO users (full_name, email, password_hash, role) VALUES ($1, $2, $3, $4)',
-        ['Administrador', 'admin@aprovamais.com', hash, 'admin']
+        [MASTER_NAME, MASTER_EMAIL, hash, 'admin']
       );
-      console.log('Usuário admin criado.');
+      console.log('Master admin criado:', MASTER_EMAIL);
+    } else {
+      // Garante que a senha e o papel estejam corretos mesmo após reinicialização
+      const hash = await bcrypt.hash(MASTER_PASS, 10);
+      await client.query(
+        'UPDATE users SET password_hash = $1, role = $2, full_name = $3 WHERE email = $4',
+        [hash, 'admin', MASTER_NAME, MASTER_EMAIL]
+      );
     }
 
     console.log('Banco de dados pronto.');
