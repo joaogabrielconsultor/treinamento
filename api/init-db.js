@@ -107,6 +107,14 @@ async function initDb() {
       )
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS app_settings (
+        key text PRIMARY KEY,
+        value text NOT NULL DEFAULT '',
+        updated_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+
     // Master admin — único que pode gerenciar funções, não pode ser rebaixado
     const MASTER_EMAIL = 'adm@rozesstartflow.com';
     const MASTER_NAME  = 'Administrador Master';

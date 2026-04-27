@@ -1,22 +1,40 @@
 import { useState } from 'react';
-import { Palette, Save, ImageIcon, Check } from 'lucide-react';
+import { Palette, Save, ImageIcon, Check, AlertCircle } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { LogoComponent } from '../LogoComponent';
 
 export function AdminPersonalizacao() {
   const { logoUrl, setLogoUrl } = useAppContext();
   const [inputUrl, setInputUrl] = useState(logoUrl);
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSave = () => {
-    setLogoUrl(inputUrl.trim());
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  const handleSave = async () => {
+    setSaving(true);
+    setError('');
+    try {
+      await setLogoUrl(inputUrl.trim());
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch {
+      setError('Erro ao salvar. Tente novamente.');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleRemove = () => {
+  const handleRemove = async () => {
     setInputUrl('');
-    setLogoUrl('');
+    setSaving(true);
+    setError('');
+    try {
+      await setLogoUrl('');
+    } catch {
+      setError('Erro ao remover a logo.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -39,7 +57,7 @@ export function AdminPersonalizacao() {
             <div>
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Preview da logo</p>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                {logoUrl ? 'Logo personalizada ativa' : 'Usando logo padrão'}
+                {logoUrl ? 'Logo personalizada ativa — visível para todos os usuários' : 'Usando logo padrão'}
               </p>
             </div>
           </div>
@@ -55,7 +73,7 @@ export function AdminPersonalizacao() {
               <input
                 type="url"
                 value={inputUrl}
-                onChange={(e) => { setInputUrl(e.target.value); setSaved(false); }}
+                onChange={(e) => { setInputUrl(e.target.value); setSaved(false); setError(''); }}
                 placeholder="https://exemplo.com/logo.png"
                 className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 dark:border-dk-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand bg-white dark:bg-dk-surface text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
               />
@@ -65,23 +83,32 @@ export function AdminPersonalizacao() {
             </p>
           </div>
 
+          {error && (
+            <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2 text-sm text-red-600 dark:text-red-400">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              {error}
+            </div>
+          )}
+
           <div className="flex gap-3 pt-1">
             {logoUrl && (
               <button
                 onClick={handleRemove}
-                className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-dk-surface rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                disabled={saving}
+                className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-dk-surface rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
               >
                 Remover logo
               </button>
             )}
             <button
               onClick={handleSave}
-              className={`flex items-center gap-2 px-4 py-2 text-sm text-white rounded-xl font-medium transition-colors ${
+              disabled={saving}
+              className={`flex items-center gap-2 px-4 py-2 text-sm text-white rounded-xl font-medium transition-colors disabled:opacity-50 ${
                 saved ? 'bg-emerald-600' : 'bg-brand hover:bg-brand-hover'
               }`}
             >
               {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-              {saved ? 'Salvo!' : 'Salvar'}
+              {saving ? 'Salvando...' : saved ? 'Salvo!' : 'Salvar'}
             </button>
           </div>
         </div>

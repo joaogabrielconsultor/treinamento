@@ -333,6 +333,23 @@ app.post('/api/admin/users', auth, adminOnly, async (req, res) => {
   }
 });
 
+// ─── APP SETTINGS ─────────────────────────────────────────────────────────────
+app.get('/api/settings', async (req, res) => {
+  const { rows } = await pool.query("SELECT key, value FROM app_settings");
+  const settings = Object.fromEntries(rows.map(r => [r.key, r.value]));
+  res.json({ logo_url: settings.logo_url ?? '' });
+});
+
+app.put('/api/settings', auth, adminOnly, async (req, res) => {
+  const { logo_url } = req.body;
+  await pool.query(
+    `INSERT INTO app_settings (key, value, updated_at) VALUES ('logo_url', $1, now())
+     ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = now()`,
+    [logo_url ?? '']
+  );
+  res.json({ logo_url: logo_url ?? '' });
+});
+
 // ─── LOGIN BANCOS ──────────────────────────────────────────────────────────────
 app.get('/api/login-bancos', auth, async (req, res) => {
   const { rows } = await pool.query('SELECT * FROM login_bancos ORDER BY nome ASC');
