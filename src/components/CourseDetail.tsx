@@ -78,10 +78,10 @@ export function CourseDetail({
               const isExpanded = expandedModules.has(module.id);
               const moduleCompleted = module.lessons?.every((l) => completedIds.has(l.id));
               return (
-                <div key={module.id} className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                <div key={module.id} className="border border-gray-200 dark:border-dk-border rounded-xl overflow-hidden">
                   <button
                     onClick={() => onToggleModule(module.id)}
-                    className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+                    className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-dk-surface hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
                   >
                     <div className="flex items-center gap-3">
                       {moduleCompleted ? (
@@ -108,7 +108,7 @@ export function CourseDetail({
                             key={lesson.id}
                             onClick={() => enrollment && onSelectLesson(lesson)}
                             disabled={!enrollment}
-                            className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors bg-white dark:bg-gray-900 ${
+                            className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors bg-white dark:bg-dk-card ${
                               enrollment
                                 ? 'hover:bg-brand-light dark:hover:bg-brand/10 cursor-pointer'
                                 : 'cursor-default opacity-60'
@@ -136,7 +136,7 @@ export function CourseDetail({
         </div>
 
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 sticky top-8 shadow-sm">
+          <div className="bg-white dark:bg-dk-card border border-gray-200 dark:border-dk-border rounded-2xl p-6 sticky top-8 shadow-sm">
             {enrollment ? (
               <>
                 <div className="mb-4">
@@ -187,7 +187,7 @@ export function CourseDetail({
               </>
             )}
 
-            <div className="mt-5 pt-5 border-t border-gray-100 dark:border-gray-800 space-y-3">
+            <div className="mt-5 pt-5 border-t border-gray-100 dark:border-dk-border space-y-3">
               <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                 <BookOpen className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                 <span>{totalLessons} aulas</span>

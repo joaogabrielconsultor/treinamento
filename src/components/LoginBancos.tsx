@@ -73,7 +73,7 @@ function BancoModal({ banco, onClose, onSave }: {
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-6">
+      <div className="bg-white dark:bg-dk-card rounded-2xl shadow-xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white">
             {banco ? 'Editar Banco' : 'Adicionar Banco'}
@@ -95,7 +95,7 @@ function BancoModal({ banco, onClose, onSave }: {
                 value={value}
                 onChange={(e) => setter(e.target.value)}
                 required
-                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
+                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-dk-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand bg-white dark:bg-dk-surface text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
                 placeholder={placeholder}
               />
             </div>
@@ -109,7 +109,7 @@ function BancoModal({ banco, onClose, onSave }: {
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 required
-                className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 dark:border-dk-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand bg-white dark:bg-dk-surface text-gray-900 dark:text-white"
                 placeholder="Senha de acesso"
               />
               <button type="button" onClick={() => setShowPwd(!showPwd)}
@@ -126,7 +126,7 @@ function BancoModal({ banco, onClose, onSave }: {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               required
-              className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
+              className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-dk-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand bg-white dark:bg-dk-surface text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
               placeholder="https://internetbanking.banco.com.br"
             />
           </div>
@@ -139,7 +139,7 @@ function BancoModal({ banco, onClose, onSave }: {
 
           <div className="flex gap-3 pt-1">
             <button type="button" onClick={onClose}
-              className="flex-1 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+              className="flex-1 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-dk-surface rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
               Cancelar
             </button>
             <button type="submit" disabled={loading}
@@ -158,14 +158,14 @@ function DeleteConfirm({ nome, onConfirm, onCancel }: {
 }) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
+      <div className="bg-white dark:bg-dk-card rounded-2xl shadow-xl w-full max-w-sm p-6">
         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Excluir banco?</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
           Tem certeza que deseja excluir <strong>{nome}</strong>? Esta ação não pode ser desfeita.
         </p>
         <div className="flex gap-3">
           <button onClick={onCancel}
-            className="flex-1 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+            className="flex-1 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-dk-surface rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
             Cancelar
           </button>
           <button onClick={onConfirm}
@@ -187,7 +187,7 @@ function BancoCard({ banco, isAdmin, onEdit, onDelete }: {
   const maskedSenha = '•'.repeat(Math.min(banco.senha.length, 12));
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-5 hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-dk-card rounded-2xl border border-gray-100 dark:border-dk-border shadow-sm p-5 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-brand-light dark:bg-brand/20 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -215,14 +215,14 @@ function BancoCard({ banco, isAdmin, onEdit, onDelete }: {
       </div>
 
       <div className="space-y-3">
-        <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-2.5">
+        <div className="flex items-center gap-2 bg-gray-50 dark:bg-dk-surface rounded-xl px-3 py-2.5">
           <User className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
           <span className="text-xs text-gray-500 dark:text-gray-400 w-10 flex-shrink-0">Login</span>
           <span className="flex-1 text-sm text-gray-800 dark:text-gray-200 font-mono truncate">{banco.login}</span>
           <CopyButton value={banco.login} />
         </div>
 
-        <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-2.5">
+        <div className="flex items-center gap-2 bg-gray-50 dark:bg-dk-surface rounded-xl px-3 py-2.5">
           <Lock className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
           <span className="text-xs text-gray-500 dark:text-gray-400 w-10 flex-shrink-0">Senha</span>
           <span className="flex-1 text-sm text-gray-800 dark:text-gray-200 font-mono truncate">
@@ -236,7 +236,7 @@ function BancoCard({ banco, isAdmin, onEdit, onDelete }: {
           <CopyButton value={banco.senha} />
         </div>
 
-        <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-2.5">
+        <div className="flex items-center gap-2 bg-gray-50 dark:bg-dk-surface rounded-xl px-3 py-2.5">
           <Link className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
           <span className="text-xs text-gray-500 dark:text-gray-400 w-10 flex-shrink-0">URL</span>
           <a href={banco.url} target="_blank" rel="noopener noreferrer"
@@ -309,7 +309,7 @@ export function LoginBancos({ isAdmin }: { isAdmin: boolean }) {
         </div>
         <div className="flex items-center gap-3">
           <button onClick={refetch}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 bg-white dark:bg-dk-card border border-gray-200 dark:border-dk-border rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
             <RefreshCw className="w-4 h-4" />
             Atualizar
           </button>
@@ -330,7 +330,7 @@ export function LoginBancos({ isAdmin }: { isAdmin: boolean }) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar por banco, login ou URL..."
-          className="w-full pl-10 pr-4 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 shadow-sm"
+          className="w-full pl-10 pr-4 py-2.5 text-sm bg-white dark:bg-dk-card border border-gray-200 dark:border-dk-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 shadow-sm"
         />
         {search && (
           <button onClick={() => setSearch('')}
@@ -354,7 +354,7 @@ export function LoginBancos({ isAdmin }: { isAdmin: boolean }) {
         </div>
       ) : (
         <div className="text-center py-20">
-          <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gray-100 dark:bg-dk-surface rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Building2 className="w-8 h-8 text-gray-300 dark:text-gray-600" />
           </div>
           {search ? (

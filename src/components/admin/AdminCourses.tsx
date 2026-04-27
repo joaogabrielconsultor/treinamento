@@ -55,9 +55,9 @@ export function AdminCourses({ onNavigate }: AdminCoursesProps) {
         {courses.map((course) => (
           <div
             key={course.id}
-            className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-5 flex items-center gap-5"
+            className="bg-white dark:bg-dk-card rounded-2xl border border-gray-100 dark:border-dk-border shadow-sm p-5 flex items-center gap-5"
           >
-            <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-gray-800">
+            <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-dk-surface">
               {course.thumbnail_url ? (
                 <img src={course.thumbnail_url} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -74,7 +74,7 @@ export function AdminCourses({ onNavigate }: AdminCoursesProps) {
                   className={`flex-shrink-0 text-xs px-2 py-0.5 rounded-full font-medium ${
                     course.published
                       ? 'bg-emerald-100 text-emerald-700'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+                      : 'bg-gray-100 dark:bg-dk-surface text-gray-500 dark:text-gray-400'
                   }`}
                 >
                   {course.published ? 'Publicado' : 'Rascunho'}
@@ -125,7 +125,7 @@ export function AdminCourses({ onNavigate }: AdminCoursesProps) {
         ))}
 
         {courses.length === 0 && (
-          <div className="text-center py-20 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800">
+          <div className="text-center py-20 bg-white dark:bg-dk-card rounded-2xl border border-gray-100 dark:border-dk-border">
             <BookOpen className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
             <p className="text-gray-500 dark:text-gray-400 mb-4">Nenhum curso cadastrado</p>
             <button

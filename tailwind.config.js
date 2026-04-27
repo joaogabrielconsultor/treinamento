@@ -11,6 +11,13 @@ export default {
           light:   '#edf5f0',
           muted:   '#b8d4c8',
         },
+        // Dark mode green-tinted surfaces
+        dk: {
+          bg:      '#0f1e17', // fundo principal dark
+          card:    '#162a1f', // cards dark
+          surface: '#1a3024', // inputs, table headers dark
+          border:  '#1e3a2a', // bordas dark
+        },
       },
     },
   },

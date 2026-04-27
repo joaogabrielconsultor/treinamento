@@ -16,7 +16,7 @@ function StatCard({ icon: Icon, label, value, color }: {
   color: string;
 }) {
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm">
+    <div className="bg-white dark:bg-dk-card rounded-2xl p-6 border border-gray-100 dark:border-dk-border shadow-sm">
       <div className={`inline-flex p-2.5 rounded-xl mb-3 ${color}`}>
         <Icon className="w-5 h-5 text-white" />
       </div>
@@ -99,7 +99,7 @@ export function Dashboard({ user, courses, enrollments, onNavigate }: DashboardP
                 <div
                   key={enrollment.id}
                   onClick={() => onNavigate('course', course.id)}
-                  className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-5 flex items-center gap-5 cursor-pointer hover:shadow-md hover:border-brand-muted dark:hover:border-brand transition-all group"
+                  className="bg-white dark:bg-dk-card border border-gray-100 dark:border-dk-border rounded-2xl p-5 flex items-center gap-5 cursor-pointer hover:shadow-md hover:border-brand-muted dark:hover:border-brand transition-all group"
                 >
                   <img
                     src={course.thumbnail_url}
@@ -151,7 +151,7 @@ export function Dashboard({ user, courses, enrollments, onNavigate }: DashboardP
               <div
                 key={course.id}
                 onClick={() => onNavigate('course', course.id)}
-                className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl overflow-hidden cursor-pointer hover:shadow-md hover:border-brand-muted dark:hover:border-brand transition-all group"
+                className="bg-white dark:bg-dk-card border border-gray-100 dark:border-dk-border rounded-2xl overflow-hidden cursor-pointer hover:shadow-md hover:border-brand-muted dark:hover:border-brand transition-all group"
               >
                 <img
                   src={course.thumbnail_url}

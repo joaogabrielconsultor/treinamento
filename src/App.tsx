@@ -34,7 +34,7 @@ function AppInner() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-dk-bg flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-brand border-t-transparent rounded-full" />
       </div>
     );
@@ -90,7 +90,7 @@ function AppInner() {
   } as Parameters<typeof Sidebar>[0]['user'];
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-dk-bg">
       <Sidebar
         currentView={currentView}
         onNavigate={navigate}

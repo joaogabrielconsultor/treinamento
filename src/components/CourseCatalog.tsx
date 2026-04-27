@@ -57,7 +57,7 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
             placeholder="Buscar cursos, instrutores..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand bg-white dark:bg-gray-900"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-dk-border rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand bg-white dark:bg-dk-card"
           />
         </div>
 
@@ -66,14 +66,14 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:border-brand bg-white dark:bg-gray-900"
+            className="border border-gray-200 dark:border-dk-border rounded-xl px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:border-brand bg-white dark:bg-dk-card"
           >
             {categories.map((c) => <option key={c}>{c}</option>)}
           </select>
           <select
             value={selectedLevel}
             onChange={(e) => setSelectedLevel(e.target.value)}
-            className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:border-brand bg-white dark:bg-gray-900"
+            className="border border-gray-200 dark:border-dk-border rounded-xl px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:border-brand bg-white dark:bg-dk-card"
           >
             {levels.map((l) => <option key={l}>{l}</option>)}
           </select>
@@ -83,8 +83,8 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
       {loading ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 animate-pulse">
-              <div className="h-44 bg-gray-200 dark:bg-gray-800" />
+            <div key={i} className="bg-white dark:bg-dk-card rounded-2xl overflow-hidden border border-gray-100 dark:border-dk-border animate-pulse">
+              <div className="h-44 bg-gray-200 dark:bg-dk-surface" />
               <div className="p-5 space-y-3">
                 <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
                 <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
@@ -112,7 +112,7 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
               <div
                 key={course.id}
                 onClick={() => onNavigate('course', course.id)}
-                className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg hover:border-brand-muted dark:hover:border-brand transition-all duration-200 group flex flex-col"
+                className="bg-white dark:bg-dk-card border border-gray-100 dark:border-dk-border rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg hover:border-brand-muted dark:hover:border-brand transition-all duration-200 group flex flex-col"
               >
                 <div className="relative overflow-hidden h-44">
                   <img
@@ -144,7 +144,7 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
                   </h3>
                   <p className="text-gray-500 dark:text-gray-400 text-sm line-clamp-2 mb-3">{course.description}</p>
 
-                  <div className="flex items-center justify-between text-xs text-gray-400 dark:text-gray-500 border-t border-gray-100 dark:border-gray-800 pt-3 mt-auto">
+                  <div className="flex items-center justify-between text-xs text-gray-400 dark:text-gray-500 border-t border-gray-100 dark:border-dk-border pt-3 mt-auto">
                     <span>{course.instructor}</span>
                     <span className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" />
