@@ -16,12 +16,12 @@ const levelColors: Record<string, string> = {
 };
 
 const categoryColors: Record<string, string> = {
-  Liderança: 'bg-blue-100 text-blue-700',
-  'Soft Skills': 'bg-teal-100 text-teal-700',
-  Tecnologia: 'bg-violet-100 text-violet-700',
-  Segurança: 'bg-orange-100 text-orange-700',
-  Gestão: 'bg-sky-100 text-sky-700',
-  Vendas: 'bg-rose-100 text-rose-700',
+  Liderança:    'bg-teal-100 text-teal-700',
+  'Soft Skills':'bg-sky-100 text-sky-700',
+  Tecnologia:   'bg-violet-100 text-violet-700',
+  Segurança:    'bg-orange-100 text-orange-700',
+  Gestão:       'bg-indigo-100 text-indigo-700',
+  Vendas:       'bg-rose-100 text-rose-700',
 };
 
 export function CourseCatalog({ courses, enrollments, loading, onNavigate }: CourseCatalogProps) {
@@ -45,8 +45,8 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
   return (
     <div className="p-8 max-w-6xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Catálogo de Cursos</h1>
-        <p className="text-gray-500 mt-1">{courses.length} treinamentos disponíveis</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Catálogo de Cursos</h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">{courses.length} treinamentos disponíveis</p>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -57,7 +57,7 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
             placeholder="Buscar cursos, instrutores..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 bg-white"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand bg-white dark:bg-gray-900"
           />
         </div>
 
@@ -66,20 +66,16 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:border-blue-500 bg-white"
+            className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:border-brand bg-white dark:bg-gray-900"
           >
-            {categories.map((c) => (
-              <option key={c}>{c}</option>
-            ))}
+            {categories.map((c) => <option key={c}>{c}</option>)}
           </select>
           <select
             value={selectedLevel}
             onChange={(e) => setSelectedLevel(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:border-blue-500 bg-white"
+            className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:border-brand bg-white dark:bg-gray-900"
           >
-            {levels.map((l) => (
-              <option key={l}>{l}</option>
-            ))}
+            {levels.map((l) => <option key={l}>{l}</option>)}
           </select>
         </div>
       </div>
@@ -87,23 +83,23 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
       {loading ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl overflow-hidden border border-gray-100 animate-pulse">
-              <div className="h-44 bg-gray-200" />
+            <div key={i} className="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 animate-pulse">
+              <div className="h-44 bg-gray-200 dark:bg-gray-800" />
               <div className="p-5 space-y-3">
-                <div className="h-4 bg-gray-200 rounded w-1/3" />
-                <div className="h-5 bg-gray-200 rounded w-3/4" />
-                <div className="h-4 bg-gray-200 rounded w-1/2" />
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
+                <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
               </div>
             </div>
           ))}
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
-          <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 font-medium">Nenhum curso encontrado.</p>
+          <BookOpen className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+          <p className="text-gray-500 dark:text-gray-400 font-medium">Nenhum curso encontrado.</p>
           <button
             onClick={() => { setSearch(''); setSelectedCategory('Todos'); setSelectedLevel('Todos'); }}
-            className="mt-3 text-blue-600 text-sm hover:underline"
+            className="mt-3 text-brand text-sm hover:underline"
           >
             Limpar filtros
           </button>
@@ -116,7 +112,7 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
               <div
                 key={course.id}
                 onClick={() => onNavigate('course', course.id)}
-                className="bg-white border border-gray-100 rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg hover:border-blue-200 transition-all duration-200 group flex flex-col"
+                className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg hover:border-brand-muted dark:hover:border-brand transition-all duration-200 group flex flex-col"
               >
                 <div className="relative overflow-hidden h-44">
                   <img
@@ -143,12 +139,12 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
                     </span>
                   </div>
 
-                  <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug mb-1 flex-1">
+                  <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-brand transition-colors leading-snug mb-1 flex-1">
                     {course.title}
                   </h3>
-                  <p className="text-gray-500 text-sm line-clamp-2 mb-3">{course.description}</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm line-clamp-2 mb-3">{course.description}</p>
 
-                  <div className="flex items-center justify-between text-xs text-gray-400 border-t border-gray-100 pt-3 mt-auto">
+                  <div className="flex items-center justify-between text-xs text-gray-400 dark:text-gray-500 border-t border-gray-100 dark:border-gray-800 pt-3 mt-auto">
                     <span>{course.instructor}</span>
                     <span className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" />
@@ -158,13 +154,13 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
 
                   {enrollment && !enrollment.completed && (
                     <div className="mt-3">
-                      <div className="flex justify-between text-xs text-gray-500 mb-1">
+                      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
                         <span>Progresso</span>
                         <span>{enrollment.progress_percent}%</span>
                       </div>
-                      <div className="bg-gray-200 rounded-full h-1.5">
+                      <div className="bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
                         <div
-                          className="bg-blue-500 h-1.5 rounded-full"
+                          className="bg-brand h-1.5 rounded-full"
                           style={{ width: `${enrollment.progress_percent}%` }}
                         />
                       </div>

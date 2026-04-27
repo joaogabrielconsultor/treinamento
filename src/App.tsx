@@ -8,14 +8,16 @@ import { LessonViewer } from './components/LessonViewer';
 import { AdminUsers } from './components/admin/AdminUsers';
 import { AdminCourses } from './components/admin/AdminCourses';
 import { AdminCourseEdit } from './components/admin/AdminCourseEdit';
+import { AdminPersonalizacao } from './components/admin/AdminPersonalizacao';
 import { LoginBancos } from './components/LoginBancos';
 import { useAuth } from './hooks/useAuth';
 import { useCourses, useCourseDetail } from './hooks/useCourses';
 import { useEnrollments, useLessonProgress } from './hooks/useEnrollments';
 import { useIsAdmin } from './hooks/useAdmin';
+import { AppProvider } from './context/AppContext';
 import { ViewType, Lesson } from './types';
 
-export default function App() {
+function AppInner() {
   const { user, loading: authLoading, signIn, signOut } = useAuth();
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
@@ -32,8 +34,8 @@ export default function App() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-brand border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -88,7 +90,7 @@ export default function App() {
   } as Parameters<typeof Sidebar>[0]['user'];
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
       <Sidebar
         currentView={currentView}
         onNavigate={navigate}
@@ -125,7 +127,7 @@ export default function App() {
 
         {currentView === 'course' && courseDetailLoading && (
           <div className="p-8 flex items-center justify-center min-h-64">
-            <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
+            <div className="animate-spin w-8 h-8 border-4 border-brand border-t-transparent rounded-full" />
           </div>
         )}
 
@@ -144,13 +146,22 @@ export default function App() {
           />
         )}
 
-        {currentView === 'admin-users' && isAdmin && <AdminUsers currentUserEmail={user.email} />}
-        {currentView === 'admin-courses' && isAdmin && <AdminCourses onNavigate={navigate} />}
-        {currentView === 'admin-course-edit' && isAdmin && adminEditCourseId && (
+        {currentView === 'admin-users'          && isAdmin && <AdminUsers currentUserEmail={user.email} />}
+        {currentView === 'admin-courses'         && isAdmin && <AdminCourses onNavigate={navigate} />}
+        {currentView === 'admin-personalizacao'  && isAdmin && <AdminPersonalizacao />}
+        {currentView === 'admin-course-edit'     && isAdmin && adminEditCourseId && (
           <AdminCourseEdit courseId={adminEditCourseId} onNavigate={navigate} />
         )}
         {currentView === 'login-bancos' && <LoginBancos isAdmin={isAdmin} />}
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AppProvider>
+      <AppInner />
+    </AppProvider>
   );
 }

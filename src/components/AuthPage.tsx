@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { BookOpen, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { LogoComponent } from './LogoComponent';
 
 interface AuthPageProps {
   onSuccess: () => void;
@@ -31,8 +32,8 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4">
-            <BookOpen className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center mb-4">
+            <LogoComponent size="lg" />
           </div>
           <h1 className="text-3xl font-bold text-white">Aprova Mais</h1>
           <p className="text-slate-400 mt-1">Plataforma de Treinamentos Corporativos</p>
@@ -52,7 +53,7 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="seu@email.com"
                   required
-                  className="w-full bg-slate-900 border border-slate-600 rounded-xl pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-slate-900 border border-slate-600 rounded-xl pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-brand transition-colors"
                 />
               </div>
             </div>
@@ -68,7 +69,7 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
                   placeholder="••••••••"
                   required
                   minLength={6}
-                  className="w-full bg-slate-900 border border-slate-600 rounded-xl pl-10 pr-12 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-slate-900 border border-slate-600 rounded-xl pl-10 pr-12 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-brand transition-colors"
                 />
                 <button
                   type="button"
@@ -89,7 +90,7 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors mt-2"
+              className="w-full bg-brand hover:bg-brand-hover disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors mt-2"
             >
               {loading ? 'Aguarde...' : 'Entrar'}
             </button>

@@ -83,6 +83,7 @@ export type ViewType =
   | 'admin-users'
   | 'admin-courses'
   | 'admin-course-edit'
-  | 'login-bancos';
+  | 'login-bancos'
+  | 'admin-personalizacao';
 
 export type AuthMode = 'login';
