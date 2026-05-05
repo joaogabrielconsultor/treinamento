@@ -39,7 +39,16 @@ export function useAdminUsers() {
     setUsers((prev) => [{ ...newUser, enrollment_count: 0 }, ...prev]);
   };
 
-  return { users, loading, toggleRole, createUser, refetch: fetchUsers };
+  const deleteUser = async (userId: string) => {
+    await api.delete(`/admin/users/${userId}`, true);
+    setUsers((prev) => prev.filter((u) => u.id !== userId));
+  };
+
+  const changePassword = async (userId: string, password: string) => {
+    await api.put(`/admin/users/${userId}/password`, { password }, true);
+  };
+
+  return { users, loading, toggleRole, createUser, deleteUser, changePassword, refetch: fetchUsers };
 }
 
 export function useAdminCourses() {

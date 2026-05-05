@@ -333,6 +333,34 @@ app.post('/api/admin/users', auth, adminOnly, async (req, res) => {
   }
 });
 
+// ─── ADMIN: DELETE USER ────────────────────────────────────────────────────────
+app.delete('/api/admin/users/:id', auth, adminOnly, async (req, res) => {
+  if (req.user.email !== MASTER_ADMIN_EMAIL) {
+    return res.status(403).json({ error: 'Apenas o administrador master pode excluir usuários' });
+  }
+  const { rows: target } = await pool.query('SELECT email FROM users WHERE id = $1', [req.params.id]);
+  if (!target[0]) return res.status(404).json({ error: 'Usuário não encontrado' });
+  if (target[0].email === MASTER_ADMIN_EMAIL) {
+    return res.status(403).json({ error: 'O administrador master não pode ser excluído' });
+  }
+  await pool.query('DELETE FROM users WHERE id = $1', [req.params.id]);
+  res.json({ success: true });
+});
+
+// ─── ADMIN: CHANGE USER PASSWORD ───────────────────────────────────────────────
+app.put('/api/admin/users/:id/password', auth, adminOnly, async (req, res) => {
+  if (req.user.email !== MASTER_ADMIN_EMAIL) {
+    return res.status(403).json({ error: 'Apenas o administrador master pode alterar senhas' });
+  }
+  const { password } = req.body;
+  if (!password || password.length < 6) return res.status(400).json({ error: 'Senha deve ter no mínimo 6 caracteres' });
+  const { rows: target } = await pool.query('SELECT email FROM users WHERE id = $1', [req.params.id]);
+  if (!target[0]) return res.status(404).json({ error: 'Usuário não encontrado' });
+  const hash = await bcrypt.hash(password, 10);
+  await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, req.params.id]);
+  res.json({ success: true });
+});
+
 // ─── APP SETTINGS ─────────────────────────────────────────────────────────────
 app.get('/api/settings', async (req, res) => {
   const { rows } = await pool.query("SELECT key, value FROM app_settings");

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Users, Shield, ShieldOff, BookOpen, RefreshCw, Plus, X, Eye, EyeOff, Crown } from 'lucide-react';
+import { Users, Shield, ShieldOff, BookOpen, RefreshCw, Plus, X, Eye, EyeOff, Crown, Trash2, KeyRound } from 'lucide-react';
 import { useAdminUsers } from '../../hooks/useAdmin';
 
 const MASTER_ADMIN_EMAIL = 'adm@rozesstartflow.com';
@@ -120,9 +120,134 @@ function CreateUserModal({ onClose, onCreate }: {
   );
 }
 
+function ChangePasswordModal({ userName, onClose, onSave }: {
+  userName: string;
+  onClose: () => void;
+  onSave: (password: string) => Promise<void>;
+}) {
+  const [password, setPassword] = useState('');
+  const [showPwd, setShowPwd] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      await onSave(password);
+      onClose();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao alterar senha');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-dk-card rounded-2xl shadow-xl w-full max-w-sm p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Alterar Senha</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Nova senha para <span className="font-medium text-gray-800 dark:text-gray-200">{userName}</span></p>
+        <form onSubmit={submit} className="space-y-4">
+          <div className="relative">
+            <input
+              type={showPwd ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              autoFocus
+              className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 dark:border-dk-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand bg-white dark:bg-dk-surface text-gray-900 dark:text-white"
+              placeholder="Mínimo 6 caracteres"
+            />
+            <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2 text-sm text-red-600 dark:text-red-400">
+              {error}
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-1">
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-dk-surface rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+              Cancelar
+            </button>
+            <button type="submit" disabled={loading} className="flex-1 px-4 py-2 text-sm text-white bg-brand rounded-xl hover:bg-brand-hover disabled:opacity-50 transition-colors font-medium">
+              {loading ? 'Salvando...' : 'Salvar'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function DeleteConfirmModal({ userName, onClose, onConfirm }: {
+  userName: string;
+  onClose: () => void;
+  onConfirm: () => Promise<void>;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const confirm = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await onConfirm();
+      onClose();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao excluir usuário');
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-dk-card rounded-2xl shadow-xl w-full max-w-sm p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Excluir Usuário</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Tem certeza que deseja excluir</p>
+        <p className="text-sm font-semibold text-gray-900 dark:text-white mb-4">{userName}?</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mb-5">Esta ação não pode ser desfeita. Todos os dados do usuário serão removidos.</p>
+
+        {error && (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2 text-sm text-red-600 dark:text-red-400 mb-4">
+            {error}
+          </div>
+        )}
+
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-dk-surface rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+            Cancelar
+          </button>
+          <button onClick={confirm} disabled={loading} className="flex-1 px-4 py-2 text-sm text-white bg-red-600 rounded-xl hover:bg-red-700 disabled:opacity-50 transition-colors font-medium">
+            {loading ? 'Excluindo...' : 'Excluir'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
-  const { users, loading, toggleRole, createUser, refetch } = useAdminUsers();
+  const { users, loading, toggleRole, createUser, deleteUser, changePassword, refetch } = useAdminUsers();
   const [showCreate, setShowCreate] = useState(false);
+  const [changePwdUser, setChangePwdUser] = useState<{ id: string; name: string } | null>(null);
+  const [deleteUserTarget, setDeleteUserTarget] = useState<{ id: string; name: string } | null>(null);
 
   const isMasterAdmin = currentUserEmail === MASTER_ADMIN_EMAIL;
 
@@ -140,6 +265,20 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
         <CreateUserModal
           onClose={() => setShowCreate(false)}
           onCreate={createUser}
+        />
+      )}
+      {changePwdUser && (
+        <ChangePasswordModal
+          userName={changePwdUser.name}
+          onClose={() => setChangePwdUser(null)}
+          onSave={(pwd) => changePassword(changePwdUser.id, pwd)}
+        />
+      )}
+      {deleteUserTarget && (
+        <DeleteConfirmModal
+          userName={deleteUserTarget.name}
+          onClose={() => setDeleteUserTarget(null)}
+          onConfirm={() => deleteUser(deleteUserTarget.id)}
         />
       )}
 
@@ -229,18 +368,35 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
                   </td>
                   <td className="px-6 py-4 text-right">
                     {isMasterAdmin && !isThisMaster && (
-                      <button
-                        onClick={() => toggleRole(user.id, user.role)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                          user.role === 'admin'
-                            ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30'
-                            : 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30'
-                        }`}
-                      >
-                        {user.role === 'admin'
-                          ? <><ShieldOff className="w-3.5 h-3.5" /> Remover Admin</>
-                          : <><Shield className="w-3.5 h-3.5" /> Tornar Admin</>}
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => toggleRole(user.id, user.role)}
+                          title={user.role === 'admin' ? 'Remover Admin' : 'Tornar Admin'}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                            user.role === 'admin'
+                              ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30'
+                              : 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30'
+                          }`}
+                        >
+                          {user.role === 'admin'
+                            ? <><ShieldOff className="w-3.5 h-3.5" /> Remover Admin</>
+                            : <><Shield className="w-3.5 h-3.5" /> Tornar Admin</>}
+                        </button>
+                        <button
+                          onClick={() => setChangePwdUser({ id: user.id, name: name })}
+                          title="Alterar senha"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                        >
+                          <KeyRound className="w-3.5 h-3.5" /> Senha
+                        </button>
+                        <button
+                          onClick={() => setDeleteUserTarget({ id: user.id, name: name })}
+                          title="Excluir usuário"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>
