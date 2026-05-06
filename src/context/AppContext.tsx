@@ -16,7 +16,7 @@ const AppContext = createContext<AppContextType>({
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   // localStorage é apenas cache local para evitar flash no carregamento
-  const [logoUrl, setLogoUrlState] = useState(() => localStorage.getItem('logoUrl') ?? '');
+  const [logoUrl, setLogoUrlState] = useState(() => localStorage.getItem('logoUrl') || '/logo.png');
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
 
   // Busca a logo do banco de dados ao iniciar — garante que todos os usuários vejam
@@ -24,7 +24,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     fetch('/api/settings')
       .then((r) => r.json())
       .then((data) => {
-        const url: string = data.logo_url ?? '';
+        const url: string = data.logo_url || '/logo.png';
         setLogoUrlState(url);
         localStorage.setItem('logoUrl', url);
       })
