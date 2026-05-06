@@ -2,9 +2,9 @@ import { BookOpen } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 
 const sizes = {
-  sm: { wrap: 'w-7 h-7',  icon: 'w-4 h-4' },
-  md: { wrap: 'w-9 h-9',  icon: 'w-5 h-5' },
-  lg: { wrap: 'w-16 h-16', icon: 'w-8 h-8' },
+  sm: { wrap: 'w-9 h-9',   icon: 'w-5 h-5' },
+  md: { wrap: 'w-12 h-12', icon: 'w-6 h-6' },
+  lg: { wrap: 'w-24 h-24', icon: 'w-10 h-10' },
 };
 
 export function LogoComponent({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
