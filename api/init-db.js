@@ -164,6 +164,34 @@ async function initDb() {
 
     await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS bank_id uuid REFERENCES banks(id) ON DELETE SET NULL`);
     await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS convenio_id uuid REFERENCES convenios(id) ON DELETE SET NULL`);
+    await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS comissao_empresa numeric(5,2) NOT NULL DEFAULT 0`);
+    await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS comissao_corretor numeric(5,2) NOT NULL DEFAULT 0`);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS commission_ranges (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        financial_table_id uuid NOT NULL REFERENCES financial_tables(id) ON DELETE CASCADE,
+        tipo_proposta text NOT NULL DEFAULT '',
+        expires_at date,
+        convenio_descricao text NOT NULL DEFAULT '',
+        parceiro text NOT NULL DEFAULT '',
+        prazo_inicial integer,
+        prazo_final integer,
+        juros_inicial numeric(10,6),
+        juros_final numeric(10,6),
+        coef_inicial numeric(10,6),
+        coef_final numeric(10,6),
+        comissao_empresa numeric(5,2) NOT NULL DEFAULT 0,
+        comissao_corretor numeric(5,2) NOT NULL DEFAULT 0,
+        disponivel_para text NOT NULL DEFAULT 'todos',
+        category_id uuid REFERENCES table_categories(id) ON DELETE SET NULL,
+        min_value numeric(15,2) NOT NULL DEFAULT 0,
+        max_value numeric(15,2),
+        base_points integer NOT NULL DEFAULT 0,
+        multiplier numeric(5,2),
+        created_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
     await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS bank_id uuid REFERENCES banks(id) ON DELETE SET NULL`);
     await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS convenio_id uuid REFERENCES convenios(id) ON DELETE SET NULL`);
     await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS product_id uuid REFERENCES products(id) ON DELETE SET NULL`);

@@ -107,11 +107,39 @@ export interface FinancialTable {
   convenio_id: string | null;
   category_id: string | null;
   active: boolean;
+  comissao_empresa: number;
+  comissao_corretor: number;
   created_at: string;
   category_name?: string;
   category_multiplier?: number;
   bank_name?: string;
   convenio_name?: string;
+}
+
+export interface CommissionRange {
+  id: string;
+  financial_table_id: string;
+  tipo_proposta: string;
+  expires_at: string | null;
+  convenio_descricao: string;
+  parceiro: string;
+  prazo_inicial: number | null;
+  prazo_final: number | null;
+  juros_inicial: number | null;
+  juros_final: number | null;
+  coef_inicial: number | null;
+  coef_final: number | null;
+  comissao_empresa: number;
+  comissao_corretor: number;
+  disponivel_para: string;
+  category_id: string | null;
+  min_value: number;
+  max_value: number | null;
+  base_points: number;
+  multiplier: number | null;
+  created_at: string;
+  category_name?: string;
+  category_multiplier?: number;
 }
 
 export interface ScoringRule {
@@ -235,6 +263,7 @@ export type ViewType =
   | 'admin-banks'
   | 'admin-convenios'
   | 'admin-products'
+  | 'admin-commission-ranges'
   | 'admin-reports';
 
 export type AuthMode = 'login';

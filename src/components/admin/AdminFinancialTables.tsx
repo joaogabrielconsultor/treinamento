@@ -7,7 +7,7 @@ const API = (p: string, opts?: RequestInit) =>
 
 const inp = 'w-full px-3 py-2 border border-gray-200 dark:border-dk-border rounded-xl text-sm bg-white dark:bg-dk-surface dark:text-white focus:outline-none focus:ring-2 focus:ring-brand/30';
 
-const EMPTY_TABLE = { name: '', bank_id: '', convenio_id: '', category_id: '', active: true };
+const EMPTY_TABLE = { name: '', bank_id: '', convenio_id: '', category_id: '', active: true, comissao_empresa: '', comissao_corretor: '' };
 
 export function AdminFinancialTables() {
   const [tables, setTables] = useState<FinancialTable[]>([]);
@@ -57,6 +57,8 @@ export function AdminFinancialTables() {
       convenio_id: form.convenio_id,
       category_id: form.category_id,
       active: form.active,
+      comissao_empresa: parseFloat(form.comissao_empresa as string) || 0,
+      comissao_corretor: parseFloat(form.comissao_corretor as string) || 0,
     };
     const url = editId ? `/api/financial-tables/${editId}` : '/api/financial-tables';
     await API(url, { method: editId ? 'PUT' : 'POST', body: JSON.stringify(body) });
@@ -141,17 +143,17 @@ export function AdminFinancialTables() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 dark:border-dk-border">
-                {['Nome da Tabela', 'Convênio', 'Banco', 'Categoria', 'Status', 'Ações'].map(h => (
+                {['Nome da Tabela', 'Convênio', 'Banco', 'Categoria', 'Comissão Emp.', 'Comissão Cor.', 'Status', 'Ações'].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={6} className="text-center py-12 text-gray-400">Nenhuma tabela cadastrada</td></tr>
+                <tr><td colSpan={8} className="text-center py-12 text-gray-400">Nenhuma tabela cadastrada</td></tr>
               ) : filtered.map(t => (
                 <tr key={t.id} className="border-b border-gray-50 dark:border-dk-border/50 hover:bg-gray-50 dark:hover:bg-dk-surface/30">
-                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-white max-w-[260px] truncate">{t.name}</td>
+                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-white max-w-[200px] truncate">{t.name}</td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{t.convenio_name || '—'}</td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{t.bank_name || '—'}</td>
                   <td className="px-4 py-3">
@@ -161,6 +163,8 @@ export function AdminFinancialTables() {
                       </span>
                     ) : <span className="text-gray-400">—</span>}
                   </td>
+                  <td className="px-4 py-3 text-blue-600 dark:text-blue-400 font-medium text-xs">{t.comissao_empresa != null ? `${Number(t.comissao_empresa).toFixed(2)}%` : '—'}</td>
+                  <td className="px-4 py-3 text-green-600 dark:text-green-400 font-medium text-xs">{t.comissao_corretor != null ? `${Number(t.comissao_corretor).toFixed(2)}%` : '—'}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${t.active ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-gray-100 dark:bg-dk-surface text-gray-500'}`}>
                       {t.active ? 'Ativo' : 'Inativo'}
@@ -172,7 +176,7 @@ export function AdminFinancialTables() {
                         className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-dk-surface text-gray-400 hover:text-brand transition-colors">
                         <Settings className="w-3.5 h-3.5" />
                       </button>
-                      <button onClick={() => { setForm({ name: t.name, bank_id: t.bank_id || '', convenio_id: t.convenio_id || '', category_id: t.category_id || '', active: t.active }); setEditId(t.id); setShowForm(true); }}
+                      <button onClick={() => { setForm({ name: t.name, bank_id: t.bank_id || '', convenio_id: t.convenio_id || '', category_id: t.category_id || '', active: t.active, comissao_empresa: String(t.comissao_empresa ?? ''), comissao_corretor: String(t.comissao_corretor ?? '') }); setEditId(t.id); setShowForm(true); }}
                         className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-dk-surface text-gray-400 hover:text-gray-600 transition-colors">
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
@@ -234,6 +238,16 @@ export function AdminFinancialTables() {
                   </select>
                 </div>
                 {categories.length === 0 && <p className="text-xs text-orange-500 mt-1">Nenhuma categoria cadastrada. Cadastre em <strong>Categorias</strong> primeiro.</p>}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Comissão Empresa (%)</label>
+                  <input type="number" step="0.01" min="0" max="100" value={form.comissao_empresa} onChange={e => setForm(f => ({ ...f, comissao_empresa: e.target.value }))} className={inp} placeholder="0.00" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Comissão Corretor (%)</label>
+                  <input type="number" step="0.01" min="0" max="100" value={form.comissao_corretor} onChange={e => setForm(f => ({ ...f, comissao_corretor: e.target.value }))} className={inp} placeholder="0.00" />
+                </div>
               </div>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={form.active} onChange={e => setForm(f => ({ ...f, active: e.target.checked }))} className="w-4 h-4 rounded" />

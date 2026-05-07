@@ -1,4 +1,4 @@
-import { LayoutDashboard, Library, LogOut, ChevronRight, Users, GraduationCap, Shield, Building2, Moon, Sun, Palette, FileText, Trophy, BarChart2, Table2, Tag, ClipboardList, FileBarChart, Handshake, Package } from 'lucide-react';
+import { LayoutDashboard, Library, LogOut, ChevronRight, Users, GraduationCap, Shield, Building2, Moon, Sun, Palette, FileText, Trophy, BarChart2, Table2, Tag, ClipboardList, FileBarChart, Handshake, Package, Percent } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { ViewType } from '../types';
 import { LogoComponent } from './LogoComponent';
@@ -27,8 +27,9 @@ const adminItems = [
   { view: 'admin-convenios'        as ViewType, icon: Handshake,     label: 'Convênios' },
   { view: 'admin-banks'            as ViewType, icon: Building2,     label: 'Bancos' },
   { view: 'admin-products'         as ViewType, icon: Package,       label: 'Produtos' },
-  { view: 'admin-financial-tables' as ViewType, icon: Table2,        label: 'Tabelas Financeiras' },
-  { view: 'admin-categories'       as ViewType, icon: Tag,           label: 'Categorias' },
+  { view: 'admin-financial-tables'   as ViewType, icon: Table2,        label: 'Tabelas Financeiras' },
+  { view: 'admin-commission-ranges' as ViewType, icon: Percent,       label: 'Faixas de Comissão' },
+  { view: 'admin-categories'        as ViewType, icon: Tag,           label: 'Categorias' },
   { view: 'admin-reports'          as ViewType, icon: FileBarChart,  label: 'Relatórios' },
   { view: 'admin-courses'          as ViewType, icon: GraduationCap, label: 'Treinamentos' },
   { view: 'admin-personalizacao'   as ViewType, icon: Palette,       label: 'Personalização' },
@@ -93,6 +94,7 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin }: S
                 (view === 'admin-courses' && currentView === 'admin-course-edit') ||
                 (view === 'admin-proposals' && currentView === 'admin-proposals') ||
                 (view === 'admin-financial-tables' && currentView === 'admin-financial-tables') ||
+                (view === 'admin-commission-ranges' && currentView === 'admin-commission-ranges') ||
                 (view === 'admin-categories' && currentView === 'admin-categories') ||
                 (view === 'admin-reports' && currentView === 'admin-reports');
               return (

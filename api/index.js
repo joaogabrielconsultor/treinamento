@@ -552,18 +552,18 @@ app.get('/api/financial-tables', auth, async (req, res) => {
 });
 
 app.post('/api/financial-tables', auth, adminOnly, async (req, res) => {
-  const { name, bank_id, convenio_id, category_id, active } = req.body;
+  const { name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor } = req.body;
   if (!name) return res.status(400).json({ error: 'Nome obrigatório' });
   const { rows } = await pool.query(
-    'INSERT INTO financial_tables (name, bank_id, convenio_id, category_id, active) VALUES ($1,$2,$3,$4,$5) RETURNING *',
-    [name, bank_id || null, convenio_id || null, category_id || null, active !== false]
+    'INSERT INTO financial_tables (name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
+    [name, bank_id || null, convenio_id || null, category_id || null, active !== false, comissao_empresa || 0, comissao_corretor || 0]
   );
   res.json(rows[0]);
 });
 
 app.put('/api/financial-tables/:id', auth, adminOnly, async (req, res) => {
-  const { name, bank_id, convenio_id, category_id, active } = req.body;
-  const fields = { name, bank_id, convenio_id, category_id, active };
+  const { name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor } = req.body;
+  const fields = { name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor };
   const updates = [];
   const values = [];
   let i = 1;
@@ -614,22 +614,102 @@ app.delete('/api/scoring-rules/:id', auth, adminOnly, async (req, res) => {
   res.json({ ok: true });
 });
 
+// ─── FAIXAS DE COMISSÃO ───────────────────────────────────────────────────────
+app.get('/api/commission-ranges', auth, async (req, res) => {
+  const { table_id } = req.query;
+  if (!table_id) return res.status(400).json({ error: 'table_id obrigatório' });
+  const { rows } = await pool.query(`
+    SELECT cr.*, tc.name as category_name, tc.multiplier as category_multiplier
+    FROM commission_ranges cr
+    LEFT JOIN table_categories tc ON tc.id = cr.category_id
+    WHERE cr.financial_table_id = $1
+    ORDER BY cr.min_value ASC, cr.tipo_proposta ASC
+  `, [table_id]);
+  res.json(rows);
+});
+
+app.post('/api/commission-ranges', auth, adminOnly, async (req, res) => {
+  const {
+    financial_table_id, tipo_proposta, expires_at, convenio_descricao, parceiro,
+    prazo_inicial, prazo_final, juros_inicial, juros_final, coef_inicial, coef_final,
+    comissao_empresa, comissao_corretor, disponivel_para,
+    category_id, min_value, max_value, base_points, multiplier
+  } = req.body;
+  if (!financial_table_id) return res.status(400).json({ error: 'financial_table_id obrigatório' });
+  const { rows } = await pool.query(`
+    INSERT INTO commission_ranges (
+      financial_table_id, tipo_proposta, expires_at, convenio_descricao, parceiro,
+      prazo_inicial, prazo_final, juros_inicial, juros_final, coef_inicial, coef_final,
+      comissao_empresa, comissao_corretor, disponivel_para,
+      category_id, min_value, max_value, base_points, multiplier
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+    RETURNING *
+  `, [
+    financial_table_id, tipo_proposta||'', expires_at||null, convenio_descricao||'', parceiro||'',
+    prazo_inicial||null, prazo_final||null, juros_inicial||null, juros_final||null,
+    coef_inicial||null, coef_final||null,
+    comissao_empresa||0, comissao_corretor||0, disponivel_para||'todos',
+    category_id||null, min_value||0, max_value||null, base_points||0, multiplier||null
+  ]);
+  res.json(rows[0]);
+});
+
+app.put('/api/commission-ranges/:id', auth, adminOnly, async (req, res) => {
+  const fields = [
+    'tipo_proposta','expires_at','convenio_descricao','parceiro',
+    'prazo_inicial','prazo_final','juros_inicial','juros_final','coef_inicial','coef_final',
+    'comissao_empresa','comissao_corretor','disponivel_para',
+    'category_id','min_value','max_value','base_points','multiplier'
+  ];
+  const updates = [];
+  const values = [];
+  let i = 1;
+  for (const f of fields) {
+    if (req.body[f] !== undefined) { updates.push(`${f} = $${i++}`); values.push(req.body[f] === '' ? null : req.body[f]); }
+  }
+  if (!updates.length) return res.status(400).json({ error: 'Nenhum campo' });
+  values.push(req.params.id);
+  const { rows } = await pool.query(`UPDATE commission_ranges SET ${updates.join(', ')} WHERE id=$${i} RETURNING *`, values);
+  res.json(rows[0]);
+});
+
+app.delete('/api/commission-ranges/:id', auth, adminOnly, async (req, res) => {
+  await pool.query('DELETE FROM commission_ranges WHERE id=$1', [req.params.id]);
+  res.json({ ok: true });
+});
+
 // ─── HELPER: calcula pontos de uma proposta ────────────────────────────────────
 async function calcPoints(tableId, value) {
   if (!tableId) return 0;
-  const { rows: rules } = await pool.query(
-    `SELECT sr.points, tc.multiplier FROM scoring_rules sr
-     JOIN financial_tables ft ON ft.id = sr.table_id
-     LEFT JOIN table_categories tc ON tc.id = ft.category_id
-     WHERE sr.table_id = $1
-       AND sr.min_value <= $2
-       AND (sr.max_value IS NULL OR sr.max_value >= $2)
-     ORDER BY sr.min_value DESC LIMIT 1`,
-    [tableId, value]
-  );
+
+  // Prioridade 1: faixas de comissão (commission_ranges)
+  const { rows: cr } = await pool.query(`
+    SELECT cr.base_points,
+           COALESCE(cr.multiplier, tc.multiplier, 1) as multiplier
+    FROM commission_ranges cr
+    LEFT JOIN table_categories tc ON tc.id = cr.category_id
+    WHERE cr.financial_table_id = $1
+      AND cr.min_value <= $2
+      AND (cr.max_value IS NULL OR cr.max_value >= $2)
+    ORDER BY cr.min_value DESC LIMIT 1
+  `, [tableId, value]);
+  if (cr[0] && cr[0].base_points > 0) {
+    return Math.round(cr[0].base_points * (parseFloat(cr[0].multiplier) || 1));
+  }
+
+  // Fallback: scoring_rules legado
+  const { rows: rules } = await pool.query(`
+    SELECT sr.points, COALESCE(tc.multiplier, 1) as multiplier
+    FROM scoring_rules sr
+    JOIN financial_tables ft ON ft.id = sr.table_id
+    LEFT JOIN table_categories tc ON tc.id = ft.category_id
+    WHERE sr.table_id = $1
+      AND sr.min_value <= $2
+      AND (sr.max_value IS NULL OR sr.max_value >= $2)
+    ORDER BY sr.min_value DESC LIMIT 1
+  `, [tableId, value]);
   if (!rules[0]) return 0;
-  const multiplier = parseFloat(rules[0].multiplier) || 1;
-  return Math.round(rules[0].points * multiplier);
+  return Math.round(rules[0].points * (parseFloat(rules[0].multiplier) || 1));
 }
 
 async function awardBadgesAndNotify(client, userId) {

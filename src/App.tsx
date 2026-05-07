@@ -16,6 +16,7 @@ import { AdminConvenios } from './components/admin/AdminConvenios';
 import { AdminProducts } from './components/admin/AdminProducts';
 import { AdminProposals } from './components/admin/AdminProposals';
 import { AdminReports } from './components/admin/AdminReports';
+import { AdminCommissionRanges } from './components/admin/AdminCommissionRanges';
 import { LoginBancos } from './components/LoginBancos';
 import { Proposals } from './components/Proposals';
 import { Ranking } from './components/Ranking';
@@ -168,7 +169,8 @@ function AppInner() {
         {currentView === 'admin-convenios'        && isAdmin && <AdminConvenios />}
         {currentView === 'admin-products'         && isAdmin && <AdminProducts />}
         {currentView === 'admin-proposals'        && isAdmin && <AdminProposals />}
-        {currentView === 'admin-reports'          && isAdmin && <AdminReports />}
+        {currentView === 'admin-reports'           && isAdmin && <AdminReports />}
+        {currentView === 'admin-commission-ranges' && isAdmin && <AdminCommissionRanges />}
         {currentView === 'login-bancos' && <LoginBancos isAdmin={isAdmin} />}
         {currentView === 'proposals'  && <Proposals />}
         {currentView === 'ranking'    && <Ranking userId={user.id} />}
