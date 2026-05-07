@@ -410,6 +410,30 @@ app.delete('/api/login-bancos/:id', auth, adminOnly, async (req, res) => {
   res.json({ ok: true });
 });
 
+// ─── PRODUTOS ────────────────────────────────────────────────────────────────
+app.get('/api/products', auth, async (req, res) => {
+  const { rows } = await pool.query('SELECT * FROM products ORDER BY name ASC');
+  res.json(rows);
+});
+
+app.post('/api/products', auth, adminOnly, async (req, res) => {
+  const { name } = req.body;
+  if (!name) return res.status(400).json({ error: 'Nome obrigatório' });
+  const { rows } = await pool.query('INSERT INTO products (name) VALUES ($1) RETURNING *', [name]);
+  res.json(rows[0]);
+});
+
+app.put('/api/products/:id', auth, adminOnly, async (req, res) => {
+  const { name } = req.body;
+  const { rows } = await pool.query('UPDATE products SET name=$1 WHERE id=$2 RETURNING *', [name, req.params.id]);
+  res.json(rows[0]);
+});
+
+app.delete('/api/products/:id', auth, adminOnly, async (req, res) => {
+  await pool.query('DELETE FROM products WHERE id=$1', [req.params.id]);
+  res.json({ ok: true });
+});
+
 // ─── BANCOS ───────────────────────────────────────────────────────────────────
 app.get('/api/banks', auth, async (req, res) => {
   const { convenio_id } = req.query;
@@ -690,11 +714,15 @@ app.get('/api/proposals', auth, async (req, res) => {
   const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
   const { rows } = await pool.query(`
     SELECT p.*, u.full_name as user_name, u.email as user_email,
-           ft.name as table_name, tc.name as category_name
+           ft.name as table_name, tc.name as category_name,
+           b.name as bank_name, cv.name as convenio_name, pr.name as product_name
     FROM proposals p
     JOIN users u ON u.id = p.user_id
     LEFT JOIN financial_tables ft ON ft.id = p.table_id
     LEFT JOIN table_categories tc ON tc.id = ft.category_id
+    LEFT JOIN banks b ON b.id = p.bank_id
+    LEFT JOIN convenios cv ON cv.id = p.convenio_id
+    LEFT JOIN products pr ON pr.id = p.product_id
     ${where}
     ORDER BY p.created_at DESC
   `, values);
@@ -702,9 +730,9 @@ app.get('/api/proposals', auth, async (req, res) => {
 });
 
 app.post('/api/proposals', auth, async (req, res) => {
-  const { proposal_number, value, product, bank, convenio, table_id, bank_id, convenio_id, client_name, client_cpf, client_phone } = req.body;
+  const { proposal_number, value, product, product_id, bank, convenio, table_id, bank_id, convenio_id, client_name, client_cpf, client_phone } = req.body;
   // Campos obrigatórios
-  if (!proposal_number || !value || !product || !client_name || !client_cpf || !client_phone) {
+  if (!proposal_number || !value || (!product && !product_id) || !client_name || !client_cpf || !client_phone) {
     return res.status(400).json({ error: 'Preencha todos os campos obrigatórios' });
   }
   // Verifica número duplicado
@@ -712,11 +740,17 @@ app.post('/api/proposals', auth, async (req, res) => {
   if (dup.length > 0) {
     return res.status(409).json({ error: `Número ${proposal_number} já cadastrado para o cliente "${dup[0].client_name}"` });
   }
+  // Resolve nome do produto se veio por ID
+  let productName = product || '';
+  if (product_id) {
+    const { rows: pr } = await pool.query('SELECT name FROM products WHERE id=$1', [product_id]);
+    if (pr[0]) productName = pr[0].name;
+  }
   // Corretor sempre cria como Digitada
   const { rows } = await pool.query(
-    `INSERT INTO proposals (user_id, proposal_number, value, product, bank, convenio, table_id, bank_id, convenio_id, client_name, client_cpf, client_phone, status)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'Digitada') RETURNING *`,
-    [req.user.id, proposal_number, value, product, bank||'', convenio||'', table_id||null, bank_id||null, convenio_id||null, client_name, client_cpf, client_phone]
+    `INSERT INTO proposals (user_id, proposal_number, value, product, product_id, bank, convenio, table_id, bank_id, convenio_id, client_name, client_cpf, client_phone, status)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'Digitada') RETURNING *`,
+    [req.user.id, proposal_number, value, productName, product_id||null, bank||'', convenio||'', table_id||null, bank_id||null, convenio_id||null, client_name, client_cpf, client_phone]
   );
   res.json(rows[0]);
 });
@@ -731,7 +765,7 @@ app.put('/api/proposals/:id', auth, async (req, res) => {
   if (!isAdmin && req.body.status !== undefined) {
     return res.status(403).json({ error: 'Apenas o administrador pode alterar o status da proposta' });
   }
-  const fields = ['proposal_number','value','product','bank','convenio','table_id','bank_id','convenio_id','client_name','client_cpf','client_phone'];
+  const fields = ['proposal_number','value','product','product_id','bank','convenio','table_id','bank_id','convenio_id','client_name','client_cpf','client_phone'];
   if (isAdmin) fields.push('status');
   const updates = ['updated_at = now()'];
   const values = [];

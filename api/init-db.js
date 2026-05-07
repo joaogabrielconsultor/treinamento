@@ -115,6 +115,15 @@ async function initDb() {
       )
     `);
 
+    // ─── PRODUTOS ─────────────────────────────────────────────────────────────
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS products (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        name text NOT NULL,
+        created_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+
     // ─── BANCOS E CONVÊNIOS ────────────────────────────────────────────────────
     await client.query(`
       CREATE TABLE IF NOT EXISTS banks (
@@ -157,6 +166,7 @@ async function initDb() {
     await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS convenio_id uuid REFERENCES convenios(id) ON DELETE SET NULL`);
     await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS bank_id uuid REFERENCES banks(id) ON DELETE SET NULL`);
     await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS convenio_id uuid REFERENCES convenios(id) ON DELETE SET NULL`);
+    await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS product_id uuid REFERENCES products(id) ON DELETE SET NULL`);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS scoring_rules (

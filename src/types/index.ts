@@ -74,6 +74,12 @@ export interface LoginBanco {
   created_at: string;
 }
 
+export interface Product {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
 export interface Bank {
   id: string;
   name: string;
@@ -125,6 +131,7 @@ export interface Proposal {
   proposal_number: string;
   value: number;
   product: string;
+  product_id: string | null;
   bank: string;
   bank_id: string | null;
   convenio: string;
@@ -143,6 +150,7 @@ export interface Proposal {
   category_name?: string;
   bank_name?: string;
   convenio_name?: string;
+  product_name?: string;
 }
 
 export interface RankingEntry {
@@ -226,6 +234,7 @@ export type ViewType =
   | 'admin-categories'
   | 'admin-banks'
   | 'admin-convenios'
+  | 'admin-products'
   | 'admin-reports';
 
 export type AuthMode = 'login';

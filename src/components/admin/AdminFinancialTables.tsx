@@ -48,11 +48,14 @@ export function AdminFinancialTables() {
 
   async function saveTable(e: React.FormEvent) {
     e.preventDefault();
+    if (!form.convenio_id) { alert('Selecione o convênio'); return; }
+    if (!form.bank_id)     { alert('Selecione o banco'); return; }
+    if (!form.category_id) { alert('Selecione a categoria'); return; }
     const body = {
       name: form.name,
-      bank_id: form.bank_id || null,
-      convenio_id: form.convenio_id || null,
-      category_id: form.category_id || null,
+      bank_id: form.bank_id,
+      convenio_id: form.convenio_id,
+      category_id: form.category_id,
       active: form.active,
     };
     const url = editId ? `/api/financial-tables/${editId}` : '/api/financial-tables';
@@ -200,34 +203,37 @@ export function AdminFinancialTables() {
                 <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className={inp} required placeholder="Ex: APROVAMAIS NEO_096-299_318661 - CC-CB" />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Convênio</label>
+                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Convênio <span className="text-red-400">*</span></label>
                 <div className="relative">
                   <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-                  <select value={form.convenio_id} onChange={e => setForm(f => ({ ...f, convenio_id: e.target.value }))} className={`${inp} appearance-none pr-8`}>
-                    <option value="">Sem convênio</option>
+                  <select value={form.convenio_id} onChange={e => setForm(f => ({ ...f, convenio_id: e.target.value }))} className={`${inp} appearance-none pr-8 ${!form.convenio_id ? 'border-red-200' : ''}`}>
+                    <option value="">Selecione o convênio</option>
                     {convenios.map(cv => <option key={cv.id} value={cv.id}>{cv.name}</option>)}
                   </select>
                 </div>
+                {convenios.length === 0 && <p className="text-xs text-orange-500 mt-1">Nenhum convênio cadastrado. Cadastre em <strong>Convênios</strong> primeiro.</p>}
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Banco</label>
+                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Banco <span className="text-red-400">*</span></label>
                 <div className="relative">
                   <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-                  <select value={form.bank_id} onChange={e => setForm(f => ({ ...f, bank_id: e.target.value }))} className={`${inp} appearance-none pr-8`}>
-                    <option value="">Sem banco</option>
+                  <select value={form.bank_id} onChange={e => setForm(f => ({ ...f, bank_id: e.target.value }))} className={`${inp} appearance-none pr-8 ${!form.bank_id ? 'border-red-200' : ''}`}>
+                    <option value="">Selecione o banco</option>
                     {banks.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
                 </div>
+                {banks.length === 0 && <p className="text-xs text-orange-500 mt-1">Nenhum banco cadastrado. Cadastre em <strong>Bancos</strong> primeiro.</p>}
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Categoria</label>
+                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Categoria <span className="text-red-400">*</span></label>
                 <div className="relative">
                   <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-                  <select value={form.category_id} onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))} className={`${inp} appearance-none pr-8`}>
-                    <option value="">Sem categoria</option>
+                  <select value={form.category_id} onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))} className={`${inp} appearance-none pr-8 ${!form.category_id ? 'border-red-200' : ''}`}>
+                    <option value="">Selecione a categoria</option>
                     {categories.map(c => <option key={c.id} value={c.id}>{c.name} (×{c.multiplier})</option>)}
                   </select>
                 </div>
+                {categories.length === 0 && <p className="text-xs text-orange-500 mt-1">Nenhuma categoria cadastrada. Cadastre em <strong>Categorias</strong> primeiro.</p>}
               </div>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={form.active} onChange={e => setForm(f => ({ ...f, active: e.target.checked }))} className="w-4 h-4 rounded" />

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Search, FileText, ChevronDown, X, CheckCircle, Clock, DollarSign, XCircle, Edit2, User, CreditCard, ChevronRight, AlertTriangle } from 'lucide-react';
-import { Proposal, ProposalStatus, FinancialTable, Bank, Convenio } from '../types';
+import { Proposal, ProposalStatus, FinancialTable, Bank, Convenio, Product } from '../types';
 
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
@@ -15,7 +15,7 @@ const STATUS_CONFIG: Record<ProposalStatus, { color: string; icon: React.ReactNo
 
 const EMPTY_FORM = {
   client_name: '', client_cpf: '', client_phone: '',
-  proposal_number: '', value: '', product: '',
+  proposal_number: '', value: '', product_id: '',
   convenio_id: '', bank_id: '', table_id: '',
 };
 
@@ -65,6 +65,7 @@ export function Proposals() {
 
   // Cascade data
   const [convenios, setConvenios] = useState<Convenio[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [banks, setBanks] = useState<Bank[]>([]);
   const [tables, setTables] = useState<FinancialTable[]>([]);
   const [loadingBanks, setLoadingBanks] = useState(false);
@@ -74,12 +75,14 @@ export function Proposals() {
 
   async function load() {
     setLoading(true);
-    const [pr, cv] = await Promise.all([
+    const [pr, cv, pd] = await Promise.all([
       API('/api/proposals').then(r => r.json()),
       API('/api/convenios').then(r => r.json()),
+      API('/api/products').then(r => r.json()),
     ]);
     setProposals(Array.isArray(pr) ? pr : []);
     setConvenios(Array.isArray(cv) ? cv : []);
+    setProducts(Array.isArray(pd) ? pd : []);
     setLoading(false);
   }
 
@@ -137,7 +140,7 @@ export function Proposals() {
   function openEdit(p: Proposal) {
     setForm({
       client_name: p.client_name, client_cpf: p.client_cpf, client_phone: p.client_phone,
-      proposal_number: p.proposal_number, value: String(p.value), product: p.product,
+      proposal_number: p.proposal_number, value: String(p.value), product_id: p.product_id || '',
       convenio_id: p.convenio_id || '', bank_id: p.bank_id || '', table_id: p.table_id || '',
     });
     setEditId(p.id);
@@ -158,7 +161,7 @@ export function Proposals() {
       if (!form.proposal_number.trim()) e.proposal_number = 'Número obrigatório';
       if (dupAlert) e.proposal_number = dupAlert;
       if (!form.value || parseFloat(form.value) <= 0) e.value = 'Valor deve ser maior que zero';
-      if (!form.product.trim()) e.product = 'Produto obrigatório';
+      if (!form.product_id) e.product_id = 'Selecione o produto';
     }
     if (s === 2) {
       if (!form.convenio_id) e.convenio_id = 'Selecione o convênio';
@@ -184,6 +187,7 @@ export function Proposals() {
     const body = {
       ...form,
       value: parseFloat(form.value),
+      product_id: form.product_id || null,
       table_id: form.table_id || null,
       bank_id: form.bank_id || null,
       convenio_id: form.convenio_id || null,
@@ -292,7 +296,7 @@ export function Proposals() {
                       <p className="text-xs text-gray-400 truncate max-w-[200px]">{p.table_name || '—'}</p>
                     </td>
                     <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">{formatCurrency(Number(p.value))}</td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{p.product}</td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{p.product_name || p.product}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${STATUS_CONFIG[p.status]?.color}`}>
                         {STATUS_CONFIG[p.status]?.icon} {p.status}
@@ -390,8 +394,14 @@ export function Proposals() {
                   <Field label="Valor liberado (R$)" error={errors.value}>
                     <input type="number" step="0.01" min="0.01" value={form.value} onChange={e => setForm(f => ({ ...f, value: e.target.value }))} className={inp} placeholder="0,00" inputMode="decimal" />
                   </Field>
-                  <Field label="Produto" error={errors.product}>
-                    <input value={form.product} onChange={e => setForm(f => ({ ...f, product: e.target.value }))} className={inp} placeholder="Ex: INSS, FGTS, CLT..." />
+                  <Field label="Produto" error={errors.product_id}>
+                    <div className="relative">
+                      <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                      <select value={form.product_id} onChange={e => setForm(f => ({ ...f, product_id: e.target.value }))} className={`${inp} appearance-none pr-8`}>
+                        <option value="">{products.length === 0 ? 'Nenhum produto cadastrado' : 'Selecione o produto'}</option>
+                        {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                      </select>
+                    </div>
                   </Field>
                 </>
               )}

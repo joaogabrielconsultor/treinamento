@@ -13,6 +13,7 @@ import { AdminFinancialTables } from './components/admin/AdminFinancialTables';
 import { AdminCategories } from './components/admin/AdminCategories';
 import { AdminBanks } from './components/admin/AdminBanks';
 import { AdminConvenios } from './components/admin/AdminConvenios';
+import { AdminProducts } from './components/admin/AdminProducts';
 import { AdminProposals } from './components/admin/AdminProposals';
 import { AdminReports } from './components/admin/AdminReports';
 import { LoginBancos } from './components/LoginBancos';
@@ -165,6 +166,7 @@ function AppInner() {
         {currentView === 'admin-categories'       && isAdmin && <AdminCategories />}
         {currentView === 'admin-banks'            && isAdmin && <AdminBanks />}
         {currentView === 'admin-convenios'        && isAdmin && <AdminConvenios />}
+        {currentView === 'admin-products'         && isAdmin && <AdminProducts />}
         {currentView === 'admin-proposals'        && isAdmin && <AdminProposals />}
         {currentView === 'admin-reports'          && isAdmin && <AdminReports />}
         {currentView === 'login-bancos' && <LoginBancos isAdmin={isAdmin} />}
