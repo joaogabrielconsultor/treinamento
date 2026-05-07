@@ -410,6 +410,66 @@ app.delete('/api/login-bancos/:id', auth, adminOnly, async (req, res) => {
   res.json({ ok: true });
 });
 
+// ─── BANCOS ───────────────────────────────────────────────────────────────────
+app.get('/api/banks', auth, async (req, res) => {
+  const { convenio_id } = req.query;
+  if (convenio_id) {
+    // Retorna apenas bancos que têm tabelas ativas nesse convênio
+    const { rows } = await pool.query(`
+      SELECT DISTINCT b.id, b.name, b.created_at
+      FROM banks b
+      JOIN financial_tables ft ON ft.bank_id = b.id
+      WHERE ft.convenio_id = $1 AND ft.active = true
+      ORDER BY b.name ASC
+    `, [convenio_id]);
+    return res.json(rows);
+  }
+  const { rows } = await pool.query('SELECT * FROM banks ORDER BY name ASC');
+  res.json(rows);
+});
+
+app.post('/api/banks', auth, adminOnly, async (req, res) => {
+  const { name } = req.body;
+  if (!name) return res.status(400).json({ error: 'Nome obrigatório' });
+  const { rows } = await pool.query('INSERT INTO banks (name) VALUES ($1) RETURNING *', [name]);
+  res.json(rows[0]);
+});
+
+app.put('/api/banks/:id', auth, adminOnly, async (req, res) => {
+  const { name } = req.body;
+  const { rows } = await pool.query('UPDATE banks SET name=$1 WHERE id=$2 RETURNING *', [name, req.params.id]);
+  res.json(rows[0]);
+});
+
+app.delete('/api/banks/:id', auth, adminOnly, async (req, res) => {
+  await pool.query('DELETE FROM banks WHERE id=$1', [req.params.id]);
+  res.json({ ok: true });
+});
+
+// ─── CONVÊNIOS ────────────────────────────────────────────────────────────────
+app.get('/api/convenios', auth, async (req, res) => {
+  const { rows } = await pool.query('SELECT * FROM convenios ORDER BY name ASC');
+  res.json(rows);
+});
+
+app.post('/api/convenios', auth, adminOnly, async (req, res) => {
+  const { name } = req.body;
+  if (!name) return res.status(400).json({ error: 'Nome obrigatório' });
+  const { rows } = await pool.query('INSERT INTO convenios (name) VALUES ($1) RETURNING *', [name]);
+  res.json(rows[0]);
+});
+
+app.put('/api/convenios/:id', auth, adminOnly, async (req, res) => {
+  const { name } = req.body;
+  const { rows } = await pool.query('UPDATE convenios SET name=$1 WHERE id=$2 RETURNING *', [name, req.params.id]);
+  res.json(rows[0]);
+});
+
+app.delete('/api/convenios/:id', auth, adminOnly, async (req, res) => {
+  await pool.query('DELETE FROM convenios WHERE id=$1', [req.params.id]);
+  res.json({ ok: true });
+});
+
 // ─── CATEGORIAS ───────────────────────────────────────────────────────────────
 app.get('/api/categories', auth, async (req, res) => {
   const { rows } = await pool.query('SELECT * FROM table_categories ORDER BY name ASC');
@@ -442,34 +502,53 @@ app.delete('/api/categories/:id', auth, adminOnly, async (req, res) => {
 
 // ─── TABELAS FINANCEIRAS ───────────────────────────────────────────────────────
 app.get('/api/financial-tables', auth, async (req, res) => {
+  const { convenio_id, bank_id } = req.query;
+  const conditions = [];
+  const values = [];
+  let i = 1;
+  if (convenio_id) { conditions.push(`ft.convenio_id = $${i++}`); values.push(convenio_id); }
+  if (bank_id)     { conditions.push(`ft.bank_id = $${i++}`);     values.push(bank_id); }
+  // Corretores só veem tabelas ativas
+  if (req.user.role !== 'admin' || convenio_id || bank_id) {
+    conditions.push(`ft.active = true`);
+  }
+  const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
   const { rows } = await pool.query(`
-    SELECT ft.*, tc.name as category_name, tc.multiplier as category_multiplier
+    SELECT ft.*,
+           tc.name as category_name, tc.multiplier as category_multiplier,
+           b.name as bank_name, cv.name as convenio_name
     FROM financial_tables ft
     LEFT JOIN table_categories tc ON tc.id = ft.category_id
+    LEFT JOIN banks b ON b.id = ft.bank_id
+    LEFT JOIN convenios cv ON cv.id = ft.convenio_id
+    ${where}
     ORDER BY ft.name ASC
-  `);
+  `, values);
   res.json(rows);
 });
 
 app.post('/api/financial-tables', auth, adminOnly, async (req, res) => {
-  const { name, bank, category_id, active } = req.body;
+  const { name, bank_id, convenio_id, category_id, active } = req.body;
   if (!name) return res.status(400).json({ error: 'Nome obrigatório' });
   const { rows } = await pool.query(
-    'INSERT INTO financial_tables (name, bank, category_id, active) VALUES ($1,$2,$3,$4) RETURNING *',
-    [name, bank || '', category_id || null, active !== false]
+    'INSERT INTO financial_tables (name, bank_id, convenio_id, category_id, active) VALUES ($1,$2,$3,$4,$5) RETURNING *',
+    [name, bank_id || null, convenio_id || null, category_id || null, active !== false]
   );
   res.json(rows[0]);
 });
 
 app.put('/api/financial-tables/:id', auth, adminOnly, async (req, res) => {
-  const { name, bank, category_id, active } = req.body;
-  const { rows } = await pool.query(
-    `UPDATE financial_tables SET
-      name=COALESCE($1,name), bank=COALESCE($2,bank),
-      category_id=COALESCE($3,category_id), active=COALESCE($4,active)
-     WHERE id=$5 RETURNING *`,
-    [name, bank, category_id, active, req.params.id]
-  );
+  const { name, bank_id, convenio_id, category_id, active } = req.body;
+  const fields = { name, bank_id, convenio_id, category_id, active };
+  const updates = [];
+  const values = [];
+  let i = 1;
+  for (const [k, v] of Object.entries(fields)) {
+    if (v !== undefined) { updates.push(`${k} = $${i++}`); values.push(v === '' ? null : v); }
+  }
+  if (!updates.length) return res.status(400).json({ error: 'Nenhum campo' });
+  values.push(req.params.id);
+  const { rows } = await pool.query(`UPDATE financial_tables SET ${updates.join(', ')} WHERE id=$${i} RETURNING *`, values);
   res.json(rows[0]);
 });
 
@@ -581,6 +660,17 @@ async function updateStreak(client, userId) {
   );
 }
 
+// ─── CHECK NÚMERO DUPLICADO ───────────────────────────────────────────────────
+app.get('/api/proposals/check-number', auth, async (req, res) => {
+  const { proposal_number, exclude_id } = req.query;
+  if (!proposal_number) return res.json({ exists: false });
+  const { rows } = await pool.query(
+    `SELECT id, client_name FROM proposals WHERE proposal_number = $1 ${exclude_id ? 'AND id != $2' : ''}`,
+    exclude_id ? [proposal_number, exclude_id] : [proposal_number]
+  );
+  res.json({ exists: rows.length > 0, client_name: rows[0]?.client_name || null });
+});
+
 // ─── PROPOSTAS ────────────────────────────────────────────────────────────────
 app.get('/api/proposals', auth, async (req, res) => {
   const isAdmin = req.user.role === 'admin';
@@ -612,11 +702,21 @@ app.get('/api/proposals', auth, async (req, res) => {
 });
 
 app.post('/api/proposals', auth, async (req, res) => {
-  const { proposal_number, value, product, bank, convenio, table_id, client_name, client_cpf, client_phone, status } = req.body;
+  const { proposal_number, value, product, bank, convenio, table_id, bank_id, convenio_id, client_name, client_cpf, client_phone } = req.body;
+  // Campos obrigatórios
+  if (!proposal_number || !value || !product || !client_name || !client_cpf || !client_phone) {
+    return res.status(400).json({ error: 'Preencha todos os campos obrigatórios' });
+  }
+  // Verifica número duplicado
+  const { rows: dup } = await pool.query('SELECT id, client_name FROM proposals WHERE proposal_number = $1', [proposal_number]);
+  if (dup.length > 0) {
+    return res.status(409).json({ error: `Número ${proposal_number} já cadastrado para o cliente "${dup[0].client_name}"` });
+  }
+  // Corretor sempre cria como Digitada
   const { rows } = await pool.query(
-    `INSERT INTO proposals (user_id, proposal_number, value, product, bank, convenio, table_id, client_name, client_cpf, client_phone, status)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
-    [req.user.id, proposal_number||'', value||0, product||'', bank||'', convenio||'', table_id||null, client_name||'', client_cpf||'', client_phone||'', status||'Digitada']
+    `INSERT INTO proposals (user_id, proposal_number, value, product, bank, convenio, table_id, bank_id, convenio_id, client_name, client_cpf, client_phone, status)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'Digitada') RETURNING *`,
+    [req.user.id, proposal_number, value, product, bank||'', convenio||'', table_id||null, bank_id||null, convenio_id||null, client_name, client_cpf, client_phone]
   );
   res.json(rows[0]);
 });
@@ -627,7 +727,11 @@ app.put('/api/proposals/:id', auth, async (req, res) => {
   if (!existing) return res.status(404).json({ error: 'Proposta não encontrada' });
   if (!isAdmin && existing.user_id !== req.user.id) return res.status(403).json({ error: 'Acesso negado' });
 
-  const fields = ['proposal_number','value','product','bank','convenio','table_id','client_name','client_cpf','client_phone'];
+  // Corretor não pode alterar status em nenhuma hipótese
+  if (!isAdmin && req.body.status !== undefined) {
+    return res.status(403).json({ error: 'Apenas o administrador pode alterar o status da proposta' });
+  }
+  const fields = ['proposal_number','value','product','bank','convenio','table_id','bank_id','convenio_id','client_name','client_cpf','client_phone'];
   if (isAdmin) fields.push('status');
   const updates = ['updated_at = now()'];
   const values = [];

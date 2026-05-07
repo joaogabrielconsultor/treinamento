@@ -1,4 +1,4 @@
-import { LayoutDashboard, Library, LogOut, ChevronRight, Users, GraduationCap, Shield, Building2, Moon, Sun, Palette, FileText, Trophy, BarChart2, Table2, Tag, ClipboardList, FileBarChart } from 'lucide-react';
+import { LayoutDashboard, Library, LogOut, ChevronRight, Users, GraduationCap, Shield, Building2, Moon, Sun, Palette, FileText, Trophy, BarChart2, Table2, Tag, ClipboardList, FileBarChart, Handshake } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { ViewType } from '../types';
 import { LogoComponent } from './LogoComponent';
@@ -24,6 +24,8 @@ const navItems = [
 const adminItems = [
   { view: 'admin-users'            as ViewType, icon: Users,         label: 'Usuários' },
   { view: 'admin-proposals'        as ViewType, icon: ClipboardList, label: 'Propostas' },
+  { view: 'admin-convenios'        as ViewType, icon: Handshake,     label: 'Convênios' },
+  { view: 'admin-banks'            as ViewType, icon: Building2,     label: 'Bancos' },
   { view: 'admin-financial-tables' as ViewType, icon: Table2,        label: 'Tabelas Financeiras' },
   { view: 'admin-categories'       as ViewType, icon: Tag,           label: 'Categorias' },
   { view: 'admin-reports'          as ViewType, icon: FileBarChart,  label: 'Relatórios' },

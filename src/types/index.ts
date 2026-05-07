@@ -74,6 +74,18 @@ export interface LoginBanco {
   created_at: string;
 }
 
+export interface Bank {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
+export interface Convenio {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
 export interface TableCategory {
   id: string;
   name: string;
@@ -85,11 +97,15 @@ export interface FinancialTable {
   id: string;
   name: string;
   bank: string;
+  bank_id: string | null;
+  convenio_id: string | null;
   category_id: string | null;
   active: boolean;
   created_at: string;
   category_name?: string;
   category_multiplier?: number;
+  bank_name?: string;
+  convenio_name?: string;
 }
 
 export interface ScoringRule {
@@ -110,7 +126,9 @@ export interface Proposal {
   value: number;
   product: string;
   bank: string;
+  bank_id: string | null;
   convenio: string;
+  convenio_id: string | null;
   table_id: string | null;
   client_name: string;
   client_cpf: string;
@@ -123,6 +141,8 @@ export interface Proposal {
   user_email?: string;
   table_name?: string;
   category_name?: string;
+  bank_name?: string;
+  convenio_name?: string;
 }
 
 export interface RankingEntry {
@@ -204,6 +224,8 @@ export type ViewType =
   | 'admin-proposals'
   | 'admin-financial-tables'
   | 'admin-categories'
+  | 'admin-banks'
+  | 'admin-convenios'
   | 'admin-reports';
 
 export type AuthMode = 'login';
