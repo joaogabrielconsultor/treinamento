@@ -179,6 +179,8 @@ export interface Proposal {
   bank_name?: string;
   convenio_name?: string;
   product_name?: string;
+  comissao_corretor_pct?: number;
+  comissao_valor?: number;
 }
 
 export interface RankingEntry {
@@ -241,6 +243,7 @@ export interface ProductionStats {
   top_table: { name: string; count: number } | null;
   my_points: number;
   my_position: number | null;
+  my_commission_total?: number;
 }
 
 export type ViewType =

@@ -217,6 +217,7 @@ export function Proposals() {
 
   const totalPaid = proposals.filter(p => p.status === 'Paga').reduce((a, b) => a + Number(b.value), 0);
   const totalPoints = proposals.reduce((a, b) => a + (b.points_earned || 0), 0);
+  const totalComissao = proposals.filter(p => p.status === 'Paga').reduce((a, b) => a + Number(b.comissao_valor || 0), 0);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -231,11 +232,12 @@ export function Proposals() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         {[
           { label: 'Total', value: proposals.length, color: 'text-blue-600' },
           { label: 'Propostas pagas', value: proposals.filter(p => p.status === 'Paga').length, color: 'text-green-600' },
           { label: 'Volume pago', value: formatCurrency(totalPaid), color: 'text-brand' },
+          { label: 'Minha comissão', value: formatCurrency(totalComissao), color: 'text-emerald-600' },
           { label: 'Meus pontos', value: `${totalPoints} pts`, color: 'text-yellow-600' },
         ].map(c => (
           <div key={c.label} className="bg-white dark:bg-dk-card rounded-xl p-4 border border-gray-100 dark:border-dk-border shadow-sm">
@@ -277,7 +279,7 @@ export function Proposals() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 dark:border-dk-border">
-                  {['Proposta', 'Cliente', 'Convênio / Banco / Tabela', 'Valor', 'Produto', 'Status', 'Pontos', ''].map(h => (
+                  {['Proposta', 'Cliente', 'Convênio / Banco / Tabela', 'Valor', 'Produto', 'Status', 'Comissão', 'Pontos', ''].map(h => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
@@ -301,6 +303,14 @@ export function Proposals() {
                       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${STATUS_CONFIG[p.status]?.color}`}>
                         {STATUS_CONFIG[p.status]?.icon} {p.status}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {p.status === 'Paga' && Number(p.comissao_valor) > 0 ? (
+                        <div>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-semibold text-sm">{formatCurrency(Number(p.comissao_valor))}</span>
+                          <p className="text-xs text-gray-400">{Number(p.comissao_corretor_pct || 0).toFixed(2)}%</p>
+                        </div>
+                      ) : <span className="text-gray-300">—</span>}
                     </td>
                     <td className="px-4 py-3">
                       {p.points_earned > 0 ? <span className="text-yellow-600 font-bold">+{p.points_earned} pts</span> : <span className="text-gray-300">—</span>}

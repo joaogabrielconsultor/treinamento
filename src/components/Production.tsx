@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, CheckCircle, BarChart2, Star, Award, Target, Zap, Bell, BellOff } from 'lucide-react';
+import { DollarSign, TrendingUp, CheckCircle, BarChart2, Star, Award, Target, Zap, Bell, BellOff, Percent } from 'lucide-react';
 import { ProductionStats, Badge, UserStreak, MonthlyGoal, Notification } from '../types';
 
 const API = (p: string, opts?: RequestInit) =>
@@ -18,7 +18,7 @@ function StatCard({ label, value, sub, icon: Icon, color }: { label: string; val
           <p className={`text-2xl font-black mt-2 ${color}`}>{value}</p>
           {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
         </div>
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color === 'text-yellow-600' ? 'bg-yellow-50 dark:bg-yellow-900/20' : color === 'text-green-600' ? 'bg-green-50 dark:bg-green-900/20' : color === 'text-blue-600' ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-purple-50 dark:bg-purple-900/20'}`}>
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color === 'text-yellow-600' ? 'bg-yellow-50 dark:bg-yellow-900/20' : color === 'text-green-600' ? 'bg-green-50 dark:bg-green-900/20' : color === 'text-blue-600' ? 'bg-blue-50 dark:bg-blue-900/20' : color === 'text-emerald-600' ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-purple-50 dark:bg-purple-900/20'}`}>
           <Icon className={`w-5 h-5 ${color}`} />
         </div>
       </div>
@@ -104,13 +104,16 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
       </div>
 
       {/* Main stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className={`grid grid-cols-2 ${isAdmin ? 'lg:grid-cols-4' : 'lg:grid-cols-5'} gap-4 mb-6`}>
         <StatCard label="Produção Hoje" value={formatCurrency(stats.today.value)} sub={`${stats.today.count} propostas`} icon={DollarSign} color="text-green-600" />
         <StatCard label="Produção do Mês" value={formatCurrency(stats.month.value)} sub={`${stats.month.count} propostas pagas`} icon={TrendingUp} color="text-blue-600" />
         <StatCard label="Ticket Médio" value={formatCurrency(stats.avg_ticket)} icon={BarChart2} color="text-purple-600" />
         {isAdmin
           ? <StatCard label="Melhor Corretor" value={stats.best_broker?.full_name?.split(' ')[0] || '—'} sub={`${stats.best_broker?.points || 0} pontos`} icon={Award} color="text-yellow-600" />
-          : <StatCard label="Meus Pontos" value={`${stats.my_points} pts`} sub={`#${stats.my_position || '—'} no ranking`} icon={Star} color="text-yellow-600" />
+          : <>
+              <StatCard label="Minha Comissão" value={formatCurrency(stats.my_commission_total || 0)} sub="propostas pagas" icon={Percent} color="text-emerald-600" />
+              <StatCard label="Meus Pontos" value={`${stats.my_points} pts`} sub={`#${stats.my_position || '—'} no ranking`} icon={Star} color="text-yellow-600" />
+            </>
         }
       </div>
 
