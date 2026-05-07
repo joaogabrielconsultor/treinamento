@@ -52,7 +52,7 @@ export function AdminCategories() {
         </button>
       </div>
 
-      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800/40 rounded-xl p-4 mb-6 text-sm text-yellow-800 dark:text-yellow-300">
+      <div className="rounded-xl p-4 mb-6 text-sm" style={{ background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24' }}>
         <strong>Como funciona:</strong> Os pontos ganhos em uma proposta = <em>pontos da faixa × multiplicador da categoria</em>.
         Uma tabela com categoria "Alta comissão" (×2) e faixa de 60 pontos gera <strong>120 pontos</strong>.
       </div>
@@ -62,26 +62,30 @@ export function AdminCategories() {
       ) : (
         <div className="space-y-3">
           {categories.map(c => (
-            <div key={c.id} className="flex items-center gap-4 p-4 bg-white dark:bg-dk-card rounded-xl border border-gray-100 dark:border-dk-border shadow-sm">
+            <div key={c.id} className="flex items-center gap-4 p-4 rounded-xl" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)' }}>
               <div className="flex-1">
-                <p className="font-semibold text-gray-900 dark:text-white">{c.name}</p>
+                <p className="font-semibold text-sm" style={{ color: '#E2E8F0' }}>{c.name}</p>
               </div>
               <div className="flex items-center gap-2">
-                <div className="px-3 py-1 rounded-full text-sm font-bold" style={{ backgroundColor: '#dabb3920', color: '#dabb39' }}>
+                <div className="px-3 py-1 rounded-full text-sm font-bold num" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24' }}>
                   ×{c.multiplier}
                 </div>
                 <button onClick={() => { setForm({ name: c.name, multiplier: String(c.multiplier) }); setEditId(c.id); setShowForm(true); }}
-                  className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-dk-surface text-gray-400 hover:text-gray-600 transition-colors">
+                  className="p-1.5 rounded-lg transition-all" style={{ color: '#475569' }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#475569'; }}>
                   <Edit2 className="w-3.5 h-3.5" />
                 </button>
                 <button onClick={() => del(c.id)}
-                  className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors">
+                  className="p-1.5 rounded-lg transition-all" style={{ color: '#475569' }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#475569'; }}>
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
           ))}
-          {categories.length === 0 && <p className="text-center py-8 text-gray-400">Nenhuma categoria cadastrada</p>}
+          {categories.length === 0 && <p className="text-center py-8 text-sm" style={{ color: '#475569' }}>Nenhuma categoria cadastrada</p>}
         </div>
       )}
 
