@@ -4,6 +4,20 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      keyframes: {
+        'modal-in': {
+          '0%':   { opacity: '0', transform: 'translateY(12px) scale(0.97)' },
+          '100%': { opacity: '1', transform: 'translateY(0)   scale(1)'    },
+        },
+        'overlay-in': {
+          '0%':   { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+      },
+      animation: {
+        'modal-in':   'modal-in   0.22s cubic-bezier(0.16,1,0.3,1) both',
+        'overlay-in': 'overlay-in 0.18s ease-out both',
+      },
       colors: {
         brand: {
           DEFAULT: '#1e4033',

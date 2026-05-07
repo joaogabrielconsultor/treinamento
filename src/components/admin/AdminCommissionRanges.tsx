@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, X, Save, ChevronDown, Percent, Star, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, Edit2, Save, ChevronDown, Percent, Star, AlertTriangle } from 'lucide-react';
 import { CommissionRange, FinancialTable, TableCategory } from '../../types';
+import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
 
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
@@ -80,7 +81,6 @@ export function AdminCommissionRanges() {
     await API(url, { method: editId ? 'PUT' : 'POST', body: JSON.stringify(body) });
     setShowForm(false);
     setEditId(null);
-    // reload
     const d = await API(`/api/commission-ranges?table_id=${selectedTable}`).then(r => r.json());
     setRanges(Array.isArray(d) ? d : []);
     setSaving(false);
@@ -154,14 +154,12 @@ export function AdminCommissionRanges() {
                 <div key={r.id} className="bg-white dark:bg-dk-card rounded-2xl border border-gray-100 dark:border-dk-border shadow-sm p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {/* Value range */}
                       <div>
                         <p className="text-xs text-gray-400 mb-0.5">Faixa de valor</p>
                         <p className="font-semibold text-gray-900 dark:text-white text-sm">
                           {fmtBRL(Number(r.min_value))} {r.max_value ? `→ ${fmtBRL(Number(r.max_value))}` : 'ou mais'}
                         </p>
                       </div>
-                      {/* Commission */}
                       <div>
                         <p className="text-xs text-gray-400 mb-0.5">Comissão</p>
                         <p className="text-sm">
@@ -170,7 +168,6 @@ export function AdminCommissionRanges() {
                           <span className="text-green-600 font-semibold">Corretor: {r.comissao_corretor}%</span>
                         </p>
                       </div>
-                      {/* Prazo/Juros */}
                       <div>
                         <p className="text-xs text-gray-400 mb-0.5">Prazo / Juros</p>
                         <p className="text-sm text-gray-700 dark:text-gray-300">
@@ -178,7 +175,6 @@ export function AdminCommissionRanges() {
                           {r.juros_inicial != null && <><br />{r.juros_inicial}{r.juros_final ? ` → ${r.juros_final}` : ''}% a.m.</>}
                         </p>
                       </div>
-                      {/* Points */}
                       <div>
                         <p className="text-xs text-gray-400 mb-0.5">Pontuação</p>
                         <div className="flex items-center gap-1">
@@ -189,7 +185,6 @@ export function AdminCommissionRanges() {
                         {r.category_name && <p className="text-xs text-gray-400 mt-0.5">{r.category_name}</p>}
                       </div>
                     </div>
-                    {/* Meta info */}
                     <div className="text-right flex-shrink-0 space-y-1">
                       {r.tipo_proposta && <p className="text-xs bg-gray-100 dark:bg-dk-surface text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full">{r.tipo_proposta}</p>}
                       {r.parceiro && <p className="text-xs text-gray-400">{r.parceiro}</p>}
@@ -212,144 +207,139 @@ export function AdminCommissionRanges() {
       )}
 
       {/* Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-dk-card rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-dk-border sticky top-0 bg-white dark:bg-dk-card z-10">
-              <div>
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">{editId ? 'Editar Faixa' : 'Nova Faixa de Comissão'}</h2>
-                {selectedTableObj && <p className="text-xs text-gray-400 mt-0.5 truncate max-w-[400px]">{selectedTableObj.name}</p>}
-              </div>
-              <button onClick={() => setShowForm(false)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dk-surface"><X className="w-5 h-5 text-gray-500" /></button>
-            </div>
-
-            <form onSubmit={save} className="p-6 space-y-6">
-              {/* Section: Dados da proposta */}
-              <Section title="Dados da Proposta">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <FormField label="Tipo de proposta">
-                    <input value={form.tipo_proposta || ''} onChange={e => setForm(f => ({ ...f, tipo_proposta: e.target.value }))} className={inp} placeholder="Ex: Refinanciamento, Novo..." />
-                  </FormField>
-                  <FormField label="Parceiro">
-                    <input value={form.parceiro || ''} onChange={e => setForm(f => ({ ...f, parceiro: e.target.value }))} className={inp} placeholder="Ex: Correspondente X" />
-                  </FormField>
-                  <FormField label="Data de expiração">
-                    <input type="date" value={form.expires_at || ''} onChange={e => setForm(f => ({ ...f, expires_at: e.target.value || null }))} className={inp} />
-                  </FormField>
-                  <FormField label="Descrição do convênio" className="md:col-span-2">
-                    <input value={form.convenio_descricao || ''} onChange={e => setForm(f => ({ ...f, convenio_descricao: e.target.value }))} className={inp} />
-                  </FormField>
-                  <FormField label="Disponível para">
-                    <div className="relative">
-                      <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-                      <select value={form.disponivel_para || 'todos'} onChange={e => setForm(f => ({ ...f, disponivel_para: e.target.value }))} className={`${inp} appearance-none pr-8`}>
-                        <option value="todos">Todos</option>
-                        <option value="corretor">Apenas corretor</option>
-                        <option value="empresa">Apenas empresa</option>
-                      </select>
-                    </div>
-                  </FormField>
-                </div>
-              </Section>
-
-              {/* Section: Prazo e Juros */}
-              <Section title="Prazo e Juros / Coeficiente">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <FormField label="Prazo inicial (meses)">
-                    <input type="number" min="0" value={form.prazo_inicial ?? ''} onChange={e => setForm(f => ({ ...f, prazo_inicial: e.target.value ? parseInt(e.target.value) : undefined }))} className={inp} placeholder="12" />
-                  </FormField>
-                  <FormField label="Prazo final (meses)">
-                    <input type="number" min="0" value={form.prazo_final ?? ''} onChange={e => setForm(f => ({ ...f, prazo_final: e.target.value ? parseInt(e.target.value) : undefined }))} className={inp} placeholder="96" />
-                  </FormField>
-                  <FormField label="Juros inicial (% a.m.)">
-                    <input type="number" step="0.0001" min="0" value={form.juros_inicial ?? ''} onChange={e => setForm(f => ({ ...f, juros_inicial: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="1.80" />
-                  </FormField>
-                  <FormField label="Juros final (% a.m.)">
-                    <input type="number" step="0.0001" min="0" value={form.juros_final ?? ''} onChange={e => setForm(f => ({ ...f, juros_final: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="2.14" />
-                  </FormField>
-                  <FormField label="Coef. inicial">
-                    <input type="number" step="0.000001" min="0" value={form.coef_inicial ?? ''} onChange={e => setForm(f => ({ ...f, coef_inicial: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="0.018741" />
-                  </FormField>
-                  <FormField label="Coef. final">
-                    <input type="number" step="0.000001" min="0" value={form.coef_final ?? ''} onChange={e => setForm(f => ({ ...f, coef_final: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="0.021893" />
-                  </FormField>
-                </div>
-              </Section>
-
-              {/* Section: Comissão */}
-              <Section title="Comissão">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField label="Comissão Empresa (%)" required>
-                    <div className="relative">
-                      <Percent className="absolute right-3 top-2.5 w-4 h-4 text-blue-400 pointer-events-none" />
-                      <input type="number" step="0.01" min="0" max="100" value={form.comissao_empresa ?? ''} onChange={e => setForm(f => ({ ...f, comissao_empresa: parseFloat(e.target.value) || 0 }))} className={`${inp} pr-9 border-blue-200 focus:ring-blue-300/30`} placeholder="0.00" required />
-                    </div>
-                  </FormField>
-                  <FormField label="Comissão Corretor (%)" required>
-                    <div className="relative">
-                      <Percent className="absolute right-3 top-2.5 w-4 h-4 text-green-400 pointer-events-none" />
-                      <input type="number" step="0.01" min="0" max="100" value={form.comissao_corretor ?? ''} onChange={e => setForm(f => ({ ...f, comissao_corretor: parseFloat(e.target.value) || 0 }))} className={`${inp} pr-9 border-green-200 focus:ring-green-300/30`} placeholder="0.00" required />
-                    </div>
-                  </FormField>
-                </div>
-              </Section>
-
-              {/* Section: Ranking */}
-              <Section title="Pontuação no Ranking">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <FormField label="Valor mínimo (R$)" required>
-                    <input type="number" step="0.01" min="0" value={form.min_value ?? ''} onChange={e => setForm(f => ({ ...f, min_value: parseFloat(e.target.value) || 0 }))} className={inp} placeholder="1000" required />
-                  </FormField>
-                  <FormField label="Valor máximo (R$)">
-                    <input type="number" step="0.01" min="0" value={form.max_value ?? ''} onChange={e => setForm(f => ({ ...f, max_value: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="Sem limite" />
-                  </FormField>
-                  <FormField label="Pontuação base" required>
-                    <input type="number" min="0" value={form.base_points ?? ''} onChange={e => setForm(f => ({ ...f, base_points: parseInt(e.target.value) || 0 }))} className={inp} placeholder="60" required />
-                  </FormField>
-                  <FormField label="Multiplicador">
-                    <input type="number" step="0.01" min="0.1" value={form.multiplier ?? ''} onChange={e => setForm(f => ({ ...f, multiplier: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="Auto (da categoria)" />
-                  </FormField>
-                  <FormField label="Categoria" className="md:col-span-2">
-                    <div className="relative">
-                      <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-                      <select value={form.category_id || ''} onChange={e => setForm(f => ({ ...f, category_id: e.target.value || undefined }))} className={`${inp} appearance-none pr-8`}>
-                        <option value="">Sem categoria específica</option>
-                        {categories.map(c => <option key={c.id} value={c.id}>{c.name} (×{c.multiplier})</option>)}
-                      </select>
-                    </div>
-                  </FormField>
-                  {/* Preview */}
-                  <div className="md:col-span-2 rounded-xl p-3 flex items-center gap-3" style={{ backgroundColor: '#dabb3918', border: '1px solid #dabb3940' }}>
-                    <Star className="w-5 h-5 text-yellow-500 flex-shrink-0" />
-                    <div>
-                      <p className="text-xs text-gray-500">Pontos gerados ao liberar valor nesta faixa</p>
-                      <p className="text-lg font-black text-yellow-600">
-                        {preview} pontos
-                        <span className="text-xs font-normal text-gray-400 ml-2">
-                          ({form.base_points || 0} pts × {form.multiplier ?? (categories.find(c => c.id === form.category_id)?.multiplier || 1)})
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                {!form.base_points && (
-                  <div className="mt-2 flex items-center gap-2 text-xs text-orange-500">
-                    <AlertTriangle className="w-3 h-3" />
-                    Pontuação base = 0 significa que esta faixa não gera pontos no ranking.
-                  </div>
-                )}
-              </Section>
-
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-dk-border text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dk-surface transition-colors">Cancelar</button>
-                <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60 transition-all" style={{ backgroundColor: '#1e4033' }}>
-                  <Save className="w-4 h-4 inline mr-1" />{saving ? 'Salvando...' : editId ? 'Salvar alterações' : 'Criar faixa'}
-                </button>
-              </div>
-            </form>
+      <Modal
+        open={showForm}
+        onClose={() => setShowForm(false)}
+        title={editId ? 'Editar Faixa' : 'Nova Faixa de Comissão'}
+        subtitle={selectedTableObj?.name}
+        size="2xl"
+        footer={
+          <div className="flex gap-3">
+            <button type="button" onClick={() => setShowForm(false)} className={btnCancel}>Cancelar</button>
+            <button type="submit" form="modal-commission" disabled={saving} className={btnPrimary} style={primaryBg}>
+              <Save className="w-4 h-4 inline mr-1" />{saving ? 'Salvando...' : editId ? 'Salvar alterações' : 'Criar faixa'}
+            </button>
           </div>
-        </div>
-      )}
+        }
+      >
+        <form id="modal-commission" onSubmit={save} className="space-y-6">
+          {/* Section: Dados da proposta */}
+          <Section title="Dados da Proposta">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <FormField label="Tipo de proposta">
+                <input value={form.tipo_proposta || ''} onChange={e => setForm(f => ({ ...f, tipo_proposta: e.target.value }))} className={inp} placeholder="Ex: Refinanciamento, Novo..." />
+              </FormField>
+              <FormField label="Parceiro">
+                <input value={form.parceiro || ''} onChange={e => setForm(f => ({ ...f, parceiro: e.target.value }))} className={inp} placeholder="Ex: Correspondente X" />
+              </FormField>
+              <FormField label="Data de expiração">
+                <input type="date" value={form.expires_at || ''} onChange={e => setForm(f => ({ ...f, expires_at: e.target.value || null }))} className={inp} />
+              </FormField>
+              <FormField label="Descrição do convênio" className="md:col-span-2">
+                <input value={form.convenio_descricao || ''} onChange={e => setForm(f => ({ ...f, convenio_descricao: e.target.value }))} className={inp} />
+              </FormField>
+              <FormField label="Disponível para">
+                <div className="relative">
+                  <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <select value={form.disponivel_para || 'todos'} onChange={e => setForm(f => ({ ...f, disponivel_para: e.target.value }))} className={`${inp} appearance-none pr-8`}>
+                    <option value="todos">Todos</option>
+                    <option value="corretor">Apenas corretor</option>
+                    <option value="empresa">Apenas empresa</option>
+                  </select>
+                </div>
+              </FormField>
+            </div>
+          </Section>
+
+          {/* Section: Prazo e Juros */}
+          <Section title="Prazo e Juros / Coeficiente">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <FormField label="Prazo inicial (meses)">
+                <input type="number" min="0" value={form.prazo_inicial ?? ''} onChange={e => setForm(f => ({ ...f, prazo_inicial: e.target.value ? parseInt(e.target.value) : undefined }))} className={inp} placeholder="12" />
+              </FormField>
+              <FormField label="Prazo final (meses)">
+                <input type="number" min="0" value={form.prazo_final ?? ''} onChange={e => setForm(f => ({ ...f, prazo_final: e.target.value ? parseInt(e.target.value) : undefined }))} className={inp} placeholder="96" />
+              </FormField>
+              <FormField label="Juros inicial (% a.m.)">
+                <input type="number" step="0.0001" min="0" value={form.juros_inicial ?? ''} onChange={e => setForm(f => ({ ...f, juros_inicial: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="1.80" />
+              </FormField>
+              <FormField label="Juros final (% a.m.)">
+                <input type="number" step="0.0001" min="0" value={form.juros_final ?? ''} onChange={e => setForm(f => ({ ...f, juros_final: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="2.14" />
+              </FormField>
+              <FormField label="Coef. inicial">
+                <input type="number" step="0.000001" min="0" value={form.coef_inicial ?? ''} onChange={e => setForm(f => ({ ...f, coef_inicial: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="0.018741" />
+              </FormField>
+              <FormField label="Coef. final">
+                <input type="number" step="0.000001" min="0" value={form.coef_final ?? ''} onChange={e => setForm(f => ({ ...f, coef_final: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="0.021893" />
+              </FormField>
+            </div>
+          </Section>
+
+          {/* Section: Comissão */}
+          <Section title="Comissão">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField label="Comissão Empresa (%)" required>
+                <div className="relative">
+                  <Percent className="absolute right-3 top-2.5 w-4 h-4 text-blue-400 pointer-events-none" />
+                  <input type="number" step="0.01" min="0" max="100" value={form.comissao_empresa ?? ''} onChange={e => setForm(f => ({ ...f, comissao_empresa: parseFloat(e.target.value) || 0 }))} className={`${inp} pr-9 border-blue-200 focus:ring-blue-300/30`} placeholder="0.00" required />
+                </div>
+              </FormField>
+              <FormField label="Comissão Corretor (%)" required>
+                <div className="relative">
+                  <Percent className="absolute right-3 top-2.5 w-4 h-4 text-green-400 pointer-events-none" />
+                  <input type="number" step="0.01" min="0" max="100" value={form.comissao_corretor ?? ''} onChange={e => setForm(f => ({ ...f, comissao_corretor: parseFloat(e.target.value) || 0 }))} className={`${inp} pr-9 border-green-200 focus:ring-green-300/30`} placeholder="0.00" required />
+                </div>
+              </FormField>
+            </div>
+          </Section>
+
+          {/* Section: Ranking */}
+          <Section title="Pontuação no Ranking">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <FormField label="Valor mínimo (R$)" required>
+                <input type="number" step="0.01" min="0" value={form.min_value ?? ''} onChange={e => setForm(f => ({ ...f, min_value: parseFloat(e.target.value) || 0 }))} className={inp} placeholder="1000" required />
+              </FormField>
+              <FormField label="Valor máximo (R$)">
+                <input type="number" step="0.01" min="0" value={form.max_value ?? ''} onChange={e => setForm(f => ({ ...f, max_value: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="Sem limite" />
+              </FormField>
+              <FormField label="Pontuação base" required>
+                <input type="number" min="0" value={form.base_points ?? ''} onChange={e => setForm(f => ({ ...f, base_points: parseInt(e.target.value) || 0 }))} className={inp} placeholder="60" required />
+              </FormField>
+              <FormField label="Multiplicador">
+                <input type="number" step="0.01" min="0.1" value={form.multiplier ?? ''} onChange={e => setForm(f => ({ ...f, multiplier: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="Auto (da categoria)" />
+              </FormField>
+              <FormField label="Categoria" className="md:col-span-2">
+                <div className="relative">
+                  <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <select value={form.category_id || ''} onChange={e => setForm(f => ({ ...f, category_id: e.target.value || undefined }))} className={`${inp} appearance-none pr-8`}>
+                    <option value="">Sem categoria específica</option>
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.name} (×{c.multiplier})</option>)}
+                  </select>
+                </div>
+              </FormField>
+              {/* Preview */}
+              <div className="md:col-span-2 rounded-xl p-3 flex items-center gap-3" style={{ backgroundColor: '#dabb3918', border: '1px solid #dabb3940' }}>
+                <Star className="w-5 h-5 text-yellow-500 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-gray-500">Pontos gerados ao liberar valor nesta faixa</p>
+                  <p className="text-lg font-black text-yellow-600">
+                    {preview} pontos
+                    <span className="text-xs font-normal text-gray-400 ml-2">
+                      ({form.base_points || 0} pts × {form.multiplier ?? (categories.find(c => c.id === form.category_id)?.multiplier || 1)})
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+            {!form.base_points && (
+              <div className="mt-2 flex items-center gap-2 text-xs text-orange-500">
+                <AlertTriangle className="w-3 h-3" />
+                Pontuação base = 0 significa que esta faixa não gera pontos no ranking.
+              </div>
+            )}
+          </Section>
+        </form>
+      </Modal>
     </div>
   );
 }

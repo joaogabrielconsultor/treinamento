@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Search, ChevronDown, FileText, CheckCircle, Clock, DollarSign, XCircle, Edit2, Trash2, X, Save } from 'lucide-react';
+import { Search, ChevronDown, FileText, CheckCircle, Clock, DollarSign, XCircle, Edit2, Trash2, Save } from 'lucide-react';
 import { Proposal, ProposalStatus, FinancialTable } from '../../types';
+import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
 
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
@@ -164,42 +165,38 @@ export function AdminProposals() {
         </div>
       )}
 
-      {/* Edit status modal */}
-      {editProposal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-dk-card rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-dk-border">
-              <div>
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Alterar Status</h2>
-                <p className="text-xs text-gray-500 mt-0.5">Proposta #{editProposal.proposal_number} — {editProposal.client_name}</p>
-              </div>
-              <button onClick={() => setEditProposal(null)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dk-surface"><X className="w-5 h-5 text-gray-500" /></button>
+      <Modal
+        open={!!editProposal}
+        onClose={() => setEditProposal(null)}
+        title="Alterar Status"
+        subtitle={editProposal ? `Proposta #${editProposal.proposal_number} — ${editProposal.client_name}` : undefined}
+        size="md"
+        footer={
+          <div className="flex gap-3">
+            <button type="button" onClick={() => setEditProposal(null)} className={btnCancel}>Cancelar</button>
+            <button onClick={updateStatus} disabled={saving} className={btnPrimary} style={primaryBg}>
+              <Save className="w-4 h-4 inline mr-1" />{saving ? 'Salvando...' : 'Salvar'}
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          {editStatus === 'Paga' && editProposal?.status !== 'Paga' && (
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/40 rounded-xl p-3 text-sm text-green-700 dark:text-green-300">
+              ✅ Ao marcar como <strong>Paga</strong>, os pontos serão calculados e atribuídos automaticamente ao corretor.
             </div>
-            <div className="p-6 space-y-4">
-              {editStatus === 'Paga' && editProposal.status !== 'Paga' && (
-                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/40 rounded-xl p-3 text-sm text-green-700 dark:text-green-300">
-                  ✅ Ao marcar como <strong>Paga</strong>, os pontos serão calculados e atribuídos automaticamente ao corretor.
-                </div>
-              )}
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Novo Status</label>
-                <div className="relative">
-                  <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-                  <select value={editStatus} onChange={e => setEditStatus(e.target.value as ProposalStatus)} className={`${inp} appearance-none pr-8`}>
-                    {(Object.keys(STATUS_CONFIG) as ProposalStatus[]).map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <button type="button" onClick={() => setEditProposal(null)} className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-dk-border text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dk-surface transition-colors">Cancelar</button>
-                <button onClick={updateStatus} disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60" style={{ backgroundColor: '#1e4033' }}>
-                  <Save className="w-4 h-4 inline mr-1" />{saving ? 'Salvando...' : 'Salvar'}
-                </button>
-              </div>
+          )}
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Novo Status</label>
+            <div className="relative">
+              <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+              <select value={editStatus} onChange={e => setEditStatus(e.target.value as ProposalStatus)} className={`${inp} appearance-none pr-8`}>
+                {(Object.keys(STATUS_CONFIG) as ProposalStatus[]).map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
             </div>
           </div>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

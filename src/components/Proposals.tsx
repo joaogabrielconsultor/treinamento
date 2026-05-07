@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, FileText, ChevronDown, X, CheckCircle, Clock, DollarSign, XCircle, Edit2, User, CreditCard, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Plus, Search, FileText, ChevronDown, CheckCircle, Clock, DollarSign, XCircle, Edit2, User, CreditCard, ChevronRight, AlertTriangle } from 'lucide-react';
 import { Proposal, ProposalStatus, FinancialTable, Bank, Convenio, Product } from '../types';
+import { Modal } from './ui/Modal';
 
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
@@ -331,151 +332,148 @@ export function Proposals() {
       )}
 
       {/* Multi-step modal */}
-      {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-dk-card rounded-2xl shadow-2xl w-full max-w-xl">
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 dark:border-dk-border">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">{editId ? 'Editar Proposta' : 'Nova Proposta'}</h2>
-              <button onClick={() => setShowForm(false)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dk-surface"><X className="w-5 h-5 text-gray-500" /></button>
-            </div>
-
-            {/* Step indicator */}
-            <div className="flex items-center px-6 pt-4 pb-2">
-              {STEPS.map((s, i) => {
-                const Icon = s.icon;
-                const done = i < step;
-                const active = i === step;
-                return (
-                  <div key={i} className="flex items-center flex-1">
-                    <div className="flex flex-col items-center">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${done ? 'bg-brand text-white' : active ? 'text-white' : 'bg-gray-100 dark:bg-dk-surface text-gray-400'}`}
-                        style={active ? { backgroundColor: '#1e4033' } : done ? { backgroundColor: '#1e4033' } : {}}>
-                        {done ? <CheckCircle className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
-                      </div>
-                      <p className={`text-[10px] mt-1 font-medium ${active ? 'text-brand' : done ? 'text-brand' : 'text-gray-400'}`} style={{ color: active || done ? '#1e4033' : undefined }}>
-                        {s.label}
-                      </p>
-                    </div>
-                    {i < STEPS.length - 1 && (
-                      <div className={`flex-1 h-0.5 mx-2 mb-4 ${done ? 'bg-brand' : 'bg-gray-200 dark:bg-dk-border'}`} style={done ? { backgroundColor: '#1e4033' } : {}} />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Step content */}
-            <div className="px-6 py-4 space-y-4 min-h-[220px]">
-              {/* Step 0: Cliente */}
-              {step === 0 && (
-                <>
-                  <Field label="Nome completo do cliente" error={errors.client_name}>
-                    <input value={form.client_name} onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))} className={inp} placeholder="João da Silva" autoFocus />
-                  </Field>
-                  <Field label="CPF do cliente" error={errors.client_cpf}>
-                    <input value={form.client_cpf} onChange={e => setForm(f => ({ ...f, client_cpf: formatCPF(e.target.value) }))} className={inp} placeholder="000.000.000-00" inputMode="numeric" />
-                  </Field>
-                  <Field label="Telefone do cliente" error={errors.client_phone}>
-                    <input value={form.client_phone} onChange={e => setForm(f => ({ ...f, client_phone: formatPhone(e.target.value) }))} className={inp} placeholder="(00) 00000-0000" inputMode="tel" />
-                  </Field>
-                </>
-              )}
-
-              {/* Step 1: Operação */}
-              {step === 1 && (
-                <>
-                  <Field label="Número da proposta" error={errors.proposal_number}>
-                    <div className="relative">
-                      <input value={form.proposal_number} onChange={e => { setForm(f => ({ ...f, proposal_number: e.target.value })); setErrors(er => ({ ...er, proposal_number: '' })); }}
-                        className={`${inp} ${dupAlert ? 'border-red-400 focus:ring-red-300' : ''} ${form.proposal_number && !dupAlert && !checkingDup ? 'border-green-400' : ''}`}
-                        placeholder="Ex: 123456" autoFocus />
-                      {checkingDup && <div className="absolute right-3 top-2.5 w-4 h-4 border-2 border-brand border-t-transparent rounded-full animate-spin" />}
-                    </div>
-                    {dupAlert && (
-                      <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                        <AlertTriangle className="w-3 h-3" /> {dupAlert}
-                      </p>
-                    )}
-                    {form.proposal_number && !dupAlert && !checkingDup && (
-                      <p className="text-xs text-green-600 mt-1 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Número disponível</p>
-                    )}
-                  </Field>
-                  <Field label="Valor liberado (R$)" error={errors.value}>
-                    <input type="number" step="0.01" min="0.01" value={form.value} onChange={e => setForm(f => ({ ...f, value: e.target.value }))} className={inp} placeholder="0,00" inputMode="decimal" />
-                  </Field>
-                  <Field label="Produto" error={errors.product_id}>
-                    <div className="relative">
-                      <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-                      <select value={form.product_id} onChange={e => setForm(f => ({ ...f, product_id: e.target.value }))} className={`${inp} appearance-none pr-8`}>
-                        <option value="">{products.length === 0 ? 'Nenhum produto cadastrado' : 'Selecione o produto'}</option>
-                        {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                      </select>
-                    </div>
-                  </Field>
-                </>
-              )}
-
-              {/* Step 2: Convênio → Banco → Tabela */}
-              {step === 2 && (
-                <>
-                  <Field label="Convênio" error={errors.convenio_id}>
-                    <div className="relative">
-                      <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-                      <select value={form.convenio_id} onChange={e => setForm(f => ({ ...f, convenio_id: e.target.value }))} className={`${inp} appearance-none pr-8`}>
-                        <option value="">Selecione o convênio</option>
-                        {convenios.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                      </select>
-                    </div>
-                  </Field>
-
-                  <Field label="Banco" error={errors.bank_id}>
-                    <div className="relative">
-                      <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-                      <select value={form.bank_id} onChange={e => setForm(f => ({ ...f, bank_id: e.target.value }))}
-                        disabled={!form.convenio_id || loadingBanks}
-                        className={`${inp} appearance-none pr-8 disabled:opacity-50`}>
-                        <option value="">{!form.convenio_id ? 'Selecione o convênio primeiro' : loadingBanks ? 'Carregando...' : banks.length === 0 ? 'Nenhum banco disponível' : 'Selecione o banco'}</option>
-                        {banks.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                      </select>
-                    </div>
-                  </Field>
-
-                  <Field label="Tabela financeira" error={errors.table_id}>
-                    <div className="relative">
-                      <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-                      <select value={form.table_id} onChange={e => setForm(f => ({ ...f, table_id: e.target.value }))}
-                        disabled={!form.bank_id || loadingTables}
-                        className={`${inp} appearance-none pr-8 disabled:opacity-50`}>
-                        <option value="">{!form.bank_id ? 'Selecione o banco primeiro' : loadingTables ? 'Carregando...' : tables.length === 0 ? 'Nenhuma tabela disponível' : 'Selecione a tabela'}</option>
-                        {tables.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                      </select>
-                    </div>
-                  </Field>
-                </>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="px-6 pb-6 flex gap-3">
-              {step > 0 && (
-                <button type="button" onClick={() => setStep(s => s - 1)} className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-dk-border text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dk-surface transition-colors">
-                  Voltar
-                </button>
-              )}
-              {step < 2 ? (
-                <button type="button" onClick={nextStep} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-all flex items-center justify-center gap-2" style={{ backgroundColor: '#1e4033' }}>
-                  Próximo <ChevronRight className="w-4 h-4" />
-                </button>
-              ) : (
-                <button type="button" onClick={handleSubmit} disabled={saving || !!dupAlert} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60 transition-all" style={{ backgroundColor: '#1e4033' }}>
-                  {saving ? 'Salvando...' : editId ? 'Salvar alterações' : 'Cadastrar proposta'}
-                </button>
-              )}
-            </div>
+      <Modal
+        open={showForm}
+        onClose={() => setShowForm(false)}
+        title={editId ? 'Editar Proposta' : 'Nova Proposta'}
+        size="lg"
+        footer={
+          <div className="flex gap-3">
+            {step > 0 && (
+              <button type="button" onClick={() => setStep(s => s - 1)}
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-dk-border text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dk-surface transition-colors">
+                Voltar
+              </button>
+            )}
+            {step < 2 ? (
+              <button type="button" onClick={nextStep}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-all flex items-center justify-center gap-2" style={{ backgroundColor: '#1e4033' }}>
+                Próximo <ChevronRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <button type="button" onClick={handleSubmit} disabled={saving || !!dupAlert}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60 transition-all" style={{ backgroundColor: '#1e4033' }}>
+                {saving ? 'Salvando...' : editId ? 'Salvar alterações' : 'Cadastrar proposta'}
+              </button>
+            )}
           </div>
+        }
+      >
+        {/* Step indicator */}
+        <div className="flex items-center mb-6">
+          {STEPS.map((s, i) => {
+            const Icon = s.icon;
+            const done = i < step;
+            const active = i === step;
+            return (
+              <div key={i} className="flex items-center flex-1">
+                <div className="flex flex-col items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${done || active ? 'text-white' : 'bg-gray-100 dark:bg-dk-surface text-gray-400'}`}
+                    style={done || active ? { backgroundColor: '#1e4033' } : {}}>
+                    {done ? <CheckCircle className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
+                  </div>
+                  <p className={`text-[10px] mt-1 font-medium ${!active && !done ? 'text-gray-400' : ''}`}
+                    style={active || done ? { color: '#1e4033' } : undefined}>
+                    {s.label}
+                  </p>
+                </div>
+                {i < STEPS.length - 1 && (
+                  <div className={`flex-1 h-0.5 mx-2 mb-4 ${done ? 'bg-brand' : 'bg-gray-200 dark:bg-dk-border'}`} style={done ? { backgroundColor: '#1e4033' } : {}} />
+                )}
+              </div>
+            );
+          })}
         </div>
-      )}
+
+        {/* Step content */}
+        <div className="space-y-4 min-h-[200px]">
+          {/* Step 0: Cliente */}
+          {step === 0 && (
+            <>
+              <Field label="Nome completo do cliente" error={errors.client_name}>
+                <input value={form.client_name} onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))} className={inp} placeholder="João da Silva" autoFocus />
+              </Field>
+              <Field label="CPF do cliente" error={errors.client_cpf}>
+                <input value={form.client_cpf} onChange={e => setForm(f => ({ ...f, client_cpf: formatCPF(e.target.value) }))} className={inp} placeholder="000.000.000-00" inputMode="numeric" />
+              </Field>
+              <Field label="Telefone do cliente" error={errors.client_phone}>
+                <input value={form.client_phone} onChange={e => setForm(f => ({ ...f, client_phone: formatPhone(e.target.value) }))} className={inp} placeholder="(00) 00000-0000" inputMode="tel" />
+              </Field>
+            </>
+          )}
+
+          {/* Step 1: Operação */}
+          {step === 1 && (
+            <>
+              <Field label="Número da proposta" error={errors.proposal_number}>
+                <div className="relative">
+                  <input value={form.proposal_number} onChange={e => { setForm(f => ({ ...f, proposal_number: e.target.value })); setErrors(er => ({ ...er, proposal_number: '' })); }}
+                    className={`${inp} ${dupAlert ? 'border-red-400 focus:ring-red-300' : ''} ${form.proposal_number && !dupAlert && !checkingDup ? 'border-green-400' : ''}`}
+                    placeholder="Ex: 123456" autoFocus />
+                  {checkingDup && <div className="absolute right-3 top-2.5 w-4 h-4 border-2 border-brand border-t-transparent rounded-full animate-spin" />}
+                </div>
+                {dupAlert && (
+                  <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" /> {dupAlert}
+                  </p>
+                )}
+                {form.proposal_number && !dupAlert && !checkingDup && (
+                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Número disponível</p>
+                )}
+              </Field>
+              <Field label="Valor liberado (R$)" error={errors.value}>
+                <input type="number" step="0.01" min="0.01" value={form.value} onChange={e => setForm(f => ({ ...f, value: e.target.value }))} className={inp} placeholder="0,00" inputMode="decimal" />
+              </Field>
+              <Field label="Produto" error={errors.product_id}>
+                <div className="relative">
+                  <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <select value={form.product_id} onChange={e => setForm(f => ({ ...f, product_id: e.target.value }))} className={`${inp} appearance-none pr-8`}>
+                    <option value="">{products.length === 0 ? 'Nenhum produto cadastrado' : 'Selecione o produto'}</option>
+                    {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+              </Field>
+            </>
+          )}
+
+          {/* Step 2: Convênio → Banco → Tabela */}
+          {step === 2 && (
+            <>
+              <Field label="Convênio" error={errors.convenio_id}>
+                <div className="relative">
+                  <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <select value={form.convenio_id} onChange={e => setForm(f => ({ ...f, convenio_id: e.target.value }))} className={`${inp} appearance-none pr-8`}>
+                    <option value="">Selecione o convênio</option>
+                    {convenios.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+              </Field>
+              <Field label="Banco" error={errors.bank_id}>
+                <div className="relative">
+                  <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <select value={form.bank_id} onChange={e => setForm(f => ({ ...f, bank_id: e.target.value }))}
+                    disabled={!form.convenio_id || loadingBanks}
+                    className={`${inp} appearance-none pr-8 disabled:opacity-50`}>
+                    <option value="">{!form.convenio_id ? 'Selecione o convênio primeiro' : loadingBanks ? 'Carregando...' : banks.length === 0 ? 'Nenhum banco disponível' : 'Selecione o banco'}</option>
+                    {banks.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  </select>
+                </div>
+              </Field>
+              <Field label="Tabela financeira" error={errors.table_id}>
+                <div className="relative">
+                  <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <select value={form.table_id} onChange={e => setForm(f => ({ ...f, table_id: e.target.value }))}
+                    disabled={!form.bank_id || loadingTables}
+                    className={`${inp} appearance-none pr-8 disabled:opacity-50`}>
+                    <option value="">{!form.bank_id ? 'Selecione o banco primeiro' : loadingTables ? 'Carregando...' : tables.length === 0 ? 'Nenhuma tabela disponível' : 'Selecione a tabela'}</option>
+                    {tables.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select>
+                </div>
+              </Field>
+            </>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }
