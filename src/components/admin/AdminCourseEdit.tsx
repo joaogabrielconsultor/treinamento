@@ -258,7 +258,7 @@ function LessonRow({
         <div className="p-4 space-y-3 border-t border-gray-100">
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
-              <label className="block text-xs font-medium text-gray-500 mb-1">Título da aula</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Título da aula</label>
               <input
                 type="text"
                 value={local.title}
@@ -267,7 +267,7 @@ function LessonRow({
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Duração (min)</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Duração (min)</label>
               <input
                 type="number"
                 min={0}
@@ -279,7 +279,7 @@ function LessonRow({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Tipo</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Tipo</label>
             <select
               value={local.lesson_type}
               onChange={(e) => set('lesson_type', e.target.value)}
@@ -308,7 +308,7 @@ function LessonRow({
             />
           ) : (
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">
+              <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>
                 {local.lesson_type === 'video' ? 'Descrição / Notas (opcional)' : 'Conteúdo'}
               </label>
               <textarea
@@ -440,7 +440,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
 
   if (loading || !course) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-64">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
       </div>
     );
@@ -459,7 +459,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
       </button>
 
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Editar Curso</h1>
+        <h1 className="text-xl font-bold text-gray-100">Editar Curso</h1>
         <div className="flex items-center gap-3">
           <span
             className={`text-xs px-2.5 py-1 rounded-full font-medium ${
@@ -482,11 +482,11 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
       </div>
 
       {/* Course metadata */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6 space-y-4">
+      <div className="rounded-2xl p-5 mb-6 space-y-4" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
         <h2 className="text-base font-semibold text-gray-800 mb-4">Informações do Curso</h2>
 
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">Título</label>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Título</label>
           <input
             type="text"
             value={current.title}
@@ -496,7 +496,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">Descrição</label>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Descrição</label>
           <textarea
             value={current.description}
             onChange={(e) => field('description', e.target.value)}
@@ -507,7 +507,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Categoria</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Categoria</label>
             <input
               type="text"
               value={current.category}
@@ -516,7 +516,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Nível</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Nível</label>
             <select
               value={current.level}
               onChange={(e) => field('level', e.target.value)}
@@ -531,7 +531,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Instrutor</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Instrutor</label>
             <input
               type="text"
               value={current.instructor}
@@ -540,7 +540,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Duração total (min)</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Duração total (min)</label>
             <input
               type="number"
               min={0}
@@ -552,7 +552,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">URL da Thumbnail</label>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>URL da Thumbnail</label>
           <input
             type="text"
             value={current.thumbnail_url}

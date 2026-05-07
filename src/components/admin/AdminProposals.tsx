@@ -7,15 +7,15 @@ const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
 
 const STATUS_CONFIG: Record<ProposalStatus, { color: string; icon: React.ReactNode }> = {
-  Digitada:    { color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',     icon: <FileText className="w-3 h-3" /> },
-  'Em análise':{ color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300', icon: <Clock className="w-3 h-3" /> },
-  Aprovada:    { color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300', icon: <CheckCircle className="w-3 h-3" /> },
-  Paga:        { color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',   icon: <DollarSign className="w-3 h-3" /> },
-  Cancelada:   { color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',          icon: <XCircle className="w-3 h-3" /> },
+  Digitada:    { color: 'badge badge-blue',   icon: <FileText className="w-3 h-3" /> },
+  'Em análise':{ color: 'badge badge-amber',  icon: <Clock className="w-3 h-3" /> },
+  Aprovada:    { color: 'badge badge-purple', icon: <CheckCircle className="w-3 h-3" /> },
+  Paga:        { color: 'badge badge-green',  icon: <DollarSign className="w-3 h-3" /> },
+  Cancelada:   { color: 'badge badge-red',    icon: <XCircle className="w-3 h-3" /> },
 };
 
 const fmtBRL = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
-const inp = 'w-full px-3 py-2 border border-gray-200 dark:border-dk-border rounded-xl text-sm bg-white dark:bg-dk-surface dark:text-white focus:outline-none focus:ring-2 focus:ring-brand/30';
+const inp = 'input-cyber w-full px-3 py-2.5 rounded-xl text-sm';
 
 export function AdminProposals() {
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -66,93 +66,107 @@ export function AdminProposals() {
   const totalPoints = proposals.reduce((a, b) => a + (b.points_earned || 0), 0);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-6 max-w-7xl mx-auto" style={{ color: '#E2E8F0' }}>
+      <div className="flex items-center justify-between mb-6 animate-fade-up">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Propostas — Visão Geral</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{proposals.length} propostas no sistema</p>
+          <h1 className="text-xl font-bold" style={{ color: '#E2E8F0' }}>Propostas — Admin</h1>
+          <p className="text-xs mt-0.5" style={{ color: '#64748B' }}>{proposals.length} propostas no sistema</p>
         </div>
       </div>
 
       {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
-          { label: 'Total', value: proposals.length, color: 'text-blue-600' },
-          { label: 'Pagas', value: proposals.filter(p => p.status === 'Paga').length, color: 'text-green-600' },
-          { label: 'Volume pago', value: fmtBRL(totalPaid), color: 'text-brand' },
-          { label: 'Pontos distribuídos', value: `${totalPoints} pts`, color: 'text-yellow-600' },
-        ].map(c => (
-          <div key={c.label} className="bg-white dark:bg-dk-card rounded-xl p-4 border border-gray-100 dark:border-dk-border shadow-sm">
-            <p className="text-xs text-gray-500 dark:text-gray-400">{c.label}</p>
-            <p className={`text-xl font-bold mt-1 ${c.color}`}>{c.value}</p>
+          { label: 'Total',               value: proposals.length,                                  color: '#60a5fa' },
+          { label: 'Pagas',               value: proposals.filter(p => p.status === 'Paga').length, color: '#4ade80' },
+          { label: 'Volume pago',          value: fmtBRL(totalPaid),                                 color: '#14B8A6' },
+          { label: 'Pontos distribuídos',  value: `${totalPoints} pts`,                              color: '#fbbf24' },
+        ].map((c, i) => (
+          <div key={c.label} className="stat-card rounded-xl p-4 animate-fade-up" style={{ animationDelay: `${i * 50}ms` }}>
+            <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#475569' }}>{c.label}</p>
+            <p className="text-xl font-black num" style={{ color: c.color }}>{c.value}</p>
           </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row gap-3 mb-4 animate-fade-up" style={{ animationDelay: '80ms' }}>
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por cliente, proposta, corretor ou banco..."
-            className="w-full pl-9 pr-3 py-2 border border-gray-200 dark:border-dk-border rounded-xl text-sm bg-white dark:bg-dk-card dark:text-white focus:outline-none focus:ring-2 focus:ring-brand/30" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: '#475569' }} />
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="Buscar por cliente, proposta, corretor ou banco..."
+            className="input-cyber w-full pl-9 pr-3 py-2.5 text-sm rounded-xl" />
         </div>
         <div className="relative">
-          <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: '#475569' }} />
           <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-            className="appearance-none pl-3 pr-8 py-2 border border-gray-200 dark:border-dk-border rounded-xl text-sm bg-white dark:bg-dk-card dark:text-white focus:outline-none focus:ring-2 focus:ring-brand/30">
-            <option value="">Todos os status</option>
-            {Object.keys(STATUS_CONFIG).map(s => <option key={s} value={s}>{s}</option>)}
+            className="input-cyber appearance-none pl-3 pr-9 py-2.5 text-sm rounded-xl" style={{ minWidth: '160px' }}>
+            <option value="" style={{ background: '#0B1020' }}>Todos os status</option>
+            {Object.keys(STATUS_CONFIG).map(s => <option key={s} value={s} style={{ background: '#0B1020' }}>{s}</option>)}
           </select>
         </div>
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16"><div className="animate-spin w-8 h-8 border-4 border-brand border-t-transparent rounded-full" /></div>
+        <div className="flex flex-col items-center justify-center py-20 gap-3">
+          <div className="spinner-cyber" />
+          <p className="text-sm" style={{ color: '#475569' }}>Carregando propostas...</p>
+        </div>
       ) : (
-        <div className="bg-white dark:bg-dk-card rounded-xl border border-gray-100 dark:border-dk-border overflow-hidden shadow-sm">
+        <div className="rounded-2xl overflow-hidden animate-fade-up"
+          style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)', animationDelay: '120ms' }}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100 dark:border-dk-border">
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                   {['Proposta', 'Corretor', 'Cliente', 'Banco / Tabela', 'Valor', 'Status', 'Pontos', 'Ações'].map(h => (
-                    <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
+                    <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: '#475569' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={8} className="text-center py-12 text-gray-400">Nenhuma proposta encontrada</td></tr>
+                  <tr>
+                    <td colSpan={8} className="text-center py-12 text-sm" style={{ color: '#475569' }}>Nenhuma proposta encontrada</td>
+                  </tr>
                 ) : filtered.map(p => (
-                  <tr key={p.id} className="border-b border-gray-50 dark:border-dk-border/50 hover:bg-gray-50 dark:hover:bg-dk-surface/30 transition-colors">
-                    <td className="px-4 py-3 font-mono text-gray-700 dark:text-gray-300">{p.proposal_number || '—'}</td>
+                  <tr key={p.id} className="table-row-cyber">
+                    <td className="px-4 py-3 font-mono text-xs num" style={{ color: '#94A3B8' }}>{p.proposal_number || '—'}</td>
                     <td className="px-4 py-3">
-                      <p className="font-medium text-gray-900 dark:text-white text-xs">{p.user_name || '—'}</p>
+                      <p className="text-xs font-semibold" style={{ color: '#94A3B8' }}>{p.user_name || '—'}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="font-medium text-gray-900 dark:text-white">{p.client_name}</p>
-                      <p className="text-xs text-gray-400">{p.client_cpf}</p>
+                      <p className="font-semibold text-sm" style={{ color: '#E2E8F0' }}>{p.client_name}</p>
+                      <p className="text-xs" style={{ color: '#475569' }}>{p.client_cpf}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-gray-700 dark:text-gray-300">{p.bank}</p>
-                      <p className="text-xs text-gray-400 truncate max-w-[160px]">{p.table_name || p.convenio}</p>
+                      <p className="text-sm" style={{ color: '#94A3B8' }}>{p.bank}</p>
+                      <p className="text-xs truncate max-w-[160px]" style={{ color: '#475569' }}>{p.table_name || p.convenio}</p>
                     </td>
-                    <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">{fmtBRL(Number(p.value))}</td>
+                    <td className="px-4 py-3 font-bold num" style={{ color: '#E2E8F0' }}>{fmtBRL(Number(p.value))}</td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${STATUS_CONFIG[p.status]?.color}`}>
+                      <span className={`${STATUS_CONFIG[p.status]?.color} inline-flex items-center gap-1`}>
                         {STATUS_CONFIG[p.status]?.icon} {p.status}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      {p.points_earned > 0 ? <span className="text-yellow-600 font-bold">+{p.points_earned}</span> : <span className="text-gray-300">—</span>}
+                      {p.points_earned > 0
+                        ? <span className="font-bold num" style={{ color: '#fbbf24' }}>+{p.points_earned}</span>
+                        : <span style={{ color: '#334155' }}>—</span>
+                      }
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
-                        <button onClick={() => { setEditProposal(p); setEditStatus(p.status); }} title="Alterar status"
-                          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-dk-surface text-gray-400 hover:text-brand transition-colors">
+                        <button onClick={() => { setEditProposal(p); setEditStatus(p.status); }}
+                          className="p-1.5 rounded-lg transition-all" style={{ color: '#475569' }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#475569'; }}>
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button onClick={() => deleteProposal(p.id)}
-                          className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors">
+                          className="p-1.5 rounded-lg transition-all" style={{ color: '#475569' }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#475569'; }}>
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -174,24 +188,25 @@ export function AdminProposals() {
         footer={
           <div className="flex gap-3">
             <button type="button" onClick={() => setEditProposal(null)} className={btnCancel}>Cancelar</button>
-            <button onClick={updateStatus} disabled={saving} className={btnPrimary} style={primaryBg}>
-              <Save className="w-4 h-4 inline mr-1" />{saving ? 'Salvando...' : 'Salvar'}
+            <button onClick={updateStatus} disabled={saving} className={`${btnPrimary} flex items-center justify-center gap-1.5`}>
+              <Save className="w-4 h-4" />{saving ? 'Salvando...' : 'Salvar'}
             </button>
           </div>
         }
       >
         <div className="space-y-4">
           {editStatus === 'Paga' && editProposal?.status !== 'Paga' && (
-            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/40 rounded-xl p-3 text-sm text-green-700 dark:text-green-300">
+            <div className="rounded-xl p-3 text-sm" style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', color: '#4ade80' }}>
               ✅ Ao marcar como <strong>Paga</strong>, os pontos serão calculados e atribuídos automaticamente ao corretor.
             </div>
           )}
           <div>
-            <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Novo Status</label>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: '#64748B' }}>Novo Status</label>
             <div className="relative">
-              <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-              <select value={editStatus} onChange={e => setEditStatus(e.target.value as ProposalStatus)} className={`${inp} appearance-none pr-8`}>
-                {(Object.keys(STATUS_CONFIG) as ProposalStatus[]).map(s => <option key={s} value={s}>{s}</option>)}
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: '#475569' }} />
+              <select value={editStatus} onChange={e => setEditStatus(e.target.value as ProposalStatus)} className={`${inp} appearance-none pr-8`}
+                style={{ background: '#0B1020' }}>
+                {(Object.keys(STATUS_CONFIG) as ProposalStatus[]).map(s => <option key={s} value={s} style={{ background: '#0B1020' }}>{s}</option>)}
               </select>
             </div>
           </div>

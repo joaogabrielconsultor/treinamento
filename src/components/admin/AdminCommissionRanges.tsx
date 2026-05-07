@@ -6,7 +6,7 @@ import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
 
-const inp = 'w-full px-3 py-2 border border-gray-200 dark:border-dk-border rounded-xl text-sm bg-white dark:bg-dk-surface dark:text-white focus:outline-none focus:ring-2 focus:ring-brand/30';
+const inp = 'input-cyber w-full px-3 py-2.5 text-sm rounded-xl';
 
 const EMPTY: Partial<CommissionRange> = {
   tipo_proposta: '', expires_at: null, convenio_descricao: '', parceiro: '',
@@ -28,7 +28,7 @@ function calcPreview(range: Partial<CommissionRange>, categories: TableCategory[
 }
 
 function Label({ text, required }: { text: string; required?: boolean }) {
-  return <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">{text}{required && <span className="text-red-400 ml-0.5">*</span>}</label>;
+  return <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>{text}{required && <span className="text-red-400 ml-0.5">*</span>}</label>;
 }
 
 export function AdminCommissionRanges() {
@@ -100,19 +100,19 @@ export function AdminCommissionRanges() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Faixas de Comissão</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Configure comissões e pontuação por tabela e faixa de valor</p>
+          <h1 className="text-xl font-bold text-gray-100">Faixas de Comissão</h1>
+          <p className="text-xs text-slate-500 mt-0.5">Configure comissões e pontuação por tabela e faixa de valor</p>
         </div>
         {selectedTable && (
           <button onClick={openNew}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-all" style={{ backgroundColor: '#1e4033' }}>
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm btn-cyber font-semibold">
             <Plus className="w-4 h-4" /> Nova Faixa
           </button>
         )}
       </div>
 
       {/* Table selector */}
-      <div className="bg-white dark:bg-dk-card rounded-2xl border border-gray-100 dark:border-dk-border shadow-sm p-5 mb-6">
+      <div className="rounded-2xl p-5 mb-6" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
         <Label text="Selecione a tabela financeira" required />
         <div className="relative max-w-lg">
           <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -139,9 +139,9 @@ export function AdminCommissionRanges() {
       {/* Ranges list */}
       {selectedTable && (
         loading ? (
-          <div className="flex justify-center py-16"><div className="animate-spin w-8 h-8 border-4 border-brand border-t-transparent rounded-full" /></div>
+          <div className="flex justify-center py-16"><div className="spinner-cyber" /></div>
         ) : ranges.length === 0 ? (
-          <div className="text-center py-12 text-gray-400 bg-white dark:bg-dk-card rounded-2xl border border-gray-100 dark:border-dk-border">
+          <div className="text-center py-12 text-gray-400 rounded-2xl" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
             <Percent className="w-10 h-10 mx-auto mb-2 opacity-30" />
             <p className="font-medium">Nenhuma faixa cadastrada para esta tabela</p>
             <p className="text-sm mt-1">Clique em "Nova Faixa" para começar</p>
@@ -151,7 +151,7 @@ export function AdminCommissionRanges() {
             {ranges.map(r => {
               const pts = calcPreview(r, categories);
               return (
-                <div key={r.id} className="bg-white dark:bg-dk-card rounded-2xl border border-gray-100 dark:border-dk-border shadow-sm p-4">
+                <div key={r.id} className="rounded-2xl p-4" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3">
                       <div>

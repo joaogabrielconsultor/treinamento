@@ -40,11 +40,11 @@ export function AdminPersonalizacao() {
   return (
     <div className="p-8 max-w-2xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Personalização</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">Configure a identidade visual da plataforma</p>
+        <h1 className="text-xl font-bold text-gray-100">Personalização</h1>
+        <p className="text-xs text-slate-500 mt-0.5">Configure a identidade visual da plataforma</p>
       </div>
 
-      <div className="bg-white dark:bg-dk-card rounded-2xl border border-gray-100 dark:border-dk-border shadow-sm p-6">
+      <div className="rounded-2xl p-5" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
         <div className="flex items-center gap-2 mb-6">
           <Palette className="w-5 h-5 text-brand" />
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Logo da plataforma</h2>
@@ -65,7 +65,7 @@ export function AdminPersonalizacao() {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>
               URL da Logo
             </label>
             <div className="relative">
@@ -75,7 +75,7 @@ export function AdminPersonalizacao() {
                 value={inputUrl}
                 onChange={(e) => { setInputUrl(e.target.value); setSaved(false); setError(''); }}
                 placeholder="https://exemplo.com/logo.png"
-                className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 dark:border-dk-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand bg-white dark:bg-dk-surface text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
+                className="input-cyber w-full pl-10 pr-4 py-2.5 text-sm rounded-xl"
               />
             </div>
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
@@ -84,7 +84,7 @@ export function AdminPersonalizacao() {
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2 text-sm text-red-600 dark:text-red-400">
+            <div className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171' }}>
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               {error}
             </div>
@@ -95,7 +95,7 @@ export function AdminPersonalizacao() {
               <button
                 onClick={handleRemove}
                 disabled={saving}
-                className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-dk-surface rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 text-sm rounded-xl btn-ghost disabled:opacity-50"
               >
                 Remover logo
               </button>

@@ -27,8 +27,8 @@ export function AdminCourses({ onNavigate }: AdminCoursesProps) {
 
   if (loading) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-64">
-        <div className="animate-spin w-8 h-8 border-4 border-brand border-t-transparent rounded-full" />
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="spinner-cyber" />
       </div>
     );
   }
@@ -37,14 +37,14 @@ export function AdminCourses({ onNavigate }: AdminCoursesProps) {
     <div className="p-8 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gestão de Treinamentos</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <h1 className="text-xl font-bold text-gray-100">Gestão de Treinamentos</h1>
+          <p className="text-xs text-slate-500 mt-0.5">
             {courses.length} curso{courses.length !== 1 ? 's' : ''} cadastrado{courses.length !== 1 ? 's' : ''}
           </p>
         </div>
         <button
           onClick={handleCreate}
-          className="flex items-center gap-2 px-4 py-2.5 bg-brand text-white text-sm font-medium rounded-xl hover:bg-brand-hover transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm btn-cyber font-semibold"
         >
           <Plus className="w-4 h-4" />
           Novo Curso
@@ -55,7 +55,7 @@ export function AdminCourses({ onNavigate }: AdminCoursesProps) {
         {courses.map((course) => (
           <div
             key={course.id}
-            className="bg-white dark:bg-dk-card rounded-2xl border border-gray-100 dark:border-dk-border shadow-sm p-5 flex items-center gap-5"
+            className="rounded-2xl p-5 flex items-center gap-5" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}
           >
             <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-dk-surface">
               {course.thumbnail_url ? (
@@ -125,12 +125,12 @@ export function AdminCourses({ onNavigate }: AdminCoursesProps) {
         ))}
 
         {courses.length === 0 && (
-          <div className="text-center py-20 bg-white dark:bg-dk-card rounded-2xl border border-gray-100 dark:border-dk-border">
+          <div className="text-center py-20 rounded-2xl" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
             <BookOpen className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
             <p className="text-gray-500 dark:text-gray-400 mb-4">Nenhum curso cadastrado</p>
             <button
               onClick={handleCreate}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-white text-sm font-medium rounded-xl hover:bg-brand-hover transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm btn-cyber font-semibold"
             >
               <Plus className="w-4 h-4" />
               Criar primeiro curso

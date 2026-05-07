@@ -13,22 +13,22 @@ interface CourseDetailProps {
   onToggleModule: (moduleId: string) => void;
 }
 
-const levelColors: Record<string, string> = {
-  Iniciante: 'bg-emerald-100 text-emerald-700',
-  Intermediário: 'bg-amber-100 text-amber-700',
-  Avançado: 'bg-red-100 text-red-700',
+const levelBadge: Record<string, string> = {
+  Iniciante:    'badge-green',
+  Intermediário:'badge-amber',
+  Avançado:     'badge-red',
 };
 
 const lessonTypeLabel: Record<string, string> = {
   video: 'Vídeo',
-  text: 'Texto',
-  quiz: 'Avaliação',
+  text:  'Texto',
+  quiz:  'Avaliação',
 };
 
-const lessonTypeColor: Record<string, string> = {
-  video: 'bg-brand-light text-brand',
-  text:  'bg-gray-100 text-gray-600',
-  quiz:  'bg-amber-100 text-amber-700',
+const lessonTypeBadge: Record<string, string> = {
+  video: 'badge-teal',
+  text:  'badge-neutral',
+  quiz:  'badge-amber',
 };
 
 export function CourseDetail({
@@ -39,68 +39,79 @@ export function CourseDetail({
   const totalLessons = modules.reduce((acc, m) => acc + (m.lessons?.length || 0), 0);
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-8 max-w-5xl mx-auto" style={{ color: '#E2E8F0' }}>
       <button
         onClick={() => onNavigate('catalog')}
-        className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white mb-6 text-sm font-medium transition-colors"
+        className="flex items-center gap-2 text-sm font-medium mb-6 transition-all"
+        style={{ color: '#64748B' }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#94A3B8'; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#64748B'; }}
       >
         <ArrowLeft className="w-4 h-4" /> Voltar ao catálogo
       </button>
 
       <div className="grid lg:grid-cols-3 gap-8">
+        {/* Main content */}
         <div className="lg:col-span-2">
           <div className="relative rounded-2xl overflow-hidden mb-6 h-64">
             <img src={course.thumbnail_url} alt={course.title} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <div
+              className="absolute inset-0"
+              style={{ background: 'linear-gradient(to top, rgba(5,8,22,0.85) 0%, rgba(5,8,22,0.2) 60%, transparent 100%)' }}
+            />
             <div className="absolute bottom-4 left-4">
-              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${levelColors[course.level] || 'bg-gray-100 text-gray-700'}`}>
-                {course.level}
-              </span>
+              <span className={`badge ${levelBadge[course.level] || 'badge-neutral'}`}>{course.level}</span>
             </div>
           </div>
 
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{course.title}</h1>
-          <p className="text-gray-500 dark:text-gray-400 mb-4 leading-relaxed">{course.description}</p>
+          <h1 className="text-xl font-bold mb-2" style={{ color: '#E2E8F0' }}>{course.title}</h1>
+          <p className="text-sm mb-4 leading-relaxed" style={{ color: '#64748B' }}>{course.description}</p>
 
-          <div className="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400 mb-8">
-            <span className="flex items-center gap-1.5"><Users className="w-4 h-4" />{course.instructor}</span>
+          <div className="flex flex-wrap gap-4 text-xs mb-8" style={{ color: '#475569' }}>
+            <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5" />{course.instructor}</span>
             <span className="flex items-center gap-1.5">
-              <Clock className="w-4 h-4" />
-              {Math.floor(course.duration_minutes / 60)}h {course.duration_minutes % 60 > 0 ? `${course.duration_minutes % 60}min` : ''}
+              <Clock className="w-3.5 h-3.5" />
+              <span className="num">{Math.floor(course.duration_minutes / 60)}h {course.duration_minutes % 60 > 0 ? `${course.duration_minutes % 60}min` : ''}</span>
             </span>
-            <span className="flex items-center gap-1.5"><BookOpen className="w-4 h-4" />{totalLessons} aulas</span>
+            <span className="flex items-center gap-1.5"><BookOpen className="w-3.5 h-3.5" />{totalLessons} aulas</span>
           </div>
 
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Conteúdo do curso</h2>
+          <h2 className="text-sm font-bold mb-3" style={{ color: '#94A3B8' }}>Conteúdo do curso</h2>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {modules.map((module) => {
               const isExpanded = expandedModules.has(module.id);
               const moduleCompleted = module.lessons?.every((l) => completedIds.has(l.id));
               return (
-                <div key={module.id} className="border border-gray-200 dark:border-dk-border rounded-xl overflow-hidden">
+                <div
+                  key={module.id}
+                  className="rounded-xl overflow-hidden"
+                  style={{ border: '1px solid rgba(255,255,255,0.06)' }}
+                >
                   <button
                     onClick={() => onToggleModule(module.id)}
-                    className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-dk-surface hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+                    className="w-full flex items-center justify-between p-4 text-left transition-all"
+                    style={{ background: 'rgba(26,32,53,0.6)' }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(26,32,53,0.9)'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(26,32,53,0.6)'; }}
                   >
                     <div className="flex items-center gap-3">
-                      {moduleCompleted ? (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                      ) : (
-                        <div className="w-5 h-5 rounded-full border-2 border-gray-300 dark:border-gray-600 flex-shrink-0" />
-                      )}
-                      <span className="font-semibold text-gray-900 dark:text-white text-sm">{module.title}</span>
+                      {moduleCompleted
+                        ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: '#22c55e' }} />
+                        : <div className="w-4 h-4 rounded-full border-2 flex-shrink-0" style={{ borderColor: '#334155' }} />
+                      }
+                      <span className="font-semibold text-sm" style={{ color: '#E2E8F0' }}>{module.title}</span>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-xs text-gray-400">{module.lessons?.length || 0} aulas</span>
+                      <span className="text-[11px]" style={{ color: '#475569' }}>{module.lessons?.length || 0} aulas</span>
                       {isExpanded
-                        ? <ChevronUp className="w-4 h-4 text-gray-400" />
-                        : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                        ? <ChevronUp className="w-4 h-4" style={{ color: '#475569' }} />
+                        : <ChevronDown className="w-4 h-4" style={{ color: '#475569' }} />}
                     </div>
                   </button>
 
                   {isExpanded && module.lessons && (
-                    <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
                       {module.lessons.map((lesson) => {
                         const isDone = completedIds.has(lesson.id);
                         return (
@@ -108,22 +119,29 @@ export function CourseDetail({
                             key={lesson.id}
                             onClick={() => enrollment && onSelectLesson(lesson)}
                             disabled={!enrollment}
-                            className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors bg-white dark:bg-dk-card ${
-                              enrollment
-                                ? 'hover:bg-brand-light dark:hover:bg-brand/10 cursor-pointer'
-                                : 'cursor-default opacity-60'
-                            }`}
+                            className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all"
+                            style={{
+                              background: 'rgba(11,16,32,0.85)',
+                              borderBottom: '1px solid rgba(255,255,255,0.03)',
+                              opacity: enrollment ? 1 : 0.5,
+                              cursor: enrollment ? 'pointer' : 'default',
+                            }}
+                            onMouseEnter={(e) => { if (enrollment) (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.04)'; }}
+                            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(11,16,32,0.85)'; }}
                           >
                             {isDone
-                              ? <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                              : <Play className="w-4 h-4 text-gray-400 flex-shrink-0" />}
-                            <span className={`text-sm flex-1 ${isDone ? 'text-gray-500 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'}`}>
+                              ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: '#22c55e' }} />
+                              : <Play className="w-4 h-4 flex-shrink-0" style={{ color: '#475569' }} />
+                            }
+                            <span className="text-sm flex-1" style={{ color: isDone ? '#475569' : '#94A3B8' }}>
                               {lesson.title}
                             </span>
-                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${lessonTypeColor[lesson.lesson_type] || 'bg-gray-100 text-gray-600'}`}>
+                            <span className={`badge ${lessonTypeBadge[lesson.lesson_type] || 'badge-neutral'} text-[10px]`}>
                               {lessonTypeLabel[lesson.lesson_type] || lesson.lesson_type}
                             </span>
-                            <span className="text-xs text-gray-400 flex-shrink-0">{lesson.duration_minutes}min</span>
+                            <span className="text-[11px] flex-shrink-0 num" style={{ color: '#475569' }}>
+                              {lesson.duration_minutes}min
+                            </span>
                           </button>
                         );
                       })}
@@ -135,28 +153,33 @@ export function CourseDetail({
           </div>
         </div>
 
+        {/* Sidebar card */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-dk-card border border-gray-200 dark:border-dk-border rounded-2xl p-6 sticky top-8 shadow-sm">
+          <div
+            className="rounded-2xl p-5 sticky top-8"
+            style={{
+              background: 'rgba(11,16,32,0.9)',
+              border: '1px solid rgba(255,255,255,0.07)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+            }}
+          >
             {enrollment ? (
               <>
                 <div className="mb-4">
-                  <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1.5">
-                    <span>Progresso do curso</span>
-                    <span className="font-semibold text-gray-900 dark:text-white">{enrollment.progress_percent}%</span>
+                  <div className="flex justify-between text-xs mb-1.5">
+                    <span style={{ color: '#64748B' }}>Progresso</span>
+                    <span className="font-bold num" style={{ color: '#E2E8F0' }}>{enrollment.progress_percent}%</span>
                   </div>
-                  <div className="bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div
-                      className="bg-brand h-2 rounded-full transition-all"
-                      style={{ width: `${enrollment.progress_percent}%` }}
-                    />
+                  <div className="progress-track h-2">
+                    <div className="progress-bar h-2" style={{ width: `${enrollment.progress_percent}%` }} />
                   </div>
                 </div>
 
                 {enrollment.completed ? (
                   <div className="text-center py-4">
-                    <Award className="w-12 h-12 text-amber-500 mx-auto mb-2" />
-                    <p className="font-semibold text-gray-900 dark:text-white">Curso concluído!</p>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Parabéns pelo seu aprendizado.</p>
+                    <Award className="w-10 h-10 mx-auto mb-2" style={{ color: '#fbbf24' }} />
+                    <p className="font-semibold text-sm" style={{ color: '#E2E8F0' }}>Curso concluído!</p>
+                    <p className="text-xs mt-1" style={{ color: '#64748B' }}>Parabéns pelo seu aprendizado.</p>
                   </div>
                 ) : (
                   <button
@@ -166,7 +189,7 @@ export function CourseDetail({
                         .find((l) => !completedIds.has(l.id));
                       if (firstIncomplete) onSelectLesson(firstIncomplete);
                     }}
-                    className="w-full bg-brand hover:bg-brand-hover text-white py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+                    className="btn-cyber w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
                   >
                     <Play className="w-4 h-4" />
                     {enrollment.progress_percent === 0 ? 'Iniciar curso' : 'Continuar'}
@@ -176,30 +199,28 @@ export function CourseDetail({
             ) : (
               <>
                 <div className="text-center mb-5">
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">Matricule-se para acessar todo o conteúdo</p>
+                  <p className="text-sm" style={{ color: '#64748B' }}>Matricule-se para acessar todo o conteúdo</p>
                 </div>
                 <button
                   onClick={() => onEnroll(course.id)}
-                  className="w-full bg-brand hover:bg-brand-hover text-white py-3 rounded-xl font-semibold transition-colors"
+                  className="btn-cyber w-full py-3 rounded-xl text-sm font-semibold"
                 >
                   Matricular-se gratuitamente
                 </button>
               </>
             )}
 
-            <div className="mt-5 pt-5 border-t border-gray-100 dark:border-dk-border space-y-3">
-              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                <BookOpen className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                <span>{totalLessons} aulas</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                <Clock className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                <span>{Math.floor(course.duration_minutes / 60)}h {course.duration_minutes % 60 > 0 ? `${course.duration_minutes % 60}min` : ''} de conteúdo</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                <Award className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                <span>Certificado de conclusão</span>
-              </div>
+            <div className="mt-5 pt-4 space-y-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+              {[
+                { icon: BookOpen, text: `${totalLessons} aulas` },
+                { icon: Clock, text: `${Math.floor(course.duration_minutes / 60)}h ${course.duration_minutes % 60 > 0 ? `${course.duration_minutes % 60}min` : ''} de conteúdo` },
+                { icon: Award, text: 'Certificado de conclusão' },
+              ].map(({ icon: Icon, text }) => (
+                <div key={text} className="flex items-center gap-2 text-xs" style={{ color: '#64748B' }}>
+                  <Icon className="w-3.5 h-3.5" style={{ color: '#475569' }} />
+                  <span className="num">{text}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

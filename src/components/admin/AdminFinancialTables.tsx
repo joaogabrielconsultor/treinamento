@@ -6,7 +6,7 @@ import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
 
-const inp = 'w-full px-3 py-2 border border-gray-200 dark:border-dk-border rounded-xl text-sm bg-white dark:bg-dk-surface dark:text-white focus:outline-none focus:ring-2 focus:ring-brand/30';
+const inp = 'input-cyber w-full px-3 py-2.5 text-sm rounded-xl';
 
 const EMPTY_TABLE = { name: '', bank_id: '', convenio_id: '', category_id: '', active: true, comissao_empresa: '', comissao_corretor: '' };
 
@@ -110,11 +110,11 @@ export function AdminFinancialTables() {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Tabelas Financeiras</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{tables.length} tabelas cadastradas</p>
+          <h1 className="text-xl font-bold text-gray-100">Tabelas Financeiras</h1>
+          <p className="text-xs text-slate-500 mt-0.5">{tables.length} tabelas cadastradas</p>
         </div>
         <button onClick={() => { setForm(EMPTY_TABLE); setEditId(null); setShowForm(true); }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-all" style={{ backgroundColor: '#1e4033' }}>
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm btn-cyber font-semibold">
           <Plus className="w-4 h-4" /> Nova Tabela
         </button>
       </div>
@@ -138,14 +138,14 @@ export function AdminFinancialTables() {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-16"><div className="animate-spin w-8 h-8 border-4 border-brand border-t-transparent rounded-full" /></div>
+        <div className="flex justify-center py-16"><div className="spinner-cyber" /></div>
       ) : (
-        <div className="bg-white dark:bg-dk-card rounded-2xl border border-gray-100 dark:border-dk-border shadow-sm overflow-hidden">
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-100 dark:border-dk-border">
+              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                 {['Nome da Tabela', 'Convênio', 'Banco', 'Categoria', 'Comissão Emp.', 'Comissão Cor.', 'Status', 'Ações'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
+                  <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: '#475569' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -153,7 +153,7 @@ export function AdminFinancialTables() {
               {filtered.length === 0 ? (
                 <tr><td colSpan={8} className="text-center py-12 text-gray-400">Nenhuma tabela cadastrada</td></tr>
               ) : filtered.map(t => (
-                <tr key={t.id} className="border-b border-gray-50 dark:border-dk-border/50 hover:bg-gray-50 dark:hover:bg-dk-surface/30">
+                <tr key={t.id} className="table-row-cyber">
                   <td className="px-4 py-3 font-medium text-gray-900 dark:text-white max-w-[200px] truncate">{t.name}</td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{t.convenio_name || '—'}</td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{t.bank_name || '—'}</td>
@@ -211,11 +211,11 @@ export function AdminFinancialTables() {
       >
         <form id="modal-financial-table" onSubmit={saveTable} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Nome da Tabela *</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Nome da Tabela *</label>
             <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className={inp} required placeholder="Ex: APROVAMAIS NEO_096-299_318661 - CC-CB" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Convênio <span className="text-red-400">*</span></label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Convênio <span className="text-red-400">*</span></label>
             <div className="relative">
               <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
               <select value={form.convenio_id} onChange={e => setForm(f => ({ ...f, convenio_id: e.target.value }))} className={`${inp} appearance-none pr-8 ${!form.convenio_id ? 'border-red-200' : ''}`}>
@@ -226,7 +226,7 @@ export function AdminFinancialTables() {
             {convenios.length === 0 && <p className="text-xs text-orange-500 mt-1">Nenhum convênio cadastrado. Cadastre em <strong>Convênios</strong> primeiro.</p>}
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Banco <span className="text-red-400">*</span></label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Banco <span className="text-red-400">*</span></label>
             <div className="relative">
               <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
               <select value={form.bank_id} onChange={e => setForm(f => ({ ...f, bank_id: e.target.value }))} className={`${inp} appearance-none pr-8 ${!form.bank_id ? 'border-red-200' : ''}`}>
@@ -237,7 +237,7 @@ export function AdminFinancialTables() {
             {banks.length === 0 && <p className="text-xs text-orange-500 mt-1">Nenhum banco cadastrado. Cadastre em <strong>Bancos</strong> primeiro.</p>}
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Categoria <span className="text-red-400">*</span></label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Categoria <span className="text-red-400">*</span></label>
             <div className="relative">
               <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
               <select value={form.category_id} onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))} className={`${inp} appearance-none pr-8 ${!form.category_id ? 'border-red-200' : ''}`}>
@@ -249,11 +249,11 @@ export function AdminFinancialTables() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Comissão Empresa (%)</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Comissão Empresa (%)</label>
               <input type="number" step="0.01" min="0" max="100" value={form.comissao_empresa} onChange={e => setForm(f => ({ ...f, comissao_empresa: e.target.value }))} className={inp} placeholder="0.00" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Comissão Corretor (%)</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Comissão Corretor (%)</label>
               <input type="number" step="0.01" min="0" max="100" value={form.comissao_corretor} onChange={e => setForm(f => ({ ...f, comissao_corretor: e.target.value }))} className={inp} placeholder="0.00" />
             </div>
           </div>
@@ -309,7 +309,7 @@ export function AdminFinancialTables() {
                 <input type="number" min="0" value={newRule.points} onChange={e => setNewRule(r => ({ ...r, points: e.target.value }))} className={inp} placeholder="10" required />
               </div>
             </div>
-            <button type="submit" className="mt-3 w-full py-2 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-all" style={{ backgroundColor: '#1e4033' }}>
+            <button type="submit" className="mt-3 w-full py-2 rounded-xl text-sm btn-cyber font-semibold">
               <Plus className="w-4 h-4 inline mr-1" />Adicionar faixa
             </button>
           </form>

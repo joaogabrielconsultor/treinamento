@@ -7,11 +7,11 @@ const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
 
 const STATUS_CONFIG: Record<ProposalStatus, { color: string; icon: React.ReactNode }> = {
-  Digitada:    { color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',     icon: <FileText className="w-3 h-3" /> },
-  'Em análise':{ color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300', icon: <Clock className="w-3 h-3" /> },
-  Aprovada:    { color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300', icon: <CheckCircle className="w-3 h-3" /> },
-  Paga:        { color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',   icon: <DollarSign className="w-3 h-3" /> },
-  Cancelada:   { color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',          icon: <XCircle className="w-3 h-3" /> },
+  Digitada:    { color: 'badge badge-blue',   icon: <FileText className="w-3 h-3" /> },
+  'Em análise':{ color: 'badge badge-amber',  icon: <Clock className="w-3 h-3" /> },
+  Aprovada:    { color: 'badge badge-purple', icon: <CheckCircle className="w-3 h-3" /> },
+  Paga:        { color: 'badge badge-green',  icon: <DollarSign className="w-3 h-3" /> },
+  Cancelada:   { color: 'badge badge-red',    icon: <XCircle className="w-3 h-3" /> },
 };
 
 const EMPTY_FORM = {
@@ -20,7 +20,7 @@ const EMPTY_FORM = {
   convenio_id: '', bank_id: '', table_id: '',
 };
 
-const inp = 'w-full px-3 py-2.5 border border-gray-200 dark:border-dk-border rounded-xl text-sm bg-white dark:bg-dk-surface dark:text-white focus:outline-none focus:ring-2 focus:ring-brand/30 transition-colors';
+const inp = 'input-cyber w-full px-3 py-2.5 rounded-xl text-sm';
 
 function formatCPF(v: string) {
   return v.replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4').slice(0, 14);
@@ -43,11 +43,15 @@ const STEPS = [
 function Field({ label, children, error }: { label: string; children: React.ReactNode; error?: string }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">
-        {label} <span className="text-red-400">*</span>
+      <label className="block text-xs font-semibold mb-1.5" style={{ color: '#64748B' }}>
+        {label} <span style={{ color: '#f87171' }}>*</span>
       </label>
       {children}
-      {error && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertTriangle className="w-3 h-3" />{error}</p>}
+      {error && (
+        <p className="text-xs mt-1 flex items-center gap-1" style={{ color: '#f87171' }}>
+          <AlertTriangle className="w-3 h-3" />{error}
+        </p>
+      )}
     </div>
   );
 }
@@ -221,13 +225,14 @@ export function Proposals() {
   const totalComissao = proposals.filter(p => p.status === 'Paga').reduce((a, b) => a + Number(b.comissao_valor || 0), 0);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-6 max-w-7xl mx-auto" style={{ color: '#E2E8F0' }}>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6 animate-fade-up">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Minhas Propostas</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{proposals.length} propostas cadastradas</p>
+          <h1 className="text-xl font-bold" style={{ color: '#E2E8F0' }}>Minhas Propostas</h1>
+          <p className="text-xs mt-0.5" style={{ color: '#64748B' }}>{proposals.length} propostas cadastradas</p>
         </div>
-        <button onClick={openNew} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90" style={{ backgroundColor: '#1e4033' }}>
+        <button onClick={openNew} className="btn-cyber flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm">
           <Plus className="w-4 h-4" /> Nova Proposta
         </button>
       </div>
@@ -235,90 +240,137 @@ export function Proposals() {
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         {[
-          { label: 'Total', value: proposals.length, color: 'text-blue-600' },
-          { label: 'Propostas pagas', value: proposals.filter(p => p.status === 'Paga').length, color: 'text-green-600' },
-          { label: 'Volume pago', value: formatCurrency(totalPaid), color: 'text-brand' },
-          { label: 'Minha comissão', value: formatCurrency(totalComissao), color: 'text-emerald-600' },
-          { label: 'Meus pontos', value: `${totalPoints} pts`, color: 'text-yellow-600' },
-        ].map(c => (
-          <div key={c.label} className="bg-white dark:bg-dk-card rounded-xl p-4 border border-gray-100 dark:border-dk-border shadow-sm">
-            <p className="text-xs text-gray-500 dark:text-gray-400">{c.label}</p>
-            <p className={`text-xl font-bold mt-1 ${c.color}`}>{c.value}</p>
+          { label: 'Total',           value: proposals.length,                                   color: '#60a5fa' },
+          { label: 'Pagas',           value: proposals.filter(p => p.status === 'Paga').length,  color: '#4ade80' },
+          { label: 'Volume pago',     value: formatCurrency(totalPaid),                           color: '#14B8A6' },
+          { label: 'Minha comissão',  value: formatCurrency(totalComissao),                       color: '#2DD4BF' },
+          { label: 'Meus pontos',     value: `${totalPoints} pts`,                                color: '#fbbf24' },
+        ].map((c, i) => (
+          <div
+            key={c.label}
+            className="stat-card rounded-xl p-4 animate-fade-up"
+            style={{ animationDelay: `${i * 50}ms` }}
+          >
+            <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#475569' }}>{c.label}</p>
+            <p className="text-lg font-black num" style={{ color: c.color }}>{c.value}</p>
           </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row gap-3 mb-4 animate-fade-up" style={{ animationDelay: '100ms' }}>
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por cliente, proposta ou banco..."
-            className="w-full pl-9 pr-3 py-2 border border-gray-200 dark:border-dk-border rounded-xl text-sm bg-white dark:bg-dk-card dark:text-white focus:outline-none focus:ring-2 focus:ring-brand/30" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: '#475569' }} />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Buscar por cliente, proposta ou banco..."
+            className="input-cyber w-full pl-9 pr-3 py-2.5 text-sm rounded-xl"
+          />
         </div>
         <div className="relative">
-          <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-            className="appearance-none pl-3 pr-8 py-2 border border-gray-200 dark:border-dk-border rounded-xl text-sm bg-white dark:bg-dk-card dark:text-white focus:outline-none focus:ring-2 focus:ring-brand/30">
-            <option value="">Todos os status</option>
-            {Object.keys(STATUS_CONFIG).map(s => <option key={s} value={s}>{s}</option>)}
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: '#475569' }} />
+          <select
+            value={filterStatus}
+            onChange={e => setFilterStatus(e.target.value)}
+            className="input-cyber appearance-none pl-3 pr-9 py-2.5 text-sm rounded-xl"
+            style={{ minWidth: '160px' }}
+          >
+            <option value="" style={{ background: '#0B1020' }}>Todos os status</option>
+            {Object.keys(STATUS_CONFIG).map(s => <option key={s} value={s} style={{ background: '#0B1020' }}>{s}</option>)}
           </select>
         </div>
       </div>
 
       {/* Table */}
       {loading ? (
-        <div className="flex justify-center py-16"><div className="animate-spin w-8 h-8 border-4 border-brand border-t-transparent rounded-full" /></div>
+        <div className="flex flex-col items-center justify-center py-20 gap-3">
+          <div className="spinner-cyber" />
+          <p className="text-sm" style={{ color: '#475569' }}>Carregando propostas...</p>
+        </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
-          <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p className="font-medium">Nenhuma proposta encontrada</p>
-          <p className="text-sm mt-1">Clique em "Nova Proposta" para começar</p>
+        <div className="text-center py-20">
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <FileText className="w-8 h-8" style={{ color: '#334155' }} />
+          </div>
+          <p className="font-medium" style={{ color: '#64748B' }}>Nenhuma proposta encontrada</p>
+          <p className="text-sm mt-1" style={{ color: '#475569' }}>Clique em "Nova Proposta" para começar</p>
         </div>
       ) : (
-        <div className="bg-white dark:bg-dk-card rounded-xl border border-gray-100 dark:border-dk-border overflow-hidden shadow-sm">
+        <div
+          className="rounded-2xl overflow-hidden animate-fade-up"
+          style={{
+            background: 'rgba(11,16,32,0.85)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.35)',
+            animationDelay: '140ms',
+          }}
+        >
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100 dark:border-dk-border">
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                   {['Proposta', 'Cliente', 'Convênio / Banco / Tabela', 'Valor', 'Produto', 'Status', 'Comissão', 'Pontos', ''].map(h => (
-                    <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{h}</th>
+                    <th
+                      key={h}
+                      className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest"
+                      style={{ color: '#475569' }}
+                    >
+                      {h}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filtered.map(p => (
-                  <tr key={p.id} className="border-b border-gray-50 dark:border-dk-border/50 hover:bg-gray-50 dark:hover:bg-dk-surface/50 transition-colors">
-                    <td className="px-4 py-3 font-mono text-gray-700 dark:text-gray-300">{p.proposal_number || '—'}</td>
+                  <tr key={p.id} className="table-row-cyber">
+                    <td className="px-4 py-3 font-mono text-xs num" style={{ color: '#94A3B8' }}>{p.proposal_number || '—'}</td>
                     <td className="px-4 py-3">
-                      <p className="font-medium text-gray-900 dark:text-white">{p.client_name}</p>
-                      <p className="text-xs text-gray-400">{p.client_cpf}</p>
+                      <p className="font-semibold text-sm" style={{ color: '#E2E8F0' }}>{p.client_name}</p>
+                      <p className="text-xs" style={{ color: '#475569' }}>{p.client_cpf}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-xs text-gray-400">{p.convenio_name || p.convenio || '—'}</p>
-                      <p className="text-gray-700 dark:text-gray-300 text-sm">{p.bank_name || p.bank || '—'}</p>
-                      <p className="text-xs text-gray-400 truncate max-w-[200px]">{p.table_name || '—'}</p>
+                      <p className="text-xs" style={{ color: '#475569' }}>{p.convenio_name || p.convenio || '—'}</p>
+                      <p className="text-sm" style={{ color: '#94A3B8' }}>{p.bank_name || p.bank || '—'}</p>
+                      <p className="text-xs truncate max-w-[200px]" style={{ color: '#475569' }}>{p.table_name || '—'}</p>
                     </td>
-                    <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">{formatCurrency(Number(p.value))}</td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{p.product_name || p.product}</td>
+                    <td className="px-4 py-3 font-bold num" style={{ color: '#E2E8F0' }}>{formatCurrency(Number(p.value))}</td>
+                    <td className="px-4 py-3 text-sm" style={{ color: '#64748B' }}>{p.product_name || p.product}</td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${STATUS_CONFIG[p.status]?.color}`}>
+                      <span className={`${STATUS_CONFIG[p.status]?.color} inline-flex items-center gap-1`}>
                         {STATUS_CONFIG[p.status]?.icon} {p.status}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       {p.status === 'Paga' && Number(p.comissao_valor) > 0 ? (
                         <div>
-                          <span className="text-emerald-600 dark:text-emerald-400 font-semibold text-sm">{formatCurrency(Number(p.comissao_valor))}</span>
-                          <p className="text-xs text-gray-400">{Number(p.comissao_corretor_pct || 0).toFixed(2)}%</p>
+                          <span className="font-bold text-sm num" style={{ color: '#4ade80' }}>{formatCurrency(Number(p.comissao_valor))}</span>
+                          <p className="text-xs num" style={{ color: '#475569' }}>{Number(p.comissao_corretor_pct || 0).toFixed(2)}%</p>
                         </div>
-                      ) : <span className="text-gray-300">—</span>}
+                      ) : <span style={{ color: '#334155' }}>—</span>}
                     </td>
                     <td className="px-4 py-3">
-                      {p.points_earned > 0 ? <span className="text-yellow-600 font-bold">+{p.points_earned} pts</span> : <span className="text-gray-300">—</span>}
+                      {p.points_earned > 0
+                        ? <span className="font-bold text-sm num" style={{ color: '#fbbf24' }}>+{p.points_earned}</span>
+                        : <span style={{ color: '#334155' }}>—</span>
+                      }
                     </td>
                     <td className="px-4 py-3">
                       {p.status === 'Digitada' && (
-                        <button onClick={() => openEdit(p)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-dk-surface text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                        <button
+                          onClick={() => openEdit(p)}
+                          className="p-1.5 rounded-lg transition-all"
+                          style={{ color: '#475569' }}
+                          onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)';
+                            (e.currentTarget as HTMLElement).style.color = '#14B8A6';
+                          }}
+                          onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLElement).style.background = 'transparent';
+                            (e.currentTarget as HTMLElement).style.color = '#475569';
+                          }}
+                        >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                       )}
@@ -340,19 +392,16 @@ export function Proposals() {
         footer={
           <div className="flex gap-3">
             {step > 0 && (
-              <button type="button" onClick={() => setStep(s => s - 1)}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-dk-border text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dk-surface transition-colors">
+              <button type="button" onClick={() => setStep(s => s - 1)} className="flex-1 py-2.5 rounded-xl text-sm font-medium btn-ghost">
                 Voltar
               </button>
             )}
             {step < 2 ? (
-              <button type="button" onClick={nextStep}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-all flex items-center justify-center gap-2" style={{ backgroundColor: '#1e4033' }}>
+              <button type="button" onClick={nextStep} className="btn-cyber flex-1 py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
                 Próximo <ChevronRight className="w-4 h-4" />
               </button>
             ) : (
-              <button type="button" onClick={handleSubmit} disabled={saving || !!dupAlert}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60 transition-all" style={{ backgroundColor: '#1e4033' }}>
+              <button type="button" onClick={handleSubmit} disabled={saving || !!dupAlert} className="btn-cyber flex-1 py-2.5 rounded-xl text-sm">
                 {saving ? 'Salvando...' : editId ? 'Salvar alterações' : 'Cadastrar proposta'}
               </button>
             )}
@@ -363,22 +412,29 @@ export function Proposals() {
         <div className="flex items-center mb-6">
           {STEPS.map((s, i) => {
             const Icon = s.icon;
-            const done = i < step;
+            const done   = i < step;
             const active = i === step;
             return (
               <div key={i} className="flex items-center flex-1">
                 <div className="flex flex-col items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${done || active ? 'text-white' : 'bg-gray-100 dark:bg-dk-surface text-gray-400'}`}
-                    style={done || active ? { backgroundColor: '#1e4033' } : {}}>
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center transition-all"
+                    style={done || active
+                      ? { background: 'linear-gradient(135deg, #14B8A6, #06B6D4)', color: '#fff', boxShadow: '0 0 12px rgba(20,184,166,0.35)' }
+                      : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: '#475569' }
+                    }
+                  >
                     {done ? <CheckCircle className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
                   </div>
-                  <p className={`text-[10px] mt-1 font-medium ${!active && !done ? 'text-gray-400' : ''}`}
-                    style={active || done ? { color: '#1e4033' } : undefined}>
+                  <p className="text-[10px] mt-1 font-medium" style={{ color: active || done ? '#14B8A6' : '#475569' }}>
                     {s.label}
                   </p>
                 </div>
                 {i < STEPS.length - 1 && (
-                  <div className={`flex-1 h-0.5 mx-2 mb-4 ${done ? 'bg-brand' : 'bg-gray-200 dark:bg-dk-border'}`} style={done ? { backgroundColor: '#1e4033' } : {}} />
+                  <div
+                    className="flex-1 h-px mx-2 mb-4 transition-all"
+                    style={{ background: done ? 'linear-gradient(90deg, #14B8A6, #06B6D4)' : 'rgba(255,255,255,0.06)' }}
+                  />
                 )}
               </div>
             );

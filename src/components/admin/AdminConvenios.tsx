@@ -6,7 +6,7 @@ import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
 
-const inp = 'w-full px-3 py-2 border border-gray-200 dark:border-dk-border rounded-xl text-sm bg-white dark:bg-dk-surface dark:text-white focus:outline-none focus:ring-2 focus:ring-brand/30';
+const inp = 'input-cyber w-full px-3 py-2.5 text-sm rounded-xl';
 
 export function AdminConvenios() {
   const [items, setItems] = useState<Convenio[]>([]);
@@ -50,12 +50,12 @@ export function AdminConvenios() {
             <Handshake className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Convênios</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{items.length} convênios cadastrados</p>
+            <h1 className="text-xl font-bold text-gray-100">Convênios</h1>
+            <p className="text-xs text-slate-500 mt-0.5">{items.length} convênios cadastrados</p>
           </div>
         </div>
         <button onClick={() => { setName(''); setEditId(null); setShowForm(true); }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-all" style={{ backgroundColor: '#1e4033' }}>
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm btn-cyber font-semibold">
           <Plus className="w-4 h-4" /> Novo Convênio
         </button>
       </div>
@@ -66,7 +66,7 @@ export function AdminConvenios() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16"><div className="animate-spin w-8 h-8 border-4 border-brand border-t-transparent rounded-full" /></div>
+        <div className="flex justify-center py-16"><div className="spinner-cyber" /></div>
       ) : (
         <div className="space-y-2">
           {items.length === 0 && <p className="text-center py-8 text-gray-400">Nenhum convênio cadastrado</p>}
@@ -104,7 +104,7 @@ export function AdminConvenios() {
         }
       >
         <form id="modal-convenios" onSubmit={save}>
-          <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Nome do convênio *</label>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Nome do convênio *</label>
           <input value={name} onChange={e => setName(e.target.value)} className={inp} required autoFocus placeholder="Ex: INSS, FGTS, Siape..." />
         </form>
       </Modal>

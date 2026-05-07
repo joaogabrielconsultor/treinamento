@@ -45,8 +45,12 @@ function AppInner() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-dk-bg flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-brand border-t-transparent rounded-full" />
+      <div
+        className="min-h-screen flex flex-col items-center justify-center gap-4"
+        style={{ background: 'linear-gradient(135deg, #050816 0%, #080d18 100%)' }}
+      >
+        <div className="spinner-cyber" />
+        <p className="text-xs font-medium" style={{ color: '#475569' }}>Carregando...</p>
       </div>
     );
   }
@@ -101,7 +105,7 @@ function AppInner() {
   } as Parameters<typeof Sidebar>[0]['user'];
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-dk-bg">
+    <div className="flex min-h-screen bg-slate-100 dark:bg-cyber-700">
       <Sidebar
         currentView={currentView}
         onNavigate={navigate}
@@ -110,7 +114,7 @@ function AppInner() {
         isAdmin={isAdmin}
       />
 
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto" style={{ background: 'var(--bg-base)' }}>
         {currentView === 'dashboard' && (
           <Dashboard user={adaptedUser} courses={courses} enrollments={enrollments} onNavigate={navigate} />
         )}

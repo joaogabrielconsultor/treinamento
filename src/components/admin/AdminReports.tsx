@@ -60,22 +60,22 @@ export function AdminReports() {
 
   const F = filters;
   const setF = (k: keyof typeof filters, v: string) => setFilters(f => ({ ...f, [k]: v }));
-  const inp = 'w-full px-3 py-2 border border-gray-200 dark:border-dk-border rounded-xl text-sm bg-white dark:bg-dk-card dark:text-white focus:outline-none focus:ring-2 focus:ring-brand/30';
+  const inp = 'input-cyber text-sm rounded-xl';
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Relatórios</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Filtre e exporte dados de produção</p>
+          <h1 className="text-xl font-bold text-gray-100">Relatórios</h1>
+          <p className="text-xs text-slate-500 mt-0.5">Filtre e exporte dados de produção</p>
         </div>
-        <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-all" style={{ backgroundColor: '#1e4033' }}>
+        <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm btn-cyber font-semibold">
           <Download className="w-4 h-4" /> Exportar CSV
         </button>
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-dk-card rounded-2xl border border-gray-100 dark:border-dk-border shadow-sm p-5 mb-6">
+      <div className="rounded-2xl p-5 mb-6" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
         <div className="flex items-center gap-2 mb-4">
           <Filter className="w-4 h-4 text-gray-400" />
           <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300">Filtros</h3>
@@ -124,7 +124,7 @@ export function AdminReports() {
           </div>
         </div>
         <div className="mt-4 flex justify-end">
-          <button onClick={search} disabled={loading} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60 transition-all" style={{ backgroundColor: '#1e4033' }}>
+          <button onClick={search} disabled={loading} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm btn-cyber font-semibold disabled:opacity-60">
             <Search className="w-4 h-4" />{loading ? 'Buscando...' : 'Buscar'}
           </button>
         </div>
@@ -132,28 +132,28 @@ export function AdminReports() {
 
       {/* Results summary */}
       <div className="grid grid-cols-3 gap-4 mb-4">
-        <div className="bg-white dark:bg-dk-card rounded-xl p-4 border border-gray-100 dark:border-dk-border shadow-sm">
+        <div className="rounded-xl p-4" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
           <p className="text-xs text-gray-500">Resultados</p>
           <p className="text-xl font-bold text-blue-600">{proposals.length}</p>
         </div>
-        <div className="bg-white dark:bg-dk-card rounded-xl p-4 border border-gray-100 dark:border-dk-border shadow-sm">
+        <div className="rounded-xl p-4" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
           <p className="text-xs text-gray-500">Volume pago</p>
           <p className="text-xl font-bold text-green-600">{fmtBRL(totalValue)}</p>
         </div>
-        <div className="bg-white dark:bg-dk-card rounded-xl p-4 border border-gray-100 dark:border-dk-border shadow-sm">
+        <div className="rounded-xl p-4" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
           <p className="text-xs text-gray-500">Propostas pagas</p>
           <p className="text-xl font-bold text-brand">{proposals.filter(p => p.status === 'Paga').length}</p>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-dk-card rounded-xl border border-gray-100 dark:border-dk-border overflow-hidden shadow-sm">
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-100 dark:border-dk-border">
+              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                 {['Data', 'Proposta', 'Corretor', 'Cliente', 'Banco', 'Tabela', 'Produto', 'Convênio', 'Valor', 'Status', 'Pts'].map(h => (
-                  <th key={h} className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                  <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: '#475569' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -161,7 +161,7 @@ export function AdminReports() {
               {proposals.length === 0 ? (
                 <tr><td colSpan={11} className="text-center py-12 text-gray-400">Nenhum resultado</td></tr>
               ) : proposals.map(p => (
-                <tr key={p.id} className="border-b border-gray-50 dark:border-dk-border/50 hover:bg-gray-50 dark:hover:bg-dk-surface/30">
+                <tr key={p.id} className="table-row-cyber">
                   <td className="px-3 py-2.5 text-gray-500 text-xs">{fmtDate(p.created_at)}</td>
                   <td className="px-3 py-2.5 font-mono text-gray-700 dark:text-gray-300">{p.proposal_number || '—'}</td>
                   <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300 whitespace-nowrap">{p.user_name || '—'}</td>

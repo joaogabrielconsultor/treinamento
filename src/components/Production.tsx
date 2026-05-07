@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, CheckCircle, BarChart2, Star, Award, Target, Zap, Bell, BellOff, Percent } from 'lucide-react';
+import { DollarSign, TrendingUp, CheckCircle, BarChart2, Star, Award, Target, Zap, Bell, BellOff, Percent, X } from 'lucide-react';
 import { ProductionStats, Badge, UserStreak, MonthlyGoal, Notification } from '../types';
 
 const API = (p: string, opts?: RequestInit) =>
@@ -9,22 +9,40 @@ function formatCurrency(v: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 }
 
-function StatCard({ label, value, sub, icon: Icon, color }: { label: string; value: string | number; sub?: string; icon: React.ElementType; color: string }) {
+interface StatCardProps {
+  label: string;
+  value: string | number;
+  sub?: string;
+  icon: React.ElementType;
+  iconClass: string;
+  iconColor: string;
+  delay?: number;
+}
+
+function StatCard({ label, value, sub, icon: Icon, iconClass, iconColor, delay = 0 }: StatCardProps) {
   return (
-    <div className="bg-white dark:bg-dk-card rounded-2xl p-5 border border-gray-100 dark:border-dk-border shadow-sm">
+    <div className="stat-card rounded-2xl p-5 animate-fade-up" style={{ animationDelay: `${delay}ms` }}>
       <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{label}</p>
-          <p className={`text-2xl font-black mt-2 ${color}`}>{value}</p>
-          {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: '#475569' }}>{label}</p>
+          <p className="text-2xl font-black num" style={{ color: '#E2E8F0' }}>{value}</p>
+          {sub && <p className="text-xs mt-1" style={{ color: '#64748B' }}>{sub}</p>}
         </div>
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color === 'text-yellow-600' ? 'bg-yellow-50 dark:bg-yellow-900/20' : color === 'text-green-600' ? 'bg-green-50 dark:bg-green-900/20' : color === 'text-blue-600' ? 'bg-blue-50 dark:bg-blue-900/20' : color === 'text-emerald-600' ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-purple-50 dark:bg-purple-900/20'}`}>
-          <Icon className={`w-5 h-5 ${color}`} />
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${iconClass}`}>
+          <Icon className="w-5 h-5" style={{ color: iconColor }} />
         </div>
       </div>
     </div>
   );
 }
+
+const PROPOSAL_BARS = [
+  { label: 'Pagas',      key: 'paid',        barClass: 'progress-bar-green'  },
+  { label: 'Aprovadas',  key: 'approved',    barClass: 'progress-bar-purple' },
+  { label: 'Em Análise', key: 'in_analysis', barClass: 'progress-bar-amber'  },
+  { label: 'Digitadas',  key: 'typed',       barClass: 'progress-bar-blue'   },
+  { label: 'Canceladas', key: 'cancelled',   barClass: 'progress-bar-red'    },
+] as const;
 
 export function Production({ isAdmin }: { isAdmin: boolean }) {
   const [stats, setStats] = useState<ProductionStats | null>(null);
@@ -64,39 +82,117 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  if (loading) return <div className="flex justify-center py-24"><div className="animate-spin w-8 h-8 border-4 border-brand border-t-transparent rounded-full" /></div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen" style={{ background: 'var(--bg-base)' }}>
+        <div className="text-center">
+          <div className="spinner-cyber mx-auto mb-4" />
+          <p className="text-sm" style={{ color: '#475569' }}>Carregando dados...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!stats) return null;
 
   const earnedBadges = badges.filter(b => b.earned);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto" style={{ color: '#E2E8F0' }}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 animate-fade-up">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard de Produção</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{isAdmin ? 'Visão geral da equipe' : 'Sua produção'}</p>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="live-dot" />
+            <span className="text-xs font-medium" style={{ color: '#14B8A6' }}>Dashboard live</span>
+          </div>
+          <h1 className="text-xl font-bold" style={{ color: '#E2E8F0' }}>Produção</h1>
+          <p className="text-xs mt-0.5" style={{ color: '#64748B' }}>
+            {isAdmin ? 'Visão geral da equipe' : 'Sua performance em tempo real'}
+          </p>
         </div>
+
+        {/* Notification bell */}
         <div className="relative">
-          <button onClick={() => setShowNotif(v => !v)} className="relative p-2.5 rounded-xl border border-gray-200 dark:border-dk-border hover:bg-gray-50 dark:hover:bg-dk-surface transition-colors">
-            {unreadCount > 0 ? <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300" /> : <BellOff className="w-5 h-5 text-gray-400" />}
-            {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{unreadCount}</span>}
+          <button
+            onClick={() => setShowNotif(v => !v)}
+            className="relative p-2.5 rounded-xl transition-all"
+            style={{
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.07)',
+              color: unreadCount > 0 ? '#14B8A6' : '#475569',
+            }}
+          >
+            {unreadCount > 0 ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+            {unreadCount > 0 && (
+              <span
+                className="absolute -top-1 -right-1 w-4 h-4 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
+                style={{ background: 'linear-gradient(135deg, #14B8A6, #06B6D4)', boxShadow: '0 0 8px rgba(20,184,166,0.5)' }}
+              >
+                {unreadCount}
+              </span>
+            )}
           </button>
+
           {showNotif && (
-            <div className="absolute right-0 top-12 w-80 bg-white dark:bg-dk-card border border-gray-100 dark:border-dk-border rounded-2xl shadow-xl z-50 overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-dk-border">
-                <span className="font-semibold text-sm text-gray-900 dark:text-white">Notificações</span>
-                {unreadCount > 0 && <button onClick={markAllRead} className="text-xs text-brand hover:underline">Marcar todas lidas</button>}
+            <div
+              className="absolute right-0 top-12 w-80 rounded-2xl z-50 overflow-hidden animate-fade-up"
+              style={{
+                background: 'rgba(8,13,24,0.97)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                boxShadow: '0 24px 60px rgba(0,0,0,0.7)',
+                backdropFilter: 'blur(20px)',
+              }}
+            >
+              <div
+                className="flex items-center justify-between px-4 py-3"
+                style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+              >
+                <span className="text-sm font-semibold" style={{ color: '#E2E8F0' }}>Notificações</span>
+                <div className="flex items-center gap-2">
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={markAllRead}
+                      className="text-xs transition-colors"
+                      style={{ color: '#14B8A6' }}
+                    >
+                      Marcar lidas
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowNotif(false)}
+                    className="p-1 rounded-lg transition-colors"
+                    style={{ color: '#475569' }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#94A3B8'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#475569'; }}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
               <div className="max-h-72 overflow-y-auto">
                 {notifications.length === 0 ? (
-                  <p className="text-center py-8 text-sm text-gray-400">Nenhuma notificação</p>
-                ) : notifications.map(n => (
-                  <div key={n.id} className={`px-4 py-3 border-b border-gray-50 dark:border-dk-border/50 ${!n.read ? 'bg-brand/5' : ''}`}>
-                    <p className="text-sm text-gray-800 dark:text-gray-200">{n.message}</p>
-                    <p className="text-xs text-gray-400 mt-1">{new Date(n.created_at).toLocaleDateString('pt-BR')}</p>
-                  </div>
-                ))}
+                  <p className="text-center py-8 text-sm" style={{ color: '#475569' }}>Nenhuma notificação</p>
+                ) : (
+                  notifications.map(n => (
+                    <div
+                      key={n.id}
+                      className="px-4 py-3"
+                      style={{
+                        borderBottom: '1px solid rgba(255,255,255,0.04)',
+                        background: !n.read ? 'rgba(20,184,166,0.04)' : 'transparent',
+                      }}
+                    >
+                      {!n.read && (
+                        <div className="w-1.5 h-1.5 rounded-full mb-1" style={{ background: '#14B8A6' }} />
+                      )}
+                      <p className="text-sm" style={{ color: '#E2E8F0' }}>{n.message}</p>
+                      <p className="text-xs mt-1" style={{ color: '#475569' }}>
+                        {new Date(n.created_at).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
@@ -105,39 +201,50 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
 
       {/* Main stats */}
       <div className={`grid grid-cols-2 ${isAdmin ? 'lg:grid-cols-4' : 'lg:grid-cols-5'} gap-4 mb-6`}>
-        <StatCard label="Produção Hoje" value={formatCurrency(stats.today.value)} sub={`${stats.today.count} propostas`} icon={DollarSign} color="text-green-600" />
-        <StatCard label="Produção do Mês" value={formatCurrency(stats.month.value)} sub={`${stats.month.count} propostas pagas`} icon={TrendingUp} color="text-blue-600" />
-        <StatCard label="Ticket Médio" value={formatCurrency(stats.avg_ticket)} icon={BarChart2} color="text-purple-600" />
+        <StatCard label="Produção Hoje"   value={formatCurrency(stats.today.value)}  sub={`${stats.today.count} propostas`}      icon={DollarSign}  iconClass="icon-box-green"  iconColor="#22c55e" delay={0}   />
+        <StatCard label="Produção do Mês" value={formatCurrency(stats.month.value)}  sub={`${stats.month.count} pagas`}           icon={TrendingUp}  iconClass="icon-box-blue"   iconColor="#60a5fa" delay={60}  />
+        <StatCard label="Ticket Médio"    value={formatCurrency(stats.avg_ticket)}                                                  icon={BarChart2}   iconClass="icon-box-purple" iconColor="#a78bfa" delay={120} />
         {isAdmin
-          ? <StatCard label="Melhor Corretor" value={stats.best_broker?.full_name?.split(' ')[0] || '—'} sub={`${stats.best_broker?.points || 0} pontos`} icon={Award} color="text-yellow-600" />
+          ? <StatCard label="Melhor Corretor" value={stats.best_broker?.full_name?.split(' ')[0] || '—'} sub={`${stats.best_broker?.points || 0} pts`} icon={Award} iconClass="icon-box-amber" iconColor="#fbbf24" delay={180} />
           : <>
-              <StatCard label="Minha Comissão" value={formatCurrency(stats.my_commission_total || 0)} sub="propostas pagas" icon={Percent} color="text-emerald-600" />
-              <StatCard label="Meus Pontos" value={`${stats.my_points} pts`} sub={`#${stats.my_position || '—'} no ranking`} icon={Star} color="text-yellow-600" />
+              <StatCard label="Minha Comissão" value={formatCurrency(stats.my_commission_total || 0)} sub="propostas pagas"        icon={Percent} iconClass="icon-box-teal"   iconColor="#14B8A6" delay={180} />
+              <StatCard label="Meus Pontos"    value={`${stats.my_points} pts`} sub={`#${stats.my_position || '—'} no ranking`}    icon={Star}    iconClass="icon-box-amber"  iconColor="#fbbf24" delay={240} />
             </>
         }
       </div>
 
-      {/* Proposal status breakdown */}
+      {/* Middle section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-        <div className="lg:col-span-2 bg-white dark:bg-dk-card rounded-2xl border border-gray-100 dark:border-dk-border shadow-sm p-5">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Status das Propostas</h3>
-          <div className="space-y-3">
-            {[
-              { label: 'Pagas', count: stats.proposals.paid, color: 'bg-green-500', max: stats.proposals.total_proposals },
-              { label: 'Aprovadas', count: stats.proposals.approved, color: 'bg-purple-500', max: stats.proposals.total_proposals },
-              { label: 'Em Análise', count: stats.proposals.in_analysis, color: 'bg-yellow-500', max: stats.proposals.total_proposals },
-              { label: 'Digitadas', count: stats.proposals.typed, color: 'bg-blue-500', max: stats.proposals.total_proposals },
-              { label: 'Canceladas', count: stats.proposals.cancelled, color: 'bg-red-400', max: stats.proposals.total_proposals },
-            ].map(item => {
-              const pct = item.max ? Math.round((item.count / item.max) * 100) : 0;
+        {/* Proposal status */}
+        <div
+          className="lg:col-span-2 rounded-2xl p-5 animate-fade-up"
+          style={{
+            background: 'rgba(11,16,32,0.85)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.35)',
+            animationDelay: '200ms',
+          }}
+        >
+          <div className="flex items-center gap-2 mb-5">
+            <div className="live-dot" />
+            <h3 className="text-sm font-semibold" style={{ color: '#E2E8F0' }}>Status das Propostas</h3>
+          </div>
+          <div className="space-y-4">
+            {PROPOSAL_BARS.map(({ label, key, barClass }) => {
+              const count = stats.proposals[key] as number;
+              const pct = stats.proposals.total_proposals
+                ? Math.round((count / stats.proposals.total_proposals) * 100)
+                : 0;
               return (
-                <div key={item.label}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600 dark:text-gray-400">{item.label}</span>
-                    <span className="font-semibold text-gray-900 dark:text-white">{item.count} <span className="text-gray-400 font-normal">({pct}%)</span></span>
+                <div key={label}>
+                  <div className="flex justify-between text-xs mb-1.5">
+                    <span style={{ color: '#64748B' }}>{label}</span>
+                    <span className="font-semibold num" style={{ color: '#94A3B8' }}>
+                      {count} <span style={{ color: '#475569' }}>({pct}%)</span>
+                    </span>
                   </div>
-                  <div className="h-2 bg-gray-100 dark:bg-dk-surface rounded-full overflow-hidden">
-                    <div className={`h-2 rounded-full ${item.color} transition-all duration-500`} style={{ width: `${pct}%` }} />
+                  <div className="progress-track h-2">
+                    <div className={`${barClass} h-2 transition-all duration-700`} style={{ width: `${pct}%` }} />
                   </div>
                 </div>
               );
@@ -145,42 +252,70 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
           </div>
         </div>
 
-        {/* Right column: streak + goal (corretor) or top table (admin) */}
+        {/* Right column */}
         <div className="space-y-4">
           {!isAdmin && streak && (
-            <div className="bg-white dark:bg-dk-card rounded-2xl border border-gray-100 dark:border-dk-border shadow-sm p-5">
+            <div
+              className="rounded-2xl p-5 animate-fade-up"
+              style={{
+                background: 'rgba(245,158,11,0.06)',
+                border: '1px solid rgba(245,158,11,0.15)',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                animationDelay: '240ms',
+              }}
+            >
               <div className="flex items-center gap-2 mb-3">
-                <Zap className="w-4 h-4 text-yellow-500" />
-                <h3 className="font-semibold text-gray-900 dark:text-white">Streak Diária</h3>
+                <Zap className="w-4 h-4" style={{ color: '#fbbf24' }} />
+                <h3 className="text-sm font-semibold" style={{ color: '#E2E8F0' }}>Streak Diária</h3>
               </div>
-              <p className="text-3xl font-black text-yellow-500">🔥 {streak.current_streak} dias</p>
-              <p className="text-xs text-gray-400 mt-1">Recorde: {streak.best_streak} dias</p>
+              <p className="text-3xl font-black num" style={{ color: '#fbbf24' }}>
+                🔥 {streak.current_streak} dias
+              </p>
+              <p className="text-xs mt-1" style={{ color: '#64748B' }}>Recorde: {streak.best_streak} dias</p>
             </div>
           )}
 
           {!isAdmin && goal && (
-            <div className="bg-white dark:bg-dk-card rounded-2xl border border-gray-100 dark:border-dk-border shadow-sm p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Target className="w-4 h-4 text-green-500" />
-                <h3 className="font-semibold text-gray-900 dark:text-white">Meta do Mês</h3>
+            <div
+              className="rounded-2xl p-5 animate-fade-up"
+              style={{
+                background: 'rgba(11,16,32,0.85)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                boxShadow: '0 4px 24px rgba(0,0,0,0.35)',
+                animationDelay: '280ms',
+              }}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <Target className="w-4 h-4" style={{ color: '#14B8A6' }} />
+                <h3 className="text-sm font-semibold" style={{ color: '#E2E8F0' }}>Meta do Mês</h3>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-gray-500">Pontos</span>
-                    <span className="font-semibold">{stats.my_points}/{goal.target_points}</span>
+                  <div className="flex justify-between text-xs mb-1.5">
+                    <span style={{ color: '#64748B' }}>Pontos</span>
+                    <span className="font-semibold num" style={{ color: '#94A3B8' }}>
+                      {stats.my_points}/{goal.target_points}
+                    </span>
                   </div>
-                  <div className="h-2 bg-gray-100 dark:bg-dk-surface rounded-full overflow-hidden">
-                    <div className="h-2 bg-green-500 rounded-full transition-all" style={{ width: `${Math.min(100, goal.target_points ? Math.round((stats.my_points / goal.target_points) * 100) : 0)}%` }} />
+                  <div className="progress-track h-2">
+                    <div
+                      className="progress-bar h-2"
+                      style={{ width: `${Math.min(100, goal.target_points ? Math.round((stats.my_points / goal.target_points) * 100) : 0)}%` }}
+                    />
                   </div>
                 </div>
                 <div>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-gray-500">Propostas Pagas</span>
-                    <span className="font-semibold">{stats.proposals.paid}/{goal.target_proposals}</span>
+                  <div className="flex justify-between text-xs mb-1.5">
+                    <span style={{ color: '#64748B' }}>Propostas Pagas</span>
+                    <span className="font-semibold num" style={{ color: '#94A3B8' }}>
+                      {stats.proposals.paid}/{goal.target_proposals}
+                    </span>
                   </div>
-                  <div className="h-2 bg-gray-100 dark:bg-dk-surface rounded-full overflow-hidden">
-                    <div className="h-2 bg-blue-500 rounded-full transition-all" style={{ width: `${Math.min(100, goal.target_proposals ? Math.round((stats.proposals.paid / goal.target_proposals) * 100) : 0)}%` }} />
+                  <div className="progress-track h-2">
+                    <div
+                      className="progress-bar-green h-2"
+                      style={{ width: `${Math.min(100, goal.target_proposals ? Math.round((stats.proposals.paid / goal.target_proposals) * 100) : 0)}%` }}
+                    />
                   </div>
                 </div>
               </div>
@@ -188,38 +323,83 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
           )}
 
           {isAdmin && stats.top_table && (
-            <div className="bg-white dark:bg-dk-card rounded-2xl border border-gray-100 dark:border-dk-border shadow-sm p-5">
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Tabela mais usada</h3>
-              <p className="font-bold text-brand">{stats.top_table.name}</p>
-              <p className="text-sm text-gray-400 mt-1">{stats.top_table.count} propostas pagas</p>
+            <div
+              className="rounded-2xl p-5"
+              style={{
+                background: 'rgba(20,184,166,0.06)',
+                border: '1px solid rgba(20,184,166,0.15)',
+              }}
+            >
+              <h3 className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: '#475569' }}>Tabela mais usada</h3>
+              <p className="font-bold" style={{ color: '#2DD4BF' }}>{stats.top_table.name}</p>
+              <p className="text-xs mt-1" style={{ color: '#64748B' }}>{stats.top_table.count} propostas pagas</p>
             </div>
           )}
 
-          {/* Total proposals */}
-          <div className="bg-white dark:bg-dk-card rounded-2xl border border-gray-100 dark:border-dk-border shadow-sm p-5">
+          <div
+            className="rounded-2xl p-5"
+            style={{
+              background: 'rgba(11,16,32,0.85)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.35)',
+            }}
+          >
             <div className="flex items-center gap-2 mb-2">
-              <CheckCircle className="w-4 h-4 text-gray-400" />
-              <h3 className="font-semibold text-gray-900 dark:text-white">Total de Propostas</h3>
+              <CheckCircle className="w-4 h-4" style={{ color: '#475569' }} />
+              <h3 className="text-sm font-semibold" style={{ color: '#94A3B8' }}>Total de Propostas</h3>
             </div>
-            <p className="text-3xl font-black text-gray-900 dark:text-white">{stats.proposals.total_proposals}</p>
+            <p className="text-3xl font-black num" style={{ color: '#E2E8F0' }}>
+              {stats.proposals.total_proposals}
+            </p>
           </div>
         </div>
       </div>
 
       {/* Badges */}
       {badges.length > 0 && (
-        <div className="bg-white dark:bg-dk-card rounded-2xl border border-gray-100 dark:border-dk-border shadow-sm p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Award className="w-4 h-4 text-yellow-500" />
-            <h3 className="font-semibold text-gray-900 dark:text-white">Medalhas</h3>
-            <span className="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 px-2 py-0.5 rounded-full font-medium">{earnedBadges.length}/{badges.length}</span>
+        <div
+          className="rounded-2xl p-5 animate-fade-up"
+          style={{
+            background: 'rgba(11,16,32,0.85)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.35)',
+            animationDelay: '320ms',
+          }}
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <Award className="w-4 h-4" style={{ color: '#fbbf24' }} />
+            <h3 className="text-sm font-semibold" style={{ color: '#E2E8F0' }}>Conquistas</h3>
+            <span className="badge badge-amber text-[10px]">
+              {earnedBadges.length}/{badges.length}
+            </span>
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-9 gap-3">
+          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-9 gap-2">
             {badges.map(b => (
-              <div key={b.id} title={`${b.name}: ${b.description}`}
-                className={`flex flex-col items-center p-2 rounded-xl border transition-all ${b.earned ? 'border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20' : 'border-gray-100 dark:border-dk-border bg-gray-50 dark:bg-dk-surface opacity-40 grayscale'}`}>
-                <span className="text-2xl">{b.icon}</span>
-                <span className="text-[10px] text-center mt-1 text-gray-600 dark:text-gray-400 leading-tight">{b.name}</span>
+              <div
+                key={b.id}
+                title={`${b.name}: ${b.description}`}
+                className="flex flex-col items-center p-2.5 rounded-xl transition-all cursor-default"
+                style={b.earned
+                  ? {
+                      background: 'rgba(245,158,11,0.08)',
+                      border: '1px solid rgba(245,158,11,0.2)',
+                      boxShadow: '0 0 12px rgba(245,158,11,0.08)',
+                    }
+                  : {
+                      background: 'rgba(255,255,255,0.02)',
+                      border: '1px solid rgba(255,255,255,0.05)',
+                      opacity: 0.35,
+                      filter: 'grayscale(1)',
+                    }
+                }
+              >
+                <span className="text-xl">{b.icon}</span>
+                <span
+                  className="text-[9px] text-center mt-1.5 leading-tight line-clamp-2"
+                  style={{ color: b.earned ? '#94A3B8' : '#475569' }}
+                >
+                  {b.name}
+                </span>
               </div>
             ))}
           </div>

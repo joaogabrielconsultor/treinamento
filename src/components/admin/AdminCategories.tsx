@@ -6,7 +6,7 @@ import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
 
-const inp = 'w-full px-3 py-2 border border-gray-200 dark:border-dk-border rounded-xl text-sm bg-white dark:bg-dk-surface dark:text-white focus:outline-none focus:ring-2 focus:ring-brand/30';
+const inp = 'input-cyber w-full px-3 py-2.5 text-sm rounded-xl';
 
 export function AdminCategories() {
   const [categories, setCategories] = useState<TableCategory[]>([]);
@@ -43,11 +43,11 @@ export function AdminCategories() {
     <div className="p-6 max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Categorias de Tabelas</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Configure os multiplicadores de pontuação</p>
+          <h1 className="text-xl font-bold text-gray-100">Categorias de Tabelas</h1>
+          <p className="text-xs text-slate-500 mt-0.5">Configure os multiplicadores de pontuação</p>
         </div>
         <button onClick={() => { setForm({ name: '', multiplier: '1' }); setEditId(null); setShowForm(true); }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-all" style={{ backgroundColor: '#1e4033' }}>
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm btn-cyber font-semibold">
           <Plus className="w-4 h-4" /> Nova Categoria
         </button>
       </div>
@@ -58,7 +58,7 @@ export function AdminCategories() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16"><div className="animate-spin w-8 h-8 border-4 border-brand border-t-transparent rounded-full" /></div>
+        <div className="flex justify-center py-16"><div className="spinner-cyber" /></div>
       ) : (
         <div className="space-y-3">
           {categories.map(c => (
@@ -101,11 +101,11 @@ export function AdminCategories() {
       >
         <form id="modal-categories" onSubmit={save} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Nome *</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Nome *</label>
             <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className={inp} required autoFocus placeholder="Ex: Alta comissão" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Multiplicador</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Multiplicador</label>
             <input type="number" step="0.01" min="0.1" value={form.multiplier} onChange={e => setForm(f => ({ ...f, multiplier: e.target.value }))} className={inp} required />
             <p className="text-xs text-gray-400 mt-1">Ex: 2 = dobra os pontos, 0.5 = metade dos pontos</p>
           </div>

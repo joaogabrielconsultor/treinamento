@@ -17,7 +17,7 @@ const AppContext = createContext<AppContextType>({
 export function AppProvider({ children }: { children: React.ReactNode }) {
   // localStorage é apenas cache local para evitar flash no carregamento
   const [logoUrl, setLogoUrlState] = useState(() => localStorage.getItem('logoUrl') || '/logo.png');
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') !== 'false');
 
   // Busca a logo do banco de dados ao iniciar — garante que todos os usuários vejam
   useEffect(() => {
