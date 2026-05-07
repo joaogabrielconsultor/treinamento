@@ -74,6 +74,119 @@ export interface LoginBanco {
   created_at: string;
 }
 
+export interface TableCategory {
+  id: string;
+  name: string;
+  multiplier: number;
+  created_at: string;
+}
+
+export interface FinancialTable {
+  id: string;
+  name: string;
+  bank: string;
+  category_id: string | null;
+  active: boolean;
+  created_at: string;
+  category_name?: string;
+  category_multiplier?: number;
+}
+
+export interface ScoringRule {
+  id: string;
+  table_id: string;
+  min_value: number;
+  max_value: number | null;
+  points: number;
+  created_at: string;
+}
+
+export type ProposalStatus = 'Digitada' | 'Em análise' | 'Aprovada' | 'Paga' | 'Cancelada';
+
+export interface Proposal {
+  id: string;
+  user_id: string;
+  proposal_number: string;
+  value: number;
+  product: string;
+  bank: string;
+  convenio: string;
+  table_id: string | null;
+  client_name: string;
+  client_cpf: string;
+  client_phone: string;
+  status: ProposalStatus;
+  points_earned: number;
+  created_at: string;
+  updated_at: string;
+  user_name?: string;
+  user_email?: string;
+  table_name?: string;
+  category_name?: string;
+}
+
+export interface RankingEntry {
+  user_id: string;
+  full_name: string;
+  email: string;
+  total_points: number;
+  proposals_paid: number;
+  total_value: number;
+  position: number;
+}
+
+export interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  condition_type: string;
+  condition_value: number;
+  earned?: boolean;
+}
+
+export interface UserStreak {
+  user_id: string;
+  current_streak: number;
+  best_streak: number;
+  last_activity_date: string | null;
+}
+
+export interface MonthlyGoal {
+  id: string;
+  user_id: string;
+  month: number;
+  year: number;
+  target_points: number;
+  target_proposals: number;
+}
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  message: string;
+  read: boolean;
+  created_at: string;
+}
+
+export interface ProductionStats {
+  today: { value: number; count: number };
+  month: { value: number; count: number };
+  avg_ticket: number;
+  proposals: {
+    total_proposals: number;
+    paid: number;
+    in_analysis: number;
+    approved: number;
+    typed: number;
+    cancelled: number;
+  };
+  best_broker: { full_name: string; points: number } | null;
+  top_table: { name: string; count: number } | null;
+  my_points: number;
+  my_position: number | null;
+}
+
 export type ViewType =
   | 'dashboard'
   | 'catalog'
@@ -84,6 +197,13 @@ export type ViewType =
   | 'admin-courses'
   | 'admin-course-edit'
   | 'login-bancos'
-  | 'admin-personalizacao';
+  | 'admin-personalizacao'
+  | 'proposals'
+  | 'ranking'
+  | 'production'
+  | 'admin-proposals'
+  | 'admin-financial-tables'
+  | 'admin-categories'
+  | 'admin-reports';
 
 export type AuthMode = 'login';

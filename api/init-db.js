@@ -115,6 +115,151 @@ async function initDb() {
       )
     `);
 
+    // ─── PRODUÇÃO / RANKING / GAMIFICAÇÃO ─────────────────────────────────────
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS table_categories (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        name text NOT NULL,
+        multiplier numeric(5,2) NOT NULL DEFAULT 1,
+        created_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS financial_tables (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        name text NOT NULL,
+        bank text NOT NULL DEFAULT '',
+        category_id uuid REFERENCES table_categories(id) ON DELETE SET NULL,
+        active boolean NOT NULL DEFAULT true,
+        created_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS scoring_rules (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        table_id uuid NOT NULL REFERENCES financial_tables(id) ON DELETE CASCADE,
+        min_value numeric(15,2) NOT NULL DEFAULT 0,
+        max_value numeric(15,2),
+        points integer NOT NULL DEFAULT 0,
+        created_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS proposals (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        proposal_number text NOT NULL DEFAULT '',
+        value numeric(15,2) NOT NULL DEFAULT 0,
+        product text NOT NULL DEFAULT '',
+        bank text NOT NULL DEFAULT '',
+        convenio text NOT NULL DEFAULT '',
+        table_id uuid REFERENCES financial_tables(id) ON DELETE SET NULL,
+        client_name text NOT NULL DEFAULT '',
+        client_cpf text NOT NULL DEFAULT '',
+        client_phone text NOT NULL DEFAULT '',
+        status text NOT NULL DEFAULT 'Digitada' CHECK (status IN ('Digitada','Em análise','Aprovada','Paga','Cancelada')),
+        points_earned integer NOT NULL DEFAULT 0,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_points (
+        user_id uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        total_points integer NOT NULL DEFAULT 0,
+        updated_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS badges (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        name text NOT NULL,
+        description text NOT NULL DEFAULT '',
+        icon text NOT NULL DEFAULT '🏅',
+        condition_type text NOT NULL DEFAULT 'proposals_paid',
+        condition_value integer NOT NULL DEFAULT 1,
+        created_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_badges (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        badge_id uuid NOT NULL REFERENCES badges(id) ON DELETE CASCADE,
+        earned_at timestamptz NOT NULL DEFAULT now(),
+        UNIQUE(user_id, badge_id)
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_streaks (
+        user_id uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        current_streak integer NOT NULL DEFAULT 0,
+        best_streak integer NOT NULL DEFAULT 0,
+        last_activity_date date,
+        updated_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS monthly_goals (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+        month integer NOT NULL,
+        year integer NOT NULL,
+        target_points integer NOT NULL DEFAULT 0,
+        target_proposals integer NOT NULL DEFAULT 0,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        UNIQUE(user_id, month, year)
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        message text NOT NULL,
+        read boolean NOT NULL DEFAULT false,
+        created_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+
+    // Seed badges padrão
+    const { rows: badgeCheck } = await client.query('SELECT id FROM badges LIMIT 1');
+    if (badgeCheck.length === 0) {
+      await client.query(`
+        INSERT INTO badges (name, description, icon, condition_type, condition_value) VALUES
+        ('Primeira Proposta', 'Cadastrou a primeira proposta paga', '🥇', 'proposals_paid', 1),
+        ('5 Propostas', 'Atingiu 5 propostas pagas', '🔥', 'proposals_paid', 5),
+        ('10 Propostas', 'Atingiu 10 propostas pagas', '💎', 'proposals_paid', 10),
+        ('50 Propostas', 'Atingiu 50 propostas pagas', '🚀', 'proposals_paid', 50),
+        ('100 Propostas', 'Atingiu 100 propostas pagas', '👑', 'proposals_paid', 100),
+        ('Streak 3 dias', 'Produziu por 3 dias seguidos', '⚡', 'streak', 3),
+        ('Streak 7 dias', 'Produziu por 7 dias seguidos', '🌟', 'streak', 7),
+        ('500 pontos', 'Acumulou 500 pontos', '🎯', 'total_points', 500),
+        ('1000 pontos', 'Acumulou 1000 pontos', '🏆', 'total_points', 1000)
+      `);
+    }
+
+    // Seed categorias padrão
+    const { rows: catCheck } = await client.query('SELECT id FROM table_categories LIMIT 1');
+    if (catCheck.length === 0) {
+      await client.query(`
+        INSERT INTO table_categories (name, multiplier) VALUES
+        ('Alta comissão', 2.0),
+        ('Média comissão', 1.0),
+        ('Baixa comissão', 0.5),
+        ('Premium', 3.0),
+        ('Estratégica', 1.5)
+      `);
+    }
+
     // Master admin — único que pode gerenciar funções, não pode ser rebaixado
     const MASTER_EMAIL = 'adm@rozesstartflow.com';
     const MASTER_NAME  = 'Administrador Master';

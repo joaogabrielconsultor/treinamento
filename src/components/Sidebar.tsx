@@ -1,4 +1,4 @@
-import { LayoutDashboard, Library, LogOut, ChevronRight, Users, GraduationCap, Shield, Building2, Moon, Sun, Palette } from 'lucide-react';
+import { LayoutDashboard, Library, LogOut, ChevronRight, Users, GraduationCap, Shield, Building2, Moon, Sun, Palette, FileText, Trophy, BarChart2, Table2, Tag, ClipboardList, FileBarChart } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { ViewType } from '../types';
 import { LogoComponent } from './LogoComponent';
@@ -14,14 +14,21 @@ interface SidebarProps {
 
 const navItems = [
   { view: 'dashboard'    as ViewType, icon: LayoutDashboard, label: 'Dashboard' },
-  { view: 'catalog'      as ViewType, icon: Library,         label: 'Catálogo de Cursos' },
+  { view: 'production'   as ViewType, icon: BarChart2,       label: 'Produção' },
+  { view: 'proposals'    as ViewType, icon: FileText,        label: 'Minhas Propostas' },
+  { view: 'ranking'      as ViewType, icon: Trophy,          label: 'Ranking' },
+  { view: 'catalog'      as ViewType, icon: Library,         label: 'Treinamentos' },
   { view: 'login-bancos' as ViewType, icon: Building2,       label: 'Login Bancos' },
 ];
 
 const adminItems = [
-  { view: 'admin-users'          as ViewType, icon: Users,         label: 'Usuários' },
-  { view: 'admin-courses'        as ViewType, icon: GraduationCap, label: 'Treinamentos' },
-  { view: 'admin-personalizacao' as ViewType, icon: Palette,       label: 'Personalização' },
+  { view: 'admin-users'            as ViewType, icon: Users,         label: 'Usuários' },
+  { view: 'admin-proposals'        as ViewType, icon: ClipboardList, label: 'Propostas' },
+  { view: 'admin-financial-tables' as ViewType, icon: Table2,        label: 'Tabelas Financeiras' },
+  { view: 'admin-categories'       as ViewType, icon: Tag,           label: 'Categorias' },
+  { view: 'admin-reports'          as ViewType, icon: FileBarChart,  label: 'Relatórios' },
+  { view: 'admin-courses'          as ViewType, icon: GraduationCap, label: 'Treinamentos' },
+  { view: 'admin-personalizacao'   as ViewType, icon: Palette,       label: 'Personalização' },
 ];
 
 export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin }: SidebarProps) {
@@ -80,7 +87,11 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin }: S
             {adminItems.map(({ view, icon: Icon, label }) => {
               const isActive =
                 currentView === view ||
-                (view === 'admin-courses' && currentView === 'admin-course-edit');
+                (view === 'admin-courses' && currentView === 'admin-course-edit') ||
+                (view === 'admin-proposals' && currentView === 'admin-proposals') ||
+                (view === 'admin-financial-tables' && currentView === 'admin-financial-tables') ||
+                (view === 'admin-categories' && currentView === 'admin-categories') ||
+                (view === 'admin-reports' && currentView === 'admin-reports');
               return (
                 <button
                   key={view}

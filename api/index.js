@@ -410,6 +410,467 @@ app.delete('/api/login-bancos/:id', auth, adminOnly, async (req, res) => {
   res.json({ ok: true });
 });
 
+// ─── CATEGORIAS ───────────────────────────────────────────────────────────────
+app.get('/api/categories', auth, async (req, res) => {
+  const { rows } = await pool.query('SELECT * FROM table_categories ORDER BY name ASC');
+  res.json(rows);
+});
+
+app.post('/api/categories', auth, adminOnly, async (req, res) => {
+  const { name, multiplier } = req.body;
+  if (!name) return res.status(400).json({ error: 'Nome obrigatório' });
+  const { rows } = await pool.query(
+    'INSERT INTO table_categories (name, multiplier) VALUES ($1,$2) RETURNING *',
+    [name, multiplier || 1]
+  );
+  res.json(rows[0]);
+});
+
+app.put('/api/categories/:id', auth, adminOnly, async (req, res) => {
+  const { name, multiplier } = req.body;
+  const { rows } = await pool.query(
+    'UPDATE table_categories SET name=COALESCE($1,name), multiplier=COALESCE($2,multiplier) WHERE id=$3 RETURNING *',
+    [name, multiplier, req.params.id]
+  );
+  res.json(rows[0]);
+});
+
+app.delete('/api/categories/:id', auth, adminOnly, async (req, res) => {
+  await pool.query('DELETE FROM table_categories WHERE id=$1', [req.params.id]);
+  res.json({ ok: true });
+});
+
+// ─── TABELAS FINANCEIRAS ───────────────────────────────────────────────────────
+app.get('/api/financial-tables', auth, async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT ft.*, tc.name as category_name, tc.multiplier as category_multiplier
+    FROM financial_tables ft
+    LEFT JOIN table_categories tc ON tc.id = ft.category_id
+    ORDER BY ft.name ASC
+  `);
+  res.json(rows);
+});
+
+app.post('/api/financial-tables', auth, adminOnly, async (req, res) => {
+  const { name, bank, category_id, active } = req.body;
+  if (!name) return res.status(400).json({ error: 'Nome obrigatório' });
+  const { rows } = await pool.query(
+    'INSERT INTO financial_tables (name, bank, category_id, active) VALUES ($1,$2,$3,$4) RETURNING *',
+    [name, bank || '', category_id || null, active !== false]
+  );
+  res.json(rows[0]);
+});
+
+app.put('/api/financial-tables/:id', auth, adminOnly, async (req, res) => {
+  const { name, bank, category_id, active } = req.body;
+  const { rows } = await pool.query(
+    `UPDATE financial_tables SET
+      name=COALESCE($1,name), bank=COALESCE($2,bank),
+      category_id=COALESCE($3,category_id), active=COALESCE($4,active)
+     WHERE id=$5 RETURNING *`,
+    [name, bank, category_id, active, req.params.id]
+  );
+  res.json(rows[0]);
+});
+
+app.delete('/api/financial-tables/:id', auth, adminOnly, async (req, res) => {
+  await pool.query('DELETE FROM financial_tables WHERE id=$1', [req.params.id]);
+  res.json({ ok: true });
+});
+
+// ─── REGRAS DE PONTUAÇÃO ───────────────────────────────────────────────────────
+app.get('/api/scoring-rules/:table_id', auth, async (req, res) => {
+  const { rows } = await pool.query(
+    'SELECT * FROM scoring_rules WHERE table_id=$1 ORDER BY min_value ASC',
+    [req.params.table_id]
+  );
+  res.json(rows);
+});
+
+app.post('/api/scoring-rules', auth, adminOnly, async (req, res) => {
+  const { table_id, min_value, max_value, points } = req.body;
+  if (!table_id) return res.status(400).json({ error: 'table_id obrigatório' });
+  const { rows } = await pool.query(
+    'INSERT INTO scoring_rules (table_id, min_value, max_value, points) VALUES ($1,$2,$3,$4) RETURNING *',
+    [table_id, min_value || 0, max_value || null, points || 0]
+  );
+  res.json(rows[0]);
+});
+
+app.put('/api/scoring-rules/:id', auth, adminOnly, async (req, res) => {
+  const { min_value, max_value, points } = req.body;
+  const { rows } = await pool.query(
+    'UPDATE scoring_rules SET min_value=COALESCE($1,min_value), max_value=$2, points=COALESCE($3,points) WHERE id=$4 RETURNING *',
+    [min_value, max_value || null, points, req.params.id]
+  );
+  res.json(rows[0]);
+});
+
+app.delete('/api/scoring-rules/:id', auth, adminOnly, async (req, res) => {
+  await pool.query('DELETE FROM scoring_rules WHERE id=$1', [req.params.id]);
+  res.json({ ok: true });
+});
+
+// ─── HELPER: calcula pontos de uma proposta ────────────────────────────────────
+async function calcPoints(tableId, value) {
+  if (!tableId) return 0;
+  const { rows: rules } = await pool.query(
+    `SELECT sr.points, tc.multiplier FROM scoring_rules sr
+     JOIN financial_tables ft ON ft.id = sr.table_id
+     LEFT JOIN table_categories tc ON tc.id = ft.category_id
+     WHERE sr.table_id = $1
+       AND sr.min_value <= $2
+       AND (sr.max_value IS NULL OR sr.max_value >= $2)
+     ORDER BY sr.min_value DESC LIMIT 1`,
+    [tableId, value]
+  );
+  if (!rules[0]) return 0;
+  const multiplier = parseFloat(rules[0].multiplier) || 1;
+  return Math.round(rules[0].points * multiplier);
+}
+
+async function awardBadgesAndNotify(client, userId) {
+  const { rows: [up] } = await client.query('SELECT total_points FROM user_points WHERE user_id=$1', [userId]);
+  const totalPoints = up?.total_points || 0;
+  const { rows: [pc] } = await client.query(
+    "SELECT COUNT(*)::int as cnt FROM proposals WHERE user_id=$1 AND status='Paga'", [userId]
+  );
+  const proposalsPaid = pc?.cnt || 0;
+  const { rows: [st] } = await client.query('SELECT current_streak FROM user_streaks WHERE user_id=$1', [userId]);
+  const streak = st?.current_streak || 0;
+
+  const { rows: allBadges } = await client.query('SELECT * FROM badges');
+  for (const badge of allBadges) {
+    let earned = false;
+    if (badge.condition_type === 'proposals_paid' && proposalsPaid >= badge.condition_value) earned = true;
+    if (badge.condition_type === 'total_points' && totalPoints >= badge.condition_value) earned = true;
+    if (badge.condition_type === 'streak' && streak >= badge.condition_value) earned = true;
+    if (earned) {
+      const { rowCount } = await client.query(
+        'INSERT INTO user_badges (user_id, badge_id) VALUES ($1,$2) ON CONFLICT DO NOTHING',
+        [userId, badge.id]
+      );
+      if (rowCount > 0) {
+        await client.query(
+          'INSERT INTO notifications (user_id, message) VALUES ($1,$2)',
+          [userId, `🏅 Nova medalha conquistada: ${badge.name}!`]
+        );
+      }
+    }
+  }
+}
+
+async function updateStreak(client, userId) {
+  const today = new Date().toISOString().split('T')[0];
+  const { rows: [st] } = await client.query('SELECT * FROM user_streaks WHERE user_id=$1', [userId]);
+  if (!st) {
+    await client.query(
+      'INSERT INTO user_streaks (user_id, current_streak, best_streak, last_activity_date) VALUES ($1,1,1,$2)',
+      [userId, today]
+    );
+    return;
+  }
+  const last = st.last_activity_date ? new Date(st.last_activity_date).toISOString().split('T')[0] : null;
+  if (last === today) return;
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  const newStreak = last === yesterday ? st.current_streak + 1 : 1;
+  const bestStreak = Math.max(newStreak, st.best_streak);
+  await client.query(
+    'UPDATE user_streaks SET current_streak=$1, best_streak=$2, last_activity_date=$3, updated_at=now() WHERE user_id=$4',
+    [newStreak, bestStreak, today, userId]
+  );
+}
+
+// ─── PROPOSTAS ────────────────────────────────────────────────────────────────
+app.get('/api/proposals', auth, async (req, res) => {
+  const isAdmin = req.user.role === 'admin';
+  const { bank, table_id, convenio, product, status, start_date, end_date, user_id } = req.query;
+  const conditions = [];
+  const values = [];
+  let i = 1;
+  if (!isAdmin) { conditions.push(`p.user_id = $${i++}`); values.push(req.user.id); }
+  else if (user_id) { conditions.push(`p.user_id = $${i++}`); values.push(user_id); }
+  if (bank)       { conditions.push(`p.bank ILIKE $${i++}`);      values.push(`%${bank}%`); }
+  if (table_id)   { conditions.push(`p.table_id = $${i++}`);      values.push(table_id); }
+  if (convenio)   { conditions.push(`p.convenio ILIKE $${i++}`);  values.push(`%${convenio}%`); }
+  if (product)    { conditions.push(`p.product ILIKE $${i++}`);   values.push(`%${product}%`); }
+  if (status)     { conditions.push(`p.status = $${i++}`);        values.push(status); }
+  if (start_date) { conditions.push(`p.created_at >= $${i++}`);   values.push(start_date); }
+  if (end_date)   { conditions.push(`p.created_at <= $${i++}`);   values.push(end_date + ' 23:59:59'); }
+  const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
+  const { rows } = await pool.query(`
+    SELECT p.*, u.full_name as user_name, u.email as user_email,
+           ft.name as table_name, tc.name as category_name
+    FROM proposals p
+    JOIN users u ON u.id = p.user_id
+    LEFT JOIN financial_tables ft ON ft.id = p.table_id
+    LEFT JOIN table_categories tc ON tc.id = ft.category_id
+    ${where}
+    ORDER BY p.created_at DESC
+  `, values);
+  res.json(rows);
+});
+
+app.post('/api/proposals', auth, async (req, res) => {
+  const { proposal_number, value, product, bank, convenio, table_id, client_name, client_cpf, client_phone, status } = req.body;
+  const { rows } = await pool.query(
+    `INSERT INTO proposals (user_id, proposal_number, value, product, bank, convenio, table_id, client_name, client_cpf, client_phone, status)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
+    [req.user.id, proposal_number||'', value||0, product||'', bank||'', convenio||'', table_id||null, client_name||'', client_cpf||'', client_phone||'', status||'Digitada']
+  );
+  res.json(rows[0]);
+});
+
+app.put('/api/proposals/:id', auth, async (req, res) => {
+  const isAdmin = req.user.role === 'admin';
+  const { rows: [existing] } = await pool.query('SELECT * FROM proposals WHERE id=$1', [req.params.id]);
+  if (!existing) return res.status(404).json({ error: 'Proposta não encontrada' });
+  if (!isAdmin && existing.user_id !== req.user.id) return res.status(403).json({ error: 'Acesso negado' });
+
+  const fields = ['proposal_number','value','product','bank','convenio','table_id','client_name','client_cpf','client_phone'];
+  if (isAdmin) fields.push('status');
+  const updates = ['updated_at = now()'];
+  const values = [];
+  let i = 1;
+  for (const f of fields) {
+    if (req.body[f] !== undefined) { updates.push(`${f} = $${i++}`); values.push(req.body[f]); }
+  }
+  values.push(req.params.id);
+
+  const { rows: [updated] } = await pool.query(
+    `UPDATE proposals SET ${updates.join(', ')} WHERE id = $${i} RETURNING *`,
+    values
+  );
+
+  // Se mudou para Paga, calcular e adicionar pontos
+  if (isAdmin && req.body.status === 'Paga' && existing.status !== 'Paga') {
+    const pts = await calcPoints(updated.table_id, parseFloat(updated.value));
+    await pool.query('UPDATE proposals SET points_earned=$1 WHERE id=$2', [pts, updated.id]);
+    updated.points_earned = pts;
+    await pool.query(
+      `INSERT INTO user_points (user_id, total_points, updated_at) VALUES ($1,$2,now())
+       ON CONFLICT (user_id) DO UPDATE SET total_points = user_points.total_points + $2, updated_at = now()`,
+      [updated.user_id, pts]
+    );
+    const client2 = await pool.connect();
+    try {
+      await updateStreak(client2, updated.user_id);
+      await awardBadgesAndNotify(client2, updated.user_id);
+    } finally { client2.release(); }
+    await pool.query(
+      'INSERT INTO notifications (user_id, message) VALUES ($1,$2)',
+      [updated.user_id, `💰 Proposta #${updated.proposal_number} marcada como Paga! +${pts} pontos`]
+    );
+    // Notifica se ultrapassou alguém no ranking
+    const { rows: myRank } = await pool.query(`
+      SELECT COUNT(*)::int + 1 as pos FROM user_points
+      WHERE total_points > (SELECT COALESCE(total_points,0) FROM user_points WHERE user_id=$1)
+    `, [updated.user_id]);
+    if (myRank[0].pos <= 3) {
+      const { rows: allUsers } = await pool.query('SELECT user_id FROM user_points WHERE user_id != $1', [updated.user_id]);
+      for (const row of allUsers) {
+        await pool.query(
+          'INSERT INTO notifications (user_id, message) VALUES ($1,$2)',
+          [row.user_id, `🏆 Mudança no ranking! Confira sua posição.`]
+        );
+      }
+    }
+  }
+
+  // Se removido de Paga, subtrair pontos
+  if (isAdmin && existing.status === 'Paga' && req.body.status && req.body.status !== 'Paga') {
+    const pts = existing.points_earned || 0;
+    if (pts > 0) {
+      await pool.query('UPDATE proposals SET points_earned=0 WHERE id=$1', [existing.id]);
+      await pool.query(
+        'UPDATE user_points SET total_points = GREATEST(0, total_points - $1), updated_at=now() WHERE user_id=$2',
+        [pts, existing.user_id]
+      );
+    }
+  }
+
+  res.json(updated);
+});
+
+app.delete('/api/proposals/:id', auth, adminOnly, async (req, res) => {
+  const { rows: [p] } = await pool.query('SELECT * FROM proposals WHERE id=$1', [req.params.id]);
+  if (p && p.status === 'Paga' && p.points_earned > 0) {
+    await pool.query(
+      'UPDATE user_points SET total_points = GREATEST(0, total_points - $1), updated_at=now() WHERE user_id=$2',
+      [p.points_earned, p.user_id]
+    );
+  }
+  await pool.query('DELETE FROM proposals WHERE id=$1', [req.params.id]);
+  res.json({ ok: true });
+});
+
+// ─── RANKING ──────────────────────────────────────────────────────────────────
+app.get('/api/ranking', auth, async (req, res) => {
+  const { period } = req.query; // 'weekly' | 'monthly' | all (default)
+  let dateFilter = '';
+  if (period === 'weekly')  dateFilter = "AND p.created_at >= now() - interval '7 days'";
+  if (period === 'monthly') dateFilter = "AND date_trunc('month', p.created_at) = date_trunc('month', now())";
+
+  let query;
+  if (period === 'weekly' || period === 'monthly') {
+    query = `
+      SELECT u.id as user_id, u.full_name, u.email,
+             COALESCE(SUM(p.points_earned),0)::int as total_points,
+             COUNT(p.id) FILTER (WHERE p.status='Paga')::int as proposals_paid,
+             COALESCE(SUM(p.value) FILTER (WHERE p.status='Paga'),0)::numeric as total_value
+      FROM users u
+      LEFT JOIN proposals p ON p.user_id = u.id ${dateFilter}
+      WHERE u.role != 'admin'
+      GROUP BY u.id, u.full_name, u.email
+      ORDER BY total_points DESC, proposals_paid DESC
+    `;
+  } else {
+    query = `
+      SELECT u.id as user_id, u.full_name, u.email,
+             COALESCE(up.total_points,0)::int as total_points,
+             COUNT(p.id) FILTER (WHERE p.status='Paga')::int as proposals_paid,
+             COALESCE(SUM(p.value) FILTER (WHERE p.status='Paga'),0)::numeric as total_value
+      FROM users u
+      LEFT JOIN user_points up ON up.user_id = u.id
+      LEFT JOIN proposals p ON p.user_id = u.id
+      WHERE u.role != 'admin'
+      GROUP BY u.id, u.full_name, u.email, up.total_points
+      ORDER BY total_points DESC, proposals_paid DESC
+    `;
+  }
+  const { rows } = await pool.query(query);
+  res.json(rows.map((r, i) => ({ ...r, position: i + 1 })));
+});
+
+// ─── DASHBOARD DE PRODUÇÃO ────────────────────────────────────────────────────
+app.get('/api/production/dashboard', auth, async (req, res) => {
+  const isAdmin = req.user.role === 'admin';
+  const userFilter = isAdmin ? '' : `AND p.user_id = '${req.user.id}'`;
+
+  const { rows: [today] } = await pool.query(`
+    SELECT COALESCE(SUM(value),0)::numeric as value, COUNT(*)::int as count
+    FROM proposals p WHERE status='Paga'
+    AND date_trunc('day', p.created_at) = date_trunc('day', now()) ${userFilter}
+  `);
+  const { rows: [month] } = await pool.query(`
+    SELECT COALESCE(SUM(value),0)::numeric as value, COUNT(*)::int as count
+    FROM proposals p WHERE status='Paga'
+    AND date_trunc('month', p.created_at) = date_trunc('month', now()) ${userFilter}
+  `);
+  const { rows: [total] } = await pool.query(`
+    SELECT COUNT(*)::int as total_proposals,
+           COUNT(*) FILTER (WHERE status='Paga')::int as paid,
+           COUNT(*) FILTER (WHERE status='Em análise')::int as in_analysis,
+           COUNT(*) FILTER (WHERE status='Aprovada')::int as approved,
+           COUNT(*) FILTER (WHERE status='Digitada')::int as typed,
+           COUNT(*) FILTER (WHERE status='Cancelada')::int as cancelled
+    FROM proposals p WHERE 1=1 ${userFilter}
+  `);
+
+  let bestBroker = null;
+  let topTable = null;
+  let myPoints = 0;
+  let myPosition = null;
+
+  if (isAdmin) {
+    const { rows: [bb] } = await pool.query(`
+      SELECT u.full_name, COALESCE(up.total_points,0)::int as points
+      FROM users u JOIN user_points up ON up.user_id = u.id
+      ORDER BY up.total_points DESC LIMIT 1
+    `);
+    bestBroker = bb || null;
+
+    const { rows: [tt] } = await pool.query(`
+      SELECT ft.name, COUNT(p.id)::int as count
+      FROM proposals p JOIN financial_tables ft ON ft.id = p.table_id
+      WHERE p.status='Paga'
+      GROUP BY ft.name ORDER BY count DESC LIMIT 1
+    `);
+    topTable = tt || null;
+  } else {
+    const { rows: [mp] } = await pool.query(
+      'SELECT COALESCE(total_points,0)::int as points FROM user_points WHERE user_id=$1',
+      [req.user.id]
+    );
+    myPoints = mp?.points || 0;
+
+    const { rows: rank } = await pool.query(`
+      SELECT COUNT(*)::int + 1 as pos FROM user_points
+      WHERE total_points > COALESCE((SELECT total_points FROM user_points WHERE user_id=$1),0)
+    `, [req.user.id]);
+    myPosition = rank[0]?.pos || 1;
+  }
+
+  const avgTicket = month.count > 0 ? parseFloat(month.value) / month.count : 0;
+
+  res.json({
+    today: { value: parseFloat(today.value), count: today.count },
+    month: { value: parseFloat(month.value), count: month.count },
+    avg_ticket: avgTicket,
+    proposals: total,
+    best_broker: bestBroker,
+    top_table: topTable,
+    my_points: myPoints,
+    my_position: myPosition,
+  });
+});
+
+// ─── BADGES ───────────────────────────────────────────────────────────────────
+app.get('/api/badges', auth, async (req, res) => {
+  const { rows: all } = await pool.query('SELECT * FROM badges ORDER BY condition_value ASC');
+  const { rows: earned } = await pool.query('SELECT badge_id FROM user_badges WHERE user_id=$1', [req.user.id]);
+  const earnedSet = new Set(earned.map(e => e.badge_id));
+  res.json(all.map(b => ({ ...b, earned: earnedSet.has(b.id) })));
+});
+
+// ─── NOTIFICAÇÕES ─────────────────────────────────────────────────────────────
+app.get('/api/notifications', auth, async (req, res) => {
+  const { rows } = await pool.query(
+    'SELECT * FROM notifications WHERE user_id=$1 ORDER BY created_at DESC LIMIT 20',
+    [req.user.id]
+  );
+  res.json(rows);
+});
+
+app.put('/api/notifications/:id/read', auth, async (req, res) => {
+  await pool.query('UPDATE notifications SET read=true WHERE id=$1 AND user_id=$2', [req.params.id, req.user.id]);
+  res.json({ ok: true });
+});
+
+app.put('/api/notifications/read-all', auth, async (req, res) => {
+  await pool.query('UPDATE notifications SET read=true WHERE user_id=$1', [req.user.id]);
+  res.json({ ok: true });
+});
+
+// ─── METAS MENSAIS ────────────────────────────────────────────────────────────
+app.get('/api/goals', auth, async (req, res) => {
+  const now = new Date();
+  const { rows } = await pool.query(
+    'SELECT * FROM monthly_goals WHERE user_id=$1 AND month=$2 AND year=$3',
+    [req.user.id, now.getMonth() + 1, now.getFullYear()]
+  );
+  res.json(rows[0] || null);
+});
+
+app.post('/api/goals', auth, adminOnly, async (req, res) => {
+  const { user_id, month, year, target_points, target_proposals } = req.body;
+  const { rows } = await pool.query(
+    `INSERT INTO monthly_goals (user_id, month, year, target_points, target_proposals)
+     VALUES ($1,$2,$3,$4,$5)
+     ON CONFLICT (user_id, month, year)
+     DO UPDATE SET target_points=$4, target_proposals=$5
+     RETURNING *`,
+    [user_id, month, year, target_points || 0, target_proposals || 0]
+  );
+  res.json(rows[0]);
+});
+
+// ─── STREAK ───────────────────────────────────────────────────────────────────
+app.get('/api/streak', auth, async (req, res) => {
+  const { rows } = await pool.query('SELECT * FROM user_streaks WHERE user_id=$1', [req.user.id]);
+  res.json(rows[0] || { user_id: req.user.id, current_streak: 0, best_streak: 0 });
+});
+
 // ─── FRONTEND (produção) ──────────────────────────────────────────────────────
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../dist')));

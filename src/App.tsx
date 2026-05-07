@@ -9,7 +9,14 @@ import { AdminUsers } from './components/admin/AdminUsers';
 import { AdminCourses } from './components/admin/AdminCourses';
 import { AdminCourseEdit } from './components/admin/AdminCourseEdit';
 import { AdminPersonalizacao } from './components/admin/AdminPersonalizacao';
+import { AdminFinancialTables } from './components/admin/AdminFinancialTables';
+import { AdminCategories } from './components/admin/AdminCategories';
+import { AdminProposals } from './components/admin/AdminProposals';
+import { AdminReports } from './components/admin/AdminReports';
 import { LoginBancos } from './components/LoginBancos';
+import { Proposals } from './components/Proposals';
+import { Ranking } from './components/Ranking';
+import { Production } from './components/Production';
 import { useAuth } from './hooks/useAuth';
 import { useCourses, useCourseDetail } from './hooks/useCourses';
 import { useEnrollments, useLessonProgress } from './hooks/useEnrollments';
@@ -152,7 +159,14 @@ function AppInner() {
         {currentView === 'admin-course-edit'     && isAdmin && adminEditCourseId && (
           <AdminCourseEdit courseId={adminEditCourseId} onNavigate={navigate} />
         )}
+        {currentView === 'admin-financial-tables' && isAdmin && <AdminFinancialTables />}
+        {currentView === 'admin-categories'       && isAdmin && <AdminCategories />}
+        {currentView === 'admin-proposals'        && isAdmin && <AdminProposals />}
+        {currentView === 'admin-reports'          && isAdmin && <AdminReports />}
         {currentView === 'login-bancos' && <LoginBancos isAdmin={isAdmin} />}
+        {currentView === 'proposals'  && <Proposals />}
+        {currentView === 'ranking'    && <Ranking userId={user.id} />}
+        {currentView === 'production' && <Production isAdmin={isAdmin} />}
       </main>
     </div>
   );
