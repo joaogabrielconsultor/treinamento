@@ -2,6 +2,7 @@
 import { Plus, Trash2, Edit2, Save } from 'lucide-react';
 import { TableCategory } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
+import { Pagination } from '../ui/Pagination';
 
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
@@ -14,6 +15,8 @@ export function AdminCategories() {
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', multiplier: '1' });
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
 
   async function load() {
     setLoading(true);
@@ -60,8 +63,9 @@ export function AdminCategories() {
       {loading ? (
         <div className="flex justify-center py-16"><div className="spinner-cyber" /></div>
       ) : (
-        <div className="space-y-3">
-          {categories.map(c => (
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
+          <div className="space-y-2 p-3">
+          {categories.slice((page - 1) * perPage, page * perPage).map(c => (
             <div key={c.id} className="flex items-center gap-4 p-4 rounded-xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
               <div className="flex-1">
                 <p className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{c.name}</p>
@@ -86,6 +90,8 @@ export function AdminCategories() {
             </div>
           ))}
           {categories.length === 0 && <p className="text-center py-8 text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma categoria cadastrada</p>}
+          </div>
+          <Pagination total={categories.length} page={page} perPage={perPage} onPage={setPage} onPerPage={setPerPage} />
         </div>
       )}
 

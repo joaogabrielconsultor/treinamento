@@ -2,6 +2,7 @@
 import { Search, ChevronDown, FileText, CheckCircle, Clock, DollarSign, XCircle, Edit2, Trash2, Save } from 'lucide-react';
 import { Proposal, ProposalStatus, FinancialTable } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
+import { Pagination } from '../ui/Pagination';
 
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
@@ -26,6 +27,8 @@ export function AdminProposals() {
   const [editProposal, setEditProposal] = useState<Proposal | null>(null);
   const [editStatus, setEditStatus] = useState<ProposalStatus>('Digitada');
   const [saving, setSaving] = useState(false);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
 
   async function load() {
     setLoading(true);
@@ -62,6 +65,9 @@ export function AdminProposals() {
     return matchSearch && matchStatus;
   });
 
+  useEffect(() => { setPage(1); }, [search, filterStatus]);
+
+  const paginated = filtered.slice((page - 1) * perPage, page * perPage);
   const totalPaid = proposals.filter(p => p.status === 'Paga').reduce((a, b) => a + Number(b.value), 0);
   const totalPoints = proposals.reduce((a, b) => a + (b.points_earned || 0), 0);
 
@@ -116,7 +122,7 @@ export function AdminProposals() {
         <div className="rounded-2xl overflow-hidden animate-fade-up"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)', animationDelay: '120ms' }}>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                   {['Proposta', 'Corretor', 'Cliente', 'Banco / Tabela', 'Valor', 'Status', 'Pontos', 'Ações'].map(h => (
@@ -129,7 +135,7 @@ export function AdminProposals() {
                   <tr>
                     <td colSpan={8} className="text-center py-12 text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma proposta encontrada</td>
                   </tr>
-                ) : filtered.map(p => (
+                ) : paginated.map(p => (
                   <tr key={p.id} className="table-row-cyber">
                     <td className="px-4 py-3 font-mono text-xs num" style={{ color: 'var(--text-2)' }}>{p.proposal_number || '—'}</td>
                     <td className="px-4 py-3">
@@ -176,6 +182,7 @@ export function AdminProposals() {
               </tbody>
             </table>
           </div>
+          <Pagination total={filtered.length} page={page} perPage={perPage} onPage={setPage} onPerPage={setPerPage} />
         </div>
       )}
 

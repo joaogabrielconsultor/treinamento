@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect } from 'react';
 import { Trophy, TrendingUp, Users, Star, Crown } from 'lucide-react';
 import { RankingEntry } from '../types';
+import { Pagination } from './ui/Pagination';
 
 const API = (p: string) =>
   fetch(p, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
@@ -19,6 +20,8 @@ export function Ranking({ userId }: { userId: string }) {
   const [entries, setEntries] = useState<RankingEntry[]>([]);
   const [period, setPeriod] = useState<'all' | 'weekly' | 'monthly'>('monthly');
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
 
   async function load() {
     setLoading(true);
@@ -29,9 +32,10 @@ export function Ranking({ userId }: { userId: string }) {
     setLoading(false);
   }
 
-  useEffect(() => { load(); }, [period]);
+  useEffect(() => { load(); setPage(1); }, [period]);
 
   const myEntry = entries.find(e => e.user_id === userId);
+  const paginated = entries.slice((page - 1) * perPage, page * perPage);
 
   const PERIODS = [
     ['monthly', 'Mensal'],
@@ -200,7 +204,7 @@ export function Ranking({ userId }: { userId: string }) {
           </div>
 
           <div>
-            {entries.map((e, i) => {
+            {paginated.map((e, i) => {
               const isMe = e.user_id === userId;
               const medal = e.position <= 3 ? MEDAL_COLORS[e.position - 1] : null;
               return (
@@ -257,6 +261,7 @@ export function Ranking({ userId }: { userId: string }) {
               );
             })}
           </div>
+          <Pagination total={entries.length} page={page} perPage={perPage} onPage={setPage} onPerPage={setPerPage} />
         </div>
       )}
     </div>

@@ -1,7 +1,8 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, Save, Handshake } from 'lucide-react';
 import { Convenio } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
+import { Pagination } from '../ui/Pagination';
 
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
@@ -14,6 +15,8 @@ export function AdminConvenios() {
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [name, setName] = useState('');
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
 
   async function load() {
     setLoading(true);
@@ -50,8 +53,8 @@ export function AdminConvenios() {
             <Handshake className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-100">Convênios</h1>
-            <p className="text-xs text-slate-500 mt-0.5">{items.length} convênios cadastrados</p>
+            <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Convênios</h1>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{items.length} convênios cadastrados</p>
           </div>
         </div>
         <button onClick={() => { setName(''); setEditId(null); setShowForm(true); }}
@@ -68,12 +71,13 @@ export function AdminConvenios() {
       {loading ? (
         <div className="flex justify-center py-16"><div className="spinner-cyber" /></div>
       ) : (
-        <div className="space-y-2">
-          {items.length === 0 && <p className="text-center py-8 text-gray-400">Nenhum convênio cadastrado</p>}
-          {items.map(cv => (
-            <div key={cv.id} className="flex items-center gap-4 p-4 bg-white dark:bg-dk-card rounded-xl border border-gray-100 dark:border-dk-border shadow-sm">
-              <Handshake className="w-5 h-5 text-gray-400 flex-shrink-0" />
-              <p className="flex-1 font-medium text-gray-900 dark:text-white">{cv.name}</p>
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
+          <div className="space-y-2 p-3">
+          {items.length === 0 && <p className="text-center py-8" style={{ color: 'var(--text-3)' }}>Nenhum convênio cadastrado</p>}
+          {items.slice((page - 1) * perPage, page * perPage).map(cv => (
+            <div key={cv.id} className="flex items-center gap-4 p-4 rounded-xl" style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-1)' }}>
+              <Handshake className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--text-3)' }} />
+              <p className="flex-1 font-medium" style={{ color: 'var(--text-1)' }}>{cv.name}</p>
               <div className="flex items-center gap-1">
                 <button onClick={() => { setName(cv.name); setEditId(cv.id); setShowForm(true); }}
                   className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-dk-surface text-gray-400 hover:text-gray-600 transition-colors">
@@ -86,6 +90,8 @@ export function AdminConvenios() {
               </div>
             </div>
           ))}
+          </div>
+          <Pagination total={items.length} page={page} perPage={perPage} onPage={setPage} onPerPage={setPerPage} />
         </div>
       )}
 

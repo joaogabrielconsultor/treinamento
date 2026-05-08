@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, Save, ChevronDown, Percent, Star, AlertTriangle } from 'lucide-react';
 import { CommissionRange, FinancialTable, TableCategory } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
+import { Pagination } from '../ui/Pagination';
 
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
@@ -41,6 +42,8 @@ export function AdminCommissionRanges() {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<CommissionRange>>(EMPTY);
   const [saving, setSaving] = useState(false);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
 
   useEffect(() => {
     Promise.all([
@@ -55,6 +58,7 @@ export function AdminCommissionRanges() {
   useEffect(() => {
     if (!selectedTable) { setRanges([]); return; }
     setLoading(true);
+    setPage(1);
     API(`/api/commission-ranges?table_id=${selectedTable}`).then(r => r.json()).then(d => {
       setRanges(Array.isArray(d) ? d : []);
       setLoading(false);
@@ -147,8 +151,9 @@ export function AdminCommissionRanges() {
             <p className="text-sm mt-1">Clique em "Nova Faixa" para começar</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {ranges.map(r => {
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
+          <div className="space-y-2 p-3">
+            {ranges.slice((page - 1) * perPage, page * perPage).map(r => {
               const pts = calcPreview(r, categories);
               return (
                 <div key={r.id} className="rounded-2xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
@@ -206,6 +211,8 @@ export function AdminCommissionRanges() {
                 </div>
               );
             })}
+          </div>
+          <Pagination total={ranges.length} page={page} perPage={perPage} onPage={setPage} onPerPage={setPerPage} />
           </div>
         )
       )}

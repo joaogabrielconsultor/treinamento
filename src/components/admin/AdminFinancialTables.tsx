@@ -2,6 +2,7 @@
 import { Plus, Trash2, Edit2, ChevronDown, Save, Settings } from 'lucide-react';
 import { FinancialTable, TableCategory, ScoringRule, Bank, Convenio } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
+import { Pagination } from '../ui/Pagination';
 
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
@@ -23,6 +24,8 @@ export function AdminFinancialTables() {
   const [rules, setRules] = useState<ScoringRule[]>([]);
   const [newRule, setNewRule] = useState({ min_value: '', max_value: '', points: '' });
   const [filterConvenio, setFilterConvenio] = useState('');
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
 
   async function load() {
     setLoading(true);
@@ -107,6 +110,9 @@ export function AdminFinancialTables() {
     ? tables.filter(t => t.convenio_id === filterConvenio)
     : tables;
 
+  useEffect(() => { setPage(1); }, [filterConvenio]);
+  const paginated = filtered.slice((page - 1) * perPage, page * perPage);
+
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -153,7 +159,7 @@ export function AdminFinancialTables() {
             <tbody>
               {filtered.length === 0 ? (
                 <tr><td colSpan={8} className="text-center py-12 text-gray-400">Nenhuma tabela cadastrada</td></tr>
-              ) : filtered.map(t => (
+              ) : paginated.map(t => (
                 <tr key={t.id} className="table-row-cyber">
                   <td className="px-4 py-3 font-medium text-gray-900 dark:text-white max-w-[200px] truncate">{t.name}</td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{t.convenio_name || '—'}</td>
@@ -195,6 +201,7 @@ export function AdminFinancialTables() {
               ))}
             </tbody>
           </table>
+          <Pagination total={filtered.length} page={page} perPage={perPage} onPage={setPage} onPerPage={setPerPage} />
         </div>
       )}
 

@@ -2,6 +2,7 @@
 import { Plus, Search, FileText, ChevronDown, CheckCircle, Clock, DollarSign, XCircle, Edit2, User, CreditCard, ChevronRight, AlertTriangle } from 'lucide-react';
 import { Proposal, ProposalStatus, FinancialTable, Bank, Convenio, Product } from '../types';
 import { Modal } from './ui/Modal';
+import { Pagination } from './ui/Pagination';
 
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
@@ -67,6 +68,8 @@ export function Proposals() {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
 
   // Cascade data
   const [convenios, setConvenios] = useState<Convenio[]>([]);
@@ -220,6 +223,9 @@ export function Proposals() {
     return matchSearch && matchStatus;
   });
 
+  useEffect(() => { setPage(1); }, [search, filterStatus]);
+
+  const paginated = filtered.slice((page - 1) * perPage, page * perPage);
   const totalPaid = proposals.filter(p => p.status === 'Paga').reduce((a, b) => a + Number(b.value), 0);
   const totalPoints = proposals.reduce((a, b) => a + (b.points_earned || 0), 0);
   const totalComissao = proposals.filter(p => p.status === 'Paga').reduce((a, b) => a + Number(b.comissao_valor || 0), 0);
@@ -323,7 +329,7 @@ export function Proposals() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(p => (
+                {paginated.map(p => (
                   <tr key={p.id} className="table-row-cyber">
                     <td className="px-4 py-3 font-mono text-xs num" style={{ color: 'var(--text-2)' }}>{p.proposal_number || '—'}</td>
                     <td className="px-4 py-3">
@@ -380,6 +386,7 @@ export function Proposals() {
               </tbody>
             </table>
           </div>
+          <Pagination total={filtered.length} page={page} perPage={perPage} onPage={setPage} onPerPage={setPerPage} />
         </div>
       )}
 

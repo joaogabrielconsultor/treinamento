@@ -2,6 +2,7 @@
 import { Plus, Trash2, Edit2, Save, Building2 } from 'lucide-react';
 import { Bank } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
+import { Pagination } from '../ui/Pagination';
 
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
@@ -14,6 +15,8 @@ export function AdminBanks() {
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [name, setName] = useState('');
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
 
   async function load() {
     setLoading(true);
@@ -68,12 +71,13 @@ export function AdminBanks() {
       {loading ? (
         <div className="flex justify-center py-16"><div className="spinner-cyber" /></div>
       ) : (
-        <div className="space-y-2">
-          {items.length === 0 && <p className="text-center py-8 text-gray-400">Nenhum banco cadastrado</p>}
-          {items.map(b => (
-            <div key={b.id} className="flex items-center gap-4 p-4 bg-white dark:bg-dk-card rounded-xl border border-gray-100 dark:border-dk-border shadow-sm">
-              <Building2 className="w-5 h-5 text-gray-400 flex-shrink-0" />
-              <p className="flex-1 font-medium text-gray-900 dark:text-white">{b.name}</p>
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
+          <div className="space-y-2 p-3">
+          {items.length === 0 && <p className="text-center py-8" style={{ color: 'var(--text-3)' }}>Nenhum banco cadastrado</p>}
+          {items.slice((page - 1) * perPage, page * perPage).map(b => (
+            <div key={b.id} className="flex items-center gap-4 p-4 rounded-xl" style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-1)' }}>
+              <Building2 className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--text-3)' }} />
+              <p className="flex-1 font-medium" style={{ color: 'var(--text-1)' }}>{b.name}</p>
               <div className="flex items-center gap-1">
                 <button onClick={() => { setName(b.name); setEditId(b.id); setShowForm(true); }}
                   className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-dk-surface text-gray-400 hover:text-gray-600 transition-colors">
@@ -86,6 +90,8 @@ export function AdminBanks() {
               </div>
             </div>
           ))}
+          </div>
+          <Pagination total={items.length} page={page} perPage={perPage} onPage={setPage} onPerPage={setPerPage} />
         </div>
       )}
 

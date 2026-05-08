@@ -1,6 +1,7 @@
 ﻿import { useState } from 'react';
 import { Users, Shield, ShieldOff, BookOpen, RefreshCw, Plus, X, Eye, EyeOff, Crown, Trash2, KeyRound } from 'lucide-react';
 import { useAdminUsers } from '../../hooks/useAdmin';
+import { Pagination } from '../ui/Pagination';
 
 const MASTER_ADMIN_EMAIL = 'adm@rozesstartflow.com';
 
@@ -248,6 +249,9 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
   const [showCreate, setShowCreate] = useState(false);
   const [changePwdUser, setChangePwdUser] = useState<{ id: string; name: string } | null>(null);
   const [deleteUserTarget, setDeleteUserTarget] = useState<{ id: string; name: string } | null>(null);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
+  const paginated = users.slice((page - 1) * perPage, page * perPage);
 
   const isMasterAdmin = currentUserEmail === MASTER_ADMIN_EMAIL;
 
@@ -317,7 +321,7 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => {
+            {paginated.map((user) => {
               const name = user.full_name || user.email?.split('@')[0] || 'Usuário';
               const initials = name.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase();
               const date = new Date(user.created_at).toLocaleDateString('pt-BR');
@@ -417,6 +421,7 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
             <p className="text-sm" style={{ color: 'var(--text-3)' }}>Nenhum usuário encontrado</p>
           </div>
         )}
+        <Pagination total={users.length} page={page} perPage={perPage} onPage={setPage} onPerPage={setPerPage} />
       </div>
     </div>
   );

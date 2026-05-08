@@ -42,7 +42,25 @@
       "Bash(git branch *)",
       "Bash(git push *)",
       "Bash(git rm *)",
-      "Bash(git config *)"
+      "Bash(git config *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\PROJETOS\\\\treinamento-main\" -Directory)",
+      "Bash(Select-Object Name)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\PROJETOS\\\\treinamento-main\" -Force | Where-Object {$_.PSIsContainer})",
+      "Bash(Copy-Item \"C:\\\\Users\\\\rozes\\\\Downloads\\\\Marca d'água Elemento AprovaMais \\(dourado\\).png\" \"C:\\\\PROJETOS\\\\treinamento-main\\\\public\\\\logo.png\" -Force)",
+      "Bash(Write-Output \"Copiado com sucesso\")",
+      "Bash(mkdir -p /c/PROJETOS/treinamento-main/public)",
+      "Bash(cp \"/c/Users/rozes/Downloads/Marca d'água Elemento AprovaMais \\(dourado\\).png\" /c/PROJETOS/treinamento-main/public/logo.png)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\PROJETOS\\\\treinamento-main\" -Force | Format-Table Name, @{Name=\"Type\";Expression={if\\($_.PSIsContainer\\){\"DIR\"}else{\"FILE\"}}} | Out-String)",
+      "Bash(Get-ChildItem -Path \"C:\\\\PROJETOS\\\\treinamento-main\" -Force)",
+      "Bash(Select-Object Name, FullName)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\PROJETOS\\\\treinamento-main\" -Recurse -Directory | Select-Object -First 30 | ForEach-Object { $_.FullName })",
+      "Bash(Find \"C:\\\\PROJETOS\\\\treinamento-main\" -type f -name \"*.js\" -o -name \"*.ts\")",
+      "Bash(Get-ChildItem C:\\\\PROJETOS\\\\treinamento-main\\\\public\\\\ *)",
+      "Bash(git pull *)",
+      "Bash(git stash *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\PROJETOS\\\\treinamento-main\" -Recurse -Filter \"*.css\" -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(git reset *)"
     ]
   }
 }
