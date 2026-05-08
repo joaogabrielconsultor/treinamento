@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Search, Clock, BookOpen, ChevronDown } from 'lucide-react';
 import { Course, Enrollment, ViewType } from '../types';
 
@@ -37,11 +37,11 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
   const selectCls = 'input-cyber px-3 py-2.5 text-sm rounded-xl appearance-none cursor-pointer pr-8';
 
   return (
-    <div className="p-8 max-w-6xl mx-auto" style={{ color: '#E2E8F0' }}>
+    <div className="p-8 max-w-6xl mx-auto" style={{ color: 'var(--text-1)' }}>
       {/* Header */}
       <div className="mb-8 animate-fade-up">
-        <h1 className="text-xl font-bold" style={{ color: '#E2E8F0' }}>Catálogo de Treinamentos</h1>
-        <p className="text-sm mt-0.5" style={{ color: '#64748B' }}>
+        <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Catálogo de Treinamentos</h1>
+        <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>
           {courses.length} treinamentos disponíveis
         </p>
       </div>
@@ -51,7 +51,7 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
         <div className="relative flex-1">
           <Search
             className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-            style={{ color: '#475569' }}
+            style={{ color: 'var(--text-3)' }}
           />
           <input
             type="text"
@@ -68,22 +68,22 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
               className={selectCls}
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: '#94A3B8' }}
+              style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-1)', color: 'var(--text-2)' }}
             >
               {categories.map((c) => <option key={c} value={c} style={{ background: '#0B1020' }}>{c}</option>)}
             </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: '#475569' }} />
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
           </div>
           <div className="relative">
             <select
               value={selectedLevel}
               onChange={(e) => setSelectedLevel(e.target.value)}
               className={selectCls}
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: '#94A3B8' }}
+              style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-1)', color: 'var(--text-2)' }}
             >
               {levels.map((l) => <option key={l} value={l} style={{ background: '#0B1020' }}>{l}</option>)}
             </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: '#475569' }} />
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
           </div>
         </div>
       </div>
@@ -95,7 +95,7 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
             <div
               key={i}
               className="rounded-2xl overflow-hidden"
-              style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)' }}
+              style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
             >
               <div className="skeleton h-44 rounded-none" />
               <div className="p-5 space-y-3">
@@ -110,11 +110,11 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
         <div className="text-center py-20 animate-fade-up">
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+            style={{ background: 'var(--surface-subtle)', border: '1px solid var(--card-border)' }}
           >
             <BookOpen className="w-8 h-8" style={{ color: '#334155' }} />
           </div>
-          <p className="font-medium mb-1" style={{ color: '#64748B' }}>Nenhum curso encontrado</p>
+          <p className="font-medium mb-1" style={{ color: 'var(--text-3)' }}>Nenhum curso encontrado</p>
           <button
             onClick={() => { setSearch(''); setSelectedCategory('Todos'); setSelectedLevel('Todos'); }}
             className="text-sm font-medium transition-colors mt-2"
@@ -164,17 +164,17 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
 
                   <h3
                     className="font-semibold text-sm leading-snug mb-1 flex-1 transition-colors"
-                    style={{ color: '#E2E8F0' }}
+                    style={{ color: 'var(--text-1)' }}
                   >
                     {course.title}
                   </h3>
-                  <p className="text-xs line-clamp-2 mb-3" style={{ color: '#64748B' }}>
+                  <p className="text-xs line-clamp-2 mb-3" style={{ color: 'var(--text-3)' }}>
                     {course.description}
                   </p>
 
                   <div
                     className="flex items-center justify-between text-xs pt-3 mt-auto"
-                    style={{ borderTop: '1px solid rgba(255,255,255,0.05)', color: '#475569' }}
+                    style={{ borderTop: '1px solid var(--card-border)', color: 'var(--text-3)' }}
                   >
                     <span>{course.instructor}</span>
                     <span className="flex items-center gap-1">
@@ -189,8 +189,8 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
                   {enrollment && !enrollment.completed && (
                     <div className="mt-3">
                       <div className="flex justify-between text-[11px] mb-1.5">
-                        <span style={{ color: '#475569' }}>Progresso</span>
-                        <span className="num" style={{ color: '#64748B' }}>{enrollment.progress_percent}%</span>
+                        <span style={{ color: 'var(--text-3)' }}>Progresso</span>
+                        <span className="num" style={{ color: 'var(--text-3)' }}>{enrollment.progress_percent}%</span>
                       </div>
                       <div className="progress-track h-1.5">
                         <div

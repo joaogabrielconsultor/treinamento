@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { Plus, Search, FileText, ChevronDown, CheckCircle, Clock, DollarSign, XCircle, Edit2, User, CreditCard, ChevronRight, AlertTriangle } from 'lucide-react';
 import { Proposal, ProposalStatus, FinancialTable, Bank, Convenio, Product } from '../types';
 import { Modal } from './ui/Modal';
@@ -43,7 +43,7 @@ const STEPS = [
 function Field({ label, children, error }: { label: string; children: React.ReactNode; error?: string }) {
   return (
     <div>
-      <label className="block text-xs font-semibold mb-1.5" style={{ color: '#64748B' }}>
+      <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>
         {label} <span style={{ color: '#f87171' }}>*</span>
       </label>
       {children}
@@ -225,12 +225,12 @@ export function Proposals() {
   const totalComissao = proposals.filter(p => p.status === 'Paga').reduce((a, b) => a + Number(b.comissao_valor || 0), 0);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto" style={{ color: '#E2E8F0' }}>
+    <div className="p-6 max-w-7xl mx-auto" style={{ color: 'var(--text-1)' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6 animate-fade-up">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: '#E2E8F0' }}>Minhas Propostas</h1>
-          <p className="text-xs mt-0.5" style={{ color: '#64748B' }}>{proposals.length} propostas cadastradas</p>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Minhas Propostas</h1>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{proposals.length} propostas cadastradas</p>
         </div>
         <button onClick={openNew} className="btn-cyber flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm">
           <Plus className="w-4 h-4" /> Nova Proposta
@@ -251,7 +251,7 @@ export function Proposals() {
             className="stat-card rounded-xl p-4 animate-fade-up"
             style={{ animationDelay: `${i * 50}ms` }}
           >
-            <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#475569' }}>{c.label}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>{c.label}</p>
             <p className="text-lg font-black num" style={{ color: c.color }}>{c.value}</p>
           </div>
         ))}
@@ -260,7 +260,7 @@ export function Proposals() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4 animate-fade-up" style={{ animationDelay: '100ms' }}>
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: '#475569' }} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -269,7 +269,7 @@ export function Proposals() {
           />
         </div>
         <div className="relative">
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: '#475569' }} />
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
           <select
             value={filterStatus}
             onChange={e => setFilterStatus(e.target.value)}
@@ -286,36 +286,36 @@ export function Proposals() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
           <div className="spinner-cyber" />
-          <p className="text-sm" style={{ color: '#475569' }}>Carregando propostas...</p>
+          <p className="text-sm" style={{ color: 'var(--text-3)' }}>Carregando propostas...</p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-20">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            style={{ background: 'var(--surface-subtle)', border: '1px solid var(--card-border)' }}>
             <FileText className="w-8 h-8" style={{ color: '#334155' }} />
           </div>
-          <p className="font-medium" style={{ color: '#64748B' }}>Nenhuma proposta encontrada</p>
-          <p className="text-sm mt-1" style={{ color: '#475569' }}>Clique em "Nova Proposta" para começar</p>
+          <p className="font-medium" style={{ color: 'var(--text-3)' }}>Nenhuma proposta encontrada</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>Clique em "Nova Proposta" para começar</p>
         </div>
       ) : (
         <div
           className="rounded-2xl overflow-hidden animate-fade-up"
           style={{
-            background: 'rgba(11,16,32,0.85)',
-            border: '1px solid rgba(255,255,255,0.06)',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.35)',
+            background: 'var(--card-bg)',
+            border: '1px solid var(--card-border)',
+            boxShadow: 'var(--shadow-card)',
             animationDelay: '140ms',
           }}
         >
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                   {['Proposta', 'Cliente', 'Convênio / Banco / Tabela', 'Valor', 'Produto', 'Status', 'Comissão', 'Pontos', ''].map(h => (
                     <th
                       key={h}
                       className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest"
-                      style={{ color: '#475569' }}
+                      style={{ color: 'var(--text-3)' }}
                     >
                       {h}
                     </th>
@@ -325,18 +325,18 @@ export function Proposals() {
               <tbody>
                 {filtered.map(p => (
                   <tr key={p.id} className="table-row-cyber">
-                    <td className="px-4 py-3 font-mono text-xs num" style={{ color: '#94A3B8' }}>{p.proposal_number || '—'}</td>
+                    <td className="px-4 py-3 font-mono text-xs num" style={{ color: 'var(--text-2)' }}>{p.proposal_number || '—'}</td>
                     <td className="px-4 py-3">
-                      <p className="font-semibold text-sm" style={{ color: '#E2E8F0' }}>{p.client_name}</p>
-                      <p className="text-xs" style={{ color: '#475569' }}>{p.client_cpf}</p>
+                      <p className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{p.client_name}</p>
+                      <p className="text-xs" style={{ color: 'var(--text-3)' }}>{p.client_cpf}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-xs" style={{ color: '#475569' }}>{p.convenio_name || p.convenio || '—'}</p>
-                      <p className="text-sm" style={{ color: '#94A3B8' }}>{p.bank_name || p.bank || '—'}</p>
-                      <p className="text-xs truncate max-w-[200px]" style={{ color: '#475569' }}>{p.table_name || '—'}</p>
+                      <p className="text-xs" style={{ color: 'var(--text-3)' }}>{p.convenio_name || p.convenio || '—'}</p>
+                      <p className="text-sm" style={{ color: 'var(--text-2)' }}>{p.bank_name || p.bank || '—'}</p>
+                      <p className="text-xs truncate max-w-[200px]" style={{ color: 'var(--text-3)' }}>{p.table_name || '—'}</p>
                     </td>
-                    <td className="px-4 py-3 font-bold num" style={{ color: '#E2E8F0' }}>{formatCurrency(Number(p.value))}</td>
-                    <td className="px-4 py-3 text-sm" style={{ color: '#64748B' }}>{p.product_name || p.product}</td>
+                    <td className="px-4 py-3 font-bold num" style={{ color: 'var(--text-1)' }}>{formatCurrency(Number(p.value))}</td>
+                    <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-3)' }}>{p.product_name || p.product}</td>
                     <td className="px-4 py-3">
                       <span className={`${STATUS_CONFIG[p.status]?.color} inline-flex items-center gap-1`}>
                         {STATUS_CONFIG[p.status]?.icon} {p.status}
@@ -346,7 +346,7 @@ export function Proposals() {
                       {p.status === 'Paga' && Number(p.comissao_valor) > 0 ? (
                         <div>
                           <span className="font-bold text-sm num" style={{ color: '#4ade80' }}>{formatCurrency(Number(p.comissao_valor))}</span>
-                          <p className="text-xs num" style={{ color: '#475569' }}>{Number(p.comissao_corretor_pct || 0).toFixed(2)}%</p>
+                          <p className="text-xs num" style={{ color: 'var(--text-3)' }}>{Number(p.comissao_corretor_pct || 0).toFixed(2)}%</p>
                         </div>
                       ) : <span style={{ color: '#334155' }}>—</span>}
                     </td>
@@ -361,7 +361,7 @@ export function Proposals() {
                         <button
                           onClick={() => openEdit(p)}
                           className="p-1.5 rounded-lg transition-all"
-                          style={{ color: '#475569' }}
+                          style={{ color: 'var(--text-3)' }}
                           onMouseEnter={(e) => {
                             (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)';
                             (e.currentTarget as HTMLElement).style.color = '#14B8A6';
@@ -421,7 +421,7 @@ export function Proposals() {
                     className="w-8 h-8 rounded-full flex items-center justify-center transition-all"
                     style={done || active
                       ? { background: 'linear-gradient(135deg, #14B8A6, #06B6D4)', color: '#fff', boxShadow: '0 0 12px rgba(20,184,166,0.35)' }
-                      : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: '#475569' }
+                      : { background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border-1)', color: 'var(--text-3)' }
                     }
                   >
                     {done ? <CheckCircle className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
@@ -529,7 +529,7 @@ export function Proposals() {
                   const sel = tables.find(t => t.id === form.table_id);
                   return sel?.coeficiente ? (
                     <div className="mt-2 flex items-center gap-2">
-                      <span className="text-[10px] font-medium" style={{ color: '#475569' }}>Coeficiente:</span>
+                      <span className="text-[10px] font-medium" style={{ color: 'var(--text-3)' }}>Coeficiente:</span>
                       <span className="font-mono text-[11px] px-2 py-0.5 rounded-lg" style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.25)', color: '#a78bfa' }}>
                         {Number(sel.coeficiente).toFixed(7)}
                       </span>

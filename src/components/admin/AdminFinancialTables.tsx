@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, ChevronDown, Save, Settings } from 'lucide-react';
 import { FinancialTable, TableCategory, ScoringRule, Bank, Convenio } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
@@ -141,12 +141,12 @@ export function AdminFinancialTables() {
       {loading ? (
         <div className="flex justify-center py-16"><div className="spinner-cyber" /></div>
       ) : (
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
           <table className="w-full text-sm">
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                 {['Nome da Tabela', 'Convênio', 'Banco', 'Categoria', 'Coeficiente', 'Comissão Emp.', 'Comissão Cor.', 'Status', 'Ações'].map(h => (
-                  <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: '#475569' }}>{h}</th>
+                  <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -215,11 +215,11 @@ export function AdminFinancialTables() {
       >
         <form id="modal-financial-table" onSubmit={saveTable} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Nome da Tabela *</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Nome da Tabela *</label>
             <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className={inp} required placeholder="Ex: APROVAMAIS NEO_096-299_318661 - CC-CB" />
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Convênio <span className="text-red-400">*</span></label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Convênio <span className="text-red-400">*</span></label>
             <div className="relative">
               <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
               <select value={form.convenio_id} onChange={e => setForm(f => ({ ...f, convenio_id: e.target.value }))} className={`${inp} appearance-none pr-8 ${!form.convenio_id ? 'border-red-200' : ''}`}>
@@ -230,7 +230,7 @@ export function AdminFinancialTables() {
             {convenios.length === 0 && <p className="text-xs text-orange-500 mt-1">Nenhum convênio cadastrado. Cadastre em <strong>Convênios</strong> primeiro.</p>}
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Banco <span className="text-red-400">*</span></label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Banco <span className="text-red-400">*</span></label>
             <div className="relative">
               <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
               <select value={form.bank_id} onChange={e => setForm(f => ({ ...f, bank_id: e.target.value }))} className={`${inp} appearance-none pr-8 ${!form.bank_id ? 'border-red-200' : ''}`}>
@@ -241,7 +241,7 @@ export function AdminFinancialTables() {
             {banks.length === 0 && <p className="text-xs text-orange-500 mt-1">Nenhum banco cadastrado. Cadastre em <strong>Bancos</strong> primeiro.</p>}
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Categoria <span className="text-red-400">*</span></label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Categoria <span className="text-red-400">*</span></label>
             <div className="relative">
               <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
               <select value={form.category_id} onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))} className={`${inp} appearance-none pr-8 ${!form.category_id ? 'border-red-200' : ''}`}>
@@ -253,18 +253,18 @@ export function AdminFinancialTables() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Comissão Empresa (%)</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Comissão Empresa (%)</label>
               <input type="number" step="0.01" min="0" max="100" value={form.comissao_empresa} onChange={e => setForm(f => ({ ...f, comissao_empresa: e.target.value }))} className={inp} placeholder="0.00" />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Comissão Corretor (%)</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Comissão Corretor (%)</label>
               <input type="number" step="0.01" min="0" max="100" value={form.comissao_corretor} onChange={e => setForm(f => ({ ...f, comissao_corretor: e.target.value }))} className={inp} placeholder="0.00" />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>
               Coeficiente
-              <span className="ml-2 text-[10px] font-normal" style={{ color: '#475569' }}>— peso/rentabilidade da tabela (ex: 0.0409485)</span>
+              <span className="ml-2 text-[10px] font-normal" style={{ color: 'var(--text-3)' }}>— peso/rentabilidade da tabela (ex: 0.0409485)</span>
             </label>
             <input type="number" step="0.0000001" min="0" value={form.coeficiente} onChange={e => setForm(f => ({ ...f, coeficiente: e.target.value }))} className={`${inp} font-mono`} placeholder="0.0000000" />
           </div>

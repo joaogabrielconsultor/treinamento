@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Search, Download, Filter } from 'lucide-react';
 import { Proposal, FinancialTable } from '../../types';
 
@@ -75,7 +75,7 @@ export function AdminReports() {
       </div>
 
       {/* Filters */}
-      <div className="rounded-2xl p-5 mb-6" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
+      <div className="rounded-2xl p-5 mb-6" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
         <div className="flex items-center gap-2 mb-4">
           <Filter className="w-4 h-4 text-gray-400" />
           <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300">Filtros</h3>
@@ -132,28 +132,28 @@ export function AdminReports() {
 
       {/* Results summary */}
       <div className="grid grid-cols-3 gap-4 mb-4">
-        <div className="rounded-xl p-4" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
+        <div className="rounded-xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
           <p className="text-xs text-gray-500">Resultados</p>
           <p className="text-xl font-bold text-blue-600">{proposals.length}</p>
         </div>
-        <div className="rounded-xl p-4" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
+        <div className="rounded-xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
           <p className="text-xs text-gray-500">Volume pago</p>
           <p className="text-xl font-bold text-green-600">{fmtBRL(totalValue)}</p>
         </div>
-        <div className="rounded-xl p-4" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
+        <div className="rounded-xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
           <p className="text-xs text-gray-500">Propostas pagas</p>
           <p className="text-xl font-bold text-brand">{proposals.filter(p => p.status === 'Paga').length}</p>
         </div>
       </div>
 
       {/* Table */}
-      <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                 {['Data', 'Proposta', 'Corretor', 'Cliente', 'Banco', 'Tabela', 'Produto', 'Convênio', 'Valor', 'Status', 'Pts'].map(h => (
-                  <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: '#475569' }}>{h}</th>
+                  <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
                 ))}
               </tr>
             </thead>

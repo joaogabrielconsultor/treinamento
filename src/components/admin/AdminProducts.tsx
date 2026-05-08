@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, Save, Package } from 'lucide-react';
 import { Product } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
@@ -104,7 +104,7 @@ export function AdminProducts() {
         }
       >
         <form id="modal-products" onSubmit={save}>
-          <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Nome do produto *</label>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Nome do produto *</label>
           <input value={name} onChange={e => setName(e.target.value)} className={inp} required autoFocus placeholder="Ex: INSS, FGTS, Siape..." />
         </form>
       </Modal>

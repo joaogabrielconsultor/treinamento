@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+﻿import { useRef, useState, useEffect } from 'react';
 import { ArrowLeft, ArrowRight, CheckCircle2, Clock, Video, FileText, HelpCircle, Play, Pause, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 import { Lesson, Module, LessonProgress, QuizQuestion } from '../types';
 
@@ -91,7 +91,7 @@ function DirectVideoPlayer({ src }: { src: string }) {
   return (
     <div
       className="rounded-2xl overflow-hidden mb-6 relative group"
-      style={{ background: '#000', border: '1px solid rgba(255,255,255,0.06)' }}
+      style={{ background: '#000', border: '1px solid var(--card-border)' }}
     >
       <video
         ref={videoRef}
@@ -176,7 +176,7 @@ function VideoPlayer({ src }: { src: string }) {
   return (
     <div
       className="rounded-2xl overflow-hidden mb-6"
-      style={{ background: '#000', border: '1px solid rgba(255,255,255,0.06)' }}
+      style={{ background: '#000', border: '1px solid var(--card-border)' }}
     >
       <iframe
         src={embed.src}
@@ -196,11 +196,11 @@ function QuizViewer({ content }: { content: string }) {
   try {
     questions = JSON.parse(content);
   } catch {
-    return <p className="text-sm" style={{ color: '#475569' }}>Prova sem questões configuradas.</p>;
+    return <p className="text-sm" style={{ color: 'var(--text-3)' }}>Prova sem questões configuradas.</p>;
   }
 
   if (!Array.isArray(questions) || questions.length === 0) {
-    return <p className="text-sm" style={{ color: '#475569' }}>Prova sem questões configuradas.</p>;
+    return <p className="text-sm" style={{ color: 'var(--text-3)' }}>Prova sem questões configuradas.</p>;
   }
 
   const score = submitted ? questions.filter((q, i) => answers[i] === q.correct).length : 0;
@@ -212,9 +212,9 @@ function QuizViewer({ content }: { content: string }) {
         <div
           key={qi}
           className="rounded-xl p-4"
-          style={{ background: 'rgba(26,32,53,0.6)', border: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ background: 'rgba(26,32,53,0.6)', border: '1px solid var(--card-border)' }}
         >
-          <p className="font-semibold text-sm mb-3" style={{ color: '#E2E8F0' }}>
+          <p className="font-semibold text-sm mb-3" style={{ color: 'var(--text-1)' }}>
             {qi + 1}. {q.question}
           </p>
           <div className="space-y-2">
@@ -293,11 +293,11 @@ export function LessonViewer({
   const contentParagraphs = lesson.content?.split('\n').filter(Boolean) ?? [];
 
   return (
-    <div className="p-8 max-w-4xl mx-auto" style={{ color: '#E2E8F0' }}>
+    <div className="p-8 max-w-4xl mx-auto" style={{ color: 'var(--text-1)' }}>
       <button
         onClick={onBack}
         className="flex items-center gap-2 text-sm font-medium mb-6 transition-all"
-        style={{ color: '#64748B' }}
+        style={{ color: 'var(--text-3)' }}
         onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#94A3B8'; }}
         onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#64748B'; }}
       >
@@ -312,13 +312,13 @@ export function LessonViewer({
               <TypeIcon className="w-3 h-3" />
               {typeLabel[lesson.lesson_type] || 'Conteúdo'}
             </span>
-            <span className="flex items-center gap-1 text-xs num" style={{ color: '#475569' }}>
+            <span className="flex items-center gap-1 text-xs num" style={{ color: 'var(--text-3)' }}>
               <Clock className="w-3.5 h-3.5" />
               {lesson.duration_minutes} min
             </span>
           </div>
 
-          <h1 className="text-xl font-bold mb-6" style={{ color: '#E2E8F0' }}>{lesson.title}</h1>
+          <h1 className="text-xl font-bold mb-6" style={{ color: 'var(--text-1)' }}>{lesson.title}</h1>
 
           {lesson.lesson_type === 'video' && (
             lesson.video_url
@@ -326,7 +326,7 @@ export function LessonViewer({
               : (
                 <div
                   className="rounded-2xl aspect-video flex items-center justify-center mb-6"
-                  style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)' }}
+                  style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
                 >
                   <div className="text-center">
                     <Video className="w-10 h-10 mx-auto mb-2" style={{ color: '#334155' }} />
@@ -343,7 +343,7 @@ export function LessonViewer({
               {contentParagraphs.map((para, i) => {
                 if (para.startsWith('**') && para.endsWith('**')) {
                   return (
-                    <h3 key={i} className="text-sm font-bold mt-5 mb-1" style={{ color: '#E2E8F0' }}>
+                    <h3 key={i} className="text-sm font-bold mt-5 mb-1" style={{ color: 'var(--text-1)' }}>
                       {para.slice(2, -2)}
                     </h3>
                   );
@@ -355,12 +355,12 @@ export function LessonViewer({
                         className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
                         style={{ background: '#14B8A6' }}
                       />
-                      <p className="text-sm leading-relaxed" style={{ color: '#64748B' }}>{para.slice(2)}</p>
+                      <p className="text-sm leading-relaxed" style={{ color: 'var(--text-3)' }}>{para.slice(2)}</p>
                     </div>
                   );
                 }
                 return (
-                  <p key={i} className="text-sm leading-relaxed" style={{ color: '#64748B' }}>
+                  <p key={i} className="text-sm leading-relaxed" style={{ color: 'var(--text-3)' }}>
                     {para}
                   </p>
                 );
@@ -371,13 +371,13 @@ export function LessonViewer({
           {/* Navigation footer */}
           <div
             className="mt-8 pt-6 flex items-center justify-between"
-            style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
+            style={{ borderTop: '1px solid var(--card-border)' }}
           >
             {prevLesson ? (
               <button
                 onClick={() => onNavigateLesson(prevLesson)}
                 className="flex items-center gap-2 text-sm font-medium transition-all"
-                style={{ color: '#64748B' }}
+                style={{ color: 'var(--text-3)' }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#94A3B8'; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#64748B'; }}
               >
@@ -404,7 +404,7 @@ export function LessonViewer({
               <button
                 onClick={() => onNavigateLesson(nextLesson)}
                 className="flex items-center gap-2 text-sm font-medium transition-all"
-                style={{ color: '#64748B' }}
+                style={{ color: 'var(--text-3)' }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#94A3B8'; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#64748B'; }}
               >
@@ -424,7 +424,7 @@ export function LessonViewer({
               boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
             }}
           >
-            <h3 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#475569' }}>
+            <h3 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-3)' }}>
               Conteúdo do curso
             </h3>
             <div className="space-y-3">

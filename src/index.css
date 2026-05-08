@@ -3,35 +3,67 @@
 @tailwind utilities;
 
 /* ═══════════════════════════════════════════════════════════════
-   DESIGN TOKENS — CYBER / FINTECH PREMIUM
+   DESIGN TOKENS — LIGHT MODE (padrão)
 ═══════════════════════════════════════════════════════════════ */
 :root {
-  --bg-deep:    #050816;
-  --bg-base:    #0B1020;
-  --bg-card:    #111827;
-  --bg-surface: #1a2035;
-  --accent:     #14B8A6;
-  --accent2:    #2DD4BF;
-  --accent3:    #06B6D4;
-  --text-1:     #E2E8F0;
-  --text-2:     #94A3B8;
-  --text-3:     #64748B;
-  --border-1:   rgba(255,255,255,0.06);
-  --border-2:   rgba(255,255,255,0.10);
-  --border-accent: rgba(20,184,166,0.25);
-  --glow-sm:    0 0 8px rgba(20,184,166,0.2);
-  --glow-md:    0 0 20px rgba(20,184,166,0.25);
-  --glow-lg:    0 0 40px rgba(20,184,166,0.15), 0 0 80px rgba(6,182,212,0.05);
-  --shadow-card: 0 4px 24px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.3);
-  --shadow-lifted: 0 16px 48px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.4);
+  --bg-deep:        #f8fafc;
+  --bg-base:        #f0f4f8;
+  --bg-card:        #ffffff;
+  --bg-surface:     #e8eef5;
+  --card-bg:        rgba(255,255,255,0.97);
+  --card-border:    rgba(15,23,42,0.08);
+  --modal-bg:       rgba(255,255,255,0.99);
+  --surface-subtle: rgba(15,23,42,0.04);
+  --surface-hover:  rgba(20,184,166,0.06);
+  --text-1:         #0f172a;
+  --text-2:         #334155;
+  --text-3:         #64748b;
+  --border-1:       rgba(15,23,42,0.08);
+  --border-2:       rgba(15,23,42,0.14);
+  --border-accent:  rgba(20,184,166,0.35);
+  --accent:         #14B8A6;
+  --accent2:        #2DD4BF;
+  --accent3:        #06B6D4;
+  --glow-sm:        0 0 8px rgba(20,184,166,0.12);
+  --glow-md:        0 0 20px rgba(20,184,166,0.18);
+  --glow-lg:        0 0 40px rgba(20,184,166,0.12);
+  --shadow-card:    0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-lifted:  0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06);
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   BASE RESET — DARK FIRST
+   DESIGN TOKENS — DARK MODE
 ═══════════════════════════════════════════════════════════════ */
-html.dark body {
+html.dark {
+  --bg-deep:        #050816;
+  --bg-base:        #0B1020;
+  --bg-card:        #111827;
+  --bg-surface:     #1a2035;
+  --card-bg:        rgba(11,16,32,0.85);
+  --card-border:    rgba(255,255,255,0.06);
+  --modal-bg:       rgba(8,13,24,0.95);
+  --surface-subtle: rgba(255,255,255,0.03);
+  --surface-hover:  rgba(255,255,255,0.04);
+  --text-1:         #E2E8F0;
+  --text-2:         #94A3B8;
+  --text-3:         #64748B;
+  --border-1:       rgba(255,255,255,0.06);
+  --border-2:       rgba(255,255,255,0.10);
+  --border-accent:  rgba(20,184,166,0.25);
+  --glow-sm:        0 0 8px rgba(20,184,166,0.2);
+  --glow-md:        0 0 20px rgba(20,184,166,0.25);
+  --glow-lg:        0 0 40px rgba(20,184,166,0.15), 0 0 80px rgba(6,182,212,0.05);
+  --shadow-card:    0 4px 24px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.3);
+  --shadow-lifted:  0 16px 48px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.4);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BASE — usa vars em ambos os modos
+═══════════════════════════════════════════════════════════════ */
+body {
   background-color: var(--bg-base);
   color: var(--text-1);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 * {
@@ -55,24 +87,24 @@ html.dark body {
    GLASS MORPHISM
 ═══════════════════════════════════════════════════════════════ */
 .glass {
-  background: rgba(17,24,39,0.75);
+  background: var(--card-bg);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--border-1);
 }
 
 .glass-light {
-  background: rgba(26,32,53,0.6);
+  background: var(--surface-subtle);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--border-2);
 }
 
 .glass-card {
-  background: rgba(11,16,32,0.85);
+  background: var(--card-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border-1);
+  border: 1px solid var(--card-border);
   box-shadow: var(--shadow-card);
   transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
 }
@@ -117,13 +149,13 @@ html.dark body {
 }
 
 .btn-ghost {
-  background: rgba(255,255,255,0.04);
+  background: var(--surface-subtle);
   border: 1px solid var(--border-1);
   color: var(--text-2);
   transition: all 0.2s ease;
 }
 .btn-ghost:hover {
-  background: rgba(255,255,255,0.07);
+  background: var(--surface-hover);
   border-color: var(--border-2);
   color: var(--text-1);
 }
@@ -143,8 +175,8 @@ html.dark body {
    INPUTS
 ═══════════════════════════════════════════════════════════════ */
 .input-cyber {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-1);
   color: var(--text-1);
   border-radius: 10px;
   transition: all 0.22s ease;
@@ -154,13 +186,13 @@ html.dark body {
   border-color: rgba(20,184,166,0.45);
   box-shadow: 0 0 0 3px rgba(20,184,166,0.08), 0 0 14px rgba(20,184,166,0.08);
 }
-.input-cyber::placeholder { color: #475569; }
+.input-cyber::placeholder { color: var(--text-3); }
 
 /* ═══════════════════════════════════════════════════════════════
    PROGRESS BARS
 ═══════════════════════════════════════════════════════════════ */
 .progress-track {
-  background: rgba(255,255,255,0.05);
+  background: var(--surface-subtle);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -206,7 +238,7 @@ html.dark body {
 .badge-purple  { background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.25); color: #a78bfa; }
 .badge-blue    { background: rgba(96,165,250,0.12); border: 1px solid rgba(96,165,250,0.25); color: #60a5fa; }
 .badge-red     { background: rgba(248,113,113,0.12);border: 1px solid rgba(248,113,113,0.25);color: #f87171; }
-.badge-neutral { background: rgba(255,255,255,0.06);border: 1px solid rgba(255,255,255,0.10);color: #94A3B8; }
+.badge-neutral { background: var(--surface-subtle); border: 1px solid var(--border-2); color: var(--text-2); }
 
 /* Badge card (conquistas) hover animation */
 .badge-card {
@@ -254,9 +286,9 @@ html.dark body {
 .skeleton {
   background: linear-gradient(
     90deg,
-    rgba(255,255,255,0.03) 0%,
-    rgba(255,255,255,0.07) 50%,
-    rgba(255,255,255,0.03) 100%
+    var(--surface-subtle) 0%,
+    var(--border-1) 50%,
+    var(--surface-subtle) 100%
   );
   background-size: 200% 100%;
   animation: shimmer 1.8s linear infinite;
@@ -307,26 +339,26 @@ html.dark body {
 ═══════════════════════════════════════════════════════════════ */
 .table-row-cyber {
   transition: background 0.15s ease;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid var(--border-1);
 }
 .table-row-cyber:hover {
-  background: rgba(20,184,166,0.04);
+  background: var(--surface-hover);
 }
 
 /* ═══════════════════════════════════════════════════════════════
    STAT CARD
 ═══════════════════════════════════════════════════════════════ */
 .stat-card {
-  background: rgba(11,16,32,0.85);
-  border: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow-card);
   transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
   position: relative;
   overflow: hidden;
 }
 .stat-card:hover {
-  border-color: rgba(20,184,166,0.2);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(20,184,166,0.08);
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-lifted), 0 0 0 1px rgba(20,184,166,0.08);
   transform: translateY(-1px);
 }
 .stat-card::before {
@@ -341,11 +373,11 @@ html.dark body {
    MODAL OVERLAY / PANEL
 ═══════════════════════════════════════════════════════════════ */
 .modal-panel {
-  background: rgba(8,13,24,0.95);
+  background: var(--modal-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.08);
-  box-shadow: 0 24px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(20,184,166,0.06);
+  border: 1px solid var(--border-1);
+  box-shadow: var(--shadow-lifted), 0 0 0 1px rgba(20,184,166,0.06);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -414,7 +446,7 @@ html.dark body {
 ═══════════════════════════════════════════════════════════════ */
 .divider-cyber {
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  background: linear-gradient(90deg, transparent, var(--border-2), transparent);
 }
 
 /* ═══════════════════════════════════════════════════════════════

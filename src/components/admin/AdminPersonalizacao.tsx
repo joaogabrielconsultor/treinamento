@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Palette, Save, ImageIcon, Check, AlertCircle } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { LogoComponent } from '../LogoComponent';
@@ -44,7 +44,7 @@ export function AdminPersonalizacao() {
         <p className="text-xs text-slate-500 mt-0.5">Configure a identidade visual da plataforma</p>
       </div>
 
-      <div className="rounded-2xl p-5" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
+      <div className="rounded-2xl p-5" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
         <div className="flex items-center gap-2 mb-6">
           <Palette className="w-5 h-5 text-brand" />
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Logo da plataforma</h2>
@@ -65,7 +65,7 @@ export function AdminPersonalizacao() {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>
               URL da Logo
             </label>
             <div className="relative">

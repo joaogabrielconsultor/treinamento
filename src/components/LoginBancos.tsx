@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+﻿import { useState, useCallback } from 'react';
 import {
   Building2, Copy, Check, Eye, EyeOff, Plus, Pencil, Trash2,
   X, Search, RefreshCw, Link, User, Lock, ExternalLink,
@@ -42,7 +42,7 @@ function CopyButton({ value }: { value: string }) {
       className="flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200"
       style={copied
         ? { background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', color: '#4ade80' }
-        : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: '#64748B' }
+        : { background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border-1)', color: 'var(--text-3)' }
       }
       onMouseEnter={(e) => {
         if (!copied) {
@@ -115,13 +115,13 @@ function BancoModal({ banco, onClose, onSave }: {
           }}
         />
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-base font-bold" style={{ color: '#E2E8F0' }}>
+          <h2 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>
             {banco ? 'Editar Banco' : 'Adicionar Banco'}
           </h2>
           <button
             onClick={onClose}
             className="p-2 rounded-xl transition-all"
-            style={{ color: '#475569', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
+            style={{ color: 'var(--text-3)', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--card-border)' }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#94A3B8'; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#475569'; }}
           >
@@ -135,7 +135,7 @@ function BancoModal({ banco, onClose, onSave }: {
             { label: 'Login', value: login, setter: setLogin, type: 'text', placeholder: 'Usuário ou CPF/CNPJ' },
           ] as const).map(({ label, value, setter, type, placeholder }) => (
             <div key={label}>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>{label} *</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>{label} *</label>
               <input
                 type={type}
                 value={value}
@@ -148,7 +148,7 @@ function BancoModal({ banco, onClose, onSave }: {
           ))}
 
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Senha *</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Senha *</label>
             <div className="relative">
               <input
                 type={showPwd ? 'text' : 'password'}
@@ -162,7 +162,7 @@ function BancoModal({ banco, onClose, onSave }: {
                 type="button"
                 onClick={() => setShowPwd(!showPwd)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                style={{ color: '#475569' }}
+                style={{ color: 'var(--text-3)' }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#94A3B8'; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#475569'; }}
               >
@@ -172,7 +172,7 @@ function BancoModal({ banco, onClose, onSave }: {
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>URL do Banco *</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>URL do Banco *</label>
             <input
               type="url"
               value={url}
@@ -233,10 +233,10 @@ function DeleteConfirm({ nome, onConfirm, onCancel }: { nome: string; onConfirm:
             borderRadius: '16px 16px 0 0',
           }}
         />
-        <h2 className="text-base font-bold mb-2" style={{ color: '#E2E8F0' }}>Excluir banco?</h2>
-        <p className="text-sm mb-6" style={{ color: '#64748B' }}>
+        <h2 className="text-base font-bold mb-2" style={{ color: 'var(--text-1)' }}>Excluir banco?</h2>
+        <p className="text-sm mb-6" style={{ color: 'var(--text-3)' }}>
           Tem certeza que deseja excluir{' '}
-          <strong style={{ color: '#94A3B8' }}>{nome}</strong>?{' '}
+          <strong style={{ color: 'var(--text-2)' }}>{nome}</strong>?{' '}
           Esta ação não pode ser desfeita.
         </p>
         <div className="flex gap-3">
@@ -266,9 +266,9 @@ function FieldRow({ icon: Icon, label, children }: {
   return (
     <div
       className="flex items-center gap-3 rounded-xl px-3 py-2.5"
-      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
+      style={{ background: 'var(--surface-subtle)', border: '1px solid var(--card-border)' }}
     >
-      <Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#475569' }} />
+      <Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--text-3)' }} />
       <span className="text-[10px] font-bold uppercase tracking-wider w-9 flex-shrink-0" style={{ color: '#334155' }}>{label}</span>
       {children}
     </div>
@@ -290,7 +290,7 @@ function BancoCard({ banco, isAdmin, onEdit, onDelete }: {
       className="relative rounded-2xl overflow-hidden transition-all duration-300 cursor-default"
       style={{
         background: 'rgba(11,16,32,0.9)',
-        border: '1px solid rgba(255,255,255,0.06)',
+        border: '1px solid var(--card-border)',
         boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
       }}
       onMouseEnter={(e) => {
@@ -318,7 +318,7 @@ function BancoCard({ banco, isAdmin, onEdit, onDelete }: {
               <Building2 className="w-4.5 h-4.5" style={{ color: accent }} />
             </div>
             <div>
-              <h3 className="font-bold text-base leading-tight" style={{ color: '#E2E8F0' }}>
+              <h3 className="font-bold text-base leading-tight" style={{ color: 'var(--text-1)' }}>
                 {banco.nome}
               </h3>
               <p className="text-[11px] mt-0.5" style={{ color: '#334155' }}>
@@ -333,7 +333,7 @@ function BancoCard({ banco, isAdmin, onEdit, onDelete }: {
                 onClick={() => onEdit(banco)}
                 title="Editar"
                 className="p-1.5 rounded-lg transition-all"
-                style={{ color: '#475569' }}
+                style={{ color: 'var(--text-3)' }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)';
                   (e.currentTarget as HTMLElement).style.color = '#94A3B8';
@@ -349,7 +349,7 @@ function BancoCard({ banco, isAdmin, onEdit, onDelete }: {
                 onClick={() => onDelete(banco)}
                 title="Excluir"
                 className="p-1.5 rounded-lg transition-all"
-                style={{ color: '#475569' }}
+                style={{ color: 'var(--text-3)' }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.12)';
                   (e.currentTarget as HTMLElement).style.color = '#f87171';
@@ -368,18 +368,18 @@ function BancoCard({ banco, isAdmin, onEdit, onDelete }: {
         {/* Fields */}
         <div className="space-y-2">
           <FieldRow icon={User} label="Login">
-            <span className="flex-1 text-sm font-mono truncate" style={{ color: '#E2E8F0' }}>{banco.login}</span>
+            <span className="flex-1 text-sm font-mono truncate" style={{ color: 'var(--text-1)' }}>{banco.login}</span>
             <CopyButton value={banco.login} />
           </FieldRow>
 
           <FieldRow icon={Lock} label="Senha">
-            <span className="flex-1 text-sm font-mono truncate" style={{ color: '#E2E8F0' }}>
+            <span className="flex-1 text-sm font-mono truncate" style={{ color: 'var(--text-1)' }}>
               {showSenha ? banco.senha : maskedSenha}
             </span>
             <button
               onClick={() => setShowSenha(!showSenha)}
               className="flex-shrink-0 p-1 rounded transition-colors"
-              style={{ color: '#475569' }}
+              style={{ color: 'var(--text-3)' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#94A3B8'; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#475569'; }}
             >
@@ -441,7 +441,7 @@ export function LoginBancos({ isAdmin }: { isAdmin: boolean }) {
   }
 
   return (
-    <div className="p-8 max-w-5xl mx-auto" style={{ color: '#E2E8F0' }}>
+    <div className="p-8 max-w-5xl mx-auto" style={{ color: 'var(--text-1)' }}>
       {(modalOpen || editingBanco) && (
         <BancoModal
           banco={editingBanco}
@@ -462,9 +462,9 @@ export function LoginBancos({ isAdmin }: { isAdmin: boolean }) {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Building2 className="w-4 h-4" style={{ color: '#14B8A6' }} />
-            <h1 className="text-xl font-bold" style={{ color: '#E2E8F0' }}>Login Bancos</h1>
+            <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Login Bancos</h1>
           </div>
-          <p className="text-xs" style={{ color: '#64748B' }}>
+          <p className="text-xs" style={{ color: 'var(--text-3)' }}>
             {bancos.length} banco{bancos.length !== 1 ? 's' : ''} cadastrado{bancos.length !== 1 ? 's' : ''}
           </p>
         </div>
@@ -492,7 +492,7 @@ export function LoginBancos({ isAdmin }: { isAdmin: boolean }) {
       <div className="relative mb-6 animate-fade-up" style={{ animationDelay: '60ms' }}>
         <Search
           className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-          style={{ color: '#475569' }}
+          style={{ color: 'var(--text-3)' }}
         />
         <input
           type="text"
@@ -505,7 +505,7 @@ export function LoginBancos({ isAdmin }: { isAdmin: boolean }) {
           <button
             onClick={() => setSearch('')}
             className="absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors"
-            style={{ color: '#475569' }}
+            style={{ color: 'var(--text-3)' }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#94A3B8'; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#475569'; }}
           >
@@ -532,14 +532,14 @@ export function LoginBancos({ isAdmin }: { isAdmin: boolean }) {
         <div className="text-center py-20 animate-fade-up">
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+            style={{ background: 'var(--surface-subtle)', border: '1px solid var(--card-border)' }}
           >
             <Building2 className="w-8 h-8" style={{ color: '#334155' }} />
           </div>
           {search ? (
             <>
-              <p className="font-medium mb-1" style={{ color: '#64748B' }}>Nenhum banco encontrado</p>
-              <p className="text-sm mb-4" style={{ color: '#475569' }}>Tente outro termo de busca</p>
+              <p className="font-medium mb-1" style={{ color: 'var(--text-3)' }}>Nenhum banco encontrado</p>
+              <p className="text-sm mb-4" style={{ color: 'var(--text-3)' }}>Tente outro termo de busca</p>
               <button
                 onClick={() => setSearch('')}
                 className="text-sm font-medium transition-colors"
@@ -550,7 +550,7 @@ export function LoginBancos({ isAdmin }: { isAdmin: boolean }) {
             </>
           ) : (
             <>
-              <p className="font-medium mb-1" style={{ color: '#64748B' }}>Nenhum banco cadastrado</p>
+              <p className="font-medium mb-1" style={{ color: 'var(--text-3)' }}>Nenhum banco cadastrado</p>
               {isAdmin && (
                 <button
                   onClick={() => setModalOpen(true)}

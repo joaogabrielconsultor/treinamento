@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, CheckCircle, BarChart2, Star, Award, Target, Zap, Bell, BellOff, Percent, X } from 'lucide-react';
 import { ProductionStats, Badge, UserStreak, MonthlyGoal, Notification } from '../types';
 
@@ -24,9 +24,9 @@ function StatCard({ label, value, sub, icon: Icon, iconClass, iconColor, delay =
     <div className="stat-card rounded-2xl p-5 animate-fade-up" style={{ animationDelay: `${delay}ms` }}>
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: '#475569' }}>{label}</p>
-          <p className="text-2xl font-black num" style={{ color: '#E2E8F0' }}>{value}</p>
-          {sub && <p className="text-xs mt-1" style={{ color: '#64748B' }}>{sub}</p>}
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-3)' }}>{label}</p>
+          <p className="text-2xl font-black num" style={{ color: 'var(--text-1)' }}>{value}</p>
+          {sub && <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{sub}</p>}
         </div>
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${iconClass}`}>
           <Icon className="w-5 h-5" style={{ color: iconColor }} />
@@ -87,7 +87,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
       <div className="flex items-center justify-center min-h-screen" style={{ background: 'var(--bg-base)' }}>
         <div className="text-center">
           <div className="spinner-cyber mx-auto mb-4" />
-          <p className="text-sm" style={{ color: '#475569' }}>Carregando dados...</p>
+          <p className="text-sm" style={{ color: 'var(--text-3)' }}>Carregando dados...</p>
         </div>
       </div>
     );
@@ -98,7 +98,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
   const earnedBadges = badges.filter(b => b.earned);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto" style={{ color: '#E2E8F0' }}>
+    <div className="p-6 max-w-7xl mx-auto" style={{ color: 'var(--text-1)' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6 animate-fade-up">
         <div>
@@ -106,8 +106,8 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
             <div className="live-dot" />
             <span className="text-xs font-medium" style={{ color: '#14B8A6' }}>Dashboard live</span>
           </div>
-          <h1 className="text-xl font-bold" style={{ color: '#E2E8F0' }}>Produção</h1>
-          <p className="text-xs mt-0.5" style={{ color: '#64748B' }}>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Produção</h1>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
             {isAdmin ? 'Visão geral da equipe' : 'Sua performance em tempo real'}
           </p>
         </div>
@@ -139,16 +139,16 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
               className="absolute right-0 top-12 w-80 rounded-2xl z-50 overflow-hidden animate-fade-up"
               style={{
                 background: 'rgba(8,13,24,0.97)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                border: '1px solid var(--border-1)',
                 boxShadow: '0 24px 60px rgba(0,0,0,0.7)',
                 backdropFilter: 'blur(20px)',
               }}
             >
               <div
                 className="flex items-center justify-between px-4 py-3"
-                style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+                style={{ borderBottom: '1px solid var(--card-border)' }}
               >
-                <span className="text-sm font-semibold" style={{ color: '#E2E8F0' }}>Notificações</span>
+                <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>Notificações</span>
                 <div className="flex items-center gap-2">
                   {unreadCount > 0 && (
                     <button
@@ -162,7 +162,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                   <button
                     onClick={() => setShowNotif(false)}
                     className="p-1 rounded-lg transition-colors"
-                    style={{ color: '#475569' }}
+                    style={{ color: 'var(--text-3)' }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#94A3B8'; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#475569'; }}
                   >
@@ -172,7 +172,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
               </div>
               <div className="max-h-72 overflow-y-auto">
                 {notifications.length === 0 ? (
-                  <p className="text-center py-8 text-sm" style={{ color: '#475569' }}>Nenhuma notificação</p>
+                  <p className="text-center py-8 text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma notificação</p>
                 ) : (
                   notifications.map(n => (
                     <div
@@ -186,8 +186,8 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                       {!n.read && (
                         <div className="w-1.5 h-1.5 rounded-full mb-1" style={{ background: '#14B8A6' }} />
                       )}
-                      <p className="text-sm" style={{ color: '#E2E8F0' }}>{n.message}</p>
-                      <p className="text-xs mt-1" style={{ color: '#475569' }}>
+                      <p className="text-sm" style={{ color: 'var(--text-1)' }}>{n.message}</p>
+                      <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
                         {new Date(n.created_at).toLocaleDateString('pt-BR')}
                       </p>
                     </div>
@@ -219,15 +219,15 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
         <div
           className="lg:col-span-2 rounded-2xl p-5 animate-fade-up"
           style={{
-            background: 'rgba(11,16,32,0.85)',
-            border: '1px solid rgba(255,255,255,0.06)',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.35)',
+            background: 'var(--card-bg)',
+            border: '1px solid var(--card-border)',
+            boxShadow: 'var(--shadow-card)',
             animationDelay: '200ms',
           }}
         >
           <div className="flex items-center gap-2 mb-5">
             <div className="live-dot" />
-            <h3 className="text-sm font-semibold" style={{ color: '#E2E8F0' }}>Status das Propostas</h3>
+            <h3 className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>Status das Propostas</h3>
           </div>
           <div className="space-y-4">
             {PROPOSAL_BARS.map(({ label, key, barClass }) => {
@@ -238,9 +238,9 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
               return (
                 <div key={label}>
                   <div className="flex justify-between text-xs mb-1.5">
-                    <span style={{ color: '#64748B' }}>{label}</span>
-                    <span className="font-semibold num" style={{ color: '#94A3B8' }}>
-                      {count} <span style={{ color: '#475569' }}>({pct}%)</span>
+                    <span style={{ color: 'var(--text-3)' }}>{label}</span>
+                    <span className="font-semibold num" style={{ color: 'var(--text-2)' }}>
+                      {count} <span style={{ color: 'var(--text-3)' }}>({pct}%)</span>
                     </span>
                   </div>
                   <div className="progress-track h-2">
@@ -266,12 +266,12 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
             >
               <div className="flex items-center gap-2 mb-3">
                 <Zap className="w-4 h-4" style={{ color: '#fbbf24' }} />
-                <h3 className="text-sm font-semibold" style={{ color: '#E2E8F0' }}>Streak Diária</h3>
+                <h3 className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>Streak Diária</h3>
               </div>
               <p className="text-3xl font-black num" style={{ color: '#fbbf24' }}>
                 🔥 {streak.current_streak} dias
               </p>
-              <p className="text-xs mt-1" style={{ color: '#64748B' }}>Recorde: {streak.best_streak} dias</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>Recorde: {streak.best_streak} dias</p>
             </div>
           )}
 
@@ -279,21 +279,21 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
             <div
               className="rounded-2xl p-5 animate-fade-up"
               style={{
-                background: 'rgba(11,16,32,0.85)',
-                border: '1px solid rgba(255,255,255,0.06)',
-                boxShadow: '0 4px 24px rgba(0,0,0,0.35)',
+                background: 'var(--card-bg)',
+                border: '1px solid var(--card-border)',
+                boxShadow: 'var(--shadow-card)',
                 animationDelay: '280ms',
               }}
             >
               <div className="flex items-center gap-2 mb-4">
                 <Target className="w-4 h-4" style={{ color: '#14B8A6' }} />
-                <h3 className="text-sm font-semibold" style={{ color: '#E2E8F0' }}>Meta do Mês</h3>
+                <h3 className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>Meta do Mês</h3>
               </div>
               <div className="space-y-3">
                 <div>
                   <div className="flex justify-between text-xs mb-1.5">
-                    <span style={{ color: '#64748B' }}>Pontos</span>
-                    <span className="font-semibold num" style={{ color: '#94A3B8' }}>
+                    <span style={{ color: 'var(--text-3)' }}>Pontos</span>
+                    <span className="font-semibold num" style={{ color: 'var(--text-2)' }}>
                       {stats.my_points}/{goal.target_points}
                     </span>
                   </div>
@@ -306,8 +306,8 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                 </div>
                 <div>
                   <div className="flex justify-between text-xs mb-1.5">
-                    <span style={{ color: '#64748B' }}>Propostas Pagas</span>
-                    <span className="font-semibold num" style={{ color: '#94A3B8' }}>
+                    <span style={{ color: 'var(--text-3)' }}>Propostas Pagas</span>
+                    <span className="font-semibold num" style={{ color: 'var(--text-2)' }}>
                       {stats.proposals.paid}/{goal.target_proposals}
                     </span>
                   </div>
@@ -330,25 +330,25 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                 border: '1px solid rgba(20,184,166,0.15)',
               }}
             >
-              <h3 className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: '#475569' }}>Tabela mais usada</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>Tabela mais usada</h3>
               <p className="font-bold" style={{ color: '#2DD4BF' }}>{stats.top_table.name}</p>
-              <p className="text-xs mt-1" style={{ color: '#64748B' }}>{stats.top_table.count} propostas pagas</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{stats.top_table.count} propostas pagas</p>
             </div>
           )}
 
           <div
             className="rounded-2xl p-5"
             style={{
-              background: 'rgba(11,16,32,0.85)',
-              border: '1px solid rgba(255,255,255,0.06)',
-              boxShadow: '0 4px 24px rgba(0,0,0,0.35)',
+              background: 'var(--card-bg)',
+              border: '1px solid var(--card-border)',
+              boxShadow: 'var(--shadow-card)',
             }}
           >
             <div className="flex items-center gap-2 mb-2">
-              <CheckCircle className="w-4 h-4" style={{ color: '#475569' }} />
-              <h3 className="text-sm font-semibold" style={{ color: '#94A3B8' }}>Total de Propostas</h3>
+              <CheckCircle className="w-4 h-4" style={{ color: 'var(--text-3)' }} />
+              <h3 className="text-sm font-semibold" style={{ color: 'var(--text-2)' }}>Total de Propostas</h3>
             </div>
-            <p className="text-3xl font-black num" style={{ color: '#E2E8F0' }}>
+            <p className="text-3xl font-black num" style={{ color: 'var(--text-1)' }}>
               {stats.proposals.total_proposals}
             </p>
           </div>
@@ -360,15 +360,15 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
         <div
           className="rounded-2xl p-5 animate-fade-up"
           style={{
-            background: 'rgba(11,16,32,0.85)',
-            border: '1px solid rgba(255,255,255,0.06)',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.35)',
+            background: 'var(--card-bg)',
+            border: '1px solid var(--card-border)',
+            boxShadow: 'var(--shadow-card)',
             animationDelay: '320ms',
           }}
         >
           <div className="flex items-center gap-3 mb-4">
             <Award className="w-4 h-4" style={{ color: '#fbbf24' }} />
-            <h3 className="text-sm font-semibold" style={{ color: '#E2E8F0' }}>Conquistas</h3>
+            <h3 className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>Conquistas</h3>
             <span className="badge badge-amber text-[10px]">
               {earnedBadges.length}/{badges.length}
             </span>

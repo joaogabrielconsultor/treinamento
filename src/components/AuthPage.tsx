@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { LogoComponent } from './LogoComponent';
 
@@ -85,7 +85,7 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
           >
             Aprova Mais
           </h1>
-          <p className="text-sm mt-1" style={{ color: '#475569' }}>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
             Plataforma de Treinamentos & Produção
           </p>
         </div>
@@ -100,20 +100,20 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
             backdropFilter: 'blur(20px)',
           }}
         >
-          <p className="text-base font-semibold mb-5" style={{ color: '#E2E8F0' }}>
+          <p className="text-base font-semibold mb-5" style={{ color: 'var(--text-1)' }}>
             Acessar plataforma
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>
                 Email
               </label>
               <div className="relative">
                 <Mail
                   className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-                  style={{ color: '#475569' }}
+                  style={{ color: 'var(--text-3)' }}
                 />
                 <input
                   type="email"
@@ -128,13 +128,13 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
 
             {/* Password */}
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>
                 Senha
               </label>
               <div className="relative">
                 <Lock
                   className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-                  style={{ color: '#475569' }}
+                  style={{ color: 'var(--text-3)' }}
                 />
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -149,7 +149,7 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                  style={{ color: '#475569' }}
+                  style={{ color: 'var(--text-3)' }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#94A3B8'; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#475569'; }}
                 >

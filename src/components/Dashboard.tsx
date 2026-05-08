@@ -1,4 +1,4 @@
-import { Trophy, BookOpen, Clock, Target, ArrowRight, CheckCircle2, Play, Sparkles } from 'lucide-react';
+﻿import { Trophy, BookOpen, Clock, Target, ArrowRight, CheckCircle2, Play, Sparkles } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { Course, Enrollment, ViewType } from '../types';
 
@@ -27,8 +27,8 @@ function StatCard({ icon: Icon, label, value, iconClass, iconColor, delay = 0 }:
       <div className={`inline-flex w-10 h-10 rounded-xl items-center justify-center mb-4 ${iconClass}`}>
         <Icon className="w-5 h-5" style={{ color: iconColor }} />
       </div>
-      <p className="text-2xl font-bold num" style={{ color: '#E2E8F0' }}>{value}</p>
-      <p className="text-xs mt-1 font-medium" style={{ color: '#475569' }}>{label}</p>
+      <p className="text-2xl font-bold num" style={{ color: 'var(--text-1)' }}>{value}</p>
+      <p className="text-xs mt-1 font-medium" style={{ color: 'var(--text-3)' }}>{label}</p>
     </div>
   );
 }
@@ -66,7 +66,7 @@ export function Dashboard({ user, courses, enrollments, onNavigate }: DashboardP
   return (
     <div
       className="min-h-screen p-8 max-w-6xl mx-auto"
-      style={{ color: '#E2E8F0' }}
+      style={{ color: 'var(--text-1)' }}
     >
       {/* Header */}
       <div className="mb-8 animate-fade-up">
@@ -74,10 +74,10 @@ export function Dashboard({ user, courses, enrollments, onNavigate }: DashboardP
           <div className="live-dot" />
           <span className="text-xs font-medium" style={{ color: '#14B8A6' }}>Sistema ativo</span>
         </div>
-        <h1 className="text-2xl font-bold" style={{ color: '#E2E8F0' }}>
+        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-1)' }}>
           Olá, {firstName}
         </h1>
-        <p className="text-sm mt-0.5" style={{ color: '#64748B' }}>
+        <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>
           Continue sua jornada de aprendizado e evolua sua performance.
         </p>
       </div>
@@ -103,7 +103,7 @@ export function Dashboard({ user, courses, enrollments, onNavigate }: DashboardP
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Play className="w-4 h-4" style={{ color: '#14B8A6' }} />
-              <h2 className="text-sm font-bold" style={{ color: '#E2E8F0' }}>Continuar aprendendo</h2>
+              <h2 className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>Continuar aprendendo</h2>
             </div>
             <button
               onClick={() => onNavigate('catalog')}
@@ -128,16 +128,16 @@ export function Dashboard({ user, courses, enrollments, onNavigate }: DashboardP
                     src={course.thumbnail_url}
                     alt={course.title}
                     className="w-16 h-12 object-cover rounded-xl flex-shrink-0"
-                    style={{ border: '1px solid rgba(255,255,255,0.06)' }}
+                    style={{ border: '1px solid var(--card-border)' }}
                   />
                   <div className="flex-1 min-w-0">
                     <h3
                       className="font-semibold text-sm truncate transition-colors"
-                      style={{ color: '#E2E8F0' }}
+                      style={{ color: 'var(--text-1)' }}
                     >
                       {course.title}
                     </h3>
-                    <p className="text-xs mt-0.5" style={{ color: '#475569' }}>{course.instructor}</p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{course.instructor}</p>
                     <div className="mt-2 flex items-center gap-2">
                       <div className="flex-1 progress-track h-1.5">
                         <div
@@ -145,7 +145,7 @@ export function Dashboard({ user, courses, enrollments, onNavigate }: DashboardP
                           style={{ width: `${enrollment.progress_percent}%` }}
                         />
                       </div>
-                      <span className="text-[11px] font-semibold flex-shrink-0 num" style={{ color: '#64748B' }}>
+                      <span className="text-[11px] font-semibold flex-shrink-0 num" style={{ color: 'var(--text-3)' }}>
                         {enrollment.progress_percent}%
                       </span>
                     </div>
@@ -169,7 +169,7 @@ export function Dashboard({ user, courses, enrollments, onNavigate }: DashboardP
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" style={{ color: '#14B8A6' }} />
-              <h2 className="text-sm font-bold" style={{ color: '#E2E8F0' }}>
+              <h2 className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>
                 {enrolled === 0 ? 'Comece a aprender' : 'Recomendados para você'}
               </h2>
             </div>
@@ -208,13 +208,13 @@ export function Dashboard({ user, courses, enrollments, onNavigate }: DashboardP
                   </span>
                   <h3
                     className="font-semibold text-sm mt-2 line-clamp-2 leading-snug transition-colors"
-                    style={{ color: '#E2E8F0' }}
+                    style={{ color: 'var(--text-1)' }}
                   >
                     {course.title}
                   </h3>
                   <div className="flex items-center gap-1.5 mt-2">
-                    <Clock className="w-3.5 h-3.5" style={{ color: '#475569' }} />
-                    <span className="text-xs num" style={{ color: '#64748B' }}>
+                    <Clock className="w-3.5 h-3.5" style={{ color: 'var(--text-3)' }} />
+                    <span className="text-xs num" style={{ color: 'var(--text-3)' }}>
                       {Math.floor(course.duration_minutes / 60)}h {course.duration_minutes % 60}min
                     </span>
                   </div>
@@ -238,8 +238,8 @@ export function Dashboard({ user, courses, enrollments, onNavigate }: DashboardP
           >
             <Trophy className="w-8 h-8" style={{ color: '#14B8A6' }} />
           </div>
-          <h3 className="text-base font-semibold mb-2" style={{ color: '#E2E8F0' }}>Comece sua jornada</h3>
-          <p className="text-sm mb-5" style={{ color: '#64748B' }}>Explore o catálogo e matricule-se em um curso.</p>
+          <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--text-1)' }}>Comece sua jornada</h3>
+          <p className="text-sm mb-5" style={{ color: 'var(--text-3)' }}>Explore o catálogo e matricule-se em um curso.</p>
           <button
             onClick={() => onNavigate('catalog')}
             className="btn-cyber px-6 py-2.5 rounded-xl text-sm"

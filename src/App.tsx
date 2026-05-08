@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { AuthPage } from './components/AuthPage';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -47,10 +47,10 @@ function AppInner() {
     return (
       <div
         className="min-h-screen flex flex-col items-center justify-center gap-4"
-        style={{ background: 'linear-gradient(135deg, #050816 0%, #080d18 100%)' }}
+        style={{ background: 'var(--bg-base)' }}
       >
         <div className="spinner-cyber" />
-        <p className="text-xs font-medium" style={{ color: '#475569' }}>Carregando...</p>
+        <p className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Carregando...</p>
       </div>
     );
   }
@@ -105,7 +105,7 @@ function AppInner() {
   } as Parameters<typeof Sidebar>[0]['user'];
 
   return (
-    <div className="flex min-h-screen bg-slate-100 dark:bg-cyber-700">
+    <div className="flex min-h-screen" style={{ background: 'var(--bg-base)' }}>
       <Sidebar
         currentView={currentView}
         onNavigate={navigate}

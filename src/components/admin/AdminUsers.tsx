@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Users, Shield, ShieldOff, BookOpen, RefreshCw, Plus, X, Eye, EyeOff, Crown, Trash2, KeyRound } from 'lucide-react';
 import { useAdminUsers } from '../../hooks/useAdmin';
 
@@ -34,8 +34,8 @@ function CreateUserModal({ onClose, onCreate }: {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)' }}>
       <div className="modal-panel rounded-2xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-base font-bold" style={{ color: '#E2E8F0' }}>Criar Usuário</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg transition-colors" style={{ color: '#475569' }}>
+          <h2 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>Criar Usuário</h2>
+          <button onClick={onClose} className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--text-3)' }}>
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -148,8 +148,8 @@ function ChangePasswordModal({ userName, onClose, onSave }: {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)' }}>
       <div className="modal-panel rounded-2xl w-full max-w-sm p-6">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-base font-bold" style={{ color: '#E2E8F0' }}>Alterar Senha</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg transition-colors" style={{ color: '#475569' }}>
+          <h2 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>Alterar Senha</h2>
+          <button onClick={onClose} className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--text-3)' }}>
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -215,8 +215,8 @@ function DeleteConfirmModal({ userName, onClose, onConfirm }: {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)' }}>
       <div className="modal-panel rounded-2xl w-full max-w-sm p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-bold" style={{ color: '#E2E8F0' }}>Excluir Usuário</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg transition-colors" style={{ color: '#475569' }}>
+          <h2 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>Excluir Usuário</h2>
+          <button onClick={onClose} className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--text-3)' }}>
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -284,8 +284,8 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
 
       <div className="flex items-center justify-between mb-6 animate-fade-up">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: '#E2E8F0' }}>Gestão de Usuários</h1>
-          <p className="text-xs mt-0.5" style={{ color: '#64748B' }}>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Gestão de Usuários</h1>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
             {users.length} usuário{users.length !== 1 ? 's' : ''} cadastrado{users.length !== 1 ? 's' : ''}
           </p>
         </div>
@@ -302,17 +302,17 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
       <div
         className="rounded-2xl overflow-hidden animate-fade-up"
         style={{
-          background: 'rgba(11,16,32,0.85)',
-          border: '1px solid rgba(255,255,255,0.06)',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.35)',
+          background: 'var(--card-bg)',
+          border: '1px solid var(--card-border)',
+          boxShadow: 'var(--shadow-card)',
           animationDelay: '60ms',
         }}
       >
         <table className="w-full">
           <thead>
-            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
               {['Usuário', 'Função', 'Matrículas', 'Cadastro', ''].map(h => (
-                <th key={h} className="text-left px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: '#475569' }}>{h}</th>
+                <th key={h} className="text-left px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -341,14 +341,14 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="text-sm font-semibold" style={{ color: '#E2E8F0' }}>{name}</p>
+                          <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{name}</p>
                           {isThisMaster && (
                             <span className="badge badge-amber text-[10px]">
                               <Crown className="w-2.5 h-2.5" /> Master
                             </span>
                           )}
                         </div>
-                        <p className="text-xs" style={{ color: '#475569' }}>{user.email}</p>
+                        <p className="text-xs" style={{ color: 'var(--text-3)' }}>{user.email}</p>
                       </div>
                     </div>
                   </td>
@@ -359,13 +359,13 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
                     </span>
                   </td>
                   <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-1.5 text-sm" style={{ color: '#64748B' }}>
-                      <BookOpen className="w-3.5 h-3.5" style={{ color: '#475569' }} />
+                    <div className="flex items-center gap-1.5 text-sm" style={{ color: 'var(--text-3)' }}>
+                      <BookOpen className="w-3.5 h-3.5" style={{ color: 'var(--text-3)' }} />
                       {user.enrollment_count}
                     </div>
                   </td>
                   <td className="px-5 py-3.5">
-                    <span className="text-xs" style={{ color: '#475569' }}>{date}</span>
+                    <span className="text-xs" style={{ color: 'var(--text-3)' }}>{date}</span>
                   </td>
                   <td className="px-5 py-3.5 text-right">
                     {isMasterAdmin && !isThisMaster && (
@@ -390,7 +390,7 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
                         <button
                           onClick={() => setDeleteUserTarget({ id: user.id, name })}
                           className="p-1.5 rounded-lg transition-all"
-                          style={{ color: '#475569' }}
+                          style={{ color: 'var(--text-3)' }}
                           onMouseEnter={(e) => {
                             (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)';
                             (e.currentTarget as HTMLElement).style.color = '#f87171';
@@ -414,7 +414,7 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
         {users.length === 0 && (
           <div className="text-center py-16">
             <Users className="w-10 h-10 mx-auto mb-3" style={{ color: '#334155' }} />
-            <p className="text-sm" style={{ color: '#475569' }}>Nenhum usuário encontrado</p>
+            <p className="text-sm" style={{ color: 'var(--text-3)' }}>Nenhum usuário encontrado</p>
           </div>
         )}
       </div>

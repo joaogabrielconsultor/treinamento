@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, Save, ChevronDown, Percent, Star, AlertTriangle } from 'lucide-react';
 import { CommissionRange, FinancialTable, TableCategory } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
@@ -28,7 +28,7 @@ function calcPreview(range: Partial<CommissionRange>, categories: TableCategory[
 }
 
 function Label({ text, required }: { text: string; required?: boolean }) {
-  return <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>{text}{required && <span className="text-red-400 ml-0.5">*</span>}</label>;
+  return <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>{text}{required && <span className="text-red-400 ml-0.5">*</span>}</label>;
 }
 
 export function AdminCommissionRanges() {
@@ -112,10 +112,10 @@ export function AdminCommissionRanges() {
       </div>
 
       {/* Table selector */}
-      <div className="rounded-2xl p-5 mb-6" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
+      <div className="rounded-2xl p-5 mb-6" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
         <Label text="Selecione a tabela financeira" required />
         <div className="relative max-w-lg">
-          <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 pointer-events-none" style={{ color: '#475569' }} />
+          <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
           <select value={selectedTable} onChange={e => setSelectedTable(e.target.value)} className={`${inp} appearance-none pr-8`} style={{ background: '#0B1020' }}>
             <option value="" style={{ background: '#0B1020' }}>Escolha uma tabela...</option>
             {tables.map(t => (
@@ -141,7 +141,7 @@ export function AdminCommissionRanges() {
         loading ? (
           <div className="flex justify-center py-16"><div className="spinner-cyber" /></div>
         ) : ranges.length === 0 ? (
-          <div className="text-center py-12 text-gray-400 rounded-2xl" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
+          <div className="text-center py-12 text-gray-400 rounded-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
             <Percent className="w-10 h-10 mx-auto mb-2 opacity-30" />
             <p className="font-medium">Nenhuma faixa cadastrada para esta tabela</p>
             <p className="text-sm mt-1">Clique em "Nova Faixa" para começar</p>
@@ -151,12 +151,12 @@ export function AdminCommissionRanges() {
             {ranges.map(r => {
               const pts = calcPreview(r, categories);
               return (
-                <div key={r.id} className="rounded-2xl p-4" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
+                <div key={r.id} className="rounded-2xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3">
                       <div>
                         <p className="text-xs text-gray-400 mb-0.5">Faixa de valor</p>
-                        <p className="font-semibold text-sm num" style={{ color: '#E2E8F0' }}>
+                        <p className="font-semibold text-sm num" style={{ color: 'var(--text-1)' }}>
                           {fmtBRL(Number(r.min_value))} {r.max_value ? `→ ${fmtBRL(Number(r.max_value))}` : 'ou mais'}
                         </p>
                       </div>
@@ -170,7 +170,7 @@ export function AdminCommissionRanges() {
                       </div>
                       <div>
                         <p className="text-xs text-gray-400 mb-0.5">Prazo / Juros</p>
-                        <p className="text-sm num" style={{ color: '#94A3B8' }}>
+                        <p className="text-sm num" style={{ color: 'var(--text-2)' }}>
                           {r.prazo_inicial != null ? `${r.prazo_inicial}` : '—'}{r.prazo_final != null ? ` → ${r.prazo_final}` : ''} parcelas
                           {r.juros_inicial != null && <><br />{r.juros_inicial}{r.juros_final ? ` → ${r.juros_final}` : ''}% a.m.</>}
                         </p>
@@ -180,22 +180,22 @@ export function AdminCommissionRanges() {
                         <div className="flex items-center gap-1">
                           <Star className="w-3.5 h-3.5 text-yellow-500" />
                           <span className="font-bold num" style={{ color: '#fbbf24' }}>{pts} pts</span>
-                          <span className="text-xs num" style={{ color: '#475569' }}>({r.base_points} × {r.multiplier ?? (r.category_multiplier || 1)})</span>
+                          <span className="text-xs num" style={{ color: 'var(--text-3)' }}>({r.base_points} × {r.multiplier ?? (r.category_multiplier || 1)})</span>
                         </div>
-                        {r.category_name && <p className="text-xs mt-0.5" style={{ color: '#475569' }}>{r.category_name}</p>}
+                        {r.category_name && <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{r.category_name}</p>}
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0 space-y-1">
                       {r.tipo_proposta && <span className="badge badge-neutral text-[10px]">{r.tipo_proposta}</span>}
-                      {r.parceiro && <p className="text-xs" style={{ color: '#475569' }}>{r.parceiro}</p>}
+                      {r.parceiro && <p className="text-xs" style={{ color: 'var(--text-3)' }}>{r.parceiro}</p>}
                       {r.expires_at && <p className="text-xs" style={{ color: '#fb923c' }}>Expira: {new Date(r.expires_at).toLocaleDateString('pt-BR')}</p>}
                       <div className="flex items-center gap-1 justify-end mt-2">
-                        <button onClick={() => openEdit(r)} className="p-1.5 rounded-lg transition-all" style={{ color: '#475569' }}
+                        <button onClick={() => openEdit(r)} className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-3)' }}
                           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
                           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#475569'; }}>
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => del(r.id)} className="p-1.5 rounded-lg transition-all" style={{ color: '#475569' }}
+                        <button onClick={() => del(r.id)} className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-3)' }}
                           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
                           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#475569'; }}>
                           <Trash2 className="w-3.5 h-3.5" />
@@ -244,7 +244,7 @@ export function AdminCommissionRanges() {
               </FormField>
               <FormField label="Disponível para">
                 <div className="relative">
-                  <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 pointer-events-none" style={{ color: '#475569' }} />
+                  <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
                   <select value={form.disponivel_para || 'todos'} onChange={e => setForm(f => ({ ...f, disponivel_para: e.target.value }))} className={`${inp} appearance-none pr-8`} style={{ background: '#0B1020' }}>
                     <option value="todos" style={{ background: '#0B1020' }}>Todos</option>
                     <option value="corretor" style={{ background: '#0B1020' }}>Apenas corretor</option>
@@ -314,7 +314,7 @@ export function AdminCommissionRanges() {
               </FormField>
               <FormField label="Categoria" className="md:col-span-2">
                 <div className="relative">
-                  <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 pointer-events-none" style={{ color: '#475569' }} />
+                  <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
                   <select value={form.category_id || ''} onChange={e => setForm(f => ({ ...f, category_id: e.target.value || undefined }))} className={`${inp} appearance-none pr-8`} style={{ background: '#0B1020' }}>
                     <option value="" style={{ background: '#0B1020' }}>Sem categoria específica</option>
                     {categories.map(c => <option key={c.id} value={c.id} style={{ background: '#0B1020' }}>{c.name} (×{c.multiplier})</option>)}
@@ -351,7 +351,7 @@ export function AdminCommissionRanges() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="text-xs font-bold uppercase tracking-wider mb-3 pb-1" style={{ color: '#475569', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>{title}</h3>
+      <h3 className="text-xs font-bold uppercase tracking-wider mb-3 pb-1" style={{ color: 'var(--text-3)', borderBottom: '1px solid var(--card-border)' }}>{title}</h3>
       {children}
     </div>
   );
@@ -368,7 +368,7 @@ function FormField({ label, children, required, className }: { label: string; ch
 
 function Chip({ label, value, color = 'gray' }: { label: string; value: string; color?: 'gray' | 'blue' | 'green' }) {
   const styles = {
-    gray: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: '#94A3B8' },
+    gray: { background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-1)', color: 'var(--text-2)' },
     blue: { background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.2)', color: '#60a5fa' },
     green: { background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.2)', color: '#4ade80' },
   };

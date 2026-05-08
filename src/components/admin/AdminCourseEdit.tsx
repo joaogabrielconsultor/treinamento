@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import {
   ArrowLeft,
   Plus,
@@ -258,7 +258,7 @@ function LessonRow({
         <div className="p-4 space-y-3 border-t border-gray-100">
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
-              <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Título da aula</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Título da aula</label>
               <input
                 type="text"
                 value={local.title}
@@ -267,7 +267,7 @@ function LessonRow({
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Duração (min)</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Duração (min)</label>
               <input
                 type="number"
                 min={0}
@@ -279,7 +279,7 @@ function LessonRow({
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Tipo</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Tipo</label>
             <select
               value={local.lesson_type}
               onChange={(e) => set('lesson_type', e.target.value)}
@@ -308,7 +308,7 @@ function LessonRow({
             />
           ) : (
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>
                 {local.lesson_type === 'video' ? 'Descrição / Notas (opcional)' : 'Conteúdo'}
               </label>
               <textarea
@@ -482,11 +482,11 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
       </div>
 
       {/* Course metadata */}
-      <div className="rounded-2xl p-5 mb-6 space-y-4" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
+      <div className="rounded-2xl p-5 mb-6 space-y-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
         <h2 className="text-base font-semibold text-gray-800 mb-4">Informações do Curso</h2>
 
         <div>
-          <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Título</label>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Título</label>
           <input
             type="text"
             value={current.title}
@@ -496,7 +496,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
         </div>
 
         <div>
-          <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Descrição</label>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Descrição</label>
           <textarea
             value={current.description}
             onChange={(e) => field('description', e.target.value)}
@@ -507,7 +507,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Categoria</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Categoria</label>
             <input
               type="text"
               value={current.category}
@@ -516,7 +516,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
             />
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Nível</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Nível</label>
             <select
               value={current.level}
               onChange={(e) => field('level', e.target.value)}
@@ -531,7 +531,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Instrutor</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Instrutor</label>
             <input
               type="text"
               value={current.instructor}
@@ -540,7 +540,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
             />
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Duração total (min)</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Duração total (min)</label>
             <input
               type="number"
               min={0}
@@ -552,7 +552,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
         </div>
 
         <div>
-          <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>URL da Thumbnail</label>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>URL da Thumbnail</label>
           <input
             type="text"
             value={current.thumbnail_url}

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+﻿import { useEffect } from 'react';
 import { X } from 'lucide-react';
 
 interface ModalProps {
@@ -54,19 +54,19 @@ export function Modal({ open, onClose, title, subtitle, size = 'md', children, f
         {/* Header */}
         <div
           className="flex items-center justify-between px-6 py-4 flex-shrink-0"
-          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ borderBottom: '1px solid var(--card-border)' }}
         >
           <div className="min-w-0 pr-3">
-            <h2 className="text-base font-bold leading-tight" style={{ color: '#E2E8F0' }}>{title}</h2>
+            <h2 className="text-base font-bold leading-tight" style={{ color: 'var(--text-1)' }}>{title}</h2>
             {subtitle && (
-              <p className="text-xs mt-0.5 truncate" style={{ color: '#64748B' }}>{subtitle}</p>
+              <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-3)' }}>{subtitle}</p>
             )}
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-2 rounded-xl transition-all flex-shrink-0"
-            style={{ color: '#475569', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
+            style={{ color: 'var(--text-3)', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--card-border)' }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)';
               (e.currentTarget as HTMLElement).style.color = '#94A3B8';
@@ -90,8 +90,8 @@ export function Modal({ open, onClose, title, subtitle, size = 'md', children, f
           <div
             className="px-6 py-4 flex-shrink-0 rounded-b-2xl flex-shrink-0"
             style={{
-              borderTop: '1px solid rgba(255,255,255,0.06)',
-              background: 'rgba(255,255,255,0.02)',
+              borderTop: '1px solid var(--card-border)',
+              background: 'var(--surface-subtle)',
             }}
           >
             {footer}

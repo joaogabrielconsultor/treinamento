@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Trophy, TrendingUp, Users, Star, Crown } from 'lucide-react';
 import { RankingEntry } from '../types';
 
@@ -40,7 +40,7 @@ export function Ranking({ userId }: { userId: string }) {
   ] as const;
 
   return (
-    <div className="p-6 max-w-4xl mx-auto" style={{ color: '#E2E8F0' }}>
+    <div className="p-6 max-w-4xl mx-auto" style={{ color: 'var(--text-1)' }}>
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6 animate-fade-up">
@@ -56,8 +56,8 @@ export function Ranking({ userId }: { userId: string }) {
             <Trophy className="w-5 h-5" style={{ color: '#fbbf24' }} />
           </div>
           <div>
-            <h1 className="text-xl font-bold" style={{ color: '#E2E8F0' }}>Ranking</h1>
-            <p className="text-xs" style={{ color: '#64748B' }}>
+            <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Ranking</h1>
+            <p className="text-xs" style={{ color: 'var(--text-3)' }}>
               {entries.length} corretores na disputa
             </p>
           </div>
@@ -80,7 +80,7 @@ export function Ranking({ userId }: { userId: string }) {
                     color: '#2DD4BF',
                     boxShadow: '0 0 10px rgba(20,184,166,0.1)',
                   }
-                : { color: '#475569', border: '1px solid transparent' }
+                : { color: 'var(--text-3)', border: '1px solid transparent' }
               }
             >
               {lbl}
@@ -112,13 +112,13 @@ export function Ranking({ userId }: { userId: string }) {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#14B8A6' }}>Sua posição</p>
-            <p className="font-bold text-sm num" style={{ color: '#E2E8F0' }}>
+            <p className="font-bold text-sm num" style={{ color: 'var(--text-1)' }}>
               #{myEntry.position} — {myEntry.total_points} pontos
             </p>
           </div>
           <div className="text-right flex-shrink-0">
-            <p className="text-xs num" style={{ color: '#64748B' }}>{myEntry.proposals_paid} prop. pagas</p>
-            <p className="text-sm font-semibold num" style={{ color: '#94A3B8' }}>
+            <p className="text-xs num" style={{ color: 'var(--text-3)' }}>{myEntry.proposals_paid} prop. pagas</p>
+            <p className="text-sm font-semibold num" style={{ color: 'var(--text-2)' }}>
               {formatCurrency(Number(myEntry.total_value))}
             </p>
           </div>
@@ -151,7 +151,7 @@ export function Ranking({ userId }: { userId: string }) {
                   />
                 )}
                 <span className="text-2xl mb-1">{medal.emoji}</span>
-                <p className="font-bold text-xs text-center truncate w-full" style={{ color: '#E2E8F0' }}>
+                <p className="font-bold text-xs text-center truncate w-full" style={{ color: 'var(--text-1)' }}>
                   {(e.full_name || e.email).split(' ')[0]}
                 </p>
                 <p className="text-[11px] font-bold mt-0.5 num" style={{ color: medal.text }}>
@@ -167,34 +167,34 @@ export function Ranking({ userId }: { userId: string }) {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
           <div className="spinner-cyber" />
-          <p className="text-sm" style={{ color: '#475569' }}>Carregando ranking...</p>
+          <p className="text-sm" style={{ color: 'var(--text-3)' }}>Carregando ranking...</p>
         </div>
       ) : entries.length === 0 ? (
         <div className="text-center py-20">
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+            style={{ background: 'var(--surface-subtle)', border: '1px solid var(--card-border)' }}
           >
             <Users className="w-8 h-8" style={{ color: '#334155' }} />
           </div>
-          <p className="text-sm" style={{ color: '#475569' }}>Nenhum dado disponível ainda</p>
+          <p className="text-sm" style={{ color: 'var(--text-3)' }}>Nenhum dado disponível ainda</p>
         </div>
       ) : (
         <div
           className="rounded-2xl overflow-hidden animate-fade-up"
           style={{
-            background: 'rgba(11,16,32,0.85)',
-            border: '1px solid rgba(255,255,255,0.06)',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.35)',
+            background: 'var(--card-bg)',
+            border: '1px solid var(--card-border)',
+            boxShadow: 'var(--shadow-card)',
             animationDelay: '160ms',
           }}
         >
           <div
             className="flex items-center gap-2 px-5 py-3"
-            style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+            style={{ borderBottom: '1px solid var(--card-border)' }}
           >
-            <TrendingUp className="w-3.5 h-3.5" style={{ color: '#475569' }} />
-            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#64748B' }}>
+            <TrendingUp className="w-3.5 h-3.5" style={{ color: 'var(--text-3)' }} />
+            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>
               Classificação completa
             </span>
           </div>
@@ -213,7 +213,7 @@ export function Ranking({ userId }: { userId: string }) {
                   <div className="w-7 text-center flex-shrink-0">
                     {medal
                       ? <span className="text-base">{medal.emoji}</span>
-                      : <span className="text-xs font-bold num" style={{ color: '#475569' }}>#{e.position}</span>
+                      : <span className="text-xs font-bold num" style={{ color: 'var(--text-3)' }}>#{e.position}</span>
                     }
                   </div>
 
@@ -222,7 +222,7 @@ export function Ranking({ userId }: { userId: string }) {
                     className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
                     style={isMe
                       ? { background: 'linear-gradient(135deg, #14B8A6, #06B6D4)', color: '#fff', boxShadow: '0 0 10px rgba(20,184,166,0.3)' }
-                      : { background: 'rgba(255,255,255,0.06)', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.08)' }
+                      : { background: 'rgba(255,255,255,0.06)', color: 'var(--text-2)', border: '1px solid var(--border-1)' }
                     }
                   >
                     {(e.full_name || e.email)[0].toUpperCase()}
@@ -238,7 +238,7 @@ export function Ranking({ userId }: { userId: string }) {
                         </span>
                       )}
                     </p>
-                    <p className="text-xs num" style={{ color: '#475569' }}>
+                    <p className="text-xs num" style={{ color: 'var(--text-3)' }}>
                       {e.proposals_paid} pagas · {formatCurrency(Number(e.total_value))}
                     </p>
                   </div>
@@ -251,7 +251,7 @@ export function Ranking({ userId }: { userId: string }) {
                         {e.total_points}
                       </span>
                     </div>
-                    <p className="text-[10px]" style={{ color: '#475569' }}>pontos</p>
+                    <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>pontos</p>
                   </div>
                 </div>
               );

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, Save, Handshake } from 'lucide-react';
 import { Convenio } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
@@ -104,7 +104,7 @@ export function AdminConvenios() {
         }
       >
         <form id="modal-convenios" onSubmit={save}>
-          <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Nome do convênio *</label>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Nome do convênio *</label>
           <input value={name} onChange={e => setName(e.target.value)} className={inp} required autoFocus placeholder="Ex: INSS, FGTS, Siape..." />
         </form>
       </Modal>

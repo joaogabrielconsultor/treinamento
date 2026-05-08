@@ -1,4 +1,4 @@
-import { Plus, Eye, EyeOff, Pencil, Trash2, BookOpen } from 'lucide-react';
+﻿import { Plus, Eye, EyeOff, Pencil, Trash2, BookOpen } from 'lucide-react';
 import { useAdminCourses } from '../../hooks/useAdmin';
 import { ViewType } from '../../types';
 
@@ -55,7 +55,7 @@ export function AdminCourses({ onNavigate }: AdminCoursesProps) {
         {courses.map((course) => (
           <div
             key={course.id}
-            className="rounded-2xl p-5 flex items-center gap-5" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}
+            className="rounded-2xl p-5 flex items-center gap-5" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}
           >
             <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-dk-surface">
               {course.thumbnail_url ? (
@@ -125,7 +125,7 @@ export function AdminCourses({ onNavigate }: AdminCoursesProps) {
         ))}
 
         {courses.length === 0 && (
-          <div className="text-center py-20 rounded-2xl" style={{ background: 'rgba(11,16,32,0.85)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}>
+          <div className="text-center py-20 rounded-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
             <BookOpen className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
             <p className="text-gray-500 dark:text-gray-400 mb-4">Nenhum curso cadastrado</p>
             <button

@@ -54,12 +54,12 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin }: S
     <aside
       className="w-60 flex flex-col h-screen sticky top-0 flex-shrink-0"
       style={{
-        background: 'linear-gradient(180deg, #080d18 0%, #070c17 100%)',
-        borderRight: '1px solid rgba(255,255,255,0.05)',
+        background: 'linear-gradient(180deg, #0d1525 0%, #0a1120 100%)',
+        borderRight: '1px solid rgba(255,255,255,0.07)',
       }}
     >
       {/* Brand */}
-      <div className="px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      <div className="px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         <div className="flex items-center gap-3">
           <div
             className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -79,7 +79,7 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin }: S
             >
               Aprova Mais
             </span>
-            <span className="text-[11px] mt-0.5 block" style={{ color: '#475569' }}>
+            <span className="text-[11px] mt-0.5 block" style={{ color: '#64748B' }}>
               Plataforma Financeira
             </span>
           </div>
@@ -163,18 +163,18 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin }: S
       </nav>
 
       {/* Bottom */}
-      <div className="px-3 py-3 space-y-1" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      <div className="px-3 py-3 space-y-1" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
         <button
           onClick={toggleDarkMode}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[12px] font-medium transition-all duration-200"
-          style={{ color: '#475569' }}
+          style={{ color: '#64748B' }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
+            (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)';
             (e.currentTarget as HTMLElement).style.color = '#94A3B8';
           }}
           onMouseLeave={(e) => {
             (e.currentTarget as HTMLElement).style.background = 'transparent';
-            (e.currentTarget as HTMLElement).style.color = '#475569';
+            (e.currentTarget as HTMLElement).style.color = '#64748B';
           }}
         >
           {darkMode
@@ -187,7 +187,7 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin }: S
         {/* User */}
         <div
           className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl mt-1"
-          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
         >
           <div
             className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-[11px] font-bold"
@@ -201,21 +201,21 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin }: S
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[12px] font-semibold truncate" style={{ color: '#E2E8F0' }}>{displayName}</p>
-            <p className="text-[10px] truncate" style={{ color: '#475569' }}>{user.email}</p>
+            <p className="text-[10px] truncate" style={{ color: '#64748B' }}>{user.email}</p>
           </div>
         </div>
 
         <button
           onClick={onSignOut}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[12px] font-medium transition-all duration-200"
-          style={{ color: '#475569' }}
+          style={{ color: '#64748B' }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.08)';
             (e.currentTarget as HTMLElement).style.color = '#f87171';
           }}
           onMouseLeave={(e) => {
             (e.currentTarget as HTMLElement).style.background = 'transparent';
-            (e.currentTarget as HTMLElement).style.color = '#475569';
+            (e.currentTarget as HTMLElement).style.color = '#64748B';
           }}
         >
           <LogOut className="w-[15px] h-[15px]" />
