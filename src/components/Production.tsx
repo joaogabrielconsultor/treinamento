@@ -378,7 +378,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
               <div
                 key={b.id}
                 title={`${b.name}: ${b.description}`}
-                className="flex flex-col items-center p-2.5 rounded-xl transition-all cursor-default"
+                className="badge-card flex flex-col items-center p-2.5 rounded-xl cursor-default"
                 style={b.earned
                   ? {
                       background: 'rgba(245,158,11,0.08)',
@@ -386,17 +386,17 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                       boxShadow: '0 0 12px rgba(245,158,11,0.08)',
                     }
                   : {
-                      background: 'rgba(255,255,255,0.02)',
-                      border: '1px solid rgba(255,255,255,0.05)',
-                      opacity: 0.35,
-                      filter: 'grayscale(1)',
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.10)',
+                      opacity: 0.6,
+                      filter: 'grayscale(0.75)',
                     }
                 }
               >
-                <span className="text-xl">{b.icon}</span>
+                <span className="text-xl badge-icon">{b.icon}</span>
                 <span
                   className="text-[9px] text-center mt-1.5 leading-tight line-clamp-2"
-                  style={{ color: b.earned ? '#94A3B8' : '#475569' }}
+                  style={{ color: b.earned ? '#94A3B8' : '#64748B' }}
                 >
                   {b.name}
                 </span>

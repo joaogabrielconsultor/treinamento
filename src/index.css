@@ -208,6 +208,26 @@ html.dark body {
 .badge-red     { background: rgba(248,113,113,0.12);border: 1px solid rgba(248,113,113,0.25);color: #f87171; }
 .badge-neutral { background: rgba(255,255,255,0.06);border: 1px solid rgba(255,255,255,0.10);color: #94A3B8; }
 
+/* Badge card (conquistas) hover animation */
+.badge-card {
+  transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.22s ease, opacity 0.22s ease, filter 0.22s ease;
+}
+.badge-card:hover {
+  transform: translateY(-4px) scale(1.12);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 16px rgba(245,158,11,0.18);
+  opacity: 1 !important;
+  filter: grayscale(0) !important;
+}
+.badge-card:hover .badge-icon {
+  animation: badge-bounce 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes badge-bounce {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35) rotate(-8deg); }
+  70%  { transform: scale(0.9) rotate(4deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
 /* ═══════════════════════════════════════════════════════════════
    LIVE INDICATOR (PULSE DOT)
 ═══════════════════════════════════════════════════════════════ */
