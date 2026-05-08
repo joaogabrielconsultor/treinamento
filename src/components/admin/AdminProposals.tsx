@@ -101,8 +101,8 @@ export function AdminProposals() {
           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
           <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
             className="input-cyber appearance-none pl-3 pr-9 py-2.5 text-sm rounded-xl" style={{ minWidth: '160px' }}>
-            <option value="" style={{ background: '#0B1020' }}>Todos os status</option>
-            {Object.keys(STATUS_CONFIG).map(s => <option key={s} value={s} style={{ background: '#0B1020' }}>{s}</option>)}
+            <option value="">Todos os status</option>
+            {Object.keys(STATUS_CONFIG).map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
       </div>
@@ -152,7 +152,7 @@ export function AdminProposals() {
                     <td className="px-4 py-3">
                       {p.points_earned > 0
                         ? <span className="font-bold num" style={{ color: '#fbbf24' }}>+{p.points_earned}</span>
-                        : <span style={{ color: '#334155' }}>—</span>
+                        : <span style={{ color: 'var(--text-3)' }}>—</span>
                       }
                     </td>
                     <td className="px-4 py-3">
@@ -160,13 +160,13 @@ export function AdminProposals() {
                         <button onClick={() => { setEditProposal(p); setEditStatus(p.status); }}
                           className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-3)' }}
                           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
-                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#475569'; }}>
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button onClick={() => deleteProposal(p.id)}
                           className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-3)' }}
                           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
-                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#475569'; }}>
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -204,9 +204,8 @@ export function AdminProposals() {
             <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>Novo Status</label>
             <div className="relative">
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
-              <select value={editStatus} onChange={e => setEditStatus(e.target.value as ProposalStatus)} className={`${inp} appearance-none pr-8`}
-                style={{ background: '#0B1020' }}>
-                {(Object.keys(STATUS_CONFIG) as ProposalStatus[]).map(s => <option key={s} value={s} style={{ background: '#0B1020' }}>{s}</option>)}
+              <select value={editStatus} onChange={e => setEditStatus(e.target.value as ProposalStatus)} className={`${inp} appearance-none pr-8`}>
+                {(Object.keys(STATUS_CONFIG) as ProposalStatus[]).map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
           </div>

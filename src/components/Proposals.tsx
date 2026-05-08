@@ -276,8 +276,8 @@ export function Proposals() {
             className="input-cyber appearance-none pl-3 pr-9 py-2.5 text-sm rounded-xl"
             style={{ minWidth: '160px' }}
           >
-            <option value="" style={{ background: '#0B1020' }}>Todos os status</option>
-            {Object.keys(STATUS_CONFIG).map(s => <option key={s} value={s} style={{ background: '#0B1020' }}>{s}</option>)}
+            <option value="">Todos os status</option>
+            {Object.keys(STATUS_CONFIG).map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
       </div>
@@ -292,7 +292,7 @@ export function Proposals() {
         <div className="text-center py-20">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
             style={{ background: 'var(--surface-subtle)', border: '1px solid var(--card-border)' }}>
-            <FileText className="w-8 h-8" style={{ color: '#334155' }} />
+            <FileText className="w-8 h-8" style={{ color: 'var(--text-3)' }} />
           </div>
           <p className="font-medium" style={{ color: 'var(--text-3)' }}>Nenhuma proposta encontrada</p>
           <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>Clique em "Nova Proposta" para começar</p>
@@ -348,12 +348,12 @@ export function Proposals() {
                           <span className="font-bold text-sm num" style={{ color: '#4ade80' }}>{formatCurrency(Number(p.comissao_valor))}</span>
                           <p className="text-xs num" style={{ color: 'var(--text-3)' }}>{Number(p.comissao_corretor_pct || 0).toFixed(2)}%</p>
                         </div>
-                      ) : <span style={{ color: '#334155' }}>—</span>}
+                      ) : <span style={{ color: 'var(--text-3)' }}>—</span>}
                     </td>
                     <td className="px-4 py-3">
                       {p.points_earned > 0
                         ? <span className="font-bold text-sm num" style={{ color: '#fbbf24' }}>+{p.points_earned}</span>
-                        : <span style={{ color: '#334155' }}>—</span>
+                        : <span style={{ color: 'var(--text-3)' }}>—</span>
                       }
                     </td>
                     <td className="px-4 py-3">
@@ -368,7 +368,7 @@ export function Proposals() {
                           }}
                           onMouseLeave={(e) => {
                             (e.currentTarget as HTMLElement).style.background = 'transparent';
-                            (e.currentTarget as HTMLElement).style.color = '#475569';
+                            (e.currentTarget as HTMLElement).style.color = 'var(--text-3)';
                           }}
                         >
                           <Edit2 className="w-3.5 h-3.5" />
@@ -421,19 +421,19 @@ export function Proposals() {
                     className="w-8 h-8 rounded-full flex items-center justify-center transition-all"
                     style={done || active
                       ? { background: 'linear-gradient(135deg, #14B8A6, #06B6D4)', color: '#fff', boxShadow: '0 0 12px rgba(20,184,166,0.35)' }
-                      : { background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border-1)', color: 'var(--text-3)' }
+                      : { background: 'var(--surface-subtle)', border: '1px solid var(--border-1)', color: 'var(--text-3)' }
                     }
                   >
                     {done ? <CheckCircle className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
                   </div>
-                  <p className="text-[10px] mt-1 font-medium" style={{ color: active || done ? '#14B8A6' : '#475569' }}>
+                  <p className="text-[10px] mt-1 font-medium" style={{ color: active || done ? '#14B8A6' : 'var(--text-3)' }}>
                     {s.label}
                   </p>
                 </div>
                 {i < STEPS.length - 1 && (
                   <div
                     className="flex-1 h-px mx-2 mb-4 transition-all"
-                    style={{ background: done ? 'linear-gradient(90deg, #14B8A6, #06B6D4)' : 'rgba(255,255,255,0.06)' }}
+                    style={{ background: done ? 'linear-gradient(90deg, #14B8A6, #06B6D4)' : 'var(--border-1)' }}
                   />
                 )}
               </div>
