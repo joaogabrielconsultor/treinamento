@@ -496,7 +496,7 @@ app.delete('/api/convenios/:id', auth, adminOnly, async (req, res) => {
 
 // ─── CATEGORIAS ───────────────────────────────────────────────────────────────
 app.get('/api/categories', auth, async (req, res) => {
-  const { rows } = await pool.query('SELECT * FROM table_categories ORDER BY name ASC');
+  const { rows } = await pool.query('SELECT * FROM table_categories ORDER BY multiplier DESC, name ASC');
   res.json(rows);
 });
 
@@ -546,7 +546,7 @@ app.get('/api/financial-tables', auth, async (req, res) => {
     LEFT JOIN banks b ON b.id = ft.bank_id
     LEFT JOIN convenios cv ON cv.id = ft.convenio_id
     ${where}
-    ORDER BY ft.name ASC
+    ORDER BY ft.coeficiente DESC, ft.comissao_corretor DESC, ft.name ASC
   `, values);
   res.json(rows);
 });
@@ -584,7 +584,7 @@ app.delete('/api/financial-tables/:id', auth, adminOnly, async (req, res) => {
 // ─── REGRAS DE PONTUAÇÃO ───────────────────────────────────────────────────────
 app.get('/api/scoring-rules/:table_id', auth, async (req, res) => {
   const { rows } = await pool.query(
-    'SELECT * FROM scoring_rules WHERE table_id=$1 ORDER BY min_value ASC',
+    'SELECT * FROM scoring_rules WHERE table_id=$1 ORDER BY min_value DESC',
     [req.params.table_id]
   );
   res.json(rows);
@@ -623,7 +623,7 @@ app.get('/api/commission-ranges', auth, async (req, res) => {
     FROM commission_ranges cr
     LEFT JOIN table_categories tc ON tc.id = cr.category_id
     WHERE cr.financial_table_id = $1
-    ORDER BY cr.min_value ASC, cr.tipo_proposta ASC
+    ORDER BY cr.min_value DESC, cr.tipo_proposta ASC
   `, [table_id]);
   res.json(rows);
 });
@@ -820,7 +820,7 @@ app.get('/api/proposals', auth, async (req, res) => {
     LEFT JOIN convenios cv ON cv.id = p.convenio_id
     LEFT JOIN products pr ON pr.id = p.product_id
     ${where}
-    ORDER BY p.created_at DESC
+    ORDER BY p.value DESC, p.created_at DESC
   `, values);
   res.json(rows);
 });
