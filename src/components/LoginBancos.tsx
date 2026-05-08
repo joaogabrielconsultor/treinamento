@@ -42,20 +42,20 @@ function CopyButton({ value }: { value: string }) {
       className="flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200"
       style={copied
         ? { background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', color: '#4ade80' }
-        : { background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border-1)', color: 'var(--text-3)' }
+        : { background: 'var(--surface-subtle)', border: '1px solid var(--border-1)', color: 'var(--text-3)' }
       }
       onMouseEnter={(e) => {
         if (!copied) {
           (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)';
-          (e.currentTarget as HTMLElement).style.borderColor = 'rgba(20,184,166,0.2)';
+          (e.currentTarget as HTMLElement).style.borderColor = 'rgba(20,184,166,0.25)';
           (e.currentTarget as HTMLElement).style.color = '#14B8A6';
         }
       }}
       onMouseLeave={(e) => {
         if (!copied) {
-          (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)';
-          (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)';
-          (e.currentTarget as HTMLElement).style.color = '#64748B';
+          (e.currentTarget as HTMLElement).style.background = 'var(--surface-subtle)';
+          (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-1)';
+          (e.currentTarget as HTMLElement).style.color = 'var(--text-3)';
         }
       }}
     >
@@ -121,9 +121,9 @@ function BancoModal({ banco, onClose, onSave }: {
           <button
             onClick={onClose}
             className="p-2 rounded-xl transition-all"
-            style={{ color: 'var(--text-3)', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--card-border)' }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#94A3B8'; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#475569'; }}
+            style={{ color: 'var(--text-3)', background: 'var(--surface-subtle)', border: '1px solid var(--card-border)' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-2)'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
           >
             <X className="w-4 h-4" />
           </button>
@@ -164,7 +164,7 @@ function BancoModal({ banco, onClose, onSave }: {
                 className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
                 style={{ color: 'var(--text-3)' }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#94A3B8'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#475569'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
               >
                 {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -269,7 +269,7 @@ function FieldRow({ icon: Icon, label, children }: {
       style={{ background: 'var(--surface-subtle)', border: '1px solid var(--card-border)' }}
     >
       <Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--text-3)' }} />
-      <span className="text-[10px] font-bold uppercase tracking-wider w-9 flex-shrink-0" style={{ color: '#334155' }}>{label}</span>
+      <span className="text-[10px] font-bold uppercase tracking-wider w-9 flex-shrink-0" style={{ color: 'var(--text-3)' }}>{label}</span>
       {children}
     </div>
   );
@@ -289,19 +289,19 @@ function BancoCard({ banco, isAdmin, onEdit, onDelete }: {
     <div
       className="relative rounded-2xl overflow-hidden transition-all duration-300 cursor-default"
       style={{
-        background: 'rgba(11,16,32,0.9)',
+        background: 'var(--card-bg)',
         border: '1px solid var(--card-border)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+        boxShadow: 'var(--shadow-card)',
       }}
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)';
-        (e.currentTarget as HTMLElement).style.boxShadow = `0 20px 48px rgba(0,0,0,0.5), 0 0 0 1px ${accent}22`;
-        (e.currentTarget as HTMLElement).style.borderColor = `${accent}30`;
+        (e.currentTarget as HTMLElement).style.boxShadow = `var(--shadow-lifted), 0 0 0 1px ${accent}22`;
+        (e.currentTarget as HTMLElement).style.borderColor = `${accent}40`;
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-        (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 32px rgba(0,0,0,0.4)';
-        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)';
+        (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-card)';
+        (e.currentTarget as HTMLElement).style.borderColor = 'var(--card-border)';
       }}
     >
       {/* Accent top line */}
@@ -321,7 +321,7 @@ function BancoCard({ banco, isAdmin, onEdit, onDelete }: {
               <h3 className="font-bold text-base leading-tight" style={{ color: 'var(--text-1)' }}>
                 {banco.nome}
               </h3>
-              <p className="text-[11px] mt-0.5" style={{ color: '#334155' }}>
+              <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-3)' }}>
                 {new Date(banco.created_at).toLocaleDateString('pt-BR')}
               </p>
             </div>
@@ -335,12 +335,12 @@ function BancoCard({ banco, isAdmin, onEdit, onDelete }: {
                 className="p-1.5 rounded-lg transition-all"
                 style={{ color: 'var(--text-3)' }}
                 onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)';
-                  (e.currentTarget as HTMLElement).style.color = '#94A3B8';
+                  (e.currentTarget as HTMLElement).style.background = 'var(--surface-subtle)';
+                  (e.currentTarget as HTMLElement).style.color = 'var(--text-2)';
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.background = 'transparent';
-                  (e.currentTarget as HTMLElement).style.color = '#475569';
+                  (e.currentTarget as HTMLElement).style.color = 'var(--text-3)';
                 }}
               >
                 <Pencil className="w-3.5 h-3.5" />
@@ -356,7 +356,7 @@ function BancoCard({ banco, isAdmin, onEdit, onDelete }: {
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.background = 'transparent';
-                  (e.currentTarget as HTMLElement).style.color = '#475569';
+                  (e.currentTarget as HTMLElement).style.color = 'var(--text-3)';
                 }}
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -381,7 +381,7 @@ function BancoCard({ banco, isAdmin, onEdit, onDelete }: {
               className="flex-shrink-0 p-1 rounded transition-colors"
               style={{ color: 'var(--text-3)' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#94A3B8'; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#475569'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
             >
               {showSenha ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
             </button>
@@ -507,7 +507,7 @@ export function LoginBancos({ isAdmin }: { isAdmin: boolean }) {
             className="absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors"
             style={{ color: 'var(--text-3)' }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#94A3B8'; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#475569'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
           >
             <X className="w-4 h-4" />
           </button>
