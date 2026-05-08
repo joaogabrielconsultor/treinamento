@@ -421,7 +421,7 @@ export function Proposals() {
                     className="w-8 h-8 rounded-full flex items-center justify-center transition-all"
                     style={done || active
                       ? { background: 'linear-gradient(135deg, #14B8A6, #06B6D4)', color: '#fff', boxShadow: '0 0 12px rgba(20,184,166,0.35)' }
-                      : { background: 'var(--surface-subtle)', border: '1px solid var(--border-1)', color: 'var(--text-3)' }
+                      : { background: 'var(--bg-surface)', border: '1px solid var(--border-2)', color: 'var(--text-3)' }
                     }
                   >
                     {done ? <CheckCircle className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
@@ -433,7 +433,7 @@ export function Proposals() {
                 {i < STEPS.length - 1 && (
                   <div
                     className="flex-1 h-px mx-2 mb-4 transition-all"
-                    style={{ background: done ? 'linear-gradient(90deg, #14B8A6, #06B6D4)' : 'var(--border-1)' }}
+                    style={{ background: done ? 'linear-gradient(90deg, #14B8A6, #06B6D4)' : 'var(--border-2)' }}
                   />
                 )}
               </div>
