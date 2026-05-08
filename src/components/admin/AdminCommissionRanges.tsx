@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, Save, ChevronDown, Percent, Star, AlertTriangle } from 'lucide-react';
 import { CommissionRange, FinancialTable, TableCategory } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
@@ -100,8 +100,8 @@ export function AdminCommissionRanges() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-gray-100">Faixas de Comissão</h1>
-          <p className="text-xs text-slate-500 mt-0.5">Configure comissões e pontuação por tabela e faixa de valor</p>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Faixas de Comissão</h1>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Configure comissões e pontuação por tabela e faixa de valor</p>
         </div>
         {selectedTable && (
           <button onClick={openNew}
@@ -116,10 +116,10 @@ export function AdminCommissionRanges() {
         <Label text="Selecione a tabela financeira" required />
         <div className="relative max-w-lg">
           <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
-          <select value={selectedTable} onChange={e => setSelectedTable(e.target.value)} className={`${inp} appearance-none pr-8`} style={{ background: '#0B1020' }}>
-            <option value="" style={{ background: '#0B1020' }}>Escolha uma tabela...</option>
+          <select value={selectedTable} onChange={e => setSelectedTable(e.target.value)} className={`${inp} appearance-none pr-8`}>
+            <option value="">Escolha uma tabela...</option>
             {tables.map(t => (
-              <option key={t.id} value={t.id} style={{ background: '#0B1020' }}>
+              <option key={t.id} value={t.id}>
                 {t.name} {t.convenio_name ? `· ${t.convenio_name}` : ''} {t.bank_name ? `· ${t.bank_name}` : ''}
               </option>
             ))}
@@ -141,7 +141,7 @@ export function AdminCommissionRanges() {
         loading ? (
           <div className="flex justify-center py-16"><div className="spinner-cyber" /></div>
         ) : ranges.length === 0 ? (
-          <div className="text-center py-12 text-gray-400 rounded-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
+          <div className="text-center py-12 rounded-2xl" style={{ color: 'var(--text-3)', background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
             <Percent className="w-10 h-10 mx-auto mb-2 opacity-30" />
             <p className="font-medium">Nenhuma faixa cadastrada para esta tabela</p>
             <p className="text-sm mt-1">Clique em "Nova Faixa" para começar</p>
@@ -155,13 +155,13 @@ export function AdminCommissionRanges() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3">
                       <div>
-                        <p className="text-xs text-gray-400 mb-0.5">Faixa de valor</p>
+                        <p className="text-xs mb-0.5" style={{ color: 'var(--text-3)' }}>Faixa de valor</p>
                         <p className="font-semibold text-sm num" style={{ color: 'var(--text-1)' }}>
                           {fmtBRL(Number(r.min_value))} {r.max_value ? `→ ${fmtBRL(Number(r.max_value))}` : 'ou mais'}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-400 mb-0.5">Comissão</p>
+                        <p className="text-xs mb-0.5" style={{ color: 'var(--text-3)' }}>Comissão</p>
                         <p className="text-sm space-y-0.5">
                           <span className="font-semibold num" style={{ color: '#60a5fa' }}>Empresa: {r.comissao_empresa}%</span>
                           <br />
@@ -169,14 +169,14 @@ export function AdminCommissionRanges() {
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-400 mb-0.5">Prazo / Juros</p>
+                        <p className="text-xs mb-0.5" style={{ color: 'var(--text-3)' }}>Prazo / Juros</p>
                         <p className="text-sm num" style={{ color: 'var(--text-2)' }}>
                           {r.prazo_inicial != null ? `${r.prazo_inicial}` : '—'}{r.prazo_final != null ? ` → ${r.prazo_final}` : ''} parcelas
                           {r.juros_inicial != null && <><br />{r.juros_inicial}{r.juros_final ? ` → ${r.juros_final}` : ''}% a.m.</>}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-400 mb-0.5">Pontuação</p>
+                        <p className="text-xs mb-0.5" style={{ color: 'var(--text-3)' }}>Pontuação</p>
                         <div className="flex items-center gap-1">
                           <Star className="w-3.5 h-3.5 text-yellow-500" />
                           <span className="font-bold num" style={{ color: '#fbbf24' }}>{pts} pts</span>
@@ -192,12 +192,12 @@ export function AdminCommissionRanges() {
                       <div className="flex items-center gap-1 justify-end mt-2">
                         <button onClick={() => openEdit(r)} className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-3)' }}
                           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
-                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#475569'; }}>
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button onClick={() => del(r.id)} className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-3)' }}
                           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
-                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#475569'; }}>
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -245,10 +245,10 @@ export function AdminCommissionRanges() {
               <FormField label="Disponível para">
                 <div className="relative">
                   <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
-                  <select value={form.disponivel_para || 'todos'} onChange={e => setForm(f => ({ ...f, disponivel_para: e.target.value }))} className={`${inp} appearance-none pr-8`} style={{ background: '#0B1020' }}>
-                    <option value="todos" style={{ background: '#0B1020' }}>Todos</option>
-                    <option value="corretor" style={{ background: '#0B1020' }}>Apenas corretor</option>
-                    <option value="empresa" style={{ background: '#0B1020' }}>Apenas empresa</option>
+                  <select value={form.disponivel_para || 'todos'} onChange={e => setForm(f => ({ ...f, disponivel_para: e.target.value }))} className={`${inp} appearance-none pr-8`}>
+                    <option value="todos">Todos</option>
+                    <option value="corretor">Apenas corretor</option>
+                    <option value="empresa">Apenas empresa</option>
                   </select>
                 </div>
               </FormField>
@@ -315,9 +315,9 @@ export function AdminCommissionRanges() {
               <FormField label="Categoria" className="md:col-span-2">
                 <div className="relative">
                   <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
-                  <select value={form.category_id || ''} onChange={e => setForm(f => ({ ...f, category_id: e.target.value || undefined }))} className={`${inp} appearance-none pr-8`} style={{ background: '#0B1020' }}>
-                    <option value="" style={{ background: '#0B1020' }}>Sem categoria específica</option>
-                    {categories.map(c => <option key={c.id} value={c.id} style={{ background: '#0B1020' }}>{c.name} (×{c.multiplier})</option>)}
+                  <select value={form.category_id || ''} onChange={e => setForm(f => ({ ...f, category_id: e.target.value || undefined }))} className={`${inp} appearance-none pr-8`}>
+                    <option value="">Sem categoria específica</option>
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.name} (×{c.multiplier})</option>)}
                   </select>
                 </div>
               </FormField>
@@ -325,10 +325,10 @@ export function AdminCommissionRanges() {
               <div className="md:col-span-2 rounded-xl p-3 flex items-center gap-3" style={{ backgroundColor: '#dabb3918', border: '1px solid #dabb3940' }}>
                 <Star className="w-5 h-5 text-yellow-500 flex-shrink-0" />
                 <div>
-                  <p className="text-xs text-gray-500">Pontos gerados ao liberar valor nesta faixa</p>
-                  <p className="text-lg font-black text-yellow-600">
+                  <p className="text-xs" style={{ color: 'var(--text-3)' }}>Pontos gerados ao liberar valor nesta faixa</p>
+                  <p className="text-lg font-black" style={{ color: '#fbbf24' }}>
                     {preview} pontos
-                    <span className="text-xs font-normal text-gray-400 ml-2">
+                    <span className="text-xs font-normal ml-2" style={{ color: 'var(--text-3)' }}>
                       ({form.base_points || 0} pts × {form.multiplier ?? (categories.find(c => c.id === form.category_id)?.multiplier || 1)})
                     </span>
                   </p>
@@ -368,7 +368,7 @@ function FormField({ label, children, required, className }: { label: string; ch
 
 function Chip({ label, value, color = 'gray' }: { label: string; value: string; color?: 'gray' | 'blue' | 'green' }) {
   const styles = {
-    gray: { background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-1)', color: 'var(--text-2)' },
+    gray: { background: 'var(--surface-subtle)', border: '1px solid var(--border-1)', color: 'var(--text-2)' },
     blue: { background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.2)', color: '#60a5fa' },
     green: { background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.2)', color: '#4ade80' },
   };
