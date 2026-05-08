@@ -8,7 +8,7 @@ const API = (p: string, opts?: RequestInit) =>
 
 const inp = 'input-cyber w-full px-3 py-2.5 text-sm rounded-xl';
 
-const EMPTY_TABLE = { name: '', bank_id: '', convenio_id: '', category_id: '', active: true, comissao_empresa: '', comissao_corretor: '' };
+const EMPTY_TABLE = { name: '', bank_id: '', convenio_id: '', category_id: '', active: true, comissao_empresa: '', comissao_corretor: '', coeficiente: '' };
 
 export function AdminFinancialTables() {
   const [tables, setTables] = useState<FinancialTable[]>([]);
@@ -60,6 +60,7 @@ export function AdminFinancialTables() {
       active: form.active,
       comissao_empresa: parseFloat(form.comissao_empresa as string) || 0,
       comissao_corretor: parseFloat(form.comissao_corretor as string) || 0,
+      coeficiente: parseFloat(form.coeficiente as string) || 0,
     };
     const url = editId ? `/api/financial-tables/${editId}` : '/api/financial-tables';
     await API(url, { method: editId ? 'PUT' : 'POST', body: JSON.stringify(body) });
@@ -144,7 +145,7 @@ export function AdminFinancialTables() {
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                {['Nome da Tabela', 'Convênio', 'Banco', 'Categoria', 'Comissão Emp.', 'Comissão Cor.', 'Status', 'Ações'].map(h => (
+                {['Nome da Tabela', 'Convênio', 'Banco', 'Categoria', 'Coeficiente', 'Comissão Emp.', 'Comissão Cor.', 'Status', 'Ações'].map(h => (
                   <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: '#475569' }}>{h}</th>
                 ))}
               </tr>
@@ -164,6 +165,9 @@ export function AdminFinancialTables() {
                       </span>
                     ) : <span className="text-gray-400">—</span>}
                   </td>
+                  <td className="px-4 py-3 font-mono text-xs" style={{ color: '#a78bfa' }}>
+                    {t.coeficiente ? Number(t.coeficiente).toFixed(7) : '—'}
+                  </td>
                   <td className="px-4 py-3 text-blue-600 dark:text-blue-400 font-medium text-xs">{t.comissao_empresa != null ? `${Number(t.comissao_empresa).toFixed(2)}%` : '—'}</td>
                   <td className="px-4 py-3 text-green-600 dark:text-green-400 font-medium text-xs">{t.comissao_corretor != null ? `${Number(t.comissao_corretor).toFixed(2)}%` : '—'}</td>
                   <td className="px-4 py-3">
@@ -177,7 +181,7 @@ export function AdminFinancialTables() {
                         className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-dk-surface text-gray-400 hover:text-brand transition-colors">
                         <Settings className="w-3.5 h-3.5" />
                       </button>
-                      <button onClick={() => { setForm({ name: t.name, bank_id: t.bank_id || '', convenio_id: t.convenio_id || '', category_id: t.category_id || '', active: t.active, comissao_empresa: String(t.comissao_empresa ?? ''), comissao_corretor: String(t.comissao_corretor ?? '') }); setEditId(t.id); setShowForm(true); }}
+                      <button onClick={() => { setForm({ name: t.name, bank_id: t.bank_id || '', convenio_id: t.convenio_id || '', category_id: t.category_id || '', active: t.active, comissao_empresa: String(t.comissao_empresa ?? ''), comissao_corretor: String(t.comissao_corretor ?? ''), coeficiente: String(t.coeficiente ?? '') }); setEditId(t.id); setShowForm(true); }}
                         className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-dk-surface text-gray-400 hover:text-gray-600 transition-colors">
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
@@ -256,6 +260,13 @@ export function AdminFinancialTables() {
               <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>Comissão Corretor (%)</label>
               <input type="number" step="0.01" min="0" max="100" value={form.comissao_corretor} onChange={e => setForm(f => ({ ...f, comissao_corretor: e.target.value }))} className={inp} placeholder="0.00" />
             </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: '#64748B' }}>
+              Coeficiente
+              <span className="ml-2 text-[10px] font-normal" style={{ color: '#475569' }}>— peso/rentabilidade da tabela (ex: 0.0409485)</span>
+            </label>
+            <input type="number" step="0.0000001" min="0" value={form.coeficiente} onChange={e => setForm(f => ({ ...f, coeficiente: e.target.value }))} className={`${inp} font-mono`} placeholder="0.0000000" />
           </div>
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" checked={form.active} onChange={e => setForm(f => ({ ...f, active: e.target.checked }))} className="w-4 h-4 rounded" />

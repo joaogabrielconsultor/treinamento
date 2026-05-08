@@ -552,18 +552,18 @@ app.get('/api/financial-tables', auth, async (req, res) => {
 });
 
 app.post('/api/financial-tables', auth, adminOnly, async (req, res) => {
-  const { name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor } = req.body;
+  const { name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor, coeficiente } = req.body;
   if (!name) return res.status(400).json({ error: 'Nome obrigatório' });
   const { rows } = await pool.query(
-    'INSERT INTO financial_tables (name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
-    [name, bank_id || null, convenio_id || null, category_id || null, active !== false, comissao_empresa || 0, comissao_corretor || 0]
+    'INSERT INTO financial_tables (name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor, coeficiente) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
+    [name, bank_id || null, convenio_id || null, category_id || null, active !== false, comissao_empresa || 0, comissao_corretor || 0, coeficiente || 0]
   );
   res.json(rows[0]);
 });
 
 app.put('/api/financial-tables/:id', auth, adminOnly, async (req, res) => {
-  const { name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor } = req.body;
-  const fields = { name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor };
+  const { name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor, coeficiente } = req.body;
+  const fields = { name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor, coeficiente };
   const updates = [];
   const values = [];
   let i = 1;
@@ -842,11 +842,17 @@ app.post('/api/proposals', auth, async (req, res) => {
     const { rows: pr } = await pool.query('SELECT name FROM products WHERE id=$1', [product_id]);
     if (pr[0]) productName = pr[0].name;
   }
+  // Resolve coeficiente da tabela financeira (nunca vem do corretor)
+  let coeficiente = 0;
+  if (table_id) {
+    const { rows: [tbl] } = await pool.query('SELECT coeficiente FROM financial_tables WHERE id=$1', [table_id]);
+    if (tbl) coeficiente = parseFloat(tbl.coeficiente) || 0;
+  }
   // Corretor sempre cria como Digitada
   const { rows } = await pool.query(
-    `INSERT INTO proposals (user_id, proposal_number, value, product, product_id, bank, convenio, table_id, bank_id, convenio_id, client_name, client_cpf, client_phone, status)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'Digitada') RETURNING *`,
-    [req.user.id, proposal_number, value, productName, product_id||null, bank||'', convenio||'', table_id||null, bank_id||null, convenio_id||null, client_name, client_cpf, client_phone]
+    `INSERT INTO proposals (user_id, proposal_number, value, product, product_id, bank, convenio, table_id, bank_id, convenio_id, client_name, client_cpf, client_phone, coeficiente, status)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'Digitada') RETURNING *`,
+    [req.user.id, proposal_number, value, productName, product_id||null, bank||'', convenio||'', table_id||null, bank_id||null, convenio_id||null, client_name, client_cpf, client_phone, coeficiente]
   );
   res.json(rows[0]);
 });
@@ -868,6 +874,18 @@ app.put('/api/proposals/:id', auth, async (req, res) => {
   let i = 1;
   for (const f of fields) {
     if (req.body[f] !== undefined) { updates.push(`${f} = $${i++}`); values.push(req.body[f]); }
+  }
+  // Atualiza coeficiente automaticamente se table_id mudou (nunca vem do corretor)
+  if (req.body.table_id !== undefined) {
+    const newTableId = req.body.table_id;
+    if (newTableId) {
+      const { rows: [tbl] } = await pool.query('SELECT coeficiente FROM financial_tables WHERE id=$1', [newTableId]);
+      updates.push(`coeficiente = $${i++}`);
+      values.push(tbl ? (parseFloat(tbl.coeficiente) || 0) : 0);
+    } else {
+      updates.push(`coeficiente = $${i++}`);
+      values.push(0);
+    }
   }
   values.push(req.params.id);
 

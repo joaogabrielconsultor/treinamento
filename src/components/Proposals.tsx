@@ -525,6 +525,17 @@ export function Proposals() {
                     {tables.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                   </select>
                 </div>
+                {(() => {
+                  const sel = tables.find(t => t.id === form.table_id);
+                  return sel?.coeficiente ? (
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="text-[10px] font-medium" style={{ color: '#475569' }}>Coeficiente:</span>
+                      <span className="font-mono text-[11px] px-2 py-0.5 rounded-lg" style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.25)', color: '#a78bfa' }}>
+                        {Number(sel.coeficiente).toFixed(7)}
+                      </span>
+                    </div>
+                  ) : null;
+                })()}
               </Field>
             </>
           )}

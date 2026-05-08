@@ -109,6 +109,7 @@ export interface FinancialTable {
   active: boolean;
   comissao_empresa: number;
   comissao_corretor: number;
+  coeficiente: number;
   created_at: string;
   category_name?: string;
   category_multiplier?: number;
@@ -170,6 +171,7 @@ export interface Proposal {
   client_phone: string;
   status: ProposalStatus;
   points_earned: number;
+  coeficiente: number;
   created_at: string;
   updated_at: string;
   user_name?: string;

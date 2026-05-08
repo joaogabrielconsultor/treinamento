@@ -166,6 +166,7 @@ async function initDb() {
     await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS convenio_id uuid REFERENCES convenios(id) ON DELETE SET NULL`);
     await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS comissao_empresa numeric(5,2) NOT NULL DEFAULT 0`);
     await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS comissao_corretor numeric(5,2) NOT NULL DEFAULT 0`);
+    await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS coeficiente numeric(10,7) NOT NULL DEFAULT 0`);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS commission_ranges (
@@ -195,6 +196,7 @@ async function initDb() {
     await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS bank_id uuid REFERENCES banks(id) ON DELETE SET NULL`);
     await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS convenio_id uuid REFERENCES convenios(id) ON DELETE SET NULL`);
     await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS product_id uuid REFERENCES products(id) ON DELETE SET NULL`);
+    await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS coeficiente numeric(10,7) NOT NULL DEFAULT 0`);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS scoring_rules (
