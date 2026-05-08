@@ -59,17 +59,12 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin }: S
       }}
     >
       {/* Brand */}
-      <div className="px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+      <div className="px-4 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         <div className="flex items-center gap-3">
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(20,184,166,0.12)', border: '1px solid rgba(20,184,166,0.2)' }}
-          >
-            <LogoComponent size="sm" />
-          </div>
-          <div>
+          <LogoComponent size="md" />
+          <div className="min-w-0">
             <span
-              className="font-bold text-sm leading-none block"
+              className="font-bold text-sm leading-none block truncate"
               style={{
                 background: 'linear-gradient(135deg, #2DD4BF 0%, #06B6D4 100%)',
                 WebkitBackgroundClip: 'text',
@@ -79,7 +74,7 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin }: S
             >
               Aprova Mais
             </span>
-            <span className="text-[11px] mt-0.5 block" style={{ color: '#64748B' }}>
+            <span className="text-[11px] mt-0.5 block truncate" style={{ color: '#64748B' }}>
               Plataforma Financeira
             </span>
           </div>
