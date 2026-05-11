@@ -9,14 +9,13 @@ import { AdminUsers } from './components/admin/AdminUsers';
 import { AdminCourses } from './components/admin/AdminCourses';
 import { AdminCourseEdit } from './components/admin/AdminCourseEdit';
 import { AdminPersonalizacao } from './components/admin/AdminPersonalizacao';
-import { AdminFinancialTables } from './components/admin/AdminFinancialTables';
+import { AdminTables } from './components/admin/AdminTables';
 import { AdminCategories } from './components/admin/AdminCategories';
 import { AdminBanks } from './components/admin/AdminBanks';
 import { AdminConvenios } from './components/admin/AdminConvenios';
 import { AdminProducts } from './components/admin/AdminProducts';
 import { AdminProposals } from './components/admin/AdminProposals';
 import { AdminReports } from './components/admin/AdminReports';
-import { AdminCommissionRanges } from './components/admin/AdminCommissionRanges';
 import { LoginBancos } from './components/LoginBancos';
 import { Proposals } from './components/Proposals';
 import { Ranking } from './components/Ranking';
@@ -167,14 +166,13 @@ function AppInner() {
         {currentView === 'admin-course-edit'     && isAdmin && adminEditCourseId && (
           <AdminCourseEdit courseId={adminEditCourseId} onNavigate={navigate} />
         )}
-        {currentView === 'admin-financial-tables' && isAdmin && <AdminFinancialTables />}
+        {currentView === 'admin-financial-tables' && isAdmin && <AdminTables />}
         {currentView === 'admin-categories'       && isAdmin && <AdminCategories />}
         {currentView === 'admin-banks'            && isAdmin && <AdminBanks />}
         {currentView === 'admin-convenios'        && isAdmin && <AdminConvenios />}
         {currentView === 'admin-products'         && isAdmin && <AdminProducts />}
         {currentView === 'admin-proposals'        && isAdmin && <AdminProposals />}
         {currentView === 'admin-reports'           && isAdmin && <AdminReports />}
-        {currentView === 'admin-commission-ranges' && isAdmin && <AdminCommissionRanges />}
         {currentView === 'login-bancos' && <LoginBancos isAdmin={isAdmin} />}
         {currentView === 'proposals'  && <Proposals />}
         {currentView === 'ranking'    && <Ranking userId={user.id} />}

@@ -271,7 +271,6 @@ export type ViewType =
   | 'admin-banks'
   | 'admin-convenios'
   | 'admin-products'
-  | 'admin-commission-ranges'
   | 'admin-reports';
 
 export type AuthMode = 'login';

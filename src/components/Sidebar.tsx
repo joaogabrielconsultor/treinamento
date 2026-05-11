@@ -28,7 +28,6 @@ const adminItems = [
   { view: 'admin-banks'             as ViewType, icon: Building2,     label: 'Bancos' },
   { view: 'admin-products'          as ViewType, icon: Package,       label: 'Produtos' },
   { view: 'admin-financial-tables'  as ViewType, icon: Table2,        label: 'Tabelas' },
-  { view: 'admin-commission-ranges' as ViewType, icon: Percent,       label: 'Comissões' },
   { view: 'admin-categories'        as ViewType, icon: Tag,           label: 'Categorias' },
   { view: 'admin-reports'           as ViewType, icon: FileBarChart,  label: 'Relatórios' },
   { view: 'admin-courses'           as ViewType, icon: GraduationCap, label: 'Treinamentos' },
