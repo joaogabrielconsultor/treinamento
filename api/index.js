@@ -551,6 +551,33 @@ app.get('/api/financial-tables', auth, async (req, res) => {
   res.json(rows);
 });
 
+app.post('/api/financial-tables/import', auth, adminOnly, async (req, res) => {
+  const items = req.body.rows;
+  if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ error: 'Nenhum item' });
+  let imported = 0;
+  const errors = [];
+  for (const item of items) {
+    if (!item.name) { errors.push({ row: item.nome || '?', error: 'nome obrigatório' }); continue; }
+    if (!item.bank_id) { errors.push({ row: item.nome || '?', error: `banco "${item.banco}" não encontrado` }); continue; }
+    if (!item.convenio_id) { errors.push({ row: item.nome || '?', error: `convênio "${item.convenio}" não encontrado` }); continue; }
+    if (!item.category_id) { errors.push({ row: item.nome || '?', error: `categoria "${item.categoria}" não encontrada` }); continue; }
+    try {
+      await pool.query(
+        'INSERT INTO financial_tables (name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor, coeficiente) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
+        [item.name, item.bank_id, item.convenio_id, item.category_id,
+         item.active !== 'false' && item.active !== false,
+         parseFloat(item.comissao_empresa) || 0,
+         parseFloat(item.comissao_corretor) || 0,
+         parseFloat(item.coeficiente) || 0]
+      );
+      imported++;
+    } catch (err) {
+      errors.push({ row: item.nome || '?', error: err.message });
+    }
+  }
+  res.json({ imported, errors });
+});
+
 app.post('/api/financial-tables', auth, adminOnly, async (req, res) => {
   const { name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor, coeficiente } = req.body;
   if (!name) return res.status(400).json({ error: 'Nome obrigatório' });

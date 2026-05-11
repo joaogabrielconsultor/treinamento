@@ -1,8 +1,32 @@
-﻿import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, ChevronDown, Save, Settings } from 'lucide-react';
+﻿import { useState, useEffect, useRef } from 'react';
+import { Plus, Trash2, Edit2, ChevronDown, Save, Settings, Upload, Download } from 'lucide-react';
 import { FinancialTable, TableCategory, ScoringRule, Bank, Convenio } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
 import { Pagination } from '../ui/Pagination';
+
+const CSV_HEADERS_FT = ['nome', 'banco', 'convenio', 'categoria', 'comissao_empresa', 'comissao_corretor', 'coeficiente', 'ativo'];
+
+function downloadTemplateFT() {
+  const example = ['APROVAMAIS_001 - INSS', 'Banco do Brasil', 'INSS', 'Alta Comissão', '3.50', '2.00', '0.0409485', 'true'];
+  const csv = [CSV_HEADERS_FT.join(','), example.join(',')].join('\r\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'modelo_importacao_tabelas.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function parseCSVFT(text: string): Record<string, string>[] {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^﻿/, '').replace(/^"|"$/g, ''));
+  return lines.slice(1).filter(l => l.trim()).map(line => {
+    const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+    return Object.fromEntries(headers.map((h, i) => [h, values[i] ?? '']));
+  });
+}
 
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
@@ -26,6 +50,11 @@ export function AdminFinancialTables() {
   const [filterConvenio, setFilterConvenio] = useState('');
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
+  const [showImport, setShowImport] = useState(false);
+  const [importRows, setImportRows] = useState<Record<string, string>[]>([]);
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [importing, setImporting] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   async function load() {
     setLoading(true);
@@ -103,6 +132,57 @@ export function AdminFinancialTables() {
     await loadRules(rulesTableId!);
   }
 
+  function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      setImportRows(parseCSVFT(ev.target?.result as string));
+      setImportErrors([]);
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+
+  async function doImport() {
+    if (importRows.length === 0) return;
+    setImporting(true);
+    const items = importRows.map(row => ({
+      nome: row.nome,
+      name: row.nome,
+      banco: row.banco,
+      convenio: row.convenio,
+      categoria: row.categoria,
+      bank_id: banks.find(b => b.name.toLowerCase() === (row.banco || '').toLowerCase())?.id || null,
+      convenio_id: convenios.find(c => c.name.toLowerCase() === (row.convenio || '').toLowerCase())?.id || null,
+      category_id: categories.find(c => c.name.toLowerCase() === (row.categoria || '').toLowerCase())?.id || null,
+      comissao_empresa: row.comissao_empresa,
+      comissao_corretor: row.comissao_corretor,
+      coeficiente: row.coeficiente,
+      active: row.ativo,
+    }));
+    const result = await API('/api/financial-tables/import', {
+      method: 'POST',
+      body: JSON.stringify({ rows: items }),
+    }).then(r => r.json());
+    if (result.errors?.length > 0) {
+      setImportErrors(result.errors.map((e: { row: string; error: string }) => `${e.row}: ${e.error}`));
+    }
+    if (result.imported > 0) {
+      setShowImport(false);
+      setImportRows([]);
+      if (fileRef.current) fileRef.current.value = '';
+      await load();
+      alert(`${result.imported} tabela(s) importada(s) com sucesso!`);
+    }
+    setImporting(false);
+  }
+
+  function closeImport() {
+    setShowImport(false);
+    setImportRows([]);
+    setImportErrors([]);
+  }
+
   const fmtBRL = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
   const rulesTable = tables.find(t => t.id === rulesTableId);
 
@@ -115,15 +195,27 @@ export function AdminFinancialTables() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-bold text-gray-100">Tabelas Financeiras</h1>
           <p className="text-xs text-slate-500 mt-0.5">{tables.length} tabelas cadastradas</p>
         </div>
-        <button onClick={() => { setForm(EMPTY_TABLE); setEditId(null); setShowForm(true); }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm btn-cyber font-semibold">
-          <Plus className="w-4 h-4" /> Nova Tabela
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button onClick={() => setShowImport(true)}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border transition-colors hover:opacity-80"
+            style={{ borderColor: 'var(--card-border)', color: 'var(--text-2)', background: 'var(--card-bg)' }}>
+            <Upload className="w-4 h-4" /> Importar CSV
+          </button>
+          <button onClick={downloadTemplateFT}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border transition-colors hover:opacity-80"
+            style={{ borderColor: 'var(--card-border)', color: 'var(--text-2)', background: 'var(--card-bg)' }}>
+            <Download className="w-4 h-4" /> Baixar Modelo
+          </button>
+          <button onClick={() => { setForm(EMPTY_TABLE); setEditId(null); setShowForm(true); }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm btn-cyber font-semibold">
+            <Plus className="w-4 h-4" /> Nova Tabela
+          </button>
+        </div>
       </div>
 
       {/* Filter by convenio */}
@@ -280,6 +372,92 @@ export function AdminFinancialTables() {
             <span className="text-sm text-gray-700 dark:text-gray-300">Tabela ativa</span>
           </label>
         </form>
+      </Modal>
+
+      {/* Import Modal */}
+      <Modal
+        open={showImport}
+        onClose={closeImport}
+        title="Importar Tabelas Financeiras"
+        size="lg"
+        footer={
+          <div className="flex gap-3">
+            <button type="button" onClick={closeImport} className={btnCancel}>Cancelar</button>
+            <button onClick={doImport} disabled={importRows.length === 0 || importing} className={btnPrimary} style={primaryBg}>
+              <Upload className="w-4 h-4 inline mr-1" />
+              {importing ? 'Importando...' : `Importar ${importRows.length} tabela(s)`}
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)' }}>
+            <Download className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#14B8A6' }} />
+            <div>
+              <p className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>Baixe o modelo antes de importar</p>
+              <p className="text-xs mt-0.5 mb-2" style={{ color: 'var(--text-3)' }}>
+                Os campos <strong>banco</strong>, <strong>convenio</strong> e <strong>categoria</strong> devem corresponder exatamente aos nomes já cadastrados no sistema.
+              </p>
+              <button onClick={downloadTemplateFT}
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium"
+                style={{ background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' }}>
+                <Download className="w-3.5 h-3.5" /> Baixar Modelo CSV
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>Selecione o arquivo CSV</label>
+            <input ref={fileRef} type="file" accept=".csv" onChange={handleImportFile}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 cursor-pointer" />
+          </div>
+
+          {importRows.length > 0 && (
+            <div>
+              <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>{importRows.length} linha(s) detectada(s)</p>
+              <div className="max-h-52 overflow-y-auto rounded-xl" style={{ border: '1px solid var(--card-border)' }}>
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr style={{ background: 'var(--surface-subtle)', borderBottom: '1px solid var(--card-border)' }}>
+                      {['Nome', 'Banco', 'Convênio', 'Categoria', 'Com. Emp.', 'Status'].map(h => (
+                        <th key={h} className="text-left px-3 py-2 font-semibold uppercase tracking-wider text-[10px]" style={{ color: 'var(--text-3)' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {importRows.map((row, i) => {
+                      const bankOk = banks.find(b => b.name.toLowerCase() === (row.banco || '').toLowerCase());
+                      const convOk = convenios.find(c => c.name.toLowerCase() === (row.convenio || '').toLowerCase());
+                      const catOk = categories.find(c => c.name.toLowerCase() === (row.categoria || '').toLowerCase());
+                      const ok = !!(bankOk && convOk && catOk && row.nome);
+                      return (
+                        <tr key={i} style={{ borderBottom: '1px solid var(--card-border)' }}>
+                          <td className="px-3 py-2 max-w-[160px] truncate" style={{ color: 'var(--text-1)' }}>{row.nome || '—'}</td>
+                          <td className="px-3 py-2" style={{ color: bankOk ? 'var(--text-2)' : '#f87171' }}>{row.banco || '—'}{!bankOk && ' ⚠'}</td>
+                          <td className="px-3 py-2" style={{ color: convOk ? 'var(--text-2)' : '#f87171' }}>{row.convenio || '—'}{!convOk && ' ⚠'}</td>
+                          <td className="px-3 py-2" style={{ color: catOk ? 'var(--text-2)' : '#f87171' }}>{row.categoria || '—'}{!catOk && ' ⚠'}</td>
+                          <td className="px-3 py-2 num" style={{ color: 'var(--text-2)' }}>{row.comissao_empresa ? `${row.comissao_empresa}%` : '—'}</td>
+                          <td className="px-3 py-2">
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${ok ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'}`}>
+                              {ok ? 'OK' : 'Erro'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {importErrors.length > 0 && (
+            <div className="rounded-xl p-3" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+              <p className="text-xs font-semibold text-red-500 mb-1">Erros na importação:</p>
+              {importErrors.map((e, i) => <p key={i} className="text-xs text-red-400">{e}</p>)}
+            </div>
+          )}
+        </div>
       </Modal>
 
       {/* Scoring rules modal */}
