@@ -141,6 +141,9 @@ export interface CommissionRange {
   created_at: string;
   category_name?: string;
   category_multiplier?: number;
+  table_name?: string;
+  bank_name?: string;
+  convenio_name?: string;
 }
 
 export interface ScoringRule {

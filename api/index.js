@@ -617,15 +617,67 @@ app.delete('/api/scoring-rules/:id', auth, adminOnly, async (req, res) => {
 // ─── FAIXAS DE COMISSÃO ───────────────────────────────────────────────────────
 app.get('/api/commission-ranges', auth, async (req, res) => {
   const { table_id } = req.query;
-  if (!table_id) return res.status(400).json({ error: 'table_id obrigatório' });
+  const params = [];
+  const where = table_id ? (params.push(table_id), 'WHERE cr.financial_table_id = $1') : '';
   const { rows } = await pool.query(`
-    SELECT cr.*, tc.name as category_name, tc.multiplier as category_multiplier
+    SELECT cr.*,
+      tc.name as category_name, tc.multiplier as category_multiplier,
+      ft.name as table_name,
+      b.name as bank_name,
+      cv.name as convenio_name
     FROM commission_ranges cr
     LEFT JOIN table_categories tc ON tc.id = cr.category_id
-    WHERE cr.financial_table_id = $1
-    ORDER BY cr.min_value DESC, cr.tipo_proposta ASC
-  `, [table_id]);
+    LEFT JOIN financial_tables ft ON ft.id = cr.financial_table_id
+    LEFT JOIN banks b ON b.id = ft.bank_id
+    LEFT JOIN convenios cv ON cv.id = ft.convenio_id
+    ${where}
+    ORDER BY cr.created_at DESC, cr.min_value DESC
+  `, params);
   res.json(rows);
+});
+
+app.post('/api/commission-ranges/import', auth, adminOnly, async (req, res) => {
+  const items = req.body.rows;
+  if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ error: 'Nenhum item' });
+  let imported = 0;
+  const errors = [];
+  for (const item of items) {
+    if (!item.financial_table_id) { errors.push({ row: item.tabela_nome || '?', error: 'tabela não encontrada' }); continue; }
+    try {
+      await pool.query(`
+        INSERT INTO commission_ranges (
+          financial_table_id, tipo_proposta, expires_at, convenio_descricao, parceiro,
+          prazo_inicial, prazo_final, juros_inicial, juros_final, coef_inicial, coef_final,
+          comissao_empresa, comissao_corretor, disponivel_para,
+          category_id, min_value, max_value, base_points, multiplier
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+      `, [
+        item.financial_table_id,
+        item.tipo_proposta || '',
+        item.expires_at || null,
+        item.convenio_descricao || '',
+        item.parceiro || '',
+        item.prazo_inicial ? parseInt(item.prazo_inicial) : null,
+        item.prazo_final ? parseInt(item.prazo_final) : null,
+        item.juros_inicial ? parseFloat(item.juros_inicial) : null,
+        item.juros_final ? parseFloat(item.juros_final) : null,
+        item.coef_inicial ? parseFloat(item.coef_inicial) : null,
+        item.coef_final ? parseFloat(item.coef_final) : null,
+        parseFloat(item.comissao_empresa) || 0,
+        parseFloat(item.comissao_corretor) || 0,
+        item.disponivel_para || 'todos',
+        item.category_id || null,
+        parseFloat(item.min_value) || 0,
+        item.max_value ? parseFloat(item.max_value) : null,
+        parseInt(item.base_points) || 0,
+        item.multiplier ? parseFloat(item.multiplier) : null,
+      ]);
+      imported++;
+    } catch (err) {
+      errors.push({ row: item.tabela_nome || '?', error: err.message });
+    }
+  }
+  res.json({ imported, errors });
 });
 
 app.post('/api/commission-ranges', auth, adminOnly, async (req, res) => {
