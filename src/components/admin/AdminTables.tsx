@@ -222,7 +222,7 @@ export function AdminTables() {
       const savedId = editTableId || saved?.id;
       if (savedId) {
         setRangesCache(prev => { const n = { ...prev }; delete n[savedId]; return n; });
-        if (expandedId === savedId) await loadRanges(savedId);
+        await loadRanges(savedId);
       }
       setShowTableForm(false); setEditTableId(null); await load();
     } catch (err) {
