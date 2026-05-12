@@ -18,7 +18,6 @@ const EMPTY_TABLE = {
   range_prazo_inicial: '', range_prazo_final: '',
   range_juros_inicial: '', range_juros_final: '',
   range_coef_inicial: '', range_coef_final: '',
-  range_comissao_empresa: '', range_comissao_corretor: '',
 };
 const EMPTY_RANGE: Partial<CommissionRange> = {
   financial_table_id: '', tipo_proposta: '', expires_at: null, convenio_descricao: '', parceiro: '',
@@ -206,8 +205,8 @@ export function AdminTables() {
       juros_final: tableForm.range_juros_final ? parseFloat(tableForm.range_juros_final) : null,
       coef_inicial: tableForm.range_coef_inicial ? parseFloat(tableForm.range_coef_inicial) : null,
       coef_final: tableForm.range_coef_final ? parseFloat(tableForm.range_coef_final) : null,
-      comissao_empresa: parseFloat(tableForm.range_comissao_empresa) || 0,
-      comissao_corretor: parseFloat(tableForm.range_comissao_corretor) || 0,
+      comissao_empresa: parseFloat(tableForm.comissao_empresa as string) || 0,
+      comissao_corretor: parseFloat(tableForm.comissao_corretor as string) || 0,
     };
     if (!editTableId && saved?.id) {
       await API('/api/commission-ranges', {
@@ -298,8 +297,6 @@ export function AdminTables() {
       range_juros_final: row.juros_final || null,
       range_coef_inicial: row.coef_inicial || null,
       range_coef_final: row.coef_final || null,
-      range_comissao_empresa: row.faixa_comissao_empresa || row.comissao_empresa || '0',
-      range_comissao_corretor: row.faixa_comissao_corretor || row.comissao_corretor || '0',
     }));
     const result = await API('/api/financial-tables/import', { method: 'POST', body: JSON.stringify({ rows: items }) }).then(r => r.json());
     if (result.errors?.length) setImportTableErrors(result.errors.map((e: { row: string; error: string }) => `${e.row}: ${e.error}`));
@@ -448,7 +445,7 @@ export function AdminTables() {
                         if (!cached && Array.isArray(rs)) setRangesCache(prev => ({ ...prev, [t.id]: rs }));
                         const fr = Array.isArray(rs) ? rs[0] : undefined;
                         setEditTableRangeId(fr?.id ?? null);
-                        setTableForm(fr ? { ...base, range_tipo_proposta: fr.tipo_proposta || '', range_parceiro: fr.parceiro || '', range_expires_at: fr.expires_at || '', range_convenio_descricao: fr.convenio_descricao || '', range_disponivel_para: fr.disponivel_para || 'todos', range_prazo_inicial: fr.prazo_inicial != null ? String(fr.prazo_inicial) : '', range_prazo_final: fr.prazo_final != null ? String(fr.prazo_final) : '', range_juros_inicial: fr.juros_inicial != null ? String(fr.juros_inicial) : '', range_juros_final: fr.juros_final != null ? String(fr.juros_final) : '', range_coef_inicial: fr.coef_inicial != null ? String(fr.coef_inicial) : '', range_coef_final: fr.coef_final != null ? String(fr.coef_final) : '', range_comissao_empresa: String(fr.comissao_empresa ?? ''), range_comissao_corretor: String(fr.comissao_corretor ?? '') } : base);
+                        setTableForm(fr ? { ...base, range_tipo_proposta: fr.tipo_proposta || '', range_parceiro: fr.parceiro || '', range_expires_at: fr.expires_at || '', range_convenio_descricao: fr.convenio_descricao || '', range_disponivel_para: fr.disponivel_para || 'todos', range_prazo_inicial: fr.prazo_inicial != null ? String(fr.prazo_inicial) : '', range_prazo_final: fr.prazo_final != null ? String(fr.prazo_final) : '', range_juros_inicial: fr.juros_inicial != null ? String(fr.juros_inicial) : '', range_juros_final: fr.juros_final != null ? String(fr.juros_final) : '', range_coef_inicial: fr.coef_inicial != null ? String(fr.coef_inicial) : '', range_coef_final: fr.coef_final != null ? String(fr.coef_final) : '' } : base);
                         setEditTableId(t.id); setShowTableForm(true);
                       }}
                         className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--text-3)' }}
@@ -608,12 +605,6 @@ export function AdminTables() {
                 </div>
               </Section>
 
-              <Section title="Comissão da Faixa">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField label="Comissão Empresa (%)"><div className="relative"><Percent className="absolute right-3 top-2.5 w-4 h-4 text-blue-400 pointer-events-none" /><input type="number" step="0.01" min="0" max="100" value={tableForm.range_comissao_empresa} onChange={e => setTableForm(f => ({ ...f, range_comissao_empresa: e.target.value }))} className={`${inp} pr-9`} placeholder="0.00" /></div></FormField>
-                  <FormField label="Comissão Corretor (%)"><div className="relative"><Percent className="absolute right-3 top-2.5 w-4 h-4 text-green-400 pointer-events-none" /><input type="number" step="0.01" min="0" max="100" value={tableForm.range_comissao_corretor} onChange={e => setTableForm(f => ({ ...f, range_comissao_corretor: e.target.value }))} className={`${inp} pr-9`} placeholder="0.00" /></div></FormField>
-                </div>
-              </Section>
             </>
         </form>
       </Modal>
