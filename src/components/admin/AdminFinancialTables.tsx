@@ -365,7 +365,7 @@ export function AdminFinancialTables() {
               Coeficiente
               <span className="ml-2 text-[10px] font-normal" style={{ color: 'var(--text-3)' }}>— peso/rentabilidade da tabela (ex: 0.0409485)</span>
             </label>
-            <input type="number" step="0.0000001" min="0" value={form.coeficiente} onChange={e => setForm(f => ({ ...f, coeficiente: e.target.value }))} className={`${inp} font-mono`} placeholder="0.0000000" />
+            <input type="number" step="any" min="0" value={form.coeficiente} onChange={e => setForm(f => ({ ...f, coeficiente: e.target.value }))} className={`${inp} font-mono`} placeholder="0.0000000" />
           </div>
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" checked={form.active} onChange={e => setForm(f => ({ ...f, active: e.target.checked }))} className="w-4 h-4 rounded" />

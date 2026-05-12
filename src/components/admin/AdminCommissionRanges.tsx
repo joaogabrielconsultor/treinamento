@@ -547,16 +547,16 @@ export function AdminCommissionRanges() {
                 <input type="number" min="0" value={form.prazo_final ?? ''} onChange={e => setForm(f => ({ ...f, prazo_final: e.target.value ? parseInt(e.target.value) : undefined }))} className={inp} placeholder="96" />
               </FormField>
               <FormField label="Juros inicial (% a.m.)">
-                <input type="number" step="0.0001" min="0" value={form.juros_inicial ?? ''} onChange={e => setForm(f => ({ ...f, juros_inicial: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="1.80" />
+                <input type="number" step="any" min="0" value={form.juros_inicial ?? ''} onChange={e => setForm(f => ({ ...f, juros_inicial: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="1.80" />
               </FormField>
               <FormField label="Juros final (% a.m.)">
-                <input type="number" step="0.0001" min="0" value={form.juros_final ?? ''} onChange={e => setForm(f => ({ ...f, juros_final: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="2.14" />
+                <input type="number" step="any" min="0" value={form.juros_final ?? ''} onChange={e => setForm(f => ({ ...f, juros_final: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="2.14" />
               </FormField>
               <FormField label="Coef. inicial">
-                <input type="number" step="0.000001" min="0" value={form.coef_inicial ?? ''} onChange={e => setForm(f => ({ ...f, coef_inicial: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="0.018741" />
+                <input type="number" step="any" min="0" value={form.coef_inicial ?? ''} onChange={e => setForm(f => ({ ...f, coef_inicial: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="0.018741" />
               </FormField>
               <FormField label="Coef. final">
-                <input type="number" step="0.000001" min="0" value={form.coef_final ?? ''} onChange={e => setForm(f => ({ ...f, coef_final: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="0.021893" />
+                <input type="number" step="any" min="0" value={form.coef_final ?? ''} onChange={e => setForm(f => ({ ...f, coef_final: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="0.021893" />
               </FormField>
             </div>
           </Section>

@@ -569,7 +569,7 @@ export function AdminTables() {
                 <div><Label text="Comissão Empresa (%)" /><input type="number" step="0.01" min="0" max="100" value={tableForm.comissao_empresa} onChange={e => setTableForm(f => ({ ...f, comissao_empresa: e.target.value }))} className={inp} placeholder="0.00" /></div>
                 <div><Label text="Comissão Corretor (%)" /><input type="number" step="0.01" min="0" max="100" value={tableForm.comissao_corretor} onChange={e => setTableForm(f => ({ ...f, comissao_corretor: e.target.value }))} className={inp} placeholder="0.00" /></div>
               </div>
-              <div><Label text="Coeficiente" /><input type="number" step="0.0000001" min="0" value={tableForm.coeficiente} onChange={e => setTableForm(f => ({ ...f, coeficiente: e.target.value }))} className={`${inp} font-mono`} placeholder="0.0000000" /></div>
+              <div><Label text="Coeficiente" /><input type="number" step="any" min="0" value={tableForm.coeficiente} onChange={e => setTableForm(f => ({ ...f, coeficiente: e.target.value }))} className={`${inp} font-mono`} placeholder="0.0000000" /></div>
               <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={tableForm.active} onChange={e => setTableForm(f => ({ ...f, active: e.target.checked }))} className="w-4 h-4 rounded" /><span className="text-sm" style={{ color: 'var(--text-2)' }}>Tabela ativa</span></label>
             </div>
           </Section>
@@ -601,10 +601,10 @@ export function AdminTables() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <FormField label="Prazo inicial (meses)"><input type="number" min="0" value={tableForm.range_prazo_inicial} onChange={e => setTableForm(f => ({ ...f, range_prazo_inicial: e.target.value }))} className={inp} placeholder="12" /></FormField>
                   <FormField label="Prazo final (meses)"><input type="number" min="0" value={tableForm.range_prazo_final} onChange={e => setTableForm(f => ({ ...f, range_prazo_final: e.target.value }))} className={inp} placeholder="96" /></FormField>
-                  <FormField label="Juros inicial (% a.m.)"><input type="number" step="0.0001" min="0" value={tableForm.range_juros_inicial} onChange={e => setTableForm(f => ({ ...f, range_juros_inicial: e.target.value }))} className={inp} placeholder="1.80" /></FormField>
-                  <FormField label="Juros final (% a.m.)"><input type="number" step="0.0001" min="0" value={tableForm.range_juros_final} onChange={e => setTableForm(f => ({ ...f, range_juros_final: e.target.value }))} className={inp} placeholder="2.14" /></FormField>
-                  <FormField label="Coef. inicial"><input type="number" step="0.000001" min="0" value={tableForm.range_coef_inicial} onChange={e => setTableForm(f => ({ ...f, range_coef_inicial: e.target.value }))} className={inp} placeholder="0.018741" /></FormField>
-                  <FormField label="Coef. final"><input type="number" step="0.000001" min="0" value={tableForm.range_coef_final} onChange={e => setTableForm(f => ({ ...f, range_coef_final: e.target.value }))} className={inp} placeholder="0.021893" /></FormField>
+                  <FormField label="Juros inicial (% a.m.)"><input type="number" step="any" min="0" value={tableForm.range_juros_inicial} onChange={e => setTableForm(f => ({ ...f, range_juros_inicial: e.target.value }))} className={inp} placeholder="1.80" /></FormField>
+                  <FormField label="Juros final (% a.m.)"><input type="number" step="any" min="0" value={tableForm.range_juros_final} onChange={e => setTableForm(f => ({ ...f, range_juros_final: e.target.value }))} className={inp} placeholder="2.14" /></FormField>
+                  <FormField label="Coef. inicial"><input type="number" step="any" min="0" value={tableForm.range_coef_inicial} onChange={e => setTableForm(f => ({ ...f, range_coef_inicial: e.target.value }))} className={inp} placeholder="0.018741" /></FormField>
+                  <FormField label="Coef. final"><input type="number" step="any" min="0" value={tableForm.range_coef_final} onChange={e => setTableForm(f => ({ ...f, range_coef_final: e.target.value }))} className={inp} placeholder="0.021893" /></FormField>
                 </div>
               </Section>
 
