@@ -185,39 +185,52 @@ export function AdminTables() {
     if (!rangesCache[id]) loadRanges(id);
   }
 
-  async function saveTable(e: React.FormEvent) {
-    e.preventDefault();
+  async function doSaveTable() {
+    if (!tableForm.name.trim()) { alert('Informe o nome da tabela'); return; }
     if (!tableForm.convenio_id) { alert('Selecione o convênio'); return; }
     if (!tableForm.bank_id) { alert('Selecione o banco'); return; }
     if (!tableForm.category_id) { alert('Selecione a categoria'); return; }
-    const body = { name: tableForm.name, bank_id: tableForm.bank_id, convenio_id: tableForm.convenio_id, category_id: tableForm.category_id, active: tableForm.active, comissao_empresa: parseFloat(tableForm.comissao_empresa as string) || 0, comissao_corretor: parseFloat(tableForm.comissao_corretor as string) || 0, coeficiente: parseFloat(tableForm.coeficiente as string) || 0 };
-    const url = editTableId ? `/api/financial-tables/${editTableId}` : '/api/financial-tables';
-    const saved = await API(url, { method: editTableId ? 'PUT' : 'POST', body: JSON.stringify(body) }).then(r => r.json());
-    const rangePayload = {
-      tipo_proposta: tableForm.range_tipo_proposta || '',
-      parceiro: tableForm.range_parceiro || '',
-      expires_at: tableForm.range_expires_at || null,
-      convenio_descricao: tableForm.range_convenio_descricao || '',
-      disponivel_para: tableForm.range_disponivel_para || 'todos',
-      prazo_inicial: tableForm.range_prazo_inicial ? parseInt(tableForm.range_prazo_inicial) : null,
-      prazo_final: tableForm.range_prazo_final ? parseInt(tableForm.range_prazo_final) : null,
-      juros_inicial: tableForm.range_juros_inicial ? parseFloat(tableForm.range_juros_inicial) : null,
-      juros_final: tableForm.range_juros_final ? parseFloat(tableForm.range_juros_final) : null,
-      coef_inicial: tableForm.range_coef_inicial ? parseFloat(tableForm.range_coef_inicial) : null,
-      coef_final: tableForm.range_coef_final ? parseFloat(tableForm.range_coef_final) : null,
-      comissao_empresa: parseFloat(tableForm.comissao_empresa as string) || 0,
-      comissao_corretor: parseFloat(tableForm.comissao_corretor as string) || 0,
-    };
-    if (!editTableId && saved?.id) {
-      await API('/api/commission-ranges', {
-        method: 'POST',
-        body: JSON.stringify({ ...rangePayload, financial_table_id: saved.id, min_value: 0, max_value: null, base_points: 0, multiplier: null }),
-      });
-    } else if (editTableId && editTableRangeId) {
-      await API(`/api/commission-ranges/${editTableRangeId}`, { method: 'PUT', body: JSON.stringify(rangePayload) });
+    try {
+      const body = { name: tableForm.name, bank_id: tableForm.bank_id, convenio_id: tableForm.convenio_id, category_id: tableForm.category_id, active: tableForm.active, comissao_empresa: parseFloat(tableForm.comissao_empresa as string) || 0, comissao_corretor: parseFloat(tableForm.comissao_corretor as string) || 0, coeficiente: parseFloat(tableForm.coeficiente as string) || 0 };
+      const url = editTableId ? `/api/financial-tables/${editTableId}` : '/api/financial-tables';
+      const res = await API(url, { method: editTableId ? 'PUT' : 'POST', body: JSON.stringify(body) });
+      if (!res.ok) { const err = await res.text(); alert(`Erro ao salvar tabela: ${err}`); return; }
+      const saved = await res.json();
+      const rangePayload = {
+        tipo_proposta: tableForm.range_tipo_proposta || '',
+        parceiro: tableForm.range_parceiro || '',
+        expires_at: tableForm.range_expires_at || null,
+        convenio_descricao: tableForm.range_convenio_descricao || '',
+        disponivel_para: tableForm.range_disponivel_para || 'todos',
+        prazo_inicial: tableForm.range_prazo_inicial ? parseInt(tableForm.range_prazo_inicial) : null,
+        prazo_final: tableForm.range_prazo_final ? parseInt(tableForm.range_prazo_final) : null,
+        juros_inicial: tableForm.range_juros_inicial ? parseFloat(tableForm.range_juros_inicial) : null,
+        juros_final: tableForm.range_juros_final ? parseFloat(tableForm.range_juros_final) : null,
+        coef_inicial: tableForm.range_coef_inicial ? parseFloat(tableForm.range_coef_inicial) : null,
+        coef_final: tableForm.range_coef_final ? parseFloat(tableForm.range_coef_final) : null,
+        comissao_empresa: parseFloat(tableForm.comissao_empresa as string) || 0,
+        comissao_corretor: parseFloat(tableForm.comissao_corretor as string) || 0,
+      };
+      if (!editTableId && saved?.id) {
+        await API('/api/commission-ranges', {
+          method: 'POST',
+          body: JSON.stringify({ ...rangePayload, financial_table_id: saved.id, min_value: 0, max_value: null, base_points: 0, multiplier: null }),
+        });
+      } else if (editTableId && editTableRangeId) {
+        await API(`/api/commission-ranges/${editTableRangeId}`, { method: 'PUT', body: JSON.stringify(rangePayload) });
+      }
+      const savedId = editTableId || saved?.id;
+      if (savedId) {
+        setRangesCache(prev => { const n = { ...prev }; delete n[savedId]; return n; });
+        if (expandedId === savedId) await loadRanges(savedId);
+      }
+      setShowTableForm(false); setEditTableId(null); await load();
+    } catch (err) {
+      alert(`Erro inesperado: ${err instanceof Error ? err.message : String(err)}`);
     }
-    setShowTableForm(false); setEditTableId(null); await load();
   }
+
+  function saveTable(e: React.FormEvent) { e.preventDefault(); doSaveTable(); }
 
   async function deleteTable(id: string) {
     if (!confirm('Excluir esta tabela? As faixas e regras serão removidas.')) return;
@@ -552,7 +565,7 @@ export function AdminTables() {
 
       {/* Table form modal */}
       <Modal open={showTableForm} onClose={() => setShowTableForm(false)} title={editTableId ? 'Editar Tabela' : 'Nova Tabela'} size="2xl"
-        footer={<div className="flex gap-3"><button type="button" onClick={() => setShowTableForm(false)} className={btnCancel}>Cancelar</button><button type="submit" form="modal-table-form" className={btnPrimary} style={primaryBg}><Save className="w-4 h-4 inline mr-1" />{editTableId ? 'Salvar' : 'Criar'}</button></div>}>
+        footer={<div className="flex gap-3"><button type="button" onClick={() => setShowTableForm(false)} className={btnCancel}>Cancelar</button><button type="button" onClick={doSaveTable} className={btnPrimary} style={primaryBg}><Save className="w-4 h-4 inline mr-1" />{editTableId ? 'Salvar' : 'Criar'}</button></div>}>
         <form id="modal-table-form" onSubmit={saveTable} className="space-y-5">
           <Section title="Dados da Tabela">
             <div className="space-y-4">

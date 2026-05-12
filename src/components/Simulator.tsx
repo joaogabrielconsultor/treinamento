@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Calculator, ChevronDown, ArrowRight, TrendingUp, Zap } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Calculator, ChevronDown, ArrowRight, TrendingUp, Zap, SlidersHorizontal } from 'lucide-react';
 import { CommissionRange, FinancialTable, Bank, Convenio } from '../types';
 
 const API = (p: string) =>
@@ -43,8 +43,16 @@ interface SimulatorProps {
 export function Simulator({ onSendProposal }: SimulatorProps) {
   const [mode, setMode] = useState<'parcela' | 'credito'>('parcela');
   const [inputVal, setInputVal] = useState('');
+
+  // Required filters
   const [filterConvenio, setFilterConvenio] = useState('');
+  const [filterTipoProposta, setFilterTipoProposta] = useState('');
+
+  // Optional filters
+  const [filterConvenioDesc, setFilterConvenioDesc] = useState('');
   const [filterBanco, setFilterBanco] = useState('');
+  const [filterParceiro, setFilterParceiro] = useState('');
+  const [showOptional, setShowOptional] = useState(false);
 
   const [allRanges, setAllRanges] = useState<CommissionRange[]>([]);
   const [tableMap, setTableMap] = useState<Record<string, FinancialTable>>({});
@@ -76,6 +84,44 @@ export function Simulator({ onSendProposal }: SimulatorProps) {
     loadData();
   }, []);
 
+  // Derived filter options based on upstream selections
+  const availableTipos = useMemo(() => {
+    const set = new Set<string>();
+    for (const range of allRanges) {
+      const table = tableMap[range.financial_table_id];
+      if (!table) continue;
+      if (filterConvenio && table.convenio_id !== filterConvenio) continue;
+      if (range.tipo_proposta) set.add(range.tipo_proposta);
+    }
+    return Array.from(set).sort();
+  }, [allRanges, tableMap, filterConvenio]);
+
+  const availableConvenioDescs = useMemo(() => {
+    const set = new Set<string>();
+    for (const range of allRanges) {
+      const table = tableMap[range.financial_table_id];
+      if (!table) continue;
+      if (filterConvenio && table.convenio_id !== filterConvenio) continue;
+      if (filterTipoProposta && range.tipo_proposta !== filterTipoProposta) continue;
+      if (range.convenio_descricao) set.add(range.convenio_descricao);
+    }
+    return Array.from(set).sort();
+  }, [allRanges, tableMap, filterConvenio, filterTipoProposta]);
+
+  const availableParceiros = useMemo(() => {
+    const set = new Set<string>();
+    for (const range of allRanges) {
+      const table = tableMap[range.financial_table_id];
+      if (!table) continue;
+      if (filterConvenio && table.convenio_id !== filterConvenio) continue;
+      if (filterTipoProposta && range.tipo_proposta !== filterTipoProposta) continue;
+      if (range.parceiro) set.add(range.parceiro);
+    }
+    return Array.from(set).sort();
+  }, [allRanges, tableMap, filterConvenio, filterTipoProposta]);
+
+  function resetResults() { setResults([]); setSimulated(false); }
+
   function simulate() {
     const raw = inputVal.replace(/\./g, '').replace(',', '.');
     const val = parseFloat(raw);
@@ -90,8 +136,14 @@ export function Simulator({ onSendProposal }: SimulatorProps) {
       const coef = Number(range.coef_final ?? range.coef_inicial ?? table.coeficiente) || 0;
       if (!coef) continue;
 
+      // Required filters
       if (filterConvenio && table.convenio_id !== filterConvenio) continue;
+      if (filterTipoProposta && range.tipo_proposta !== filterTipoProposta) continue;
+
+      // Optional filters
+      if (filterConvenioDesc && range.convenio_descricao !== filterConvenioDesc) continue;
       if (filterBanco && table.bank_id !== filterBanco) continue;
+      if (filterParceiro && range.parceiro !== filterParceiro) continue;
 
       const valor_liberado = mode === 'parcela' ? val / coef : val;
       const parcela       = mode === 'parcela' ? val       : val * coef;
@@ -126,6 +178,9 @@ export function Simulator({ onSendProposal }: SimulatorProps) {
   }
 
   const inpCls = 'input-cyber w-full px-3 py-2.5 text-sm rounded-xl appearance-none';
+  const canSimulate = !!inputVal.trim() && !!filterConvenio && !!filterTipoProposta && !dataLoading;
+
+  const optionalActiveCount = [filterConvenioDesc, filterBanco, filterParceiro].filter(Boolean).length;
 
   return (
     <div className="p-6 max-w-[1400px] mx-auto">
@@ -139,12 +194,13 @@ export function Simulator({ onSendProposal }: SimulatorProps) {
 
       {/* Input card */}
       <div className="rounded-2xl p-5 mb-5" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
+
         {/* Mode toggle */}
         <div className="inline-flex items-center gap-1 p-1 rounded-xl mb-5" style={{ background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.06)' }}>
           {(['parcela', 'credito'] as const).map(m => (
             <button
               key={m}
-              onClick={() => { setMode(m); setResults([]); setSimulated(false); }}
+              onClick={() => { setMode(m); resetResults(); }}
               className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-all"
               style={mode === m
                 ? { background: 'linear-gradient(135deg,#14B8A6,#06B6D4)', color: '#fff', boxShadow: '0 2px 10px rgba(20,184,166,0.35)' }
@@ -155,52 +211,156 @@ export function Simulator({ onSendProposal }: SimulatorProps) {
           ))}
         </div>
 
-        {/* Fields row */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
-          <div className="md:col-span-2">
-            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>
-              {mode === 'parcela' ? 'Valor da parcela / margem (R$)' : 'Valor de crédito desejado (R$)'}
+        {/* Required fields label */}
+        <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-3)' }}>
+          Campos obrigatórios
+        </p>
+
+        {/* Required row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+          {/* Valor */}
+          <div>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-2)' }}>
+              {mode === 'parcela' ? 'Valor da Parcela / Margem (R$)' : 'Valor de Crédito (R$)'}
+              <span className="ml-1 text-[10px]" style={{ color: '#f87171' }}>*</span>
             </label>
             <input
               value={inputVal}
-              onChange={e => setInputVal(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && simulate()}
+              onChange={e => { setInputVal(e.target.value); resetResults(); }}
+              onKeyDown={e => e.key === 'Enter' && canSimulate && simulate()}
               className="input-cyber w-full px-3 py-3 text-base font-bold rounded-xl"
               placeholder={mode === 'parcela' ? 'Ex: 200,00' : 'Ex: 10.000,00'}
               inputMode="decimal"
             />
           </div>
 
+          {/* Convênio */}
           <div>
-            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>Convênio</label>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-2)' }}>
+              Convênio
+              <span className="ml-1 text-[10px]" style={{ color: '#f87171' }}>*</span>
+            </label>
             <div className="relative">
-              <ChevronDown className="absolute right-2 top-2.5 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
-              <select value={filterConvenio} onChange={e => setFilterConvenio(e.target.value)} className={`${inpCls} pr-7`}>
-                <option value="">Todos</option>
+              <ChevronDown className="absolute right-2 top-3 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+              <select
+                value={filterConvenio}
+                onChange={e => { setFilterConvenio(e.target.value); setFilterTipoProposta(''); setFilterConvenioDesc(''); resetResults(); }}
+                className={`${inpCls} py-3 pr-7`}
+              >
+                <option value="">Selecione o convênio</option>
                 {convenios.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
           </div>
 
+          {/* Tipo de Proposta */}
           <div>
-            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>Banco</label>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-2)' }}>
+              Tipo de Proposta
+              <span className="ml-1 text-[10px]" style={{ color: '#f87171' }}>*</span>
+            </label>
             <div className="relative">
-              <ChevronDown className="absolute right-2 top-2.5 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
-              <select value={filterBanco} onChange={e => setFilterBanco(e.target.value)} className={`${inpCls} pr-7`}>
-                <option value="">Todos</option>
-                {banks.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+              <ChevronDown className="absolute right-2 top-3 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+              <select
+                value={filterTipoProposta}
+                onChange={e => { setFilterTipoProposta(e.target.value); setFilterConvenioDesc(''); resetResults(); }}
+                className={`${inpCls} py-3 pr-7`}
+                disabled={!filterConvenio}
+              >
+                <option value="">{filterConvenio ? 'Selecione o tipo' : 'Selecione o convênio primeiro'}</option>
+                {availableTipos.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
           </div>
+        </div>
 
+        {/* Optional filters toggle */}
+        <button
+          onClick={() => setShowOptional(v => !v)}
+          className="flex items-center gap-2 text-xs font-semibold mb-3 transition-all"
+          style={{ color: optionalActiveCount > 0 ? '#14B8A6' : 'var(--text-3)' }}
+        >
+          <SlidersHorizontal className="w-3.5 h-3.5" />
+          Filtros opcionais
+          {optionalActiveCount > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'rgba(20,184,166,0.15)', color: '#14B8A6' }}>
+              {optionalActiveCount}
+            </span>
+          )}
+          <ChevronDown className={`w-3 h-3 transition-transform ${showOptional ? 'rotate-180' : ''}`} />
+        </button>
+
+        {showOptional && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 p-3 rounded-xl" style={{ background: 'rgba(0,0,0,0.12)', border: '1px solid rgba(255,255,255,0.05)' }}>
+            {/* Desc. Convênio */}
+            <div>
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>Desc. Convênio</label>
+              <div className="relative">
+                <ChevronDown className="absolute right-2 top-2.5 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+                <select
+                  value={filterConvenioDesc}
+                  onChange={e => { setFilterConvenioDesc(e.target.value); resetResults(); }}
+                  className={`${inpCls} pr-7`}
+                  disabled={availableConvenioDescs.length === 0}
+                >
+                  <option value="">Todos</option>
+                  {availableConvenioDescs.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* Banco */}
+            <div>
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>Banco</label>
+              <div className="relative">
+                <ChevronDown className="absolute right-2 top-2.5 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+                <select value={filterBanco} onChange={e => { setFilterBanco(e.target.value); resetResults(); }} className={`${inpCls} pr-7`}>
+                  <option value="">Todos</option>
+                  {banks.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* Parceiro */}
+            <div>
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>Parceiro</label>
+              <div className="relative">
+                <ChevronDown className="absolute right-2 top-2.5 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+                <select
+                  value={filterParceiro}
+                  onChange={e => { setFilterParceiro(e.target.value); resetResults(); }}
+                  className={`${inpCls} pr-7`}
+                  disabled={availableParceiros.length === 0}
+                >
+                  <option value="">Todos</option>
+                  {availableParceiros.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Simulate button */}
+        <div className="flex items-center gap-3">
           <button
             onClick={simulate}
-            disabled={!inputVal.trim() || dataLoading}
-            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm btn-cyber font-semibold disabled:opacity-50 transition-all"
+            disabled={!canSimulate}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm btn-cyber font-semibold disabled:opacity-40 transition-all"
           >
             <Calculator className="w-4 h-4" />
-            {dataLoading ? 'Carregando...' : 'Simular'}
+            {dataLoading ? 'Carregando dados...' : 'Simular'}
           </button>
+          {!filterConvenio && (
+            <p className="text-xs" style={{ color: 'var(--text-3)' }}>Selecione o convênio para continuar</p>
+          )}
+          {filterConvenio && !filterTipoProposta && (
+            <p className="text-xs" style={{ color: 'var(--text-3)' }}>Selecione o tipo de proposta para continuar</p>
+          )}
+          {filterConvenio && filterTipoProposta && !inputVal.trim() && (
+            <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+              Informe o {mode === 'parcela' ? 'valor da parcela' : 'valor de crédito'}
+            </p>
+          )}
         </div>
 
         {/* Mode hint */}
@@ -216,12 +376,10 @@ export function Simulator({ onSendProposal }: SimulatorProps) {
         <div className="text-center py-16 rounded-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
           <Calculator className="w-12 h-12 mx-auto mb-3 opacity-20" style={{ color: 'var(--text-3)' }} />
           <p className="font-semibold" style={{ color: 'var(--text-3)' }}>
-            {mode === 'parcela'
-              ? 'Informe o valor da parcela e clique em Simular'
-              : 'Informe o valor desejado e clique em Simular'}
+            Preencha os campos obrigatórios e clique em Simular
           </p>
           <p className="text-xs mt-1" style={{ color: 'var(--text-3)', opacity: 0.6 }}>
-            Todas as tabelas ativas serão comparadas automaticamente
+            Todas as tabelas correspondentes serão comparadas automaticamente
           </p>
         </div>
       )}
@@ -230,7 +388,7 @@ export function Simulator({ onSendProposal }: SimulatorProps) {
       {simulated && results.length === 0 && (
         <div className="text-center py-12 rounded-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
           <p className="font-semibold" style={{ color: 'var(--text-3)' }}>Nenhuma tabela disponível para os critérios informados</p>
-          <p className="text-xs mt-1" style={{ color: 'var(--text-3)', opacity: 0.6 }}>Tente remover os filtros ou verifique se há tabelas com coeficiente cadastrado</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-3)', opacity: 0.6 }}>Tente remover filtros opcionais ou verifique se há tabelas com coeficiente cadastrado</p>
         </div>
       )}
 
