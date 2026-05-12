@@ -103,6 +103,7 @@ export function AdminTables() {
 
   const [showTableForm, setShowTableForm] = useState(false);
   const [editTableId, setEditTableId] = useState<string | null>(null);
+  const [editTableRangeId, setEditTableRangeId] = useState<string | null>(null);
   const [tableForm, setTableForm] = useState(EMPTY_TABLE);
 
   const [showRangeForm, setShowRangeForm] = useState(false);
@@ -173,30 +174,28 @@ export function AdminTables() {
     const body = { name: tableForm.name, bank_id: tableForm.bank_id, convenio_id: tableForm.convenio_id, category_id: tableForm.category_id, active: tableForm.active, comissao_empresa: parseFloat(tableForm.comissao_empresa as string) || 0, comissao_corretor: parseFloat(tableForm.comissao_corretor as string) || 0, coeficiente: parseFloat(tableForm.coeficiente as string) || 0 };
     const url = editTableId ? `/api/financial-tables/${editTableId}` : '/api/financial-tables';
     const saved = await API(url, { method: editTableId ? 'PUT' : 'POST', body: JSON.stringify(body) }).then(r => r.json());
+    const rangePayload = {
+      tipo_proposta: tableForm.range_tipo_proposta || '',
+      parceiro: tableForm.range_parceiro || '',
+      expires_at: tableForm.range_expires_at || null,
+      convenio_descricao: tableForm.range_convenio_descricao || '',
+      disponivel_para: tableForm.range_disponivel_para || 'todos',
+      prazo_inicial: tableForm.range_prazo_inicial ? parseInt(tableForm.range_prazo_inicial) : null,
+      prazo_final: tableForm.range_prazo_final ? parseInt(tableForm.range_prazo_final) : null,
+      juros_inicial: tableForm.range_juros_inicial ? parseFloat(tableForm.range_juros_inicial) : null,
+      juros_final: tableForm.range_juros_final ? parseFloat(tableForm.range_juros_final) : null,
+      coef_inicial: tableForm.range_coef_inicial ? parseFloat(tableForm.range_coef_inicial) : null,
+      coef_final: tableForm.range_coef_final ? parseFloat(tableForm.range_coef_final) : null,
+      comissao_empresa: parseFloat(tableForm.range_comissao_empresa) || 0,
+      comissao_corretor: parseFloat(tableForm.range_comissao_corretor) || 0,
+    };
     if (!editTableId && saved?.id) {
       await API('/api/commission-ranges', {
         method: 'POST',
-        body: JSON.stringify({
-          financial_table_id: saved.id,
-          tipo_proposta: tableForm.range_tipo_proposta || '',
-          parceiro: tableForm.range_parceiro || '',
-          expires_at: tableForm.range_expires_at || null,
-          convenio_descricao: tableForm.range_convenio_descricao || '',
-          disponivel_para: tableForm.range_disponivel_para || 'todos',
-          prazo_inicial: tableForm.range_prazo_inicial ? parseInt(tableForm.range_prazo_inicial) : null,
-          prazo_final: tableForm.range_prazo_final ? parseInt(tableForm.range_prazo_final) : null,
-          juros_inicial: tableForm.range_juros_inicial ? parseFloat(tableForm.range_juros_inicial) : null,
-          juros_final: tableForm.range_juros_final ? parseFloat(tableForm.range_juros_final) : null,
-          coef_inicial: tableForm.range_coef_inicial ? parseFloat(tableForm.range_coef_inicial) : null,
-          coef_final: tableForm.range_coef_final ? parseFloat(tableForm.range_coef_final) : null,
-          comissao_empresa: parseFloat(tableForm.range_comissao_empresa) || 0,
-          comissao_corretor: parseFloat(tableForm.range_comissao_corretor) || 0,
-          min_value: 0,
-          max_value: null,
-          base_points: 0,
-          multiplier: null,
-        }),
+        body: JSON.stringify({ ...rangePayload, financial_table_id: saved.id, min_value: 0, max_value: null, base_points: 0, multiplier: null }),
       });
+    } else if (editTableId && editTableRangeId) {
+      await API(`/api/commission-ranges/${editTableRangeId}`, { method: 'PUT', body: JSON.stringify(rangePayload) });
     }
     setShowTableForm(false); setEditTableId(null); await load();
   }
@@ -402,7 +401,16 @@ export function AdminTables() {
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
                         <Settings className="w-3.5 h-3.5" />
                       </button>
-                      <button onClick={() => { setTableForm({ name: t.name, bank_id: t.bank_id || '', convenio_id: t.convenio_id || '', category_id: t.category_id || '', active: t.active, comissao_empresa: String(t.comissao_empresa ?? ''), comissao_corretor: String(t.comissao_corretor ?? ''), coeficiente: String(t.coeficiente ?? '') }); setEditTableId(t.id); setShowTableForm(true); }}
+                      <button onClick={async () => {
+                        const base = { ...EMPTY_TABLE, name: t.name, bank_id: t.bank_id || '', convenio_id: t.convenio_id || '', category_id: t.category_id || '', active: t.active, comissao_empresa: String(t.comissao_empresa ?? ''), comissao_corretor: String(t.comissao_corretor ?? ''), coeficiente: String(t.coeficiente ?? '') };
+                        const cached = rangesCache[t.id];
+                        const rs: CommissionRange[] = cached ?? await API(`/api/commission-ranges?table_id=${t.id}`).then(r => r.json()).catch(() => []);
+                        if (!cached && Array.isArray(rs)) setRangesCache(prev => ({ ...prev, [t.id]: rs }));
+                        const fr = Array.isArray(rs) ? rs[0] : undefined;
+                        setEditTableRangeId(fr?.id ?? null);
+                        setTableForm(fr ? { ...base, range_tipo_proposta: fr.tipo_proposta || '', range_parceiro: fr.parceiro || '', range_expires_at: fr.expires_at || '', range_convenio_descricao: fr.convenio_descricao || '', range_disponivel_para: fr.disponivel_para || 'todos', range_prazo_inicial: fr.prazo_inicial != null ? String(fr.prazo_inicial) : '', range_prazo_final: fr.prazo_final != null ? String(fr.prazo_final) : '', range_juros_inicial: fr.juros_inicial != null ? String(fr.juros_inicial) : '', range_juros_final: fr.juros_final != null ? String(fr.juros_final) : '', range_coef_inicial: fr.coef_inicial != null ? String(fr.coef_inicial) : '', range_coef_final: fr.coef_final != null ? String(fr.coef_final) : '', range_comissao_empresa: String(fr.comissao_empresa ?? ''), range_comissao_corretor: String(fr.comissao_corretor ?? '') } : base);
+                        setEditTableId(t.id); setShowTableForm(true);
+                      }}
                         className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--text-3)' }}
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
@@ -506,7 +514,7 @@ export function AdminTables() {
       )}
 
       {/* Table form modal */}
-      <Modal open={showTableForm} onClose={() => setShowTableForm(false)} title={editTableId ? 'Editar Tabela' : 'Nova Tabela'} size={editTableId ? 'lg' : '2xl'}
+      <Modal open={showTableForm} onClose={() => setShowTableForm(false)} title={editTableId ? 'Editar Tabela' : 'Nova Tabela'} size="2xl"
         footer={<div className="flex gap-3"><button type="button" onClick={() => setShowTableForm(false)} className={btnCancel}>Cancelar</button><button type="submit" form="modal-table-form" className={btnPrimary} style={primaryBg}><Save className="w-4 h-4 inline mr-1" />{editTableId ? 'Salvar' : 'Criar'}</button></div>}>
         <form id="modal-table-form" onSubmit={saveTable} className="space-y-5">
           <Section title="Dados da Tabela">
@@ -526,9 +534,8 @@ export function AdminTables() {
             </div>
           </Section>
 
-          {!editTableId && (
-            <>
-              <Section title="Dados da Proposta (faixa inicial)">
+          <>
+              <Section title={editTableId ? 'Dados da Proposta (faixa vinculada)' : 'Dados da Proposta (faixa inicial)'}>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <FormField label="Tipo de proposta"><input value={tableForm.range_tipo_proposta} onChange={e => setTableForm(f => ({ ...f, range_tipo_proposta: e.target.value }))} className={inp} placeholder="Refinanciamento, Novo..." /></FormField>
                   <FormField label="Parceiro"><input value={tableForm.range_parceiro} onChange={e => setTableForm(f => ({ ...f, range_parceiro: e.target.value }))} className={inp} /></FormField>
@@ -561,44 +568,13 @@ export function AdminTables() {
                 </div>
               </Section>
             </>
-          )}
         </form>
       </Modal>
 
-      {/* Range form modal */}
-      <Modal open={showRangeForm} onClose={() => setShowRangeForm(false)} title={editRangeId ? 'Editar Faixa' : 'Nova Faixa de Comissão'} subtitle={rangeTableObj?.name} size="2xl"
-        footer={<div className="flex gap-3"><button type="button" onClick={() => setShowRangeForm(false)} className={btnCancel}>Cancelar</button><button type="submit" form="modal-range-form" disabled={savingRange} className={btnPrimary} style={primaryBg}><Save className="w-4 h-4 inline mr-1" />{savingRange ? 'Salvando...' : editRangeId ? 'Salvar' : 'Criar faixa'}</button></div>}>
+      {/* Range form modal — apenas Pontuação no Ranking */}
+      <Modal open={showRangeForm} onClose={() => setShowRangeForm(false)} title="Pontuação no Ranking" subtitle={rangeTableObj?.name} size="lg"
+        footer={<div className="flex gap-3"><button type="button" onClick={() => setShowRangeForm(false)} className={btnCancel}>Cancelar</button><button type="submit" form="modal-range-form" disabled={savingRange} className={btnPrimary} style={primaryBg}><Save className="w-4 h-4 inline mr-1" />{savingRange ? 'Salvando...' : 'Salvar'}</button></div>}>
         <form id="modal-range-form" onSubmit={saveRange} className="space-y-6">
-          <Section title="Dados da Proposta">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <FormField label="Tipo de proposta"><input value={rangeForm.tipo_proposta || ''} onChange={e => setRangeForm(f => ({ ...f, tipo_proposta: e.target.value }))} className={inp} placeholder="Refinanciamento, Novo..." /></FormField>
-              <FormField label="Parceiro"><input value={rangeForm.parceiro || ''} onChange={e => setRangeForm(f => ({ ...f, parceiro: e.target.value }))} className={inp} /></FormField>
-              <FormField label="Data de expiração"><input type="date" value={rangeForm.expires_at || ''} onChange={e => setRangeForm(f => ({ ...f, expires_at: e.target.value || null }))} className={inp} /></FormField>
-              <FormField label="Descrição do convênio" className="md:col-span-2"><input value={rangeForm.convenio_descricao || ''} onChange={e => setRangeForm(f => ({ ...f, convenio_descricao: e.target.value }))} className={inp} /></FormField>
-              <FormField label="Disponível para">
-                <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
-                  <select value={rangeForm.disponivel_para || 'todos'} onChange={e => setRangeForm(f => ({ ...f, disponivel_para: e.target.value }))} className={`${inp} appearance-none pr-8`}>
-                    <option value="todos">Todos</option><option value="corretor">Apenas corretor</option><option value="empresa">Apenas empresa</option>
-                  </select></div>
-              </FormField>
-            </div>
-          </Section>
-          <Section title="Prazo e Juros / Coeficiente">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <FormField label="Prazo inicial (meses)"><input type="number" min="0" value={rangeForm.prazo_inicial ?? ''} onChange={e => setRangeForm(f => ({ ...f, prazo_inicial: e.target.value ? parseInt(e.target.value) : undefined }))} className={inp} placeholder="12" /></FormField>
-              <FormField label="Prazo final (meses)"><input type="number" min="0" value={rangeForm.prazo_final ?? ''} onChange={e => setRangeForm(f => ({ ...f, prazo_final: e.target.value ? parseInt(e.target.value) : undefined }))} className={inp} placeholder="96" /></FormField>
-              <FormField label="Juros inicial (% a.m.)"><input type="number" step="0.0001" min="0" value={rangeForm.juros_inicial ?? ''} onChange={e => setRangeForm(f => ({ ...f, juros_inicial: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="1.80" /></FormField>
-              <FormField label="Juros final (% a.m.)"><input type="number" step="0.0001" min="0" value={rangeForm.juros_final ?? ''} onChange={e => setRangeForm(f => ({ ...f, juros_final: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="2.14" /></FormField>
-              <FormField label="Coef. inicial"><input type="number" step="0.000001" min="0" value={rangeForm.coef_inicial ?? ''} onChange={e => setRangeForm(f => ({ ...f, coef_inicial: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="0.018741" /></FormField>
-              <FormField label="Coef. final"><input type="number" step="0.000001" min="0" value={rangeForm.coef_final ?? ''} onChange={e => setRangeForm(f => ({ ...f, coef_final: e.target.value ? parseFloat(e.target.value) : undefined }))} className={inp} placeholder="0.021893" /></FormField>
-            </div>
-          </Section>
-          <Section title="Comissão">
-            <div className="grid grid-cols-2 gap-4">
-              <FormField label="Comissão Empresa (%)" required><div className="relative"><Percent className="absolute right-3 top-2.5 w-4 h-4 text-blue-400 pointer-events-none" /><input type="number" step="0.01" min="0" max="100" value={rangeForm.comissao_empresa ?? ''} onChange={e => setRangeForm(f => ({ ...f, comissao_empresa: parseFloat(e.target.value) || 0 }))} className={`${inp} pr-9`} placeholder="0.00" required /></div></FormField>
-              <FormField label="Comissão Corretor (%)" required><div className="relative"><Percent className="absolute right-3 top-2.5 w-4 h-4 text-green-400 pointer-events-none" /><input type="number" step="0.01" min="0" max="100" value={rangeForm.comissao_corretor ?? ''} onChange={e => setRangeForm(f => ({ ...f, comissao_corretor: parseFloat(e.target.value) || 0 }))} className={`${inp} pr-9`} placeholder="0.00" required /></div></FormField>
-            </div>
-          </Section>
           <Section title="Pontuação no Ranking">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <FormField label="Valor mínimo (R$)" required><input type="number" step="0.01" min="0" value={rangeForm.min_value ?? ''} onChange={e => setRangeForm(f => ({ ...f, min_value: parseFloat(e.target.value) || 0 }))} className={inp} placeholder="1000" required /></FormField>
