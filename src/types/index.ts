@@ -110,6 +110,17 @@ export interface FinancialTable {
   comissao_empresa: number;
   comissao_corretor: number;
   coeficiente: number;
+  tipo_proposta: string | null;
+  parceiro: string | null;
+  expires_at: string | null;
+  convenio_descricao: string | null;
+  disponivel_para: string | null;
+  prazo_inicial: number | null;
+  prazo_final: number | null;
+  juros_inicial: number | null;
+  juros_final: number | null;
+  coef_inicial: number | null;
+  coef_final: number | null;
   created_at: string;
   category_name?: string;
   category_multiplier?: number;

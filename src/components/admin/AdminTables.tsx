@@ -191,16 +191,19 @@ export function AdminTables() {
     if (!tableForm.bank_id) { alert('Selecione o banco'); return; }
     if (!tableForm.category_id) { alert('Selecione a categoria'); return; }
     try {
-      const body = { name: tableForm.name, bank_id: tableForm.bank_id, convenio_id: tableForm.convenio_id, category_id: tableForm.category_id, active: tableForm.active, comissao_empresa: parseFloat(tableForm.comissao_empresa as string) || 0, comissao_corretor: parseFloat(tableForm.comissao_corretor as string) || 0, coeficiente: parseFloat(tableForm.coeficiente as string) || 0 };
-      const url = editTableId ? `/api/financial-tables/${editTableId}` : '/api/financial-tables';
-      const res = await API(url, { method: editTableId ? 'PUT' : 'POST', body: JSON.stringify(body) });
-      if (!res.ok) { const err = await res.text(); alert(`Erro ao salvar tabela: ${err}`); return; }
-      const saved = await res.json();
-      const rangePayload = {
-        tipo_proposta: tableForm.range_tipo_proposta || '',
-        parceiro: tableForm.range_parceiro || '',
+      const body = {
+        name: tableForm.name,
+        bank_id: tableForm.bank_id,
+        convenio_id: tableForm.convenio_id,
+        category_id: tableForm.category_id,
+        active: tableForm.active,
+        comissao_empresa: parseFloat(tableForm.comissao_empresa as string) || 0,
+        comissao_corretor: parseFloat(tableForm.comissao_corretor as string) || 0,
+        coeficiente: parseFloat(tableForm.coeficiente as string) || 0,
+        tipo_proposta: tableForm.range_tipo_proposta || null,
+        parceiro: tableForm.range_parceiro || null,
         expires_at: tableForm.range_expires_at || null,
-        convenio_descricao: tableForm.range_convenio_descricao || '',
+        convenio_descricao: tableForm.range_convenio_descricao || null,
         disponivel_para: tableForm.range_disponivel_para || 'todos',
         prazo_inicial: tableForm.range_prazo_inicial ? parseInt(tableForm.range_prazo_inicial) : null,
         prazo_final: tableForm.range_prazo_final ? parseInt(tableForm.range_prazo_final) : null,
@@ -208,22 +211,11 @@ export function AdminTables() {
         juros_final: tableForm.range_juros_final ? parseFloat(tableForm.range_juros_final) : null,
         coef_inicial: tableForm.range_coef_inicial ? parseFloat(tableForm.range_coef_inicial) : null,
         coef_final: tableForm.range_coef_final ? parseFloat(tableForm.range_coef_final) : null,
-        comissao_empresa: parseFloat(tableForm.comissao_empresa as string) || 0,
-        comissao_corretor: parseFloat(tableForm.comissao_corretor as string) || 0,
       };
-      if (!editTableId && saved?.id) {
-        await API('/api/commission-ranges', {
-          method: 'POST',
-          body: JSON.stringify({ ...rangePayload, financial_table_id: saved.id, min_value: 0, max_value: null, base_points: 0, multiplier: null }),
-        });
-      } else if (editTableId && editTableRangeId) {
-        await API(`/api/commission-ranges/${editTableRangeId}`, { method: 'PUT', body: JSON.stringify(rangePayload) });
-      }
-      const savedId = editTableId || saved?.id;
-      if (savedId) {
-        setRangesCache(prev => { const n = { ...prev }; delete n[savedId]; return n; });
-        await loadRanges(savedId);
-      }
+      const url = editTableId ? `/api/financial-tables/${editTableId}` : '/api/financial-tables';
+      const res = await API(url, { method: editTableId ? 'PUT' : 'POST', body: JSON.stringify(body) });
+      if (!res.ok) { const err = await res.text(); alert(`Erro ao salvar tabela: ${err}`); return; }
+      await res.json();
       setShowTableForm(false); setEditTableId(null); await load();
     } catch (err) {
       alert(`Erro inesperado: ${err instanceof Error ? err.message : String(err)}`);
@@ -452,13 +444,26 @@ export function AdminTables() {
                         <Settings className="w-3.5 h-3.5" />
                       </button>
                       <button onClick={async () => {
-                        const base = { ...EMPTY_TABLE, name: t.name, bank_id: t.bank_id || '', convenio_id: t.convenio_id || '', category_id: t.category_id || '', active: t.active, comissao_empresa: String(t.comissao_empresa ?? ''), comissao_corretor: String(t.comissao_corretor ?? ''), coeficiente: String(t.coeficiente ?? '') };
-                        const cached = rangesCache[t.id];
-                        const rs: CommissionRange[] = cached ?? await API(`/api/commission-ranges?table_id=${t.id}`).then(r => r.json()).catch(() => []);
-                        if (!cached && Array.isArray(rs)) setRangesCache(prev => ({ ...prev, [t.id]: rs }));
-                        const fr = Array.isArray(rs) ? rs[0] : undefined;
-                        setEditTableRangeId(fr?.id ?? null);
-                        setTableForm(fr ? { ...base, range_tipo_proposta: fr.tipo_proposta || '', range_parceiro: fr.parceiro || '', range_expires_at: fr.expires_at || '', range_convenio_descricao: fr.convenio_descricao || '', range_disponivel_para: fr.disponivel_para || 'todos', range_prazo_inicial: fr.prazo_inicial != null ? String(fr.prazo_inicial) : '', range_prazo_final: fr.prazo_final != null ? String(fr.prazo_final) : '', range_juros_inicial: fr.juros_inicial != null ? String(fr.juros_inicial) : '', range_juros_final: fr.juros_final != null ? String(fr.juros_final) : '', range_coef_inicial: fr.coef_inicial != null ? String(fr.coef_inicial) : '', range_coef_final: fr.coef_final != null ? String(fr.coef_final) : '' } : base);
+                        setEditTableRangeId(null);
+                        setTableForm({
+                          ...EMPTY_TABLE,
+                          name: t.name, bank_id: t.bank_id || '', convenio_id: t.convenio_id || '',
+                          category_id: t.category_id || '', active: t.active,
+                          comissao_empresa: String(t.comissao_empresa ?? ''),
+                          comissao_corretor: String(t.comissao_corretor ?? ''),
+                          coeficiente: String(t.coeficiente ?? ''),
+                          range_tipo_proposta: t.tipo_proposta || '',
+                          range_parceiro: t.parceiro || '',
+                          range_expires_at: t.expires_at || '',
+                          range_convenio_descricao: t.convenio_descricao || '',
+                          range_disponivel_para: t.disponivel_para || 'todos',
+                          range_prazo_inicial: t.prazo_inicial != null ? String(t.prazo_inicial) : '',
+                          range_prazo_final: t.prazo_final != null ? String(t.prazo_final) : '',
+                          range_juros_inicial: t.juros_inicial != null ? String(t.juros_inicial) : '',
+                          range_juros_final: t.juros_final != null ? String(t.juros_final) : '',
+                          range_coef_inicial: t.coef_inicial != null ? String(t.coef_inicial) : '',
+                          range_coef_final: t.coef_final != null ? String(t.coef_final) : '',
+                        });
                         setEditTableId(t.id); setShowTableForm(true);
                       }}
                         className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--text-3)' }}

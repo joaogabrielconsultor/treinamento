@@ -604,18 +604,30 @@ app.post('/api/financial-tables/import', auth, adminOnly, async (req, res) => {
 });
 
 app.post('/api/financial-tables', auth, adminOnly, async (req, res) => {
-  const { name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor, coeficiente } = req.body;
+  const { name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor, coeficiente,
+    tipo_proposta, parceiro, expires_at, convenio_descricao, disponivel_para,
+    prazo_inicial, prazo_final, juros_inicial, juros_final, coef_inicial, coef_final } = req.body;
   if (!name) return res.status(400).json({ error: 'Nome obrigatório' });
   const { rows } = await pool.query(
-    'INSERT INTO financial_tables (name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor, coeficiente) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
-    [name, bank_id || null, convenio_id || null, category_id || null, active !== false, comissao_empresa || 0, comissao_corretor || 0, coeficiente || 0]
+    `INSERT INTO financial_tables
+      (name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor, coeficiente,
+       tipo_proposta, parceiro, expires_at, convenio_descricao, disponivel_para,
+       prazo_inicial, prazo_final, juros_inicial, juros_final, coef_inicial, coef_final)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) RETURNING *`,
+    [name, bank_id||null, convenio_id||null, category_id||null, active!==false, comissao_empresa||0, comissao_corretor||0, coeficiente||0,
+     tipo_proposta||null, parceiro||null, expires_at||null, convenio_descricao||null, disponivel_para||'todos',
+     prazo_inicial||null, prazo_final||null, juros_inicial||null, juros_final||null, coef_inicial||null, coef_final||null]
   );
   res.json(rows[0]);
 });
 
 app.put('/api/financial-tables/:id', auth, adminOnly, async (req, res) => {
-  const { name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor, coeficiente } = req.body;
-  const fields = { name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor, coeficiente };
+  const { name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor, coeficiente,
+    tipo_proposta, parceiro, expires_at, convenio_descricao, disponivel_para,
+    prazo_inicial, prazo_final, juros_inicial, juros_final, coef_inicial, coef_final } = req.body;
+  const fields = { name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor, coeficiente,
+    tipo_proposta, parceiro, expires_at, convenio_descricao, disponivel_para,
+    prazo_inicial, prazo_final, juros_inicial, juros_final, coef_inicial, coef_final };
   const updates = [];
   const values = [];
   let i = 1;

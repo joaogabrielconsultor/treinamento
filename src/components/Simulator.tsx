@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Calculator, ChevronDown, ArrowRight, TrendingUp, Zap, SlidersHorizontal } from 'lucide-react';
-import { CommissionRange, FinancialTable, Bank, Convenio } from '../types';
+import { FinancialTable, Bank, Convenio } from '../types';
 
 const API = (p: string) =>
   fetch(p, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
@@ -54,8 +54,7 @@ export function Simulator({ onSendProposal }: SimulatorProps) {
   const [filterParceiro, setFilterParceiro] = useState('');
   const [showOptional, setShowOptional] = useState(false);
 
-  const [allRanges, setAllRanges] = useState<CommissionRange[]>([]);
-  const [tableMap, setTableMap] = useState<Record<string, FinancialTable>>({});
+  const [allTables, setAllTables] = useState<FinancialTable[]>([]);
   const [banks, setBanks] = useState<Bank[]>([]);
   const [convenios, setConvenios] = useState<Convenio[]>([]);
   const [results, setResults] = useState<SimResult[]>([]);
@@ -65,18 +64,12 @@ export function Simulator({ onSendProposal }: SimulatorProps) {
   useEffect(() => {
     async function loadData() {
       setDataLoading(true);
-      const [ranges, tables, bks, cvs] = await Promise.all([
-        API('/api/commission-ranges').then(r => r.json()),
+      const [tables, bks, cvs] = await Promise.all([
         API('/api/financial-tables').then(r => r.json()),
         API('/api/banks').then(r => r.json()),
         API('/api/convenios').then(r => r.json()),
       ]);
-      if (Array.isArray(ranges)) setAllRanges(ranges);
-      if (Array.isArray(tables)) {
-        const map: Record<string, FinancialTable> = {};
-        (tables as FinancialTable[]).forEach(t => { map[t.id] = t; });
-        setTableMap(map);
-      }
+      if (Array.isArray(tables)) setAllTables(tables as FinancialTable[]);
       if (Array.isArray(bks)) setBanks(bks);
       if (Array.isArray(cvs)) setConvenios(cvs);
       setDataLoading(false);
@@ -84,41 +77,34 @@ export function Simulator({ onSendProposal }: SimulatorProps) {
     loadData();
   }, []);
 
-  // Derived filter options based on upstream selections
   const availableTipos = useMemo(() => {
     const set = new Set<string>();
-    for (const range of allRanges) {
-      const table = tableMap[range.financial_table_id];
-      if (!table) continue;
-      if (filterConvenio && table.convenio_id !== filterConvenio) continue;
-      if (range.tipo_proposta) set.add(range.tipo_proposta);
+    for (const t of allTables) {
+      if (filterConvenio && t.convenio_id !== filterConvenio) continue;
+      if (t.tipo_proposta) set.add(t.tipo_proposta);
     }
     return Array.from(set).sort();
-  }, [allRanges, tableMap, filterConvenio]);
+  }, [allTables, filterConvenio]);
 
   const availableConvenioDescs = useMemo(() => {
     const set = new Set<string>();
-    for (const range of allRanges) {
-      const table = tableMap[range.financial_table_id];
-      if (!table) continue;
-      if (filterConvenio && table.convenio_id !== filterConvenio) continue;
-      if (filterTipoProposta && range.tipo_proposta !== filterTipoProposta) continue;
-      if (range.convenio_descricao) set.add(range.convenio_descricao);
+    for (const t of allTables) {
+      if (filterConvenio && t.convenio_id !== filterConvenio) continue;
+      if (filterTipoProposta && t.tipo_proposta !== filterTipoProposta) continue;
+      if (t.convenio_descricao) set.add(t.convenio_descricao);
     }
     return Array.from(set).sort();
-  }, [allRanges, tableMap, filterConvenio, filterTipoProposta]);
+  }, [allTables, filterConvenio, filterTipoProposta]);
 
   const availableParceiros = useMemo(() => {
     const set = new Set<string>();
-    for (const range of allRanges) {
-      const table = tableMap[range.financial_table_id];
-      if (!table) continue;
-      if (filterConvenio && table.convenio_id !== filterConvenio) continue;
-      if (filterTipoProposta && range.tipo_proposta !== filterTipoProposta) continue;
-      if (range.parceiro) set.add(range.parceiro);
+    for (const t of allTables) {
+      if (filterConvenio && t.convenio_id !== filterConvenio) continue;
+      if (filterTipoProposta && t.tipo_proposta !== filterTipoProposta) continue;
+      if (t.parceiro) set.add(t.parceiro);
     }
     return Array.from(set).sort();
-  }, [allRanges, tableMap, filterConvenio, filterTipoProposta]);
+  }, [allTables, filterConvenio, filterTipoProposta]);
 
   function resetResults() { setResults([]); setSimulated(false); }
 
@@ -129,38 +115,34 @@ export function Simulator({ onSendProposal }: SimulatorProps) {
 
     const res: SimResult[] = [];
 
-    for (const range of allRanges) {
-      const table = tableMap[range.financial_table_id];
-      if (!table) continue;
+    for (const t of allTables) {
+      if (!t.active) continue;
 
-      const coef = Number(range.coef_final ?? range.coef_inicial ?? table.coeficiente) || 0;
+      const coef = Number(t.coef_final ?? t.coef_inicial ?? t.coeficiente) || 0;
       if (!coef) continue;
 
-      // Required filters
-      if (filterConvenio && table.convenio_id !== filterConvenio) continue;
-      if (filterTipoProposta && range.tipo_proposta !== filterTipoProposta) continue;
-
-      // Optional filters
-      if (filterConvenioDesc && range.convenio_descricao !== filterConvenioDesc) continue;
-      if (filterBanco && table.bank_id !== filterBanco) continue;
-      if (filterParceiro && range.parceiro !== filterParceiro) continue;
+      if (filterConvenio && t.convenio_id !== filterConvenio) continue;
+      if (filterTipoProposta && t.tipo_proposta !== filterTipoProposta) continue;
+      if (filterConvenioDesc && t.convenio_descricao !== filterConvenioDesc) continue;
+      if (filterBanco && t.bank_id !== filterBanco) continue;
+      if (filterParceiro && t.parceiro !== filterParceiro) continue;
 
       const valor_liberado = mode === 'parcela' ? val / coef : val;
       const parcela       = mode === 'parcela' ? val       : val * coef;
 
-      const empPct = Number(range.comissao_empresa || table.comissao_empresa) || 0;
-      const corPct = Number(range.comissao_corretor || table.comissao_corretor) || 0;
+      const empPct = Number(t.comissao_empresa) || 0;
+      const corPct = Number(t.comissao_corretor) || 0;
 
       res.push({
-        key: range.id,
-        table_id: range.financial_table_id,
-        table_name: range.table_name || table.name || '',
-        bank_id: table.bank_id || '',
-        bank_name: range.bank_name || table.bank_name || '',
-        convenio_id: table.convenio_id || '',
-        convenio_name: range.convenio_name || table.convenio_name || '',
-        tipo_proposta: range.tipo_proposta || '',
-        prazo: Number(range.prazo_final ?? range.prazo_inicial) || 0,
+        key: t.id,
+        table_id: t.id,
+        table_name: t.name || '',
+        bank_id: t.bank_id || '',
+        bank_name: t.bank_name || '',
+        convenio_id: t.convenio_id || '',
+        convenio_name: t.convenio_name || '',
+        tipo_proposta: t.tipo_proposta || '',
+        prazo: Number(t.prazo_final ?? t.prazo_inicial) || 0,
         coef,
         valor_liberado,
         parcela,

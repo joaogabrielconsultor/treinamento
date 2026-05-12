@@ -167,6 +167,17 @@ async function initDb() {
     await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS comissao_empresa numeric(5,2) NOT NULL DEFAULT 0`);
     await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS comissao_corretor numeric(5,2) NOT NULL DEFAULT 0`);
     await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS coeficiente numeric(10,7) NOT NULL DEFAULT 0`);
+    await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS tipo_proposta text`);
+    await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS parceiro text`);
+    await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS expires_at date`);
+    await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS convenio_descricao text`);
+    await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS disponivel_para text NOT NULL DEFAULT 'todos'`);
+    await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS prazo_inicial integer`);
+    await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS prazo_final integer`);
+    await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS juros_inicial numeric(10,6)`);
+    await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS juros_final numeric(10,6)`);
+    await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS coef_inicial numeric(10,7)`);
+    await client.query(`ALTER TABLE financial_tables ADD COLUMN IF NOT EXISTS coef_final numeric(10,7)`);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS commission_ranges (
