@@ -534,14 +534,41 @@ export function Proposals() {
                 </div>
                 {(() => {
                   const sel = tables.find(t => t.id === form.table_id);
-                  return sel?.coeficiente ? (
-                    <div className="mt-2 flex items-center gap-2">
-                      <span className="text-[10px] font-medium" style={{ color: 'var(--text-3)' }}>Coeficiente:</span>
-                      <span className="font-mono text-[11px] px-2 py-0.5 rounded-lg" style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.25)', color: '#a78bfa' }}>
-                        {Number(sel.coeficiente).toFixed(7)}
-                      </span>
+                  if (!sel) return null;
+                  const val = parseFloat(form.value) || 0;
+                  const empPct = Number(sel.comissao_empresa) || 0;
+                  const corPct = Number(sel.comissao_corretor) || 0;
+                  const empVal = val * empPct / 100;
+                  const corVal = val * corPct / 100;
+                  const fmtBRL = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                  return (
+                    <div className="mt-3 space-y-2">
+                      {sel.coeficiente ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-medium" style={{ color: 'var(--text-3)' }}>Coeficiente:</span>
+                          <span className="font-mono text-[11px] px-2 py-0.5 rounded-lg" style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.25)', color: '#a78bfa' }}>
+                            {Number(sel.coeficiente).toFixed(7)}
+                          </span>
+                        </div>
+                      ) : null}
+                      {(empPct > 0 || corPct > 0) && (
+                        <div className="rounded-xl p-3 space-y-2" style={{ background: 'rgba(20,184,166,0.06)', border: '1px solid rgba(20,184,166,0.2)' }}>
+                          <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#14B8A6' }}>Simulação de Comissão</p>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>Empresa ({empPct}%)</p>
+                              <p className="text-sm font-bold" style={{ color: '#60a5fa' }}>{val > 0 ? fmtBRL(empVal) : '—'}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>Corretor ({corPct}%)</p>
+                              <p className="text-sm font-bold" style={{ color: '#4ade80' }}>{val > 0 ? fmtBRL(corVal) : '—'}</p>
+                            </div>
+                          </div>
+                          {val <= 0 && <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>Preencha o valor no passo anterior para ver o cálculo</p>}
+                        </div>
+                      )}
                     </div>
-                  ) : null;
+                  );
                 })()}
               </Field>
             </>
