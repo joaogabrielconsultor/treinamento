@@ -18,6 +18,7 @@ import { AdminProposals } from './components/admin/AdminProposals';
 import { AdminReports } from './components/admin/AdminReports';
 import { LoginBancos } from './components/LoginBancos';
 import { Proposals } from './components/Proposals';
+import { Simulator, SimPrefill } from './components/Simulator';
 import { Ranking } from './components/Ranking';
 import { Production } from './components/Production';
 import { useAuth } from './hooks/useAuth';
@@ -41,6 +42,7 @@ function AppInner() {
   const currentEnrollment = enrollments.find((e) => e.course_id === selectedCourseId) ?? null;
   const { progress: lessonProgress, completeLesson } = useLessonProgress(user?.id ?? null, selectedCourseId);
   const { isAdmin } = useIsAdmin(user);
+  const [simPrefill, setSimPrefill] = useState<SimPrefill | null>(null);
 
   if (authLoading) {
     return (
@@ -174,7 +176,10 @@ function AppInner() {
         {currentView === 'admin-proposals'        && isAdmin && <AdminProposals />}
         {currentView === 'admin-reports'           && isAdmin && <AdminReports />}
         {currentView === 'login-bancos' && <LoginBancos isAdmin={isAdmin} />}
-        {currentView === 'proposals'  && <Proposals />}
+        {currentView === 'proposals'  && <Proposals prefill={simPrefill} onClearPrefill={() => setSimPrefill(null)} />}
+        {currentView === 'simulator'  && (
+          <Simulator onSendProposal={data => { setSimPrefill(data); navigate('proposals'); }} />
+        )}
         {currentView === 'ranking'    && <Ranking userId={user.id} />}
         {currentView === 'production' && <Production isAdmin={isAdmin} />}
       </main>

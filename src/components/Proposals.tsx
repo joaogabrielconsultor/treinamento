@@ -1,4 +1,5 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback, useRef } from 'react';
+import { SimPrefill } from './Simulator';
 import { Plus, Search, FileText, ChevronDown, CheckCircle, Clock, DollarSign, XCircle, Edit2, User, CreditCard, ChevronRight, AlertTriangle } from 'lucide-react';
 import { Proposal, ProposalStatus, FinancialTable, Bank, Convenio, Product } from '../types';
 import { Modal } from './ui/Modal';
@@ -57,7 +58,12 @@ function Field({ label, children, error }: { label: string; children: React.Reac
   );
 }
 
-export function Proposals() {
+interface ProposalsProps {
+  prefill?: SimPrefill | null;
+  onClearPrefill?: () => void;
+}
+
+export function Proposals({ prefill, onClearPrefill }: ProposalsProps = {}) {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -81,6 +87,10 @@ export function Proposals() {
   const [dupAlert, setDupAlert] = useState<string | null>(null);
   const [checkingDup, setCheckingDup] = useState(false);
 
+  // Refs para o prefill do simulador (refs pois a cascata usa closures)
+  const pendingBankIdRef = useRef<string | null>(null);
+  const pendingTableIdRef = useRef<string | null>(null);
+
   async function load() {
     setLoading(true);
     const [pr, cv, pd] = await Promise.all([
@@ -102,7 +112,12 @@ export function Proposals() {
     setLoadingBanks(true);
     API(`/api/banks?convenio_id=${form.convenio_id}`).then(r => r.json()).then(d => {
       setBanks(Array.isArray(d) ? d : []);
-      setForm(f => ({ ...f, bank_id: '', table_id: '' }));
+      const pending = pendingBankIdRef.current;
+      if (pending) {
+        setForm(f => ({ ...f, bank_id: pending, table_id: '' }));
+      } else {
+        setForm(f => ({ ...f, bank_id: '', table_id: '' }));
+      }
       setLoadingBanks(false);
     });
   }, [form.convenio_id]);
@@ -113,10 +128,32 @@ export function Proposals() {
     setLoadingTables(true);
     API(`/api/financial-tables?convenio_id=${form.convenio_id}&bank_id=${form.bank_id}`).then(r => r.json()).then(d => {
       setTables(Array.isArray(d) ? d : []);
-      setForm(f => ({ ...f, table_id: '' }));
+      const pending = pendingTableIdRef.current;
+      if (pending) {
+        setForm(f => ({ ...f, table_id: pending }));
+        pendingTableIdRef.current = null;
+      } else {
+        setForm(f => ({ ...f, table_id: '' }));
+      }
       setLoadingTables(false);
     });
   }, [form.bank_id]);
+
+  // Prefill vindo do Simulador
+  useEffect(() => {
+    if (!prefill) return;
+    pendingBankIdRef.current = prefill.bank_id || null;
+    pendingTableIdRef.current = prefill.table_id || null;
+    setForm({ ...EMPTY_FORM, value: prefill.value || '', convenio_id: prefill.convenio_id || '' });
+    setEditId(null);
+    setStep(0);
+    setErrors({});
+    setDupAlert(null);
+    setBanks([]);
+    setTables([]);
+    setShowForm(true);
+    onClearPrefill?.();
+  }, [prefill]);
 
   // Duplicate proposal number check (debounced)
   const checkDuplicate = useCallback(async (num: string, excludeId?: string) => {

@@ -263,6 +263,7 @@ export type ViewType =
   | 'login-bancos'
   | 'admin-personalizacao'
   | 'proposals'
+  | 'simulator'
   | 'ranking'
   | 'production'
   | 'admin-proposals'
