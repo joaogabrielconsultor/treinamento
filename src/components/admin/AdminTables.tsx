@@ -10,7 +10,16 @@ const API = (p: string, opts?: RequestInit) =>
 const inp = 'input-cyber w-full px-3 py-2.5 text-sm rounded-xl';
 const inpSm = 'input-cyber w-full px-3 py-2 text-xs rounded-xl';
 
-const EMPTY_TABLE = { name: '', bank_id: '', convenio_id: '', category_id: '', active: true, comissao_empresa: '', comissao_corretor: '', coeficiente: '' };
+const EMPTY_TABLE = {
+  name: '', bank_id: '', convenio_id: '', category_id: '', active: true,
+  comissao_empresa: '', comissao_corretor: '', coeficiente: '',
+  range_tipo_proposta: '', range_parceiro: '', range_expires_at: '',
+  range_convenio_descricao: '', range_disponivel_para: 'todos',
+  range_prazo_inicial: '', range_prazo_final: '',
+  range_juros_inicial: '', range_juros_final: '',
+  range_coef_inicial: '', range_coef_final: '',
+  range_comissao_empresa: '', range_comissao_corretor: '',
+};
 const EMPTY_RANGE: Partial<CommissionRange> = {
   financial_table_id: '', tipo_proposta: '', expires_at: null, convenio_descricao: '', parceiro: '',
   prazo_inicial: undefined, prazo_final: undefined, juros_inicial: undefined, juros_final: undefined,
@@ -163,7 +172,32 @@ export function AdminTables() {
     if (!tableForm.category_id) { alert('Selecione a categoria'); return; }
     const body = { name: tableForm.name, bank_id: tableForm.bank_id, convenio_id: tableForm.convenio_id, category_id: tableForm.category_id, active: tableForm.active, comissao_empresa: parseFloat(tableForm.comissao_empresa as string) || 0, comissao_corretor: parseFloat(tableForm.comissao_corretor as string) || 0, coeficiente: parseFloat(tableForm.coeficiente as string) || 0 };
     const url = editTableId ? `/api/financial-tables/${editTableId}` : '/api/financial-tables';
-    await API(url, { method: editTableId ? 'PUT' : 'POST', body: JSON.stringify(body) });
+    const saved = await API(url, { method: editTableId ? 'PUT' : 'POST', body: JSON.stringify(body) }).then(r => r.json());
+    if (!editTableId && saved?.id) {
+      await API('/api/commission-ranges', {
+        method: 'POST',
+        body: JSON.stringify({
+          financial_table_id: saved.id,
+          tipo_proposta: tableForm.range_tipo_proposta || '',
+          parceiro: tableForm.range_parceiro || '',
+          expires_at: tableForm.range_expires_at || null,
+          convenio_descricao: tableForm.range_convenio_descricao || '',
+          disponivel_para: tableForm.range_disponivel_para || 'todos',
+          prazo_inicial: tableForm.range_prazo_inicial ? parseInt(tableForm.range_prazo_inicial) : null,
+          prazo_final: tableForm.range_prazo_final ? parseInt(tableForm.range_prazo_final) : null,
+          juros_inicial: tableForm.range_juros_inicial ? parseFloat(tableForm.range_juros_inicial) : null,
+          juros_final: tableForm.range_juros_final ? parseFloat(tableForm.range_juros_final) : null,
+          coef_inicial: tableForm.range_coef_inicial ? parseFloat(tableForm.range_coef_inicial) : null,
+          coef_final: tableForm.range_coef_final ? parseFloat(tableForm.range_coef_final) : null,
+          comissao_empresa: parseFloat(tableForm.range_comissao_empresa) || 0,
+          comissao_corretor: parseFloat(tableForm.range_comissao_corretor) || 0,
+          min_value: 0,
+          max_value: null,
+          base_points: 0,
+          multiplier: null,
+        }),
+      });
+    }
     setShowTableForm(false); setEditTableId(null); await load();
   }
 
@@ -472,19 +506,62 @@ export function AdminTables() {
       )}
 
       {/* Table form modal */}
-      <Modal open={showTableForm} onClose={() => setShowTableForm(false)} title={editTableId ? 'Editar Tabela' : 'Nova Tabela'} size="lg"
+      <Modal open={showTableForm} onClose={() => setShowTableForm(false)} title={editTableId ? 'Editar Tabela' : 'Nova Tabela'} size={editTableId ? 'lg' : '2xl'}
         footer={<div className="flex gap-3"><button type="button" onClick={() => setShowTableForm(false)} className={btnCancel}>Cancelar</button><button type="submit" form="modal-table-form" className={btnPrimary} style={primaryBg}><Save className="w-4 h-4 inline mr-1" />{editTableId ? 'Salvar' : 'Criar'}</button></div>}>
-        <form id="modal-table-form" onSubmit={saveTable} className="space-y-4">
-          <div><Label text="Nome da Tabela" required /><input value={tableForm.name} onChange={e => setTableForm(f => ({ ...f, name: e.target.value }))} className={inp} required placeholder="Ex: APROVAMAIS NEO_096-299_318661 - CC-CB" /></div>
-          <div><Label text="Convênio" required /><div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" /><select value={tableForm.convenio_id} onChange={e => setTableForm(f => ({ ...f, convenio_id: e.target.value }))} className={`${inp} appearance-none pr-8`}><option value="">Selecione o convênio</option>{convenios.map(cv => <option key={cv.id} value={cv.id}>{cv.name}</option>)}</select></div></div>
-          <div><Label text="Banco" required /><div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" /><select value={tableForm.bank_id} onChange={e => setTableForm(f => ({ ...f, bank_id: e.target.value }))} className={`${inp} appearance-none pr-8`}><option value="">Selecione o banco</option>{banks.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div></div>
-          <div><Label text="Categoria" required /><div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" /><select value={tableForm.category_id} onChange={e => setTableForm(f => ({ ...f, category_id: e.target.value }))} className={`${inp} appearance-none pr-8`}><option value="">Selecione a categoria</option>{categories.map(c => <option key={c.id} value={c.id}>{c.name} (×{c.multiplier})</option>)}</select></div></div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><Label text="Comissão Empresa (%)" /><input type="number" step="0.01" min="0" max="100" value={tableForm.comissao_empresa} onChange={e => setTableForm(f => ({ ...f, comissao_empresa: e.target.value }))} className={inp} placeholder="0.00" /></div>
-            <div><Label text="Comissão Corretor (%)" /><input type="number" step="0.01" min="0" max="100" value={tableForm.comissao_corretor} onChange={e => setTableForm(f => ({ ...f, comissao_corretor: e.target.value }))} className={inp} placeholder="0.00" /></div>
-          </div>
-          <div><Label text="Coeficiente" /><input type="number" step="0.0000001" min="0" value={tableForm.coeficiente} onChange={e => setTableForm(f => ({ ...f, coeficiente: e.target.value }))} className={`${inp} font-mono`} placeholder="0.0000000" /></div>
-          <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={tableForm.active} onChange={e => setTableForm(f => ({ ...f, active: e.target.checked }))} className="w-4 h-4 rounded" /><span className="text-sm" style={{ color: 'var(--text-2)' }}>Tabela ativa</span></label>
+        <form id="modal-table-form" onSubmit={saveTable} className="space-y-5">
+          <Section title="Dados da Tabela">
+            <div className="space-y-4">
+              <div><Label text="Nome da Tabela" required /><input value={tableForm.name} onChange={e => setTableForm(f => ({ ...f, name: e.target.value }))} className={inp} required placeholder="Ex: APROVAMAIS NEO_096-299_318661 - CC-CB" /></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div><Label text="Convênio" required /><div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" /><select value={tableForm.convenio_id} onChange={e => setTableForm(f => ({ ...f, convenio_id: e.target.value }))} className={`${inp} appearance-none pr-8`}><option value="">Selecione o convênio</option>{convenios.map(cv => <option key={cv.id} value={cv.id}>{cv.name}</option>)}</select></div></div>
+                <div><Label text="Banco" required /><div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" /><select value={tableForm.bank_id} onChange={e => setTableForm(f => ({ ...f, bank_id: e.target.value }))} className={`${inp} appearance-none pr-8`}><option value="">Selecione o banco</option>{banks.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div></div>
+              </div>
+              <div><Label text="Categoria" required /><div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" /><select value={tableForm.category_id} onChange={e => setTableForm(f => ({ ...f, category_id: e.target.value }))} className={`${inp} appearance-none pr-8`}><option value="">Selecione a categoria</option>{categories.map(c => <option key={c.id} value={c.id}>{c.name} (×{c.multiplier})</option>)}</select></div></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label text="Comissão Empresa (%)" /><input type="number" step="0.01" min="0" max="100" value={tableForm.comissao_empresa} onChange={e => setTableForm(f => ({ ...f, comissao_empresa: e.target.value }))} className={inp} placeholder="0.00" /></div>
+                <div><Label text="Comissão Corretor (%)" /><input type="number" step="0.01" min="0" max="100" value={tableForm.comissao_corretor} onChange={e => setTableForm(f => ({ ...f, comissao_corretor: e.target.value }))} className={inp} placeholder="0.00" /></div>
+              </div>
+              <div><Label text="Coeficiente" /><input type="number" step="0.0000001" min="0" value={tableForm.coeficiente} onChange={e => setTableForm(f => ({ ...f, coeficiente: e.target.value }))} className={`${inp} font-mono`} placeholder="0.0000000" /></div>
+              <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={tableForm.active} onChange={e => setTableForm(f => ({ ...f, active: e.target.checked }))} className="w-4 h-4 rounded" /><span className="text-sm" style={{ color: 'var(--text-2)' }}>Tabela ativa</span></label>
+            </div>
+          </Section>
+
+          {!editTableId && (
+            <>
+              <Section title="Dados da Proposta (faixa inicial)">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <FormField label="Tipo de proposta"><input value={tableForm.range_tipo_proposta} onChange={e => setTableForm(f => ({ ...f, range_tipo_proposta: e.target.value }))} className={inp} placeholder="Refinanciamento, Novo..." /></FormField>
+                  <FormField label="Parceiro"><input value={tableForm.range_parceiro} onChange={e => setTableForm(f => ({ ...f, range_parceiro: e.target.value }))} className={inp} /></FormField>
+                  <FormField label="Data de expiração"><input type="date" value={tableForm.range_expires_at} onChange={e => setTableForm(f => ({ ...f, range_expires_at: e.target.value }))} className={inp} /></FormField>
+                  <FormField label="Descrição do convênio" className="md:col-span-2"><input value={tableForm.range_convenio_descricao} onChange={e => setTableForm(f => ({ ...f, range_convenio_descricao: e.target.value }))} className={inp} /></FormField>
+                  <FormField label="Disponível para">
+                    <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+                      <select value={tableForm.range_disponivel_para} onChange={e => setTableForm(f => ({ ...f, range_disponivel_para: e.target.value }))} className={`${inp} appearance-none pr-8`}>
+                        <option value="todos">Todos</option><option value="corretor">Apenas corretor</option><option value="empresa">Apenas empresa</option>
+                      </select></div>
+                  </FormField>
+                </div>
+              </Section>
+
+              <Section title="Prazo e Juros / Coeficiente">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <FormField label="Prazo inicial (meses)"><input type="number" min="0" value={tableForm.range_prazo_inicial} onChange={e => setTableForm(f => ({ ...f, range_prazo_inicial: e.target.value }))} className={inp} placeholder="12" /></FormField>
+                  <FormField label="Prazo final (meses)"><input type="number" min="0" value={tableForm.range_prazo_final} onChange={e => setTableForm(f => ({ ...f, range_prazo_final: e.target.value }))} className={inp} placeholder="96" /></FormField>
+                  <FormField label="Juros inicial (% a.m.)"><input type="number" step="0.0001" min="0" value={tableForm.range_juros_inicial} onChange={e => setTableForm(f => ({ ...f, range_juros_inicial: e.target.value }))} className={inp} placeholder="1.80" /></FormField>
+                  <FormField label="Juros final (% a.m.)"><input type="number" step="0.0001" min="0" value={tableForm.range_juros_final} onChange={e => setTableForm(f => ({ ...f, range_juros_final: e.target.value }))} className={inp} placeholder="2.14" /></FormField>
+                  <FormField label="Coef. inicial"><input type="number" step="0.000001" min="0" value={tableForm.range_coef_inicial} onChange={e => setTableForm(f => ({ ...f, range_coef_inicial: e.target.value }))} className={inp} placeholder="0.018741" /></FormField>
+                  <FormField label="Coef. final"><input type="number" step="0.000001" min="0" value={tableForm.range_coef_final} onChange={e => setTableForm(f => ({ ...f, range_coef_final: e.target.value }))} className={inp} placeholder="0.021893" /></FormField>
+                </div>
+              </Section>
+
+              <Section title="Comissão da Faixa">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField label="Comissão Empresa (%)"><div className="relative"><Percent className="absolute right-3 top-2.5 w-4 h-4 text-blue-400 pointer-events-none" /><input type="number" step="0.01" min="0" max="100" value={tableForm.range_comissao_empresa} onChange={e => setTableForm(f => ({ ...f, range_comissao_empresa: e.target.value }))} className={`${inp} pr-9`} placeholder="0.00" /></div></FormField>
+                  <FormField label="Comissão Corretor (%)"><div className="relative"><Percent className="absolute right-3 top-2.5 w-4 h-4 text-green-400 pointer-events-none" /><input type="number" step="0.01" min="0" max="100" value={tableForm.range_comissao_corretor} onChange={e => setTableForm(f => ({ ...f, range_comissao_corretor: e.target.value }))} className={`${inp} pr-9`} placeholder="0.00" /></div></FormField>
+                </div>
+              </Section>
+            </>
+          )}
         </form>
       </Modal>
 
