@@ -61,9 +61,10 @@ function Field({ label, children, error }: { label: string; children: React.Reac
 interface ProposalsProps {
   prefill?: SimPrefill | null;
   onClearPrefill?: () => void;
+  isAdmin?: boolean;
 }
 
-export function Proposals({ prefill, onClearPrefill }: ProposalsProps = {}) {
+export function Proposals({ prefill, onClearPrefill, isAdmin = false }: ProposalsProps = {}) {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -588,16 +589,18 @@ export function Proposals({ prefill, onClearPrefill }: ProposalsProps = {}) {
                           </span>
                         </div>
                       ) : null}
-                      {(empPct > 0 || corPct > 0) && (
+                      {corPct > 0 && (
                         <div className="rounded-xl p-3 space-y-2" style={{ background: 'rgba(20,184,166,0.06)', border: '1px solid rgba(20,184,166,0.2)' }}>
                           <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#14B8A6' }}>Simulação de Comissão</p>
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className={`grid gap-2 ${isAdmin ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                            {isAdmin && (
+                              <div>
+                                <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>Empresa ({empPct}%)</p>
+                                <p className="text-sm font-bold" style={{ color: '#60a5fa' }}>{val > 0 ? fmtBRL(empVal) : '—'}</p>
+                              </div>
+                            )}
                             <div>
-                              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>Empresa ({empPct}%)</p>
-                              <p className="text-sm font-bold" style={{ color: '#60a5fa' }}>{val > 0 ? fmtBRL(empVal) : '—'}</p>
-                            </div>
-                            <div>
-                              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>Corretor ({corPct}%)</p>
+                              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>Sua comissão ({corPct}%)</p>
                               <p className="text-sm font-bold" style={{ color: '#4ade80' }}>{val > 0 ? fmtBRL(corVal) : '—'}</p>
                             </div>
                           </div>

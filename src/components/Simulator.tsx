@@ -38,9 +38,10 @@ export interface SimPrefill {
 
 interface SimulatorProps {
   onSendProposal: (data: SimPrefill) => void;
+  isAdmin?: boolean;
 }
 
-export function Simulator({ onSendProposal }: SimulatorProps) {
+export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
   const [mode, setMode] = useState<'parcela' | 'credito'>('parcela');
   const [inputVal, setInputVal] = useState('');
 
@@ -391,7 +392,14 @@ export function Simulator({ onSendProposal }: SimulatorProps) {
               <table className="w-full">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--card-border)', background: 'rgba(0,0,0,0.12)' }}>
-                    {['Banco','Convênio','Tabela','Tipo','Prazo','Coeficiente','Valor Liberado','Parcela','Emp %','Cor %','Com. Empresa','Com. Corretor','Rentab.',''].map(h => (
+                    {[
+                      'Banco','Convênio','Tabela','Tipo','Prazo','Coeficiente',
+                      'Valor Liberado','Parcela',
+                      ...(isAdmin ? ['Emp %'] : []),
+                      'Cor %',
+                      ...(isAdmin ? ['Com. Empresa'] : []),
+                      'Com. Corretor','Rentab.',''
+                    ].map(h => (
                       <th key={h} className="text-left px-3 py-3 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
                     ))}
                   </tr>
@@ -416,9 +424,9 @@ export function Simulator({ onSendProposal }: SimulatorProps) {
                       <td className="px-3 py-3 text-[11px] num font-mono" style={{ color: '#a78bfa' }}>{r.coef.toFixed(7)}</td>
                       <td className="px-3 py-3 text-xs num font-bold" style={{ color: 'var(--text-1)' }}>{fmtBRL(r.valor_liberado)}</td>
                       <td className="px-3 py-3 text-xs num font-semibold" style={{ color: '#fbbf24' }}>{fmtBRL(r.parcela)}</td>
-                      <td className="px-3 py-3 text-xs num" style={{ color: '#60a5fa' }}>{fmtPct(r.comissao_empresa_pct)}</td>
+                      {isAdmin && <td className="px-3 py-3 text-xs num" style={{ color: '#60a5fa' }}>{fmtPct(r.comissao_empresa_pct)}</td>}
                       <td className="px-3 py-3 text-xs num" style={{ color: '#4ade80' }}>{fmtPct(r.comissao_corretor_pct)}</td>
-                      <td className="px-3 py-3 text-xs num font-semibold" style={{ color: '#60a5fa' }}>{fmtBRL(r.comissao_empresa_val)}</td>
+                      {isAdmin && <td className="px-3 py-3 text-xs num font-semibold" style={{ color: '#60a5fa' }}>{fmtBRL(r.comissao_empresa_val)}</td>}
                       <td className="px-3 py-3 text-xs num font-bold" style={{ color: '#4ade80' }}>{fmtBRL(r.comissao_corretor_val)}</td>
                       <td className="px-3 py-3 text-xs num" style={{ color: r.rentabilidade > 0 ? '#f59e0b' : 'var(--text-3)' }}>{fmtPct(r.rentabilidade)}</td>
                       <td className="px-3 py-3">

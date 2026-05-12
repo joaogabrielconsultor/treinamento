@@ -176,9 +176,9 @@ function AppInner() {
         {currentView === 'admin-proposals'        && isAdmin && <AdminProposals />}
         {currentView === 'admin-reports'           && isAdmin && <AdminReports />}
         {currentView === 'login-bancos' && <LoginBancos isAdmin={isAdmin} />}
-        {currentView === 'proposals'  && <Proposals prefill={simPrefill} onClearPrefill={() => setSimPrefill(null)} />}
+        {currentView === 'proposals'  && <Proposals prefill={simPrefill} onClearPrefill={() => setSimPrefill(null)} isAdmin={isAdmin} />}
         {currentView === 'simulator'  && (
-          <Simulator onSendProposal={data => { setSimPrefill(data); navigate('proposals'); }} />
+          <Simulator onSendProposal={data => { setSimPrefill(data); navigate('proposals'); }} isAdmin={isAdmin} />
         )}
         {currentView === 'ranking'    && <Ranking userId={user.id} />}
         {currentView === 'production' && <Production isAdmin={isAdmin} />}
