@@ -45,17 +45,32 @@ function downloadCSV(content: string, filename: string) {
 }
 
 function downloadTemplateTabelas() {
+  const sep = ';';
   downloadCSV(
-    ['nome,banco,convenio,categoria,comissao_empresa,comissao_corretor,coeficiente,ativo',
-     'APROVAMAIS_001 - INSS,Banco do Brasil,INSS,Alta Comissão,3.50,2.00,0.0409485,true'].join('\r\n'),
+    [
+      ['nome','banco','convenio','categoria','comissao_empresa','comissao_corretor','coeficiente','ativo',
+       'tipo_proposta','parceiro','expires_at','convenio_descricao','disponivel_para',
+       'prazo_inicial','prazo_final','juros_inicial','juros_final','coef_inicial','coef_final',
+       'faixa_comissao_empresa','faixa_comissao_corretor'].join(sep),
+      ['APROVAMAIS_001 - INSS','Banco do Brasil','INSS','Alta Comissão','3.50','2.00','0.0409485','true',
+       'Refinanciamento','','','','todos',
+       '12','96','1.80','2.14','0.018741','0.021893',
+       '3.50','2.00'].join(sep),
+    ].join('\r\n'),
     'modelo_tabelas.csv'
   );
 }
 
 function downloadTemplateFaixas(tableName = '') {
+  const sep = ';';
   downloadCSV(
-    ['tipo_proposta,prazo_inicial,prazo_final,juros_inicial,juros_final,coef_inicial,coef_final,comissao_empresa,comissao_corretor,disponivel_para,min_value,max_value,base_points,multiplier,parceiro,expires_at',
-     'Refinanciamento,12,96,1.80,2.14,0.018741,0.021893,3.50,2.00,todos,1000,50000,60,,,'].join('\r\n'),
+    [
+      ['tipo_proposta','prazo_inicial','prazo_final','juros_inicial','juros_final',
+       'coef_inicial','coef_final','comissao_empresa','comissao_corretor',
+       'disponivel_para','min_value','max_value','base_points','multiplier','parceiro','expires_at'].join(sep),
+      ['Refinanciamento','12','96','1.80','2.14','0.018741','0.021893','3.50','2.00',
+       'todos','1000','50000','60','','',''].join(sep),
+    ].join('\r\n'),
     `modelo_faixas${tableName ? '_' + tableName.replace(/[^a-z0-9]/gi, '_') : ''}.csv`
   );
 }
@@ -63,9 +78,11 @@ function downloadTemplateFaixas(tableName = '') {
 function parseCSV(text: string): Record<string, string>[] {
   const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return [];
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^﻿/, '').replace(/^"|"$/g, ''));
+  const rawFirst = lines[0].replace(/^﻿/, '');
+  const sep = rawFirst.includes(';') ? ';' : ',';
+  const headers = rawFirst.split(sep).map(h => h.trim().replace(/^"|"$/g, ''));
   return lines.slice(1).filter(l => l.trim()).map(line => {
-    const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+    const values = line.split(sep).map(v => v.trim().replace(/^"|"$/g, ''));
     return Object.fromEntries(headers.map((h, i) => [h, values[i] ?? '']));
   });
 }
@@ -260,7 +277,27 @@ export function AdminTables() {
   async function doImportTables() {
     if (!importTableRows.length) return;
     setImportingTables(true);
-    const items = importTableRows.map(row => ({ ...row, name: row.nome, bank_id: banks.find(b => b.name.toLowerCase() === (row.banco || '').toLowerCase())?.id || null, convenio_id: convenios.find(c => c.name.toLowerCase() === (row.convenio || '').toLowerCase())?.id || null, category_id: categories.find(c => c.name.toLowerCase() === (row.categoria || '').toLowerCase())?.id || null, active: row.ativo }));
+    const items = importTableRows.map(row => ({
+      ...row,
+      name: row.nome,
+      bank_id: banks.find(b => b.name.toLowerCase() === (row.banco || '').toLowerCase())?.id || null,
+      convenio_id: convenios.find(c => c.name.toLowerCase() === (row.convenio || '').toLowerCase())?.id || null,
+      category_id: categories.find(c => c.name.toLowerCase() === (row.categoria || '').toLowerCase())?.id || null,
+      active: row.ativo,
+      range_tipo_proposta: row.tipo_proposta || '',
+      range_parceiro: row.parceiro || '',
+      range_expires_at: row.expires_at || null,
+      range_convenio_descricao: row.convenio_descricao || '',
+      range_disponivel_para: row.disponivel_para || 'todos',
+      range_prazo_inicial: row.prazo_inicial || null,
+      range_prazo_final: row.prazo_final || null,
+      range_juros_inicial: row.juros_inicial || null,
+      range_juros_final: row.juros_final || null,
+      range_coef_inicial: row.coef_inicial || null,
+      range_coef_final: row.coef_final || null,
+      range_comissao_empresa: row.faixa_comissao_empresa || row.comissao_empresa || '0',
+      range_comissao_corretor: row.faixa_comissao_corretor || row.comissao_corretor || '0',
+    }));
     const result = await API('/api/financial-tables/import', { method: 'POST', body: JSON.stringify({ rows: items }) }).then(r => r.json());
     if (result.errors?.length) setImportTableErrors(result.errors.map((e: { row: string; error: string }) => `${e.row}: ${e.error}`));
     if (result.imported > 0) { setShowImportTables(false); setImportTableRows([]); if (fileTablesRef.current) fileTablesRef.current.value = ''; await load(); alert(`${result.imported} tabela(s) importada(s)!`); }

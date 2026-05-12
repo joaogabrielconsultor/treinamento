@@ -562,14 +562,39 @@ app.post('/api/financial-tables/import', auth, adminOnly, async (req, res) => {
     if (!item.convenio_id) { errors.push({ row: item.nome || '?', error: `convênio "${item.convenio}" não encontrado` }); continue; }
     if (!item.category_id) { errors.push({ row: item.nome || '?', error: `categoria "${item.categoria}" não encontrada` }); continue; }
     try {
-      await pool.query(
-        'INSERT INTO financial_tables (name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor, coeficiente) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
+      const { rows: tRows } = await pool.query(
+        'INSERT INTO financial_tables (name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor, coeficiente) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id',
         [item.name, item.bank_id, item.convenio_id, item.category_id,
          item.active !== 'false' && item.active !== false,
          parseFloat(item.comissao_empresa) || 0,
          parseFloat(item.comissao_corretor) || 0,
          parseFloat(item.coeficiente) || 0]
       );
+      const tableId = tRows[0].id;
+      await pool.query(`
+        INSERT INTO commission_ranges (
+          financial_table_id, tipo_proposta, parceiro, expires_at, convenio_descricao,
+          disponivel_para, prazo_inicial, prazo_final, juros_inicial, juros_final,
+          coef_inicial, coef_final, comissao_empresa, comissao_corretor,
+          min_value, max_value, base_points
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+      `, [
+        tableId,
+        item.range_tipo_proposta || '',
+        item.range_parceiro || '',
+        item.range_expires_at || null,
+        item.range_convenio_descricao || '',
+        item.range_disponivel_para || 'todos',
+        item.range_prazo_inicial ? parseInt(item.range_prazo_inicial) : null,
+        item.range_prazo_final ? parseInt(item.range_prazo_final) : null,
+        item.range_juros_inicial ? parseFloat(item.range_juros_inicial) : null,
+        item.range_juros_final ? parseFloat(item.range_juros_final) : null,
+        item.range_coef_inicial ? parseFloat(item.range_coef_inicial) : null,
+        item.range_coef_final ? parseFloat(item.range_coef_final) : null,
+        parseFloat(item.range_comissao_empresa) || 0,
+        parseFloat(item.range_comissao_corretor) || 0,
+        0, null, 0,
+      ]);
       imported++;
     } catch (err) {
       errors.push({ row: item.nome || '?', error: err.message });
