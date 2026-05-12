@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Plus, Trash2, Edit2, ChevronDown, ChevronRight, Save, Settings, Upload, Download, Filter, X, Star, Percent, AlertTriangle } from 'lucide-react';
-import { FinancialTable, TableCategory, CommissionRange, ScoringRule, Bank, Convenio } from '../../types';
+import { FinancialTable, TableCategory, CommissionRange, ScoringRule, Bank, Convenio, Product } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
 import { Pagination } from '../ui/Pagination';
 
@@ -107,6 +107,7 @@ export function AdminTables() {
   const [banks, setBanks] = useState<Bank[]>([]);
   const [convenios, setConvenios] = useState<Convenio[]>([]);
   const [categories, setCategories] = useState<TableCategory[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -150,16 +151,18 @@ export function AdminTables() {
 
   async function load() {
     setLoading(true);
-    const [t, c, b, cv] = await Promise.all([
+    const [t, c, b, cv, pr] = await Promise.all([
       API('/api/financial-tables').then(r => r.json()),
       API('/api/categories').then(r => r.json()),
       API('/api/banks').then(r => r.json()),
       API('/api/convenios').then(r => r.json()),
+      API('/api/products').then(r => r.json()),
     ]);
     setTables(Array.isArray(t) ? t : []);
     setCategories(Array.isArray(c) ? c : []);
     setBanks(Array.isArray(b) ? b : []);
     setConvenios(Array.isArray(cv) ? cv : []);
+    setProducts(Array.isArray(pr) ? pr : []);
     setLoading(false);
   }
 
@@ -574,7 +577,14 @@ export function AdminTables() {
           <>
               <Section title={editTableId ? 'Dados da Proposta (faixa vinculada)' : 'Dados da Proposta (faixa inicial)'}>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <FormField label="Tipo de proposta"><input value={tableForm.range_tipo_proposta} onChange={e => setTableForm(f => ({ ...f, range_tipo_proposta: e.target.value }))} className={inp} placeholder="Refinanciamento, Novo..." /></FormField>
+                  <FormField label="Produto / Tipo de proposta">
+                    <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+                      <select value={tableForm.range_tipo_proposta} onChange={e => setTableForm(f => ({ ...f, range_tipo_proposta: e.target.value }))} className={`${inp} appearance-none pr-8`}>
+                        <option value="">Selecione o produto</option>
+                        {products.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                      </select>
+                    </div>
+                  </FormField>
                   <FormField label="Parceiro"><input value={tableForm.range_parceiro} onChange={e => setTableForm(f => ({ ...f, range_parceiro: e.target.value }))} className={inp} /></FormField>
                   <FormField label="Data de expiração"><input type="date" value={tableForm.range_expires_at} onChange={e => setTableForm(f => ({ ...f, range_expires_at: e.target.value }))} className={inp} /></FormField>
                   <FormField label="Descrição do convênio" className="md:col-span-2"><input value={tableForm.range_convenio_descricao} onChange={e => setTableForm(f => ({ ...f, range_convenio_descricao: e.target.value }))} className={inp} /></FormField>

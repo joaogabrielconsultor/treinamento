@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { Search, Download, Filter } from 'lucide-react';
-import { Proposal, FinancialTable } from '../../types';
+import { Proposal, FinancialTable, Bank, Convenio, Product } from '../../types';
 
 const API = (p: string) =>
   fetch(p, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
@@ -14,18 +14,27 @@ export function AdminReports() {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [tables, setTables] = useState<FinancialTable[]>([]);
   const [users, setUsers] = useState<UserOption[]>([]);
+  const [banks, setBanks] = useState<Bank[]>([]);
+  const [convenios, setConvenios] = useState<Convenio[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
-    bank: '', table_id: '', user_id: '', convenio: '', product: '', status: '', start_date: '', end_date: '',
+    bank_id: '', table_id: '', user_id: '', convenio_id: '', product_id: '', status: '', start_date: '', end_date: '',
   });
 
   async function load() {
-    const [tr, us] = await Promise.all([
+    const [tr, us, bk, cv, pr] = await Promise.all([
       API('/api/financial-tables').then(r => r.json()),
       API('/api/admin/users').then(r => r.json()),
+      API('/api/banks').then(r => r.json()),
+      API('/api/convenios').then(r => r.json()),
+      API('/api/products').then(r => r.json()),
     ]);
     setTables(Array.isArray(tr) ? tr : []);
     setUsers(Array.isArray(us) ? us : []);
+    setBanks(Array.isArray(bk) ? bk : []);
+    setConvenios(Array.isArray(cv) ? cv : []);
+    setProducts(Array.isArray(pr) ? pr : []);
   }
 
   async function search() {
@@ -90,7 +99,10 @@ export function AdminReports() {
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-1">Banco</label>
-            <input value={F.bank} onChange={e => setF('bank', e.target.value)} className={inp} placeholder="Filtrar por banco" />
+            <select value={F.bank_id} onChange={e => setF('bank_id', e.target.value)} className={inp}>
+              <option value="">Todos</option>
+              {banks.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-1">Tabela</label>
@@ -101,11 +113,17 @@ export function AdminReports() {
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-1">Produto</label>
-            <input value={F.product} onChange={e => setF('product', e.target.value)} className={inp} placeholder="Filtrar por produto" />
+            <select value={F.product_id} onChange={e => setF('product_id', e.target.value)} className={inp}>
+              <option value="">Todos</option>
+              {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-1">Convênio</label>
-            <input value={F.convenio} onChange={e => setF('convenio', e.target.value)} className={inp} placeholder="Filtrar por convênio" />
+            <select value={F.convenio_id} onChange={e => setF('convenio_id', e.target.value)} className={inp}>
+              <option value="">Todos</option>
+              {convenios.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-1">Status</label>

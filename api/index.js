@@ -882,19 +882,22 @@ app.get('/api/proposals/check-number', auth, async (req, res) => {
 // ─── PROPOSTAS ────────────────────────────────────────────────────────────────
 app.get('/api/proposals', auth, async (req, res) => {
   const isAdmin = req.user.role === 'admin';
-  const { bank, table_id, convenio, product, status, start_date, end_date, user_id } = req.query;
+  const { bank, bank_id, table_id, convenio, convenio_id, product, product_id, status, start_date, end_date, user_id } = req.query;
   const conditions = [];
   const values = [];
   let i = 1;
   if (!isAdmin) { conditions.push(`p.user_id = $${i++}`); values.push(req.user.id); }
   else if (user_id) { conditions.push(`p.user_id = $${i++}`); values.push(user_id); }
-  if (bank)       { conditions.push(`p.bank ILIKE $${i++}`);      values.push(`%${bank}%`); }
-  if (table_id)   { conditions.push(`p.table_id = $${i++}`);      values.push(table_id); }
-  if (convenio)   { conditions.push(`p.convenio ILIKE $${i++}`);  values.push(`%${convenio}%`); }
-  if (product)    { conditions.push(`p.product ILIKE $${i++}`);   values.push(`%${product}%`); }
-  if (status)     { conditions.push(`p.status = $${i++}`);        values.push(status); }
-  if (start_date) { conditions.push(`p.created_at >= $${i++}`);   values.push(start_date); }
-  if (end_date)   { conditions.push(`p.created_at <= $${i++}`);   values.push(end_date + ' 23:59:59'); }
+  if (bank_id)    { conditions.push(`p.bank_id = $${i++}`);        values.push(bank_id); }
+  else if (bank)  { conditions.push(`p.bank ILIKE $${i++}`);       values.push(`%${bank}%`); }
+  if (table_id)   { conditions.push(`p.table_id = $${i++}`);       values.push(table_id); }
+  if (convenio_id){ conditions.push(`p.convenio_id = $${i++}`);    values.push(convenio_id); }
+  else if (convenio){ conditions.push(`p.convenio ILIKE $${i++}`); values.push(`%${convenio}%`); }
+  if (product_id) { conditions.push(`p.product_id = $${i++}`);     values.push(product_id); }
+  else if (product){ conditions.push(`p.product ILIKE $${i++}`);   values.push(`%${product}%`); }
+  if (status)     { conditions.push(`p.status = $${i++}`);         values.push(status); }
+  if (start_date) { conditions.push(`p.created_at >= $${i++}`);    values.push(start_date); }
+  if (end_date)   { conditions.push(`p.created_at <= $${i++}`);    values.push(end_date + ' 23:59:59'); }
   const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
   const { rows } = await pool.query(`
     SELECT p.*, u.full_name as user_name, u.email as user_email,
