@@ -556,38 +556,66 @@ app.post('/api/financial-tables/import', auth, adminOnly, async (req, res) => {
   if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ error: 'Nenhum item' });
   const toFloat = v => parseFloat(String(v ?? '').replace(',', '.')) || 0;
   let imported = 0;
+  let updated = 0;
   const errors = [];
   for (const item of items) {
     if (!item.name) { errors.push({ row: item.nome || '?', error: 'nome obrigatório' }); continue; }
     if (!item.bank_id) { errors.push({ row: item.nome || '?', error: `banco "${item.banco}" não encontrado` }); continue; }
     if (!item.convenio_id) { errors.push({ row: item.nome || '?', error: `convênio "${item.convenio}" não encontrado` }); continue; }
     if (!item.category_id) { errors.push({ row: item.nome || '?', error: `categoria "${item.categoria}" não encontrada` }); continue; }
+    const rangeValues = [
+      item.range_tipo_proposta || '',
+      item.range_parceiro || '',
+      item.range_expires_at || null,
+      item.range_convenio_descricao || '',
+      item.range_disponivel_para || 'todos',
+      item.range_prazo_inicial ? parseInt(item.range_prazo_inicial) : null,
+      item.range_prazo_final ? parseInt(item.range_prazo_final) : null,
+      item.range_juros_inicial ? toFloat(item.range_juros_inicial) : null,
+      item.range_juros_final ? toFloat(item.range_juros_final) : null,
+      item.range_coef_inicial ? toFloat(item.range_coef_inicial) : null,
+      item.range_coef_final ? toFloat(item.range_coef_final) : null,
+      toFloat(item.range_comissao_empresa),
+      toFloat(item.range_comissao_corretor),
+    ];
     try {
-      const { rows: tRows } = await pool.query(
-        `INSERT INTO financial_tables (
-          name, bank_id, convenio_id, category_id, active,
-          comissao_empresa, comissao_corretor, coeficiente,
-          tipo_proposta, parceiro, expires_at, convenio_descricao, disponivel_para,
-          prazo_inicial, prazo_final, juros_inicial, juros_final, coef_inicial, coef_final
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) RETURNING id`,
-        [item.name, item.bank_id, item.convenio_id, item.category_id,
-         item.active !== 'false' && item.active !== false,
-         toFloat(item.comissao_empresa),
-         toFloat(item.comissao_corretor),
-         toFloat(item.coeficiente),
-         item.range_tipo_proposta || '',
-         item.range_parceiro || '',
-         item.range_expires_at || null,
-         item.range_convenio_descricao || '',
-         item.range_disponivel_para || 'todos',
-         item.range_prazo_inicial ? parseInt(item.range_prazo_inicial) : null,
-         item.range_prazo_final ? parseInt(item.range_prazo_final) : null,
-         item.range_juros_inicial ? toFloat(item.range_juros_inicial) : null,
-         item.range_juros_final ? toFloat(item.range_juros_final) : null,
-         item.range_coef_inicial ? toFloat(item.range_coef_inicial) : null,
-         item.range_coef_final ? toFloat(item.range_coef_final) : null]
+      const existing = await pool.query(
+        'SELECT id FROM financial_tables WHERE name=$1 AND bank_id=$2 AND convenio_id=$3 LIMIT 1',
+        [item.name, item.bank_id, item.convenio_id]
       );
-      const tableId = tRows[0].id;
+      let tableId;
+      if (existing.rows.length > 0) {
+        tableId = existing.rows[0].id;
+        await pool.query(
+          `UPDATE financial_tables SET
+            category_id=$1, active=$2, comissao_empresa=$3, comissao_corretor=$4, coeficiente=$5,
+            tipo_proposta=$6, parceiro=$7, expires_at=$8, convenio_descricao=$9, disponivel_para=$10,
+            prazo_inicial=$11, prazo_final=$12, juros_inicial=$13, juros_final=$14, coef_inicial=$15, coef_final=$16
+          WHERE id=$17`,
+          [item.category_id,
+           item.active !== 'false' && item.active !== false,
+           toFloat(item.comissao_empresa), toFloat(item.comissao_corretor), toFloat(item.coeficiente),
+           ...rangeValues.slice(0, 11),
+           tableId]
+        );
+        await pool.query('DELETE FROM commission_ranges WHERE financial_table_id=$1', [tableId]);
+        updated++;
+      } else {
+        const { rows: tRows } = await pool.query(
+          `INSERT INTO financial_tables (
+            name, bank_id, convenio_id, category_id, active,
+            comissao_empresa, comissao_corretor, coeficiente,
+            tipo_proposta, parceiro, expires_at, convenio_descricao, disponivel_para,
+            prazo_inicial, prazo_final, juros_inicial, juros_final, coef_inicial, coef_final
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) RETURNING id`,
+          [item.name, item.bank_id, item.convenio_id, item.category_id,
+           item.active !== 'false' && item.active !== false,
+           toFloat(item.comissao_empresa), toFloat(item.comissao_corretor), toFloat(item.coeficiente),
+           ...rangeValues.slice(0, 11)]
+        );
+        tableId = tRows[0].id;
+        imported++;
+      }
       await pool.query(`
         INSERT INTO commission_ranges (
           financial_table_id, tipo_proposta, parceiro, expires_at, convenio_descricao,
@@ -595,29 +623,12 @@ app.post('/api/financial-tables/import', auth, adminOnly, async (req, res) => {
           coef_inicial, coef_final, comissao_empresa, comissao_corretor,
           min_value, max_value, base_points
         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
-      `, [
-        tableId,
-        item.range_tipo_proposta || '',
-        item.range_parceiro || '',
-        item.range_expires_at || null,
-        item.range_convenio_descricao || '',
-        item.range_disponivel_para || 'todos',
-        item.range_prazo_inicial ? parseInt(item.range_prazo_inicial) : null,
-        item.range_prazo_final ? parseInt(item.range_prazo_final) : null,
-        item.range_juros_inicial ? toFloat(item.range_juros_inicial) : null,
-        item.range_juros_final ? toFloat(item.range_juros_final) : null,
-        item.range_coef_inicial ? toFloat(item.range_coef_inicial) : null,
-        item.range_coef_final ? toFloat(item.range_coef_final) : null,
-        toFloat(item.range_comissao_empresa),
-        toFloat(item.range_comissao_corretor),
-        0, null, 0,
-      ]);
-      imported++;
+      `, [tableId, ...rangeValues, 0, null, 0]);
     } catch (err) {
       errors.push({ row: item.nome || '?', error: err.message });
     }
   }
-  res.json({ imported, errors });
+  res.json({ imported, updated, errors });
 });
 
 app.post('/api/financial-tables', auth, adminOnly, async (req, res) => {

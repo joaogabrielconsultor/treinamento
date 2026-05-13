@@ -312,21 +312,26 @@ export function AdminTables() {
     }));
     const total = items.length;
     let totalImported = 0;
+    let totalUpdated = 0;
     const allErrors: string[] = [];
     for (let i = 0; i < items.length; i++) {
       const result = await API('/api/financial-tables/import', { method: 'POST', body: JSON.stringify({ rows: [items[i]] }) }).then(r => r.json());
       if (result.errors?.length) allErrors.push(...result.errors.map((e: { row: string; error: string }) => `${e.row}: ${e.error}`));
       totalImported += result.imported ?? 0;
+      totalUpdated += result.updated ?? 0;
       setImportDone(i + 1);
       setImportProgress(Math.round(((i + 1) / total) * 100));
     }
     if (allErrors.length) setImportTableErrors(allErrors);
-    if (totalImported > 0) {
+    if (totalImported > 0 || totalUpdated > 0) {
       setShowImportTables(false);
       setImportTableRows([]);
       if (fileTablesRef.current) fileTablesRef.current.value = '';
       await load();
-      alert(`${totalImported} tabela(s) importada(s)!`);
+      const parts = [];
+      if (totalImported > 0) parts.push(`${totalImported} nova(s) adicionada(s)`);
+      if (totalUpdated > 0) parts.push(`${totalUpdated} atualizada(s)`);
+      alert(parts.join(', ') + '!');
     }
     setImportingTables(false);
     setImportProgress(0);
