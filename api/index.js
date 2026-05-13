@@ -579,10 +579,26 @@ app.post('/api/financial-tables/import', auth, adminOnly, async (req, res) => {
       toFloat(item.range_comissao_corretor),
     ];
     try {
-      const existing = await pool.query(
-        'SELECT id FROM financial_tables WHERE name=$1 AND bank_id=$2 AND convenio_id=$3 LIMIT 1',
-        [item.name, item.bank_id, item.convenio_id]
+      // Match preciso: nome+banco+convênio+comissao_empresa+comissao_corretor
+      const csvEmpresa = toFloat(item.comissao_empresa);
+      const csvCorretor = toFloat(item.comissao_corretor);
+      let existing = await pool.query(
+        `SELECT id FROM financial_tables
+         WHERE name=$1 AND bank_id=$2 AND convenio_id=$3
+           AND ROUND(comissao_empresa::numeric,4) = ROUND($4::numeric,4)
+           AND ROUND(comissao_corretor::numeric,4) = ROUND($5::numeric,4)
+         LIMIT 1`,
+        [item.name, item.bank_id, item.convenio_id, csvEmpresa, csvCorretor]
       );
+      // Fallback: se não achou pelo match preciso, tenta match só por nome+banco+convênio
+      // mas só se houver exatamente UMA entrada (sem ambiguidade)
+      if (existing.rows.length === 0) {
+        const fallback = await pool.query(
+          'SELECT id FROM financial_tables WHERE name=$1 AND bank_id=$2 AND convenio_id=$3',
+          [item.name, item.bank_id, item.convenio_id]
+        );
+        if (fallback.rows.length === 1) existing = fallback;
+      }
       let tableId;
       if (existing.rows.length > 0) {
         tableId = existing.rows[0].id;
@@ -594,7 +610,7 @@ app.post('/api/financial-tables/import', auth, adminOnly, async (req, res) => {
           WHERE id=$17`,
           [item.category_id,
            item.active !== 'false' && item.active !== false,
-           toFloat(item.comissao_empresa), toFloat(item.comissao_corretor), toFloat(item.coeficiente),
+           csvEmpresa, csvCorretor, toFloat(item.coeficiente),
            ...rangeValues.slice(0, 11),
            tableId]
         );

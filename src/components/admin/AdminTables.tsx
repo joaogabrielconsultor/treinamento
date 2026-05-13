@@ -327,6 +327,7 @@ export function AdminTables() {
       setShowImportTables(false);
       setImportTableRows([]);
       if (fileTablesRef.current) fileTablesRef.current.value = '';
+      setRangesCache({});
       await load();
       const parts = [];
       if (totalImported > 0) parts.push(`${totalImported} nova(s) adicionada(s)`);
