@@ -554,6 +554,7 @@ app.get('/api/financial-tables', auth, async (req, res) => {
 app.post('/api/financial-tables/import', auth, adminOnly, async (req, res) => {
   const items = req.body.rows;
   if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ error: 'Nenhum item' });
+  const toFloat = v => parseFloat(String(v ?? '').replace(',', '.')) || 0;
   let imported = 0;
   const errors = [];
   for (const item of items) {
@@ -566,9 +567,9 @@ app.post('/api/financial-tables/import', auth, adminOnly, async (req, res) => {
         'INSERT INTO financial_tables (name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor, coeficiente) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id',
         [item.name, item.bank_id, item.convenio_id, item.category_id,
          item.active !== 'false' && item.active !== false,
-         parseFloat(item.comissao_empresa) || 0,
-         parseFloat(item.comissao_corretor) || 0,
-         parseFloat(item.coeficiente) || 0]
+         toFloat(item.comissao_empresa),
+         toFloat(item.comissao_corretor),
+         toFloat(item.coeficiente)]
       );
       const tableId = tRows[0].id;
       await pool.query(`
@@ -587,12 +588,12 @@ app.post('/api/financial-tables/import', auth, adminOnly, async (req, res) => {
         item.range_disponivel_para || 'todos',
         item.range_prazo_inicial ? parseInt(item.range_prazo_inicial) : null,
         item.range_prazo_final ? parseInt(item.range_prazo_final) : null,
-        item.range_juros_inicial ? parseFloat(item.range_juros_inicial) : null,
-        item.range_juros_final ? parseFloat(item.range_juros_final) : null,
-        item.range_coef_inicial ? parseFloat(item.range_coef_inicial) : null,
-        item.range_coef_final ? parseFloat(item.range_coef_final) : null,
-        parseFloat(item.range_comissao_empresa) || 0,
-        parseFloat(item.range_comissao_corretor) || 0,
+        item.range_juros_inicial ? toFloat(item.range_juros_inicial) : null,
+        item.range_juros_final ? toFloat(item.range_juros_final) : null,
+        item.range_coef_inicial ? toFloat(item.range_coef_inicial) : null,
+        item.range_coef_final ? toFloat(item.range_coef_final) : null,
+        toFloat(item.range_comissao_empresa),
+        toFloat(item.range_comissao_corretor),
         0, null, 0,
       ]);
       imported++;

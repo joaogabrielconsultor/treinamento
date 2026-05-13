@@ -79,9 +79,9 @@ function parseCSV(text: string): Record<string, string>[] {
   if (lines.length < 2) return [];
   const rawFirst = lines[0].replace(/^﻿/, '');
   const sep = rawFirst.includes(';') ? ';' : ',';
-  const headers = rawFirst.split(sep).map(h => h.trim().replace(/^"|"$/g, ''));
+  const headers = rawFirst.split(sep).map(h => h.replace(/^"|"$/g, '').trim());
   return lines.slice(1).filter(l => l.trim()).map(line => {
-    const values = line.split(sep).map(v => v.trim().replace(/^"|"$/g, ''));
+    const values = line.split(sep).map(v => v.replace(/^"|"$/g, '').trim());
     return Object.fromEntries(headers.map((h, i) => [h, values[i] ?? '']));
   });
 }
@@ -139,6 +139,8 @@ export function AdminTables() {
   const [importTableRows, setImportTableRows] = useState<Record<string, string>[]>([]);
   const [importTableErrors, setImportTableErrors] = useState<string[]>([]);
   const [importingTables, setImportingTables] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
+  const [importDone, setImportDone] = useState(0);
   const fileTablesRef = useRef<HTMLInputElement>(null);
 
   const [showImportRanges, setShowImportRanges] = useState(false);
@@ -284,6 +286,9 @@ export function AdminTables() {
   async function doImportTables() {
     if (!importTableRows.length) return;
     setImportingTables(true);
+    setImportProgress(0);
+    setImportDone(0);
+    setImportTableErrors([]);
     const items = importTableRows.map(row => ({
       ...row,
       name: row.nome,
@@ -302,11 +307,30 @@ export function AdminTables() {
       range_juros_final: row.juros_final || null,
       range_coef_inicial: row.coef_inicial || null,
       range_coef_final: row.coef_final || null,
+      range_comissao_empresa: row.faixa_comissao_empresa || row.comissao_empresa || null,
+      range_comissao_corretor: row.faixa_comissao_corretor || row.comissao_corretor || null,
     }));
-    const result = await API('/api/financial-tables/import', { method: 'POST', body: JSON.stringify({ rows: items }) }).then(r => r.json());
-    if (result.errors?.length) setImportTableErrors(result.errors.map((e: { row: string; error: string }) => `${e.row}: ${e.error}`));
-    if (result.imported > 0) { setShowImportTables(false); setImportTableRows([]); if (fileTablesRef.current) fileTablesRef.current.value = ''; await load(); alert(`${result.imported} tabela(s) importada(s)!`); }
+    const total = items.length;
+    let totalImported = 0;
+    const allErrors: string[] = [];
+    for (let i = 0; i < items.length; i++) {
+      const result = await API('/api/financial-tables/import', { method: 'POST', body: JSON.stringify({ rows: [items[i]] }) }).then(r => r.json());
+      if (result.errors?.length) allErrors.push(...result.errors.map((e: { row: string; error: string }) => `${e.row}: ${e.error}`));
+      totalImported += result.imported ?? 0;
+      setImportDone(i + 1);
+      setImportProgress(Math.round(((i + 1) / total) * 100));
+    }
+    if (allErrors.length) setImportTableErrors(allErrors);
+    if (totalImported > 0) {
+      setShowImportTables(false);
+      setImportTableRows([]);
+      if (fileTablesRef.current) fileTablesRef.current.value = '';
+      await load();
+      alert(`${totalImported} tabela(s) importada(s)!`);
+    }
     setImportingTables(false);
+    setImportProgress(0);
+    setImportDone(0);
   }
 
   function openImportRanges(tableId: string) {
@@ -674,21 +698,37 @@ export function AdminTables() {
       </Modal>
 
       {/* Import tables modal */}
-      <Modal open={showImportTables} onClose={() => { setShowImportTables(false); setImportTableRows([]); setImportTableErrors([]); }} title="Importar Tabelas Financeiras" size="lg"
-        footer={<div className="flex gap-3"><button type="button" onClick={() => { setShowImportTables(false); setImportTableRows([]); setImportTableErrors([]); }} className={btnCancel}>Cancelar</button><button onClick={doImportTables} disabled={!importTableRows.length || importingTables} className={btnPrimary} style={primaryBg}><Upload className="w-4 h-4 inline mr-1" />{importingTables ? 'Importando...' : `Importar ${importTableRows.length} tabela(s)`}</button></div>}>
+      <Modal open={showImportTables} onClose={() => { if (importingTables) return; setShowImportTables(false); setImportTableRows([]); setImportTableErrors([]); }} title="Importar Tabelas Financeiras" size="lg"
+        footer={<div className="flex gap-3"><button type="button" onClick={() => { setShowImportTables(false); setImportTableRows([]); setImportTableErrors([]); }} disabled={importingTables} className={btnCancel}>Cancelar</button><button onClick={doImportTables} disabled={!importTableRows.length || importingTables} className={btnPrimary} style={primaryBg}><Upload className="w-4 h-4 inline mr-1" />{importingTables ? `Importando ${importDone}/${importTableRows.length}...` : `Importar ${importTableRows.length} tabela(s)`}</button></div>}>
         <div className="space-y-4">
-          <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)' }}>
-            <Download className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#14B8A6' }} />
-            <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>Baixe o modelo antes de importar</p>
-              <p className="text-xs mt-0.5 mb-2" style={{ color: 'var(--text-3)' }}>Banco, convênio e categoria devem corresponder exatamente aos nomes já cadastrados.</p>
-              <button onClick={downloadTemplateTabelas} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium" style={{ background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' }}><Download className="w-3.5 h-3.5" /> Baixar Modelo CSV</button>
+          {importingTables && (
+            <div className="rounded-xl p-4 space-y-2" style={{ background: 'rgba(20,184,166,0.06)', border: '1px solid rgba(20,184,166,0.2)' }}>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-semibold" style={{ color: '#14B8A6' }}>Importando tabelas...</span>
+                <span className="text-xs font-bold" style={{ color: '#14B8A6' }}>{importProgress}%</span>
+              </div>
+              <div className="w-full rounded-full overflow-hidden" style={{ height: 10, background: 'rgba(20,184,166,0.15)' }}>
+                <div className="h-full rounded-full transition-all duration-300" style={{ width: `${importProgress}%`, background: 'linear-gradient(90deg, #14B8A6, #0EA5E9)' }} />
+              </div>
+              <p className="text-xs text-center" style={{ color: 'var(--text-3)' }}>{importDone} de {importTableRows.length} tabela(s) processada(s)</p>
             </div>
-          </div>
-          <div><label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>Selecione o arquivo CSV</label>
-            <input ref={fileTablesRef} type="file" accept=".csv" onChange={e => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = ev => { setImportTableRows(parseCSV(ev.target?.result as string)); setImportTableErrors([]); }; r.readAsText(f, 'UTF-8'); }}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 cursor-pointer" /></div>
-          {importTableRows.length > 0 && (
+          )}
+          {!importingTables && (
+            <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)' }}>
+              <Download className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#14B8A6' }} />
+              <div>
+                <p className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>Baixe o modelo antes de importar</p>
+                <p className="text-xs mt-0.5 mb-2" style={{ color: 'var(--text-3)' }}>Banco, convênio e categoria devem corresponder exatamente aos nomes já cadastrados.</p>
+                <button onClick={downloadTemplateTabelas} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium" style={{ background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' }}><Download className="w-3.5 h-3.5" /> Baixar Modelo CSV</button>
+              </div>
+            </div>
+          )}
+          {!importingTables && (
+            <div><label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>Selecione o arquivo CSV</label>
+              <input ref={fileTablesRef} type="file" accept=".csv" onChange={e => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = ev => { setImportTableRows(parseCSV(ev.target?.result as string)); setImportTableErrors([]); }; r.readAsText(f, 'UTF-8'); }}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 cursor-pointer" /></div>
+          )}
+          {!importingTables && importTableRows.length > 0 && (
             <div><p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>{importTableRows.length} linha(s) detectada(s)</p>
               <div className="max-h-52 overflow-y-auto rounded-xl" style={{ border: '1px solid var(--card-border)' }}>
                 <table className="w-full text-xs"><thead><tr style={{ background: 'var(--surface-subtle)', borderBottom: '1px solid var(--card-border)' }}>{['Nome','Banco','Convênio','Categoria','Status'].map(h => <th key={h} className="text-left px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>{h}</th>)}</tr></thead>
