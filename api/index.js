@@ -564,12 +564,28 @@ app.post('/api/financial-tables/import', auth, adminOnly, async (req, res) => {
     if (!item.category_id) { errors.push({ row: item.nome || '?', error: `categoria "${item.categoria}" não encontrada` }); continue; }
     try {
       const { rows: tRows } = await pool.query(
-        'INSERT INTO financial_tables (name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor, coeficiente) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id',
+        `INSERT INTO financial_tables (
+          name, bank_id, convenio_id, category_id, active,
+          comissao_empresa, comissao_corretor, coeficiente,
+          tipo_proposta, parceiro, expires_at, convenio_descricao, disponivel_para,
+          prazo_inicial, prazo_final, juros_inicial, juros_final, coef_inicial, coef_final
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) RETURNING id`,
         [item.name, item.bank_id, item.convenio_id, item.category_id,
          item.active !== 'false' && item.active !== false,
          toFloat(item.comissao_empresa),
          toFloat(item.comissao_corretor),
-         toFloat(item.coeficiente)]
+         toFloat(item.coeficiente),
+         item.range_tipo_proposta || '',
+         item.range_parceiro || '',
+         item.range_expires_at || null,
+         item.range_convenio_descricao || '',
+         item.range_disponivel_para || 'todos',
+         item.range_prazo_inicial ? parseInt(item.range_prazo_inicial) : null,
+         item.range_prazo_final ? parseInt(item.range_prazo_final) : null,
+         item.range_juros_inicial ? toFloat(item.range_juros_inicial) : null,
+         item.range_juros_final ? toFloat(item.range_juros_final) : null,
+         item.range_coef_inicial ? toFloat(item.range_coef_inicial) : null,
+         item.range_coef_final ? toFloat(item.range_coef_final) : null]
       );
       const tableId = tRows[0].id;
       await pool.query(`
