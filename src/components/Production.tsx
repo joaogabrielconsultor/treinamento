@@ -57,6 +57,10 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
   const [period, setPeriod] = useState('month');
   const [filterCorretor, setFilterCorretor] = useState('');
   const [filterBank, setFilterBank] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterDateFrom, setFilterDateFrom] = useState('');
+  const [filterDateTo, setFilterDateTo] = useState('');
+  const [filterDateField, setFilterDateField] = useState<'created_at' | 'updated_at'>('created_at');
   const [corretores, setCorretores] = useState<FilterUser[]>([]);
   const [banks, setBanks] = useState<string[]>([]);
 
@@ -65,6 +69,11 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
     const params = new URLSearchParams({ period });
     if (isAdmin && filterCorretor) params.set('corretor_id', filterCorretor);
     if (filterBank) params.set('bank', filterBank);
+    if (filterStatus) params.set('status', filterStatus);
+    if (filterDateFrom) params.set('date_from', filterDateFrom);
+    if (filterDateTo) params.set('date_to', filterDateTo);
+    if (filterDateFrom || filterDateTo) params.set('date_field', filterDateField);
+    
 
     const reqs = [
       API(`/api/production/dashboard?${params}`).then(r => r.json()),
@@ -98,7 +107,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
     }
   }, [isAdmin]);
 
-  useEffect(() => { load(); }, [period, filterCorretor, filterBank]);
+  useEffect(() => { load(); }, [period, filterCorretor, filterBank, filterStatus, filterDateFrom, filterDateTo, filterDateField]);
 
   async function markAllRead() {
     await API('/api/notifications/read-all', { method: 'PUT' });
@@ -267,6 +276,30 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                 {banks.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
             </div>
+            <div className="relative">
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+              <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+                className="input-cyber appearance-none pl-3 pr-8 py-1.5 text-xs rounded-xl" style={{ minWidth: '140px' }}>
+                <option value="">Todos os status</option>
+                <option value="Digitada">Digitada</option>
+                <option value="Em análise">Em análise</option>
+                <option value="Aprovada">Aprovada</option>
+                <option value="Paga">Paga</option>
+                <option value="Cancelada">Cancelada</option>
+              </select>
+            </div>
+            <div className="relative">
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+              <select value={filterDateField} onChange={e => setFilterDateField(e.target.value as 'created_at' | 'updated_at')}
+                className="input-cyber appearance-none pl-3 pr-8 py-1.5 text-xs rounded-xl" style={{ minWidth: '160px' }}>
+                <option value="created_at">Data Digitada</option>
+                <option value="updated_at">Data Alteração Status</option>
+              </select>
+            </div>
+            <input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)}
+              className="input-cyber px-3 py-1.5 text-xs rounded-xl" title="De" />
+            <input type="date" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)}
+              className="input-cyber px-3 py-1.5 text-xs rounded-xl" title="Até" />
           </>
         )}
       </div>

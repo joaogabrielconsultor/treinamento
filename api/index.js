@@ -1303,7 +1303,7 @@ app.get('/api/ranking', auth, async (req, res) => {
 // ─── DASHBOARD DE PRODUÇÃO ────────────────────────────────────────────────────
 app.get('/api/production/dashboard', auth, async (req, res) => {
   const isAdmin = req.user.role === 'admin';
-  const { corretor_id, bank, period } = req.query;
+  const { corretor_id, bank, period, status, date_from, date_to, date_field } = req.query;
 
   const params = [];
   const extraFilters = [];
@@ -1319,6 +1319,21 @@ app.get('/api/production/dashboard', auth, async (req, res) => {
   if (bank) {
     params.push(bank);
     extraFilters.push(`p.bank = $${params.length}`);
+  }
+
+  if (status) {
+    params.push(status);
+    extraFilters.push(`p.status = $${params.length}`);
+  }
+
+  const col = date_field === 'updated_at' ? 'p.updated_at' : 'p.created_at';
+  if (date_from) {
+    params.push(date_from);
+    extraFilters.push(`${col}::date >= $${params.length}`);
+  }
+  if (date_to) {
+    params.push(date_to);
+    extraFilters.push(`${col}::date <= $${params.length}`);
   }
 
   const baseWhere = extraFilters.length ? `AND ${extraFilters.join(' AND ')}` : '';
