@@ -192,7 +192,7 @@ function AppInner() {
         {currentView === 'admin-banks'            && isAdmin && <AdminBanks />}
         {currentView === 'admin-convenios'        && isAdmin && <AdminConvenios />}
         {currentView === 'admin-products'         && isAdmin && <AdminProducts />}
-        {currentView === 'admin-proposals'        && isAdmin && <AdminProposals />}
+        {currentView === 'admin-proposals'        && isAdmin && <AdminProposals isMaster={isMaster} />}
         {currentView === 'admin-reports'           && isAdmin && <AdminReports />}
         {currentView === 'login-bancos' && <LoginBancos isAdmin={isAdmin} />}
         {currentView === 'proposals'  && <Proposals prefill={simPrefill} onClearPrefill={() => setSimPrefill(null)} isAdmin={isAdmin} isMaster={isMaster} />}

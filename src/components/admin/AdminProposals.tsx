@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { Search, ChevronDown, FileText, CheckCircle, Clock, DollarSign, XCircle, Edit2, Save } from 'lucide-react';
+import { Search, ChevronDown, FileText, CheckCircle, Clock, DollarSign, XCircle, Edit2, Save, Trash2 } from 'lucide-react';
 import { Proposal, ProposalStatus, FinancialTable } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
 import { Pagination } from '../ui/Pagination';
@@ -18,7 +18,7 @@ const STATUS_CONFIG: Record<ProposalStatus, { color: string; icon: React.ReactNo
 const fmtBRL = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 const inp = 'input-cyber w-full px-3 py-2.5 rounded-xl text-sm';
 
-export function AdminProposals() {
+export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [tables, setTables] = useState<FinancialTable[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,6 +31,7 @@ export function AdminProposals() {
   const [saving, setSaving] = useState(false);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
+  const [confirmDelete, setConfirmDelete] = useState<Proposal | null>(null);
 
   async function load() {
     setLoading(true);
@@ -44,6 +45,12 @@ export function AdminProposals() {
   }
 
   useEffect(() => { load(); }, []);
+
+  async function deleteProposal(id: string) {
+    await API(`/api/proposals/${id}`, { method: 'DELETE' });
+    setProposals(prev => prev.filter(p => p.id !== id));
+    setConfirmDelete(null);
+  }
 
   async function updateStatus() {
     if (!editProposal) return;
@@ -181,12 +188,23 @@ export function AdminProposals() {
                       }
                     </td>
                     <td className="px-4 py-3">
-                      <button onClick={() => { setEditProposal(p); setEditStatus(p.status); }}
-                        className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-3)' }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
-                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => { setEditProposal(p); setEditStatus(p.status); }}
+                          className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-3)' }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        {isMaster && (
+                          <button onClick={() => setConfirmDelete(p)}
+                            className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-3)' }}
+                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
+                            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
+                            title="Excluir proposta">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -194,6 +212,25 @@ export function AdminProposals() {
             </table>
           </div>
           <Pagination total={filtered.length} page={page} perPage={perPage} onPage={setPage} onPerPage={setPerPage} />
+        </div>
+      )}
+
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)' }}>
+          <div className="modal-panel rounded-2xl w-full max-w-sm p-6 animate-fade-up">
+            <h2 className="text-base font-bold mb-2" style={{ color: 'var(--text-1)' }}>Excluir Proposta</h2>
+            <p className="text-sm mb-1" style={{ color: 'var(--text-3)' }}>Tem certeza que deseja excluir a proposta de</p>
+            <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text-1)' }}>{confirmDelete.client_name}</p>
+            <p className="text-xs mb-4" style={{ color: '#f87171' }}>Esta ação é irreversível.</p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmDelete(null)} className="flex-1 py-2.5 text-sm rounded-xl btn-ghost">Cancelar</button>
+              <button onClick={() => deleteProposal(confirmDelete.id)}
+                className="flex-1 py-2.5 text-sm rounded-xl font-semibold"
+                style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}>
+                Excluir
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
