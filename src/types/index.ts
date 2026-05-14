@@ -205,6 +205,7 @@ export interface Proposal {
   comissao_corretor_pct?: number;
   comissao_valor?: number;
   status_comissao?: 'Ag. Comissão' | 'Comissão Paga' | null;
+  allow_broker_edit: boolean;
 }
 
 export interface RankingEntry {

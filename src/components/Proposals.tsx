@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import { SimPrefill } from './Simulator';
-import { Plus, Search, FileText, ChevronDown, CheckCircle, Clock, DollarSign, XCircle, Edit2, User, CreditCard, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Plus, Search, FileText, ChevronDown, CheckCircle, Clock, DollarSign, XCircle, Edit2, User, CreditCard, ChevronRight, AlertTriangle, Lock, Unlock } from 'lucide-react';
 import { Proposal, ProposalStatus, FinancialTable, Bank, Convenio, Product } from '../types';
 import { Modal } from './ui/Modal';
 import { Pagination } from './ui/Pagination';
@@ -23,6 +23,8 @@ const EMPTY_FORM = {
   proposal_number: '', value: '', product_id: '',
   convenio_id: '', bank_id: '', table_id: '',
   created_at: today(),
+  status: '' as string,
+  coeficiente: '' as string,
 };
 
 const inp = 'input-cyber w-full px-3 py-2.5 rounded-xl text-sm';
@@ -192,6 +194,8 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
       proposal_number: p.proposal_number, value: String(p.value), product_id: p.product_id || '',
       convenio_id: p.convenio_id || '', bank_id: p.bank_id || '', table_id: p.table_id || '',
       created_at: p.created_at ? p.created_at.slice(0, 10) : today(),
+      status: p.status,
+      coeficiente: p.coeficiente ? String(p.coeficiente) : '',
     });
     setEditId(p.id);
     setStep(0);
@@ -227,14 +231,28 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
     if (Object.keys(e).length === 0) setStep(s => s + 1);
   }
 
+  function validateAll(): Record<string, string> {
+    const e: Record<string, string> = {};
+    if (!form.client_name.trim()) e.client_name = 'Nome obrigatório';
+    if (!form.client_cpf.trim() || form.client_cpf.replace(/\D/g, '').length < 11) e.client_cpf = 'CPF inválido';
+    if (!form.client_phone.trim() || form.client_phone.replace(/\D/g, '').length < 10) e.client_phone = 'Telefone inválido';
+    if (!form.proposal_number.trim()) e.proposal_number = 'Número obrigatório';
+    if (dupAlert) e.proposal_number = dupAlert;
+    if (!form.value || parseFloat(form.value) <= 0) e.value = 'Valor deve ser maior que zero';
+    if (!form.convenio_id) e.convenio_id = 'Selecione o convênio';
+    if (!form.bank_id) e.bank_id = 'Selecione o banco';
+    if (!form.table_id) e.table_id = 'Selecione a tabela';
+    return e;
+  }
+
   async function handleSubmit() {
-    const e = validateStep(2);
+    const e = editId ? validateAll() : validateStep(2);
     setErrors(e);
     if (Object.keys(e).length > 0 || dupAlert) return;
     setSaving(true);
     const selectedConvenio = convenios.find(c => c.id === form.convenio_id);
     const selectedBank = banks.find(b => b.id === form.bank_id);
-    const body = {
+    const body: Record<string, unknown> = {
       ...form,
       value: parseFloat(form.value),
       product_id: form.product_id || null,
@@ -245,6 +263,10 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
       convenio: selectedConvenio?.name || '',
       created_at: form.created_at || today(),
     };
+    if (editId && isAdmin) {
+      if (form.status) body.status = form.status;
+      if (form.coeficiente !== '') body.coeficiente = form.coeficiente;
+    }
     const url = editId ? `/api/proposals/${editId}` : '/api/proposals';
     const resp = await API(url, { method: editId ? 'PUT' : 'POST', body: JSON.stringify(body) });
     if (!resp.ok) {
@@ -257,6 +279,11 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
     setShowForm(false);
     await load();
     setSaving(false);
+  }
+
+  async function toggleBrokerEdit(id: string, current: boolean) {
+    await API(`/api/admin/proposals/${id}/toggle-edit`, { method: 'PATCH' });
+    setProposals(prev => prev.map(p => p.id === id ? { ...p, allow_broker_edit: !current } : p));
   }
 
   const filtered = proposals.filter(p => {
@@ -418,23 +445,32 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
                       }
                     </td>
                     <td className="px-4 py-3">
-                      {p.status === 'Digitada' && (
-                        <button
-                          onClick={() => openEdit(p)}
-                          className="p-1.5 rounded-lg transition-all"
-                          style={{ color: 'var(--text-3)' }}
-                          onMouseEnter={(e) => {
-                            (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)';
-                            (e.currentTarget as HTMLElement).style.color = '#14B8A6';
-                          }}
-                          onMouseLeave={(e) => {
-                            (e.currentTarget as HTMLElement).style.background = 'transparent';
-                            (e.currentTarget as HTMLElement).style.color = 'var(--text-3)';
-                          }}
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
+                      <div className="flex items-center gap-1">
+                        {(isAdmin || p.allow_broker_edit) && (
+                          <button
+                            onClick={() => openEdit(p)}
+                            className="p-1.5 rounded-lg transition-all"
+                            style={{ color: 'var(--text-3)' }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
+                            title="Editar proposta"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {isAdmin && (
+                          <button
+                            onClick={() => toggleBrokerEdit(p.id, p.allow_broker_edit)}
+                            className="p-1.5 rounded-lg transition-all"
+                            style={{ color: p.allow_broker_edit ? '#4ade80' : 'var(--text-3)' }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                            title={p.allow_broker_edit ? 'Travar edição do corretor' : 'Liberar edição ao corretor'}
+                          >
+                            {p.allow_broker_edit ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -445,7 +481,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
         </div>
       )}
 
-      {/* Multi-step modal */}
+      {/* Modal: edição sem etapas / criação com etapas */}
       <Modal
         open={showForm}
         onClose={() => setShowForm(false)}
@@ -453,23 +489,119 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
         size="lg"
         footer={
           <div className="flex gap-3">
-            {step > 0 && (
-              <button type="button" onClick={() => setStep(s => s - 1)} className="flex-1 py-2.5 rounded-xl text-sm font-medium btn-ghost">
-                Voltar
-              </button>
-            )}
-            {step < 2 ? (
-              <button type="button" onClick={nextStep} className="btn-cyber flex-1 py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
-                Próximo <ChevronRight className="w-4 h-4" />
+            {editId ? (
+              <button type="button" onClick={handleSubmit} disabled={saving || !!dupAlert} className="btn-cyber flex-1 py-2.5 rounded-xl text-sm">
+                {saving ? 'Salvando...' : 'Salvar alterações'}
               </button>
             ) : (
-              <button type="button" onClick={handleSubmit} disabled={saving || !!dupAlert} className="btn-cyber flex-1 py-2.5 rounded-xl text-sm">
-                {saving ? 'Salvando...' : editId ? 'Salvar alterações' : 'Cadastrar proposta'}
-              </button>
+              <>
+                {step > 0 && (
+                  <button type="button" onClick={() => setStep(s => s - 1)} className="flex-1 py-2.5 rounded-xl text-sm font-medium btn-ghost">
+                    Voltar
+                  </button>
+                )}
+                {step < 2 ? (
+                  <button type="button" onClick={nextStep} className="btn-cyber flex-1 py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
+                    Próximo <ChevronRight className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button type="button" onClick={handleSubmit} disabled={saving || !!dupAlert} className="btn-cyber flex-1 py-2.5 rounded-xl text-sm">
+                    {saving ? 'Salvando...' : 'Cadastrar proposta'}
+                  </button>
+                )}
+              </>
             )}
           </div>
         }
       >
+        {editId ? (
+          /* ── MODO EDIÇÃO: todos os campos de uma vez ── */
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Nome completo do cliente" error={errors.client_name}>
+                <input value={form.client_name} onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))} className={inp} />
+              </Field>
+              <Field label="CPF do cliente" error={errors.client_cpf}>
+                <input value={form.client_cpf} onChange={e => setForm(f => ({ ...f, client_cpf: formatCPF(e.target.value) }))} className={inp} inputMode="numeric" />
+              </Field>
+              <Field label="Telefone do cliente" error={errors.client_phone}>
+                <input value={form.client_phone} onChange={e => setForm(f => ({ ...f, client_phone: formatPhone(e.target.value) }))} className={inp} inputMode="tel" />
+              </Field>
+              <Field label="Número da proposta" error={errors.proposal_number}>
+                <div className="relative">
+                  <input value={form.proposal_number} onChange={e => { setForm(f => ({ ...f, proposal_number: e.target.value })); setErrors(er => ({ ...er, proposal_number: '' })); }}
+                    className={`${inp} ${dupAlert ? 'border-red-400' : ''}`} />
+                  {checkingDup && <div className="absolute right-3 top-2.5 w-4 h-4 border-2 border-brand border-t-transparent rounded-full animate-spin" />}
+                </div>
+                {dupAlert && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> {dupAlert}</p>}
+              </Field>
+              <Field label="Valor liberado (R$)" error={errors.value}>
+                <input type="number" step="0.01" min="0.01" value={form.value} onChange={e => setForm(f => ({ ...f, value: e.target.value }))} className={inp} inputMode="decimal" />
+              </Field>
+              <Field label="Data de digitação">
+                <input type="date" value={form.created_at} onChange={e => setForm(f => ({ ...f, created_at: e.target.value }))} className={inp} />
+              </Field>
+              <Field label="Produto" error={errors.product_id}>
+                <div className="relative">
+                  <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <select value={form.product_id} onChange={e => setForm(f => ({ ...f, product_id: e.target.value }))} className={`${inp} appearance-none pr-8`}>
+                    <option value="">Selecione o produto</option>
+                    {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+              </Field>
+              <Field label="Convênio" error={errors.convenio_id}>
+                <div className="relative">
+                  <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <select value={form.convenio_id} onChange={e => setForm(f => ({ ...f, convenio_id: e.target.value }))} className={`${inp} appearance-none pr-8`}>
+                    <option value="">Selecione o convênio</option>
+                    {convenios.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+              </Field>
+              <Field label="Banco" error={errors.bank_id}>
+                <div className="relative">
+                  <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <select value={form.bank_id} onChange={e => setForm(f => ({ ...f, bank_id: e.target.value }))}
+                    disabled={!form.convenio_id || loadingBanks} className={`${inp} appearance-none pr-8 disabled:opacity-50`}>
+                    <option value="">{loadingBanks ? 'Carregando...' : 'Selecione o banco'}</option>
+                    {banks.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  </select>
+                </div>
+              </Field>
+              <Field label="Tabela financeira" error={errors.table_id}>
+                <div className="relative">
+                  <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <select value={form.table_id} onChange={e => setForm(f => ({ ...f, table_id: e.target.value }))}
+                    disabled={!form.bank_id || loadingTables} className={`${inp} appearance-none pr-8 disabled:opacity-50`}>
+                    <option value="">{loadingTables ? 'Carregando...' : 'Selecione a tabela'}</option>
+                    {tables.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select>
+                </div>
+              </Field>
+              {isAdmin && (
+                <>
+                  <Field label="Status">
+                    <div className="relative">
+                      <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                      <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className={`${inp} appearance-none pr-8`}>
+                        {Object.keys(STATUS_CONFIG).map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+                  </Field>
+                  <Field label="Coeficiente (manual)">
+                    <input type="number" step="0.0000001" value={form.coeficiente}
+                      onChange={e => setForm(f => ({ ...f, coeficiente: e.target.value }))}
+                      className={inp} placeholder="Ex: 0.0123456" />
+                  </Field>
+                </>
+              )}
+            </div>
+            {errors.submit && <p className="text-xs text-red-400">{errors.submit}</p>}
+          </div>
+        ) : (
+          /* ── MODO CRIAÇÃO: wizard com etapas ── */
+          <>
         {/* Step indicator */}
         <div className="flex items-center mb-6">
           {STEPS.map((s, i) => {
@@ -634,6 +766,8 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
             </>
           )}
         </div>
+          </>
+        )}
       </Modal>
     </div>
   );

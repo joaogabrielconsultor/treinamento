@@ -1212,26 +1212,46 @@ app.post('/api/proposals', auth, async (req, res) => {
   res.json(rows[0]);
 });
 
+app.patch('/api/admin/proposals/:id/toggle-edit', auth, adminOnly, async (req, res) => {
+  const { rows: [p] } = await pool.query(
+    'UPDATE proposals SET allow_broker_edit = NOT allow_broker_edit WHERE id=$1 RETURNING id, allow_broker_edit',
+    [req.params.id]
+  );
+  if (!p) return res.status(404).json({ error: 'Proposta não encontrada' });
+  res.json(p);
+});
+
 app.put('/api/proposals/:id', auth, async (req, res) => {
   const isAdmin = req.user.role === 'admin';
   const { rows: [existing] } = await pool.query('SELECT * FROM proposals WHERE id=$1', [req.params.id]);
   if (!existing) return res.status(404).json({ error: 'Proposta não encontrada' });
   if (!isAdmin && existing.user_id !== req.user.id) return res.status(403).json({ error: 'Acesso negado' });
 
-  // Corretor não pode alterar status em nenhuma hipótese
+  // Corretor só pode editar se admin liberou
+  if (!isAdmin && !existing.allow_broker_edit) {
+    return res.status(403).json({ error: 'Edição não liberada pelo administrador' });
+  }
+  // Corretor não pode alterar status ou campos de comissão
   if (!isAdmin && req.body.status !== undefined) {
     return res.status(403).json({ error: 'Apenas o administrador pode alterar o status da proposta' });
   }
-  const fields = ['proposal_number','value','product','product_id','bank','convenio','table_id','bank_id','convenio_id','client_name','client_cpf','client_phone','created_at'];
-  if (isAdmin) fields.push('status');
+
+  const brokerFields = ['proposal_number','value','product','product_id','bank','convenio','table_id','bank_id','convenio_id','client_name','client_cpf','client_phone','created_at'];
+  const adminFields = [...brokerFields, 'status', 'allow_broker_edit'];
+  const fields = isAdmin ? adminFields : brokerFields;
+
   const updates = ['updated_at = now()'];
   const values = [];
   let i = 1;
   for (const f of fields) {
     if (req.body[f] !== undefined) { updates.push(`${f} = $${i++}`); values.push(req.body[f]); }
   }
-  // Atualiza coeficiente automaticamente se table_id mudou (nunca vem do corretor)
-  if (req.body.table_id !== undefined) {
+
+  // Coeficiente: admin pode enviar valor manual; caso contrário auto-calcula da tabela
+  if (isAdmin && req.body.coeficiente !== undefined && req.body.coeficiente !== '') {
+    updates.push(`coeficiente = $${i++}`);
+    values.push(parseFloat(req.body.coeficiente) || 0);
+  } else if (req.body.table_id !== undefined) {
     const newTableId = req.body.table_id;
     if (newTableId) {
       const { rows: [tbl] } = await pool.query('SELECT coeficiente FROM financial_tables WHERE id=$1', [newTableId]);

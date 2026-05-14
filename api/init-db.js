@@ -254,6 +254,7 @@ async function initDb() {
       )
     `);
     await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS status_comissao text CHECK (status_comissao IN ('Ag. Comissão', 'Comissão Paga'))`);
+    await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS allow_broker_edit boolean NOT NULL DEFAULT false`);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS commission_payments (
