@@ -389,7 +389,7 @@ async function initDb() {
     }
 
     // Master — único usuário que pode excluir propostas e tem acesso total
-    const MASTER_EMAIL = 'admin@aprovamais.com';
+    const MASTER_EMAIL = 'adm@rozesstartflow.com';
     await client.query(`UPDATE users SET role = 'master' WHERE email = $1`, [MASTER_EMAIL]);
 
     console.log('Banco de dados pronto.');

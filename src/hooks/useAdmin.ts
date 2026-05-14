@@ -14,7 +14,7 @@ interface AdminUser {
   loja_name: string | null;
 }
 
-const MASTER_EMAIL = 'admin@aprovamais.com';
+const MASTER_EMAIL = 'adm@rozesstartflow.com';
 export function useIsAdmin(user: { role: 'user' | 'admin' | 'master'; email: string } | null) {
   const isMaster = user?.role === 'master' || user?.email === MASTER_EMAIL;
   return {

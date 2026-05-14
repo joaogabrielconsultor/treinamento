@@ -39,7 +39,7 @@ function adminOnly(req, res, next) {
   if (req.user.role !== 'admin' && req.user.role !== 'master') return res.status(403).json({ error: 'Acesso negado' });
   next();
 }
-const MASTER_EMAIL = 'admin@aprovamais.com';
+const MASTER_EMAIL = 'adm@rozesstartflow.com';
 function masterOnly(req, res, next) {
   if (req.user.role !== 'master' && req.user.email !== MASTER_EMAIL) return res.status(403).json({ error: 'Acesso restrito ao master' });
   next();

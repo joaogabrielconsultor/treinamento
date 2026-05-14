@@ -18,7 +18,7 @@ const STATUS_CONFIG: Record<ProposalStatus, { color: string; icon: React.ReactNo
 const fmtBRL = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 const inp = 'input-cyber w-full px-3 py-2.5 rounded-xl text-sm';
 
-const MASTER_EMAIL = 'admin@aprovamais.com';
+const MASTER_EMAIL = 'adm@rozesstartflow.com';
 function getTokenEmail(): string {
   try {
     const token = localStorage.getItem('token');
