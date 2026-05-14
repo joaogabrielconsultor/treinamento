@@ -118,7 +118,16 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
     );
   }
 
-  if (!stats) return null;
+  if (!stats || !stats.today || !stats.proposals) {
+    return (
+      <div className="flex items-center justify-center min-h-screen" style={{ background: 'var(--bg-base)' }}>
+        <div className="text-center">
+          <p className="text-sm font-medium mb-2" style={{ color: '#f87171' }}>Erro ao carregar dados de produção.</p>
+          <button onClick={load} className="px-4 py-2 text-xs rounded-xl btn-cyber">Tentar novamente</button>
+        </div>
+      </div>
+    );
+  }
 
   const earnedBadges = badges.filter(b => b.earned);
 
