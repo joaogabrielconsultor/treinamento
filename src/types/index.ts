@@ -197,6 +197,7 @@ export interface Proposal {
   product_name?: string;
   comissao_corretor_pct?: number;
   comissao_valor?: number;
+  status_comissao?: 'Ag. Comissão' | 'Comissão Paga' | null;
 }
 
 export interface RankingEntry {
@@ -284,6 +285,8 @@ export type ViewType =
   | 'admin-banks'
   | 'admin-convenios'
   | 'admin-products'
-  | 'admin-reports';
+  | 'admin-reports'
+  | 'conta-corrente'
+  | 'admin-conta-corrente';
 
 export type AuthMode = 'login';

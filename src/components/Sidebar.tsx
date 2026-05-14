@@ -1,4 +1,4 @@
-import { LayoutDashboard, Library, LogOut, ChevronRight, Users, GraduationCap, Shield, Building2, Sun, Moon, Palette, FileText, Trophy, BarChart2, Table2, Tag, ClipboardList, FileBarChart, Handshake, Package, Percent, Calculator } from 'lucide-react';
+import { LayoutDashboard, Library, LogOut, ChevronRight, Users, GraduationCap, Shield, Building2, Sun, Moon, Palette, FileText, Trophy, BarChart2, Table2, Tag, ClipboardList, FileBarChart, Handshake, Package, Percent, Calculator, Wallet } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { ViewType } from '../types';
 import { LogoComponent } from './LogoComponent';
@@ -17,9 +17,10 @@ const navItems = [
   { view: 'production'   as ViewType, icon: BarChart2,       label: 'Produção' },
   { view: 'proposals'    as ViewType, icon: FileText,        label: 'Propostas' },
   { view: 'simulator'   as ViewType, icon: Calculator,      label: 'Simulador' },
-  { view: 'ranking'      as ViewType, icon: Trophy,          label: 'Ranking' },
-  { view: 'catalog'      as ViewType, icon: Library,         label: 'Treinamentos' },
-  { view: 'login-bancos' as ViewType, icon: Building2,       label: 'Login Bancos' },
+  { view: 'ranking'         as ViewType, icon: Trophy,    label: 'Ranking' },
+  { view: 'conta-corrente'  as ViewType, icon: Wallet,    label: 'Conta Corrente' },
+  { view: 'catalog'         as ViewType, icon: Library,   label: 'Treinamentos' },
+  { view: 'login-bancos'    as ViewType, icon: Building2, label: 'Login Bancos' },
 ];
 
 const adminItems = [
@@ -31,6 +32,7 @@ const adminItems = [
   { view: 'admin-financial-tables'  as ViewType, icon: Table2,        label: 'Tabelas' },
   { view: 'admin-categories'        as ViewType, icon: Tag,           label: 'Categorias' },
   { view: 'admin-reports'           as ViewType, icon: FileBarChart,  label: 'Relatórios' },
+  { view: 'admin-conta-corrente'    as ViewType, icon: Wallet,        label: 'Conta Corrente' },
   { view: 'admin-courses'           as ViewType, icon: GraduationCap, label: 'Treinamentos' },
   { view: 'admin-personalizacao'    as ViewType, icon: Palette,       label: 'Personalização' },
 ];

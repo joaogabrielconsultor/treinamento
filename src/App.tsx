@@ -21,6 +21,8 @@ import { Proposals } from './components/Proposals';
 import { Simulator, SimPrefill } from './components/Simulator';
 import { Ranking } from './components/Ranking';
 import { Production } from './components/Production';
+import { ContaCorrente } from './components/ContaCorrente';
+import { AdminContaCorrente } from './components/admin/AdminContaCorrente';
 import { useAuth } from './hooks/useAuth';
 import { useCourses, useCourseDetail } from './hooks/useCourses';
 import { useEnrollments, useLessonProgress } from './hooks/useEnrollments';
@@ -180,8 +182,10 @@ function AppInner() {
         {currentView === 'simulator'  && (
           <Simulator onSendProposal={data => { setSimPrefill(data); navigate('proposals'); }} isAdmin={isAdmin} />
         )}
-        {currentView === 'ranking'    && <Ranking userId={user.id} />}
-        {currentView === 'production' && <Production isAdmin={isAdmin} />}
+        {currentView === 'ranking'              && <Ranking userId={user.id} />}
+        {currentView === 'production'           && <Production isAdmin={isAdmin} />}
+        {currentView === 'conta-corrente'       && <ContaCorrente />}
+        {currentView === 'admin-conta-corrente' && isAdmin && <AdminContaCorrente />}
       </main>
     </div>
   );

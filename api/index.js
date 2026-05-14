@@ -1069,6 +1069,16 @@ app.put('/api/proposals/:id', auth, async (req, res) => {
     values
   );
 
+  // Controla status_comissao automaticamente
+  if (isAdmin && req.body.status === 'Paga' && existing.status !== 'Paga') {
+    await pool.query("UPDATE proposals SET status_comissao = 'Ag. Comissão' WHERE id = $1", [updated.id]);
+    updated.status_comissao = 'Ag. Comissão';
+  }
+  if (isAdmin && existing.status === 'Paga' && req.body.status && req.body.status !== 'Paga') {
+    await pool.query('UPDATE proposals SET status_comissao = NULL WHERE id = $1', [updated.id]);
+    updated.status_comissao = null;
+  }
+
   // Se mudou para Paga, calcular e adicionar pontos
   if (isAdmin && req.body.status === 'Paga' && existing.status !== 'Paga') {
     const pts = await calcPoints(updated.table_id, parseFloat(updated.value));
@@ -1347,6 +1357,142 @@ app.post('/api/goals', auth, adminOnly, async (req, res) => {
 app.get('/api/streak', auth, async (req, res) => {
   const { rows } = await pool.query('SELECT * FROM user_streaks WHERE user_id=$1', [req.user.id]);
   res.json(rows[0] || { user_id: req.user.id, current_streak: 0, best_streak: 0 });
+});
+
+// ─── CONTA CORRENTE ───────────────────────────────────────────────────────────
+const contaCorrenteSelect = `
+  SELECT p.id, p.proposal_number, p.value, p.status, p.status_comissao,
+         p.client_name, p.client_cpf, p.bank, p.created_at, p.updated_at,
+         u.id as user_id, u.full_name as user_name, u.email as user_email,
+         ft.name as table_name,
+         COALESCE(
+           (SELECT cr.comissao_corretor FROM commission_ranges cr
+            WHERE cr.financial_table_id = p.table_id
+              AND cr.min_value <= p.value
+              AND (cr.max_value IS NULL OR cr.max_value >= p.value)
+            ORDER BY cr.min_value DESC LIMIT 1),
+           ft.comissao_corretor, 0
+         ) as comissao_corretor_pct,
+         ROUND(p.value * COALESCE(
+           (SELECT cr.comissao_corretor FROM commission_ranges cr
+            WHERE cr.financial_table_id = p.table_id
+              AND cr.min_value <= p.value
+              AND (cr.max_value IS NULL OR cr.max_value >= p.value)
+            ORDER BY cr.min_value DESC LIMIT 1),
+           ft.comissao_corretor, 0
+         ) / 100, 2) as comissao_valor
+  FROM proposals p
+  JOIN users u ON u.id = p.user_id
+  LEFT JOIN financial_tables ft ON ft.id = p.table_id
+`;
+
+// Visão do corretor
+app.get('/api/conta-corrente', auth, async (req, res) => {
+  const { rows } = await pool.query(
+    `${contaCorrenteSelect} WHERE p.user_id = $1 AND p.status_comissao IS NOT NULL ORDER BY p.updated_at DESC`,
+    [req.user.id]
+  );
+  const pending = rows.filter(r => r.status_comissao === 'Ag. Comissão');
+  const paid    = rows.filter(r => r.status_comissao === 'Comissão Paga');
+  res.json({
+    proposals: rows,
+    summary: {
+      pending_count: pending.length,
+      pending_value: pending.reduce((a, b) => a + parseFloat(b.comissao_valor || 0), 0),
+      paid_count: paid.length,
+      paid_value: paid.reduce((a, b) => a + parseFloat(b.comissao_valor || 0), 0),
+    }
+  });
+});
+
+// Visão do admin — resumo por corretor + lista completa
+app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
+  const { user_id, status_comissao } = req.query;
+
+  const conditions = ['p.status_comissao IS NOT NULL'];
+  const values = [];
+  let i = 1;
+  if (user_id) { conditions.push(`p.user_id = $${i++}`); values.push(user_id); }
+  if (status_comissao) { conditions.push(`p.status_comissao = $${i++}`); values.push(status_comissao); }
+  const where = 'WHERE ' + conditions.join(' AND ');
+
+  const { rows: proposals } = await pool.query(
+    `${contaCorrenteSelect} ${where} ORDER BY p.updated_at DESC`,
+    values
+  );
+
+  const { rows: brokerSummary } = await pool.query(`
+    SELECT u.id as user_id, u.full_name as user_name, u.email as user_email,
+           COUNT(*) FILTER (WHERE p.status_comissao = 'Ag. Comissão')::int as pending_count,
+           COALESCE(SUM(ROUND(p.value * COALESCE(
+             (SELECT cr.comissao_corretor FROM commission_ranges cr
+              WHERE cr.financial_table_id = p.table_id
+                AND cr.min_value <= p.value AND (cr.max_value IS NULL OR cr.max_value >= p.value)
+              ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_corretor, 0) / 100, 2)
+           ) FILTER (WHERE p.status_comissao = 'Ag. Comissão'), 0)::numeric as pending_value,
+           COUNT(*) FILTER (WHERE p.status_comissao = 'Comissão Paga')::int as paid_count,
+           COALESCE(SUM(ROUND(p.value * COALESCE(
+             (SELECT cr.comissao_corretor FROM commission_ranges cr
+              WHERE cr.financial_table_id = p.table_id
+                AND cr.min_value <= p.value AND (cr.max_value IS NULL OR cr.max_value >= p.value)
+              ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_corretor, 0) / 100, 2)
+           ) FILTER (WHERE p.status_comissao = 'Comissão Paga'), 0)::numeric as paid_value
+    FROM proposals p
+    JOIN users u ON u.id = p.user_id
+    LEFT JOIN financial_tables ft ON ft.id = p.table_id
+    WHERE p.status_comissao IS NOT NULL
+    GROUP BY u.id, u.full_name, u.email
+    ORDER BY pending_value DESC
+  `);
+
+  res.json({ proposals, brokers: brokerSummary });
+});
+
+// Marcar propostas como comissão paga
+app.post('/api/admin/conta-corrente/pay', auth, adminOnly, async (req, res) => {
+  const { proposal_ids, notes } = req.body;
+  if (!Array.isArray(proposal_ids) || proposal_ids.length === 0) {
+    return res.status(400).json({ error: 'Nenhuma proposta selecionada' });
+  }
+  const placeholders = proposal_ids.map((_, idx) => `$${idx + 1}`).join(',');
+  await pool.query(
+    `UPDATE proposals SET status_comissao = 'Comissão Paga', updated_at = now() WHERE id IN (${placeholders})`,
+    proposal_ids
+  );
+  // Registra pagamento por corretor
+  const { rows: affected } = await pool.query(
+    `SELECT p.user_id,
+            COALESCE(SUM(ROUND(p.value * COALESCE(
+              (SELECT cr.comissao_corretor FROM commission_ranges cr
+               WHERE cr.financial_table_id = p.table_id
+                 AND cr.min_value <= p.value AND (cr.max_value IS NULL OR cr.max_value >= p.value)
+               ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_corretor, 0) / 100, 2)), 0)::numeric as total_value,
+            COUNT(*)::int as proposal_count
+     FROM proposals p LEFT JOIN financial_tables ft ON ft.id = p.table_id
+     WHERE p.id IN (${placeholders}) GROUP BY p.user_id`,
+    proposal_ids
+  );
+  for (const row of affected) {
+    await pool.query(
+      'INSERT INTO commission_payments (user_id, total_value, proposal_count, notes, paid_by) VALUES ($1,$2,$3,$4,$5)',
+      [row.user_id, row.total_value, row.proposal_count, notes || '', req.user.id]
+    );
+  }
+  res.json({ ok: true, updated: proposal_ids.length });
+});
+
+// Histórico de pagamentos de comissão
+app.get('/api/admin/conta-corrente/payments', auth, adminOnly, async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT cp.*, u.full_name as user_name, u.email as user_email,
+           pb.full_name as paid_by_name
+    FROM commission_payments cp
+    JOIN users u ON u.id = cp.user_id
+    LEFT JOIN users pb ON pb.id = cp.paid_by
+    ORDER BY cp.created_at DESC
+    LIMIT 100
+  `);
+  res.json(rows);
 });
 
 // ─── FRONTEND (produção) ──────────────────────────────────────────────────────

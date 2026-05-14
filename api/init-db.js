@@ -241,6 +241,19 @@ async function initDb() {
         updated_at timestamptz NOT NULL DEFAULT now()
       )
     `);
+    await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS status_comissao text CHECK (status_comissao IN ('Ag. Comissão', 'Comissão Paga'))`);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS commission_payments (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id uuid NOT NULL REFERENCES users(id),
+        total_value numeric(15,2) NOT NULL DEFAULT 0,
+        proposal_count integer NOT NULL DEFAULT 0,
+        notes text DEFAULT '',
+        paid_by uuid REFERENCES users(id),
+        created_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS user_points (
