@@ -1130,7 +1130,7 @@ app.get('/api/proposals', auth, async (req, res) => {
 });
 
 app.post('/api/proposals', auth, async (req, res) => {
-  const { proposal_number, value, product, product_id, bank, convenio, table_id, bank_id, convenio_id, client_name, client_cpf, client_phone } = req.body;
+  const { proposal_number, value, product, product_id, bank, convenio, table_id, bank_id, convenio_id, client_name, client_cpf, client_phone, created_at } = req.body;
   // Campos obrigatórios
   if (!proposal_number || !value || (!product && !product_id) || !client_name || !client_cpf || !client_phone) {
     return res.status(400).json({ error: 'Preencha todos os campos obrigatórios' });
@@ -1153,10 +1153,11 @@ app.post('/api/proposals', auth, async (req, res) => {
     if (tbl) coeficiente = parseFloat(tbl.coeficiente) || 0;
   }
   // Corretor sempre cria como Digitada
+  const proposalDate = created_at ? new Date(created_at) : new Date();
   const { rows } = await pool.query(
-    `INSERT INTO proposals (user_id, proposal_number, value, product, product_id, bank, convenio, table_id, bank_id, convenio_id, client_name, client_cpf, client_phone, coeficiente, status)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'Digitada') RETURNING *`,
-    [req.user.id, proposal_number, value, productName, product_id||null, bank||'', convenio||'', table_id||null, bank_id||null, convenio_id||null, client_name, client_cpf, client_phone, coeficiente]
+    `INSERT INTO proposals (user_id, proposal_number, value, product, product_id, bank, convenio, table_id, bank_id, convenio_id, client_name, client_cpf, client_phone, coeficiente, status, created_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'Digitada',$15) RETURNING *`,
+    [req.user.id, proposal_number, value, productName, product_id||null, bank||'', convenio||'', table_id||null, bank_id||null, convenio_id||null, client_name, client_cpf, client_phone, coeficiente, proposalDate]
   );
   res.json(rows[0]);
 });
@@ -1171,7 +1172,7 @@ app.put('/api/proposals/:id', auth, async (req, res) => {
   if (!isAdmin && req.body.status !== undefined) {
     return res.status(403).json({ error: 'Apenas o administrador pode alterar o status da proposta' });
   }
-  const fields = ['proposal_number','value','product','product_id','bank','convenio','table_id','bank_id','convenio_id','client_name','client_cpf','client_phone'];
+  const fields = ['proposal_number','value','product','product_id','bank','convenio','table_id','bank_id','convenio_id','client_name','client_cpf','client_phone','created_at'];
   if (isAdmin) fields.push('status');
   const updates = ['updated_at = now()'];
   const values = [];

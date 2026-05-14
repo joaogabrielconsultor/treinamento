@@ -16,10 +16,13 @@ const STATUS_CONFIG: Record<ProposalStatus, { color: string; icon: React.ReactNo
   Cancelada:   { color: 'badge badge-red',    icon: <XCircle className="w-3 h-3" /> },
 };
 
+const today = () => new Date().toISOString().slice(0, 10);
+
 const EMPTY_FORM = {
   client_name: '', client_cpf: '', client_phone: '',
   proposal_number: '', value: '', product_id: '',
   convenio_id: '', bank_id: '', table_id: '',
+  created_at: today(),
 };
 
 const inp = 'input-cyber w-full px-3 py-2.5 rounded-xl text-sm';
@@ -188,6 +191,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
       client_name: p.client_name, client_cpf: p.client_cpf, client_phone: p.client_phone,
       proposal_number: p.proposal_number, value: String(p.value), product_id: p.product_id || '',
       convenio_id: p.convenio_id || '', bank_id: p.bank_id || '', table_id: p.table_id || '',
+      created_at: p.created_at ? p.created_at.slice(0, 10) : today(),
     });
     setEditId(p.id);
     setStep(0);
@@ -239,6 +243,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
       convenio_id: form.convenio_id || null,
       bank: selectedBank?.name || '',
       convenio: selectedConvenio?.name || '',
+      created_at: form.created_at || today(),
     };
     const url = editId ? `/api/proposals/${editId}` : '/api/proposals';
     const resp = await API(url, { method: editId ? 'PUT' : 'POST', body: JSON.stringify(body) });
@@ -526,6 +531,9 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
               </Field>
               <Field label="Valor liberado (R$)" error={errors.value}>
                 <input type="number" step="0.01" min="0.01" value={form.value} onChange={e => setForm(f => ({ ...f, value: e.target.value }))} className={inp} placeholder="0,00" inputMode="decimal" />
+              </Field>
+              <Field label="Data de digitação">
+                <input type="date" value={form.created_at} onChange={e => setForm(f => ({ ...f, created_at: e.target.value }))} className={inp} />
               </Field>
               <Field label="Produto" error={errors.product_id}>
                 <div className="relative">
