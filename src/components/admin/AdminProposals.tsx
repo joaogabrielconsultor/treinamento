@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { Search, ChevronDown, FileText, CheckCircle, Clock, DollarSign, XCircle, Edit2, Trash2, Save } from 'lucide-react';
+import { Search, ChevronDown, FileText, CheckCircle, Clock, DollarSign, XCircle, Edit2, Save } from 'lucide-react';
 import { Proposal, ProposalStatus, FinancialTable } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
 import { Pagination } from '../ui/Pagination';
@@ -24,6 +24,8 @@ export function AdminProposals() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [filterCorretor, setFilterCorretor] = useState('');
+  const [filterBank, setFilterBank] = useState('');
   const [editProposal, setEditProposal] = useState<Proposal | null>(null);
   const [editStatus, setEditStatus] = useState<ProposalStatus>('Digitada');
   const [saving, setSaving] = useState(false);
@@ -52,20 +54,19 @@ export function AdminProposals() {
     setSaving(false);
   }
 
-  async function deleteProposal(id: string) {
-    if (!confirm('Excluir esta proposta?')) return;
-    await API(`/api/proposals/${id}`, { method: 'DELETE' });
-    await load();
-  }
+  const corretores = Array.from(new Set(proposals.map(p => p.user_name).filter(Boolean))) as string[];
+  const banks = Array.from(new Set(proposals.map(p => p.bank).filter(Boolean))) as string[];
 
   const filtered = proposals.filter(p => {
     const q = search.toLowerCase();
-    const matchSearch = !q || p.client_name.toLowerCase().includes(q) || p.proposal_number.includes(q) || (p.user_name || '').toLowerCase().includes(q) || p.bank.toLowerCase().includes(q);
+    const matchSearch = !q || p.client_name.toLowerCase().includes(q) || p.client_cpf?.includes(q) || p.proposal_number.includes(q);
     const matchStatus = !filterStatus || p.status === filterStatus;
-    return matchSearch && matchStatus;
+    const matchCorretor = !filterCorretor || (p.user_name || '') === filterCorretor;
+    const matchBank = !filterBank || p.bank === filterBank;
+    return matchSearch && matchStatus && matchCorretor && matchBank;
   });
 
-  useEffect(() => { setPage(1); }, [search, filterStatus]);
+  useEffect(() => { setPage(1); }, [search, filterStatus, filterCorretor, filterBank]);
 
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
   const totalPaid = proposals.filter(p => p.status === 'Paga').reduce((a, b) => a + Number(b.value), 0);
@@ -100,13 +101,29 @@ export function AdminProposals() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
           <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar por cliente, proposta, corretor ou banco..."
+            placeholder="Buscar por cliente ou nº da proposta..."
             className="input-cyber w-full pl-9 pr-3 py-2.5 text-sm rounded-xl" />
         </div>
         <div className="relative">
           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
-          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+          <select value={filterCorretor} onChange={e => setFilterCorretor(e.target.value)}
             className="input-cyber appearance-none pl-3 pr-9 py-2.5 text-sm rounded-xl" style={{ minWidth: '160px' }}>
+            <option value="">Todos os corretores</option>
+            {corretores.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div className="relative">
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+          <select value={filterBank} onChange={e => setFilterBank(e.target.value)}
+            className="input-cyber appearance-none pl-3 pr-9 py-2.5 text-sm rounded-xl" style={{ minWidth: '140px' }}>
+            <option value="">Todos os bancos</option>
+            {banks.map(b => <option key={b} value={b}>{b}</option>)}
+          </select>
+        </div>
+        <div className="relative">
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+            className="input-cyber appearance-none pl-3 pr-9 py-2.5 text-sm rounded-xl" style={{ minWidth: '150px' }}>
             <option value="">Todos os status</option>
             {Object.keys(STATUS_CONFIG).map(s => <option key={s} value={s}>{s}</option>)}
           </select>
@@ -125,7 +142,7 @@ export function AdminProposals() {
             <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                  {['Proposta', 'Corretor', 'Cliente', 'Banco / Tabela', 'Valor', 'Status', 'Pontos', 'Ações'].map(h => (
+                  {['Proposta', 'Corretor', 'Nome do Cliente', 'CPF', 'Banco / Tabela', 'Valor', 'Status', 'Pontos', 'Ações'].map(h => (
                     <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
                   ))}
                 </tr>
@@ -133,7 +150,7 @@ export function AdminProposals() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="text-center py-12 text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma proposta encontrada</td>
+                    <td colSpan={9} className="text-center py-12 text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma proposta encontrada</td>
                   </tr>
                 ) : paginated.map(p => (
                   <tr key={p.id} className="table-row-cyber">
@@ -143,7 +160,9 @@ export function AdminProposals() {
                     </td>
                     <td className="px-4 py-3">
                       <p className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{p.client_name}</p>
-                      <p className="text-xs" style={{ color: 'var(--text-3)' }}>{p.client_cpf}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-xs font-mono" style={{ color: 'var(--text-3)' }}>{p.client_cpf || '—'}</p>
                     </td>
                     <td className="px-4 py-3">
                       <p className="text-sm" style={{ color: 'var(--text-2)' }}>{p.bank}</p>
@@ -162,20 +181,12 @@ export function AdminProposals() {
                       }
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => { setEditProposal(p); setEditStatus(p.status); }}
-                          className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-3)' }}
-                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
-                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button onClick={() => deleteProposal(p.id)}
-                          className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-3)' }}
-                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
-                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                      <button onClick={() => { setEditProposal(p); setEditStatus(p.status); }}
+                        className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-3)' }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
                     </td>
                   </tr>
                 ))}

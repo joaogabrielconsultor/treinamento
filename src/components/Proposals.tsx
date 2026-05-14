@@ -355,7 +355,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                  {['Proposta', 'Cliente', 'Convênio / Banco / Tabela', 'Valor', 'Produto', 'Status', 'Comissão', 'Pontos', ''].map(h => (
+                  {['Proposta', 'Nome do Cliente', 'CPF', 'Convênio / Banco / Tabela', 'Valor', 'Produto', 'Status', 'Comissão', 'Pontos', ''].map(h => (
                     <th
                       key={h}
                       className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest"
@@ -372,7 +372,9 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
                     <td className="px-4 py-3 font-mono text-xs num" style={{ color: 'var(--text-2)' }}>{p.proposal_number || '—'}</td>
                     <td className="px-4 py-3">
                       <p className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{p.client_name}</p>
-                      <p className="text-xs" style={{ color: 'var(--text-3)' }}>{p.client_cpf}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-xs font-mono" style={{ color: 'var(--text-3)' }}>{p.client_cpf || '—'}</p>
                     </td>
                     <td className="px-4 py-3">
                       <p className="text-xs" style={{ color: 'var(--text-3)' }}>{p.convenio_name || p.convenio || '—'}</p>

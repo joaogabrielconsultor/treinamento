@@ -13,9 +13,11 @@ async function initDb() {
         email text UNIQUE NOT NULL,
         password_hash text NOT NULL,
         role text NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
-        created_at timestamptz NOT NULL DEFAULT now()
+        created_at timestamptz NOT NULL DEFAULT now(),
+        archived_at timestamptz
       )
     `);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS archived_at timestamptz`);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS courses (

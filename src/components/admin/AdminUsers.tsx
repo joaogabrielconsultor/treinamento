@@ -1,5 +1,5 @@
 ﻿import { useState } from 'react';
-import { Users, Shield, ShieldOff, BookOpen, RefreshCw, Plus, X, Eye, EyeOff, Crown, Trash2, KeyRound } from 'lucide-react';
+import { Users, Shield, ShieldOff, BookOpen, RefreshCw, Plus, X, Eye, EyeOff, Crown, Archive, ArchiveRestore, KeyRound } from 'lucide-react';
 import { useAdminUsers } from '../../hooks/useAdmin';
 import { Pagination } from '../ui/Pagination';
 
@@ -192,8 +192,9 @@ function ChangePasswordModal({ userName, onClose, onSave }: {
   );
 }
 
-function DeleteConfirmModal({ userName, onClose, onConfirm }: {
+function ArchiveConfirmModal({ userName, isUnarchive, onClose, onConfirm }: {
   userName: string;
+  isUnarchive?: boolean;
   onClose: () => void;
   onConfirm: () => Promise<void>;
 }) {
@@ -207,7 +208,7 @@ function DeleteConfirmModal({ userName, onClose, onConfirm }: {
       await onConfirm();
       onClose();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Erro ao excluir usuário');
+      setError(err instanceof Error ? err.message : 'Erro ao arquivar usuário');
       setLoading(false);
     }
   };
@@ -216,14 +217,22 @@ function DeleteConfirmModal({ userName, onClose, onConfirm }: {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)' }}>
       <div className="modal-panel rounded-2xl w-full max-w-sm p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>Excluir Usuário</h2>
+          <h2 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>
+            {isUnarchive ? 'Reativar Usuário' : 'Arquivar Usuário'}
+          </h2>
           <button onClick={onClose} className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--text-3)' }}>
             <X className="w-5 h-5" />
           </button>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Tem certeza que deseja excluir</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+          {isUnarchive ? 'Reativar o usuário' : 'Tem certeza que deseja arquivar'}
+        </p>
         <p className="text-sm font-semibold text-gray-900 dark:text-white mb-4">{userName}?</p>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mb-5">Esta ação não pode ser desfeita. Todos os dados do usuário serão removidos.</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mb-5">
+          {isUnarchive
+            ? 'O usuário voltará a ter acesso ao sistema.'
+            : 'O usuário perderá o acesso ao sistema. Você pode reativá-lo depois.'}
+        </p>
 
         {error && (
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2 text-sm text-red-600 dark:text-red-400 mb-4">
@@ -235,8 +244,8 @@ function DeleteConfirmModal({ userName, onClose, onConfirm }: {
           <button onClick={onClose} className="flex-1 px-4 py-2.5 text-sm rounded-xl btn-ghost">
             Cancelar
           </button>
-          <button onClick={confirm} disabled={loading} className="flex-1 px-4 py-2.5 text-sm rounded-xl btn-danger font-semibold">
-            {loading ? 'Excluindo...' : 'Excluir'}
+          <button onClick={confirm} disabled={loading} className={`flex-1 px-4 py-2.5 text-sm rounded-xl font-semibold ${isUnarchive ? 'btn-cyber' : 'btn-danger'}`}>
+            {loading ? (isUnarchive ? 'Reativando...' : 'Arquivando...') : (isUnarchive ? 'Reativar' : 'Arquivar')}
           </button>
         </div>
       </div>
@@ -245,10 +254,11 @@ function DeleteConfirmModal({ userName, onClose, onConfirm }: {
 }
 
 export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
-  const { users, loading, toggleRole, createUser, deleteUser, changePassword, refetch } = useAdminUsers();
+  const [showArchived, setShowArchived] = useState(false);
+  const { users, loading, toggleRole, createUser, archiveUser, unarchiveUser, changePassword, refetch } = useAdminUsers(showArchived);
   const [showCreate, setShowCreate] = useState(false);
   const [changePwdUser, setChangePwdUser] = useState<{ id: string; name: string } | null>(null);
-  const [deleteUserTarget, setDeleteUserTarget] = useState<{ id: string; name: string } | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<{ id: string; name: string; isUnarchive?: boolean } | null>(null);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
   const paginated = users.slice((page - 1) * perPage, page * perPage);
@@ -278,11 +288,12 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
           onSave={(pwd) => changePassword(changePwdUser.id, pwd)}
         />
       )}
-      {deleteUserTarget && (
-        <DeleteConfirmModal
-          userName={deleteUserTarget.name}
-          onClose={() => setDeleteUserTarget(null)}
-          onConfirm={() => deleteUser(deleteUserTarget.id)}
+      {archiveTarget && (
+        <ArchiveConfirmModal
+          userName={archiveTarget.name}
+          isUnarchive={archiveTarget.isUnarchive}
+          onClose={() => setArchiveTarget(null)}
+          onConfirm={() => archiveTarget.isUnarchive ? unarchiveUser(archiveTarget.id) : archiveUser(archiveTarget.id)}
         />
       )}
 
@@ -290,16 +301,24 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
         <div>
           <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Gestão de Usuários</h1>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
-            {users.length} usuário{users.length !== 1 ? 's' : ''} cadastrado{users.length !== 1 ? 's' : ''}
+            {users.length} usuário{users.length !== 1 ? 's' : ''} {showArchived ? 'arquivado' : 'ativo'}{users.length !== 1 ? 's' : ''}
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => { setShowArchived(v => !v); setPage(1); }}
+            className={`flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl transition-all ${showArchived ? 'btn-cyber' : 'btn-ghost'}`}
+          >
+            <Archive className="w-3.5 h-3.5" /> {showArchived ? 'Ver ativos' : 'Ver arquivados'}
+          </button>
           <button onClick={refetch} className="flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl btn-ghost">
             <RefreshCw className="w-3.5 h-3.5" /> Atualizar
           </button>
-          <button onClick={() => setShowCreate(true)} className="flex items-center gap-2 px-4 py-2 text-xs rounded-xl btn-cyber font-semibold">
-            <Plus className="w-3.5 h-3.5" /> Criar usuário
-          </button>
+          {!showArchived && (
+            <button onClick={() => setShowCreate(true)} className="flex items-center gap-2 px-4 py-2 text-xs rounded-xl btn-cyber font-semibold">
+              <Plus className="w-3.5 h-3.5" /> Criar usuário
+            </button>
+          )}
         </div>
       </div>
 
@@ -374,37 +393,39 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
                   <td className="px-5 py-3.5 text-right">
                     {isMasterAdmin && !isThisMaster && (
                       <div className="flex items-center justify-end gap-1.5">
+                        {!showArchived && (
+                          <>
+                            <button
+                              onClick={() => toggleRole(user.id, user.role)}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                user.role === 'admin' ? 'badge-red' : 'badge-purple'
+                              }`}
+                            >
+                              {user.role === 'admin'
+                                ? <><ShieldOff className="w-3.5 h-3.5" /> Remover Admin</>
+                                : <><Shield className="w-3.5 h-3.5" /> Tornar Admin</>
+                              }
+                            </button>
+                            <button
+                              onClick={() => setChangePwdUser({ id: user.id, name })}
+                              className="badge badge-blue inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+                            >
+                              <KeyRound className="w-3.5 h-3.5" /> Senha
+                            </button>
+                          </>
+                        )}
                         <button
-                          onClick={() => toggleRole(user.id, user.role)}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                            user.role === 'admin' ? 'badge-red' : 'badge-purple'
-                          }`}
-                        >
-                          {user.role === 'admin'
-                            ? <><ShieldOff className="w-3.5 h-3.5" /> Remover Admin</>
-                            : <><Shield className="w-3.5 h-3.5" /> Tornar Admin</>
+                          onClick={() => setArchiveTarget({ id: user.id, name, isUnarchive: showArchived })}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                          style={showArchived
+                            ? { background: 'rgba(20,184,166,0.1)', color: '#14B8A6' }
+                            : { background: 'rgba(245,158,11,0.1)', color: '#f59e0b' }
                           }
-                        </button>
-                        <button
-                          onClick={() => setChangePwdUser({ id: user.id, name })}
-                          className="badge badge-blue inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
                         >
-                          <KeyRound className="w-3.5 h-3.5" /> Senha
-                        </button>
-                        <button
-                          onClick={() => setDeleteUserTarget({ id: user.id, name })}
-                          className="p-1.5 rounded-lg transition-all"
-                          style={{ color: 'var(--text-3)' }}
-                          onMouseEnter={(e) => {
-                            (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)';
-                            (e.currentTarget as HTMLElement).style.color = '#f87171';
-                          }}
-                          onMouseLeave={(e) => {
-                            (e.currentTarget as HTMLElement).style.background = 'transparent';
-                            (e.currentTarget as HTMLElement).style.color = '#475569';
-                          }}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          {showArchived
+                            ? <><ArchiveRestore className="w-3.5 h-3.5" /> Reativar</>
+                            : <><Archive className="w-3.5 h-3.5" /> Arquivar</>
+                          }
                         </button>
                       </div>
                     )}

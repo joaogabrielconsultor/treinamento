@@ -47,6 +47,7 @@ app.post('/api/auth/login', async (req, res) => {
     const { rows } = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     const user = rows[0];
     if (!user) return res.status(400).json({ error: 'Email ou senha incorretos' });
+    if (user.archived_at) return res.status(403).json({ error: 'Usuário inativo. Entre em contato com o administrador.' });
     const ok = await bcrypt.compare(password, user.password_hash);
     if (!ok) return res.status(400).json({ error: 'Email ou senha incorretos' });
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role, full_name: user.full_name }, JWT_SECRET, { expiresIn: '7d' });
@@ -289,11 +290,13 @@ app.post('/api/quiz-results', auth, async (req, res) => {
 
 // ─── ADMIN: USERS ──────────────────────────────────────────────────────────────
 app.get('/api/admin/users', auth, adminOnly, async (req, res) => {
+  const showArchived = req.query.archived === 'true';
   const { rows } = await pool.query(
-    `SELECT u.id, u.full_name, u.email, u.role, u.created_at,
+    `SELECT u.id, u.full_name, u.email, u.role, u.created_at, u.archived_at,
             COUNT(e.id)::int AS enrollment_count
      FROM users u
      LEFT JOIN enrollments e ON e.user_id = u.id
+     WHERE ${showArchived ? 'u.archived_at IS NOT NULL' : 'u.archived_at IS NULL'}
      GROUP BY u.id ORDER BY u.created_at DESC`
   );
   res.json(rows);
@@ -333,17 +336,26 @@ app.post('/api/admin/users', auth, adminOnly, async (req, res) => {
   }
 });
 
-// ─── ADMIN: DELETE USER ────────────────────────────────────────────────────────
-app.delete('/api/admin/users/:id', auth, adminOnly, async (req, res) => {
+// ─── ADMIN: ARCHIVE USER ──────────────────────────────────────────────────────
+app.put('/api/admin/users/:id/archive', auth, adminOnly, async (req, res) => {
   if (req.user.email !== MASTER_ADMIN_EMAIL) {
-    return res.status(403).json({ error: 'Apenas o administrador master pode excluir usuários' });
+    return res.status(403).json({ error: 'Apenas o administrador master pode arquivar usuários' });
   }
   const { rows: target } = await pool.query('SELECT email FROM users WHERE id = $1', [req.params.id]);
   if (!target[0]) return res.status(404).json({ error: 'Usuário não encontrado' });
   if (target[0].email === MASTER_ADMIN_EMAIL) {
-    return res.status(403).json({ error: 'O administrador master não pode ser excluído' });
+    return res.status(403).json({ error: 'O administrador master não pode ser arquivado' });
   }
-  await pool.query('DELETE FROM users WHERE id = $1', [req.params.id]);
+  await pool.query('UPDATE users SET archived_at = now() WHERE id = $1', [req.params.id]);
+  res.json({ success: true });
+});
+
+// ─── ADMIN: UNARCHIVE USER ────────────────────────────────────────────────────
+app.put('/api/admin/users/:id/unarchive', auth, adminOnly, async (req, res) => {
+  if (req.user.email !== MASTER_ADMIN_EMAIL) {
+    return res.status(403).json({ error: 'Apenas o administrador master pode reativar usuários' });
+  }
+  await pool.query('UPDATE users SET archived_at = NULL WHERE id = $1', [req.params.id]);
   res.json({ success: true });
 });
 
@@ -1108,15 +1120,7 @@ app.put('/api/proposals/:id', auth, async (req, res) => {
 });
 
 app.delete('/api/proposals/:id', auth, adminOnly, async (req, res) => {
-  const { rows: [p] } = await pool.query('SELECT * FROM proposals WHERE id=$1', [req.params.id]);
-  if (p && p.status === 'Paga' && p.points_earned > 0) {
-    await pool.query(
-      'UPDATE user_points SET total_points = GREATEST(0, total_points - $1), updated_at=now() WHERE user_id=$2',
-      [p.points_earned, p.user_id]
-    );
-  }
-  await pool.query('DELETE FROM proposals WHERE id=$1', [req.params.id]);
-  res.json({ ok: true });
+  res.status(405).json({ error: 'Exclusão de propostas não é permitida.' });
 });
 
 // ─── RANKING ──────────────────────────────────────────────────────────────────
@@ -1160,27 +1164,64 @@ app.get('/api/ranking', auth, async (req, res) => {
 // ─── DASHBOARD DE PRODUÇÃO ────────────────────────────────────────────────────
 app.get('/api/production/dashboard', auth, async (req, res) => {
   const isAdmin = req.user.role === 'admin';
-  const userFilter = isAdmin ? '' : `AND p.user_id = '${req.user.id}'`;
+  const { corretor_id, bank, period } = req.query;
 
-  const { rows: [today] } = await pool.query(`
-    SELECT COALESCE(SUM(value),0)::numeric as value, COUNT(*)::int as count
-    FROM proposals p WHERE status='Paga'
-    AND date_trunc('day', p.created_at) = date_trunc('day', now()) ${userFilter}
-  `);
-  const { rows: [month] } = await pool.query(`
-    SELECT COALESCE(SUM(value),0)::numeric as value, COUNT(*)::int as count
-    FROM proposals p WHERE status='Paga'
-    AND date_trunc('month', p.created_at) = date_trunc('month', now()) ${userFilter}
-  `);
-  const { rows: [total] } = await pool.query(`
-    SELECT COUNT(*)::int as total_proposals,
-           COUNT(*) FILTER (WHERE status='Paga')::int as paid,
-           COUNT(*) FILTER (WHERE status='Em análise')::int as in_analysis,
-           COUNT(*) FILTER (WHERE status='Aprovada')::int as approved,
-           COUNT(*) FILTER (WHERE status='Digitada')::int as typed,
-           COUNT(*) FILTER (WHERE status='Cancelada')::int as cancelled
-    FROM proposals p WHERE 1=1 ${userFilter}
-  `);
+  const params = [];
+  const extraFilters = [];
+
+  if (!isAdmin) {
+    params.push(req.user.id);
+    extraFilters.push(`p.user_id = $${params.length}`);
+  } else if (corretor_id) {
+    params.push(corretor_id);
+    extraFilters.push(`p.user_id = $${params.length}`);
+  }
+
+  if (bank) {
+    params.push(bank);
+    extraFilters.push(`p.bank = $${params.length}`);
+  }
+
+  const baseWhere = extraFilters.length ? `AND ${extraFilters.join(' AND ')}` : '';
+
+  let periodFilter = '';
+  if (period === 'today') {
+    periodFilter = `AND date_trunc('day', p.created_at) = date_trunc('day', now())`;
+  } else if (period === 'week') {
+    periodFilter = `AND p.created_at >= date_trunc('week', now())`;
+  } else if (period === 'month' || !period) {
+    periodFilter = `AND date_trunc('month', p.created_at) = date_trunc('month', now())`;
+  }
+
+  const todayParams = [...params];
+  todayParams.push(true);
+  const { rows: [today] } = await pool.query(
+    `SELECT COALESCE(SUM(value),0)::numeric as value, COUNT(*)::int as count
+     FROM proposals p WHERE status='Paga'
+     AND date_trunc('day', p.created_at) = date_trunc('day', now()) ${baseWhere}`,
+    params
+  );
+  const { rows: [month] } = await pool.query(
+    `SELECT COALESCE(SUM(value),0)::numeric as value, COUNT(*)::int as count
+     FROM proposals p WHERE status='Paga'
+     AND date_trunc('month', p.created_at) = date_trunc('month', now()) ${baseWhere}`,
+    params
+  );
+  const { rows: [periodData] } = await pool.query(
+    `SELECT COALESCE(SUM(value),0)::numeric as value, COUNT(*)::int as count
+     FROM proposals p WHERE status='Paga' ${periodFilter} ${baseWhere}`,
+    params
+  );
+  const { rows: [total] } = await pool.query(
+    `SELECT COUNT(*)::int as total_proposals,
+            COUNT(*) FILTER (WHERE status='Paga')::int as paid,
+            COUNT(*) FILTER (WHERE status='Em análise')::int as in_analysis,
+            COUNT(*) FILTER (WHERE status='Aprovada')::int as approved,
+            COUNT(*) FILTER (WHERE status='Digitada')::int as typed,
+            COUNT(*) FILTER (WHERE status='Cancelada')::int as cancelled
+     FROM proposals p WHERE 1=1 ${baseWhere}`,
+    params
+  );
 
   let bestBroker = null;
   let topTable = null;
@@ -1236,11 +1277,12 @@ app.get('/api/production/dashboard', auth, async (req, res) => {
     myCommissionTotal = parseFloat(comm?.total || 0);
   }
 
-  const avgTicket = month.count > 0 ? parseFloat(month.value) / month.count : 0;
+  const avgTicket = periodData.count > 0 ? parseFloat(periodData.value) / periodData.count : 0;
 
   res.json({
     today: { value: parseFloat(today.value), count: today.count },
     month: { value: parseFloat(month.value), count: month.count },
+    period: { value: parseFloat(periodData.value), count: periodData.count },
     avg_ticket: avgTicket,
     proposals: total,
     best_broker: bestBroker,

@@ -9,22 +9,24 @@ interface AdminUser {
   role: 'user' | 'admin';
   created_at: string;
   enrollment_count: number;
+  archived_at: string | null;
 }
 
 export function useIsAdmin(user: { role: 'user' | 'admin' } | null) {
   return { isAdmin: user?.role === 'admin', loading: false };
 }
 
-export function useAdminUsers() {
+export function useAdminUsers(showArchived = false) {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
-    api.get<AdminUser[]>('/admin/users', true)
+    const url = showArchived ? '/admin/users?archived=true' : '/admin/users';
+    api.get<AdminUser[]>(url, true)
       .then(setUsers)
       .finally(() => setLoading(false));
-  }, []);
+  }, [showArchived]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
@@ -39,8 +41,13 @@ export function useAdminUsers() {
     setUsers((prev) => [{ ...newUser, enrollment_count: 0 }, ...prev]);
   };
 
-  const deleteUser = async (userId: string) => {
-    await api.delete(`/admin/users/${userId}`, true);
+  const archiveUser = async (userId: string) => {
+    await api.put(`/admin/users/${userId}/archive`, {}, true);
+    setUsers((prev) => prev.filter((u) => u.id !== userId));
+  };
+
+  const unarchiveUser = async (userId: string) => {
+    await api.put(`/admin/users/${userId}/unarchive`, {}, true);
     setUsers((prev) => prev.filter((u) => u.id !== userId));
   };
 
@@ -48,7 +55,7 @@ export function useAdminUsers() {
     await api.put(`/admin/users/${userId}/password`, { password }, true);
   };
 
-  return { users, loading, toggleRole, createUser, deleteUser, changePassword, refetch: fetchUsers };
+  return { users, loading, toggleRole, createUser, archiveUser, unarchiveUser, changePassword, refetch: fetchUsers };
 }
 
 export function useAdminCourses() {

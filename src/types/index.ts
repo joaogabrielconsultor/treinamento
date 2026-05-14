@@ -246,6 +246,7 @@ export interface Notification {
 export interface ProductionStats {
   today: { value: number; count: number };
   month: { value: number; count: number };
+  period: { value: number; count: number };
   avg_ticket: number;
   proposals: {
     total_proposals: number;

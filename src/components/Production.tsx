@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, CheckCircle, BarChart2, Star, Award, Target, Zap, Bell, BellOff, Percent, X } from 'lucide-react';
+import { DollarSign, TrendingUp, CheckCircle, BarChart2, Star, Award, Target, Zap, Bell, BellOff, Percent, X, ChevronDown } from 'lucide-react';
 import { ProductionStats, Badge, UserStreak, MonthlyGoal, Notification } from '../types';
 
 const API = (p: string, opts?: RequestInit) =>
@@ -44,6 +44,8 @@ const PROPOSAL_BARS = [
   { label: 'Canceladas', key: 'cancelled',   barClass: 'progress-bar-red'    },
 ] as const;
 
+interface FilterUser { id: string; full_name: string | null; email: string; }
+
 export function Production({ isAdmin }: { isAdmin: boolean }) {
   const [stats, setStats] = useState<ProductionStats | null>(null);
   const [badges, setBadges] = useState<Badge[]>([]);
@@ -52,11 +54,20 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotif, setShowNotif] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState('month');
+  const [filterCorretor, setFilterCorretor] = useState('');
+  const [filterBank, setFilterBank] = useState('');
+  const [corretores, setCorretores] = useState<FilterUser[]>([]);
+  const [banks, setBanks] = useState<string[]>([]);
 
   async function load() {
     setLoading(true);
+    const params = new URLSearchParams({ period });
+    if (isAdmin && filterCorretor) params.set('corretor_id', filterCorretor);
+    if (filterBank) params.set('bank', filterBank);
+
     const reqs = [
-      API('/api/production/dashboard').then(r => r.json()),
+      API(`/api/production/dashboard?${params}`).then(r => r.json()),
       API('/api/badges').then(r => r.json()),
       API('/api/notifications').then(r => r.json()),
     ];
@@ -73,7 +84,21 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
     setLoading(false);
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    if (isAdmin) {
+      API('/api/admin/users').then(r => r.json()).then(data => {
+        if (Array.isArray(data)) setCorretores(data);
+      });
+      API('/api/proposals').then(r => r.json()).then(data => {
+        if (Array.isArray(data)) {
+          const uniqueBanks = Array.from(new Set(data.map((p: { bank: string }) => p.bank).filter(Boolean)));
+          setBanks(uniqueBanks as string[]);
+        }
+      });
+    }
+  }, [isAdmin]);
+
+  useEffect(() => { load(); }, [period, filterCorretor, filterBank]);
 
   async function markAllRead() {
     await API('/api/notifications/read-all', { method: 'PUT' });
@@ -199,10 +224,53 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
         </div>
       </div>
 
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3 mb-6 animate-fade-up" style={{ animationDelay: '40ms' }}>
+        {(['today', 'week', 'month', 'all'] as const).map(p => {
+          const label = p === 'today' ? 'Hoje' : p === 'week' ? 'Esta Semana' : p === 'month' ? 'Este Mês' : 'Todo Período';
+          return (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${period === p ? 'btn-cyber' : 'btn-ghost'}`}
+            >
+              {label}
+            </button>
+          );
+        })}
+        {isAdmin && (
+          <>
+            <div className="relative">
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+              <select value={filterCorretor} onChange={e => setFilterCorretor(e.target.value)}
+                className="input-cyber appearance-none pl-3 pr-8 py-1.5 text-xs rounded-xl" style={{ minWidth: '160px' }}>
+                <option value="">Todos os corretores</option>
+                {corretores.map(u => (
+                  <option key={u.id} value={u.id}>{u.full_name || u.email}</option>
+                ))}
+              </select>
+            </div>
+            <div className="relative">
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+              <select value={filterBank} onChange={e => setFilterBank(e.target.value)}
+                className="input-cyber appearance-none pl-3 pr-8 py-1.5 text-xs rounded-xl" style={{ minWidth: '140px' }}>
+                <option value="">Todos os bancos</option>
+                {banks.map(b => <option key={b} value={b}>{b}</option>)}
+              </select>
+            </div>
+          </>
+        )}
+      </div>
+
       {/* Main stats */}
       <div className={`grid grid-cols-2 ${isAdmin ? 'lg:grid-cols-4' : 'lg:grid-cols-5'} gap-4 mb-6`}>
-        <StatCard label="Produção Hoje"   value={formatCurrency(stats.today.value)}  sub={`${stats.today.count} propostas`}      icon={DollarSign}  iconClass="icon-box-green"  iconColor="#22c55e" delay={0}   />
-        <StatCard label="Produção do Mês" value={formatCurrency(stats.month.value)}  sub={`${stats.month.count} pagas`}           icon={TrendingUp}  iconClass="icon-box-blue"   iconColor="#60a5fa" delay={60}  />
+        <StatCard label="Produção Hoje"    value={formatCurrency(stats.today.value)}   sub={`${stats.today.count} propostas`}  icon={DollarSign}  iconClass="icon-box-green"  iconColor="#22c55e" delay={0}   />
+        <StatCard
+          label={period === 'today' ? 'Produção Hoje' : period === 'week' ? 'Esta Semana' : period === 'all' ? 'Todo Período' : 'Este Mês'}
+          value={formatCurrency(stats.period?.value ?? stats.month.value)}
+          sub={`${stats.period?.count ?? stats.month.count} pagas`}
+          icon={TrendingUp} iconClass="icon-box-blue" iconColor="#60a5fa" delay={60}
+        />
         <StatCard label="Ticket Médio"    value={formatCurrency(stats.avg_ticket)}                                                  icon={BarChart2}   iconClass="icon-box-purple" iconColor="#a78bfa" delay={120} />
         {isAdmin
           ? <StatCard label="Melhor Corretor" value={stats.best_broker?.full_name?.split(' ')[0] || '—'} sub={`${stats.best_broker?.points || 0} pts`} icon={Award} iconClass="icon-box-amber" iconColor="#fbbf24" delay={180} />
