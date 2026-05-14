@@ -18,7 +18,17 @@ const STATUS_CONFIG: Record<ProposalStatus, { color: string; icon: React.ReactNo
 const fmtBRL = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 const inp = 'input-cyber w-full px-3 py-2.5 rounded-xl text-sm';
 
+const MASTER_EMAIL = 'admin@aprovamais.com';
+function getTokenEmail(): string {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return '';
+    return JSON.parse(atob(token.split('.')[1])).email || '';
+  } catch { return ''; }
+}
+
 export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
+  const canDelete = isMaster || getTokenEmail() === MASTER_EMAIL;
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [tables, setTables] = useState<FinancialTable[]>([]);
   const [loading, setLoading] = useState(true);
@@ -195,7 +205,7 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
                           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
-                        {isMaster && (
+                        {canDelete && (
                           <button onClick={() => setConfirmDelete(p)}
                             className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-3)' }}
                             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
