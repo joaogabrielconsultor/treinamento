@@ -62,6 +62,35 @@ app.get('/api/auth/me', auth, async (req, res) => {
   res.json(rows[0] || null);
 });
 
+app.put('/api/profile', auth, async (req, res) => {
+  const { full_name, email } = req.body;
+  if (!full_name?.trim()) return res.status(400).json({ error: 'Nome obrigatório' });
+  if (!email?.trim()) return res.status(400).json({ error: 'Email obrigatório' });
+  try {
+    const { rows } = await pool.query(
+      'UPDATE users SET full_name=$1, email=$2 WHERE id=$3 RETURNING id, full_name, email, role, pix_key, pix_key_type',
+      [full_name.trim(), email.trim().toLowerCase(), req.user.id]
+    );
+    res.json(rows[0]);
+  } catch (e) {
+    if (e.code === '23505') return res.status(400).json({ error: 'Este email já está em uso' });
+    res.status(500).json({ error: 'Erro ao atualizar perfil' });
+  }
+});
+
+app.put('/api/profile/password', auth, async (req, res) => {
+  const { current_password, new_password } = req.body;
+  if (!current_password || !new_password) return res.status(400).json({ error: 'Preencha todos os campos' });
+  if (new_password.length < 6) return res.status(400).json({ error: 'Nova senha deve ter no mínimo 6 caracteres' });
+  const { rows } = await pool.query('SELECT password_hash FROM users WHERE id=$1', [req.user.id]);
+  if (!rows[0]) return res.status(404).json({ error: 'Usuário não encontrado' });
+  const ok = await bcrypt.compare(current_password, rows[0].password_hash);
+  if (!ok) return res.status(400).json({ error: 'Senha atual incorreta' });
+  const hash = await bcrypt.hash(new_password, 10);
+  await pool.query('UPDATE users SET password_hash=$1 WHERE id=$2', [hash, req.user.id]);
+  res.json({ ok: true });
+});
+
 app.put('/api/profile/pix', auth, async (req, res) => {
   const { pix_key, pix_key_type } = req.body;
   const validTypes = ['cpf', 'cnpj', 'email', 'telefone', 'aleatoria'];

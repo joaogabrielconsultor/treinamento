@@ -1,8 +1,10 @@
-import { LayoutDashboard, Library, LogOut, ChevronRight, Users, GraduationCap, Shield, Building2, Sun, Moon, Palette, FileText, Trophy, BarChart2, Table2, Tag, ClipboardList, FileBarChart, Handshake, Package, Calculator, Wallet, Store } from 'lucide-react';
+import { LayoutDashboard, Library, LogOut, ChevronRight, Users, GraduationCap, Shield, Building2, Sun, Moon, Palette, FileText, Trophy, BarChart2, Table2, Tag, ClipboardList, FileBarChart, Handshake, Package, Calculator, Wallet, Store, UserCog } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
+import { useState } from 'react';
 import { ViewType } from '../types';
 import { LogoComponent } from './LogoComponent';
 import { useAppContext } from '../context/AppContext';
+import { ProfileModal } from './ProfileModal';
 
 interface SidebarProps {
   currentView: ViewType;
@@ -41,8 +43,12 @@ const adminItems = [
 
 export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin }: SidebarProps) {
   const { darkMode, toggleDarkMode } = useAppContext();
+  const [showProfile, setShowProfile] = useState(false);
+  const [localName, setLocalName] = useState<string | null>(null);
+  const [localEmail, setLocalEmail] = useState<string | null>(null);
 
-  const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário';
+  const displayName = localName ?? user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'Usuário';
+  const displayEmail = localEmail ?? user.email ?? '';
   const initials = displayName
     .split(' ')
     .slice(0, 2)
@@ -184,9 +190,13 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin }: S
         </button>
 
         {/* User */}
-        <div
-          className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl mt-1"
+        <button
+          onClick={() => setShowProfile(true)}
+          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl mt-1 transition-all text-left"
           style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.09)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; }}
+          title="Editar perfil"
         >
           <div
             className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-[11px] font-bold"
@@ -200,9 +210,18 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin }: S
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[12px] font-semibold truncate" style={{ color: '#E2E8F0' }}>{displayName}</p>
-            <p className="text-[10px] truncate" style={{ color: '#64748B' }}>{user.email}</p>
+            <p className="text-[10px] truncate" style={{ color: '#64748B' }}>{displayEmail}</p>
           </div>
-        </div>
+          <UserCog className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#475569' }} />
+        </button>
+
+        {showProfile && (
+          <ProfileModal
+            user={{ full_name: displayName, email: displayEmail }}
+            onClose={() => setShowProfile(false)}
+            onUpdated={(name, email) => { setLocalName(name); setLocalEmail(email); }}
+          />
+        )}
 
         <button
           onClick={onSignOut}
