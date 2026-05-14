@@ -1133,7 +1133,7 @@ app.get('/api/proposals/check-number', auth, async (req, res) => {
 
 // ─── PROPOSTAS ────────────────────────────────────────────────────────────────
 app.get('/api/proposals', auth, async (req, res) => {
-  const isAdmin = req.user.role === 'admin';
+  const isAdmin = req.user.role === 'admin' || req.user.role === 'master';
   const { bank, bank_id, table_id, convenio, convenio_id, product, product_id, status, start_date, end_date, user_id } = req.query;
   const conditions = [];
   const values = [];
@@ -1227,7 +1227,7 @@ app.patch('/api/admin/proposals/:id/toggle-edit', auth, adminOnly, async (req, r
 });
 
 app.put('/api/proposals/:id', auth, async (req, res) => {
-  const isAdmin = req.user.role === 'admin';
+  const isAdmin = req.user.role === 'admin' || req.user.role === 'master';
   const { rows: [existing] } = await pool.query('SELECT * FROM proposals WHERE id=$1', [req.params.id]);
   if (!existing) return res.status(404).json({ error: 'Proposta não encontrada' });
   if (!isAdmin && existing.user_id !== req.user.id) return res.status(403).json({ error: 'Acesso negado' });
@@ -1417,7 +1417,7 @@ app.get('/api/ranking', auth, async (req, res) => {
 
 // ─── DASHBOARD DE PRODUÇÃO ────────────────────────────────────────────────────
 app.get('/api/production/dashboard', auth, async (req, res) => {
-  const isAdmin = req.user.role === 'admin';
+  const isAdmin = req.user.role === 'admin' || req.user.role === 'master';
   const { corretor_id, bank, period, status, date_from, date_to, date_field } = req.query;
 
   const params = [];
