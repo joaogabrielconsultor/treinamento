@@ -47,7 +47,7 @@ function AppInner() {
   const { enrollments, enroll, refetch: refetchEnrollments } = useEnrollments(user?.id ?? null);
   const currentEnrollment = enrollments.find((e) => e.course_id === selectedCourseId) ?? null;
   const { progress: lessonProgress, completeLesson } = useLessonProgress(user?.id ?? null, selectedCourseId);
-  const { isAdmin } = useIsAdmin(user);
+  const { isAdmin, isMaster } = useIsAdmin(user);
   const [simPrefill, setSimPrefill] = useState<SimPrefill | null>(null);
   const [showProfile, setShowProfile] = useState(false);
 
@@ -195,7 +195,7 @@ function AppInner() {
         {currentView === 'admin-proposals'        && isAdmin && <AdminProposals />}
         {currentView === 'admin-reports'           && isAdmin && <AdminReports />}
         {currentView === 'login-bancos' && <LoginBancos isAdmin={isAdmin} />}
-        {currentView === 'proposals'  && <Proposals prefill={simPrefill} onClearPrefill={() => setSimPrefill(null)} isAdmin={isAdmin} />}
+        {currentView === 'proposals'  && <Proposals prefill={simPrefill} onClearPrefill={() => setSimPrefill(null)} isAdmin={isAdmin} isMaster={isMaster} />}
         {currentView === 'simulator'  && (
           <Simulator onSendProposal={data => { setSimPrefill(data); navigate('proposals'); }} isAdmin={isAdmin} />
         )}

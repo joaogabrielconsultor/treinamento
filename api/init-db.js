@@ -12,11 +12,13 @@ async function initDb() {
         full_name text,
         email text UNIQUE NOT NULL,
         password_hash text NOT NULL,
-        role text NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
+        role text NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin', 'master')),
         created_at timestamptz NOT NULL DEFAULT now(),
         archived_at timestamptz
       )
     `);
+    await client.query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check`);
+    await client.query(`ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('user', 'admin', 'master'))`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS archived_at timestamptz`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS pix_key text`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS pix_key_type text CHECK (pix_key_type IN ('cpf','cnpj','email','telefone','aleatoria'))`);
@@ -386,27 +388,9 @@ async function initDb() {
       `);
     }
 
-    // Master admin — único que pode gerenciar funções, não pode ser rebaixado
-    const MASTER_EMAIL = 'adm@rozesstartflow.com';
-    const MASTER_NAME  = 'Administrador Master';
-    const MASTER_PASS  = 'Rozes10**@';
-
-    const { rows: masterRows } = await client.query('SELECT id FROM users WHERE email = $1', [MASTER_EMAIL]);
-    if (masterRows.length === 0) {
-      const hash = await bcrypt.hash(MASTER_PASS, 10);
-      await client.query(
-        'INSERT INTO users (full_name, email, password_hash, role) VALUES ($1, $2, $3, $4)',
-        [MASTER_NAME, MASTER_EMAIL, hash, 'admin']
-      );
-      console.log('Master admin criado:', MASTER_EMAIL);
-    } else {
-      // Garante que a senha e o papel estejam corretos mesmo após reinicialização
-      const hash = await bcrypt.hash(MASTER_PASS, 10);
-      await client.query(
-        'UPDATE users SET password_hash = $1, role = $2, full_name = $3 WHERE email = $4',
-        [hash, 'admin', MASTER_NAME, MASTER_EMAIL]
-      );
-    }
+    // Master — único usuário que pode excluir propostas e tem acesso total
+    const MASTER_EMAIL = 'admin@aprovamais.com';
+    await client.query(`UPDATE users SET role = 'master' WHERE email = $1`, [MASTER_EMAIL]);
 
     console.log('Banco de dados pronto.');
   } catch (err) {

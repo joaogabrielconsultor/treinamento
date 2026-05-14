@@ -36,7 +36,11 @@ function auth(req, res, next) {
 }
 
 function adminOnly(req, res, next) {
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Acesso negado' });
+  if (req.user.role !== 'admin' && req.user.role !== 'master') return res.status(403).json({ error: 'Acesso negado' });
+  next();
+}
+function masterOnly(req, res, next) {
+  if (req.user.role !== 'master') return res.status(403).json({ error: 'Acesso restrito ao master' });
   next();
 }
 
@@ -1329,8 +1333,11 @@ app.put('/api/proposals/:id', auth, async (req, res) => {
   res.json(updated);
 });
 
-app.delete('/api/proposals/:id', auth, adminOnly, async (req, res) => {
-  res.status(405).json({ error: 'Exclusão de propostas não é permitida.' });
+app.delete('/api/proposals/:id', auth, masterOnly, async (req, res) => {
+  const { rows: [p] } = await pool.query('SELECT id FROM proposals WHERE id=$1', [req.params.id]);
+  if (!p) return res.status(404).json({ error: 'Proposta não encontrada' });
+  await pool.query('DELETE FROM proposals WHERE id=$1', [req.params.id]);
+  res.json({ ok: true });
 });
 
 // ─── PROPOSAL STATUSES ────────────────────────────────────────────────────────

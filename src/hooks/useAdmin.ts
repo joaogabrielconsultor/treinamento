@@ -14,8 +14,12 @@ interface AdminUser {
   loja_name: string | null;
 }
 
-export function useIsAdmin(user: { role: 'user' | 'admin' } | null) {
-  return { isAdmin: user?.role === 'admin', loading: false };
+export function useIsAdmin(user: { role: 'user' | 'admin' | 'master' } | null) {
+  return {
+    isAdmin: user?.role === 'admin' || user?.role === 'master',
+    isMaster: user?.role === 'master',
+    loading: false,
+  };
 }
 
 export function useAdminUsers(showArchived = false) {

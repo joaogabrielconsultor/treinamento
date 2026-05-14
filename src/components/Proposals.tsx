@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import { SimPrefill } from './Simulator';
-import { Plus, Search, FileText, ChevronDown, CheckCircle, Clock, DollarSign, XCircle, Edit2, User, CreditCard, ChevronRight, AlertTriangle, Lock, Unlock } from 'lucide-react';
+import { Plus, Search, FileText, ChevronDown, CheckCircle, Clock, DollarSign, XCircle, Edit2, User, CreditCard, ChevronRight, AlertTriangle, Lock, Unlock, Trash2 } from 'lucide-react';
 import { Proposal, ProposalStatusDef, FinancialTable, Bank, Convenio, Product } from '../types';
 import { Modal } from './ui/Modal';
 import { Pagination } from './ui/Pagination';
@@ -78,9 +78,10 @@ interface ProposalsProps {
   prefill?: SimPrefill | null;
   onClearPrefill?: () => void;
   isAdmin?: boolean;
+  isMaster?: boolean;
 }
 
-export function Proposals({ prefill, onClearPrefill, isAdmin = false }: ProposalsProps = {}) {
+export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster = false }: ProposalsProps = {}) {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -94,6 +95,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
   const [statusDefs, setStatusDefs] = useState<ProposalStatusDef[]>([]);
+  const [confirmDelete, setConfirmDelete] = useState<Proposal | null>(null);
 
   // Cascade data
   const [convenios, setConvenios] = useState<Convenio[]>([]);
@@ -298,6 +300,12 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
     setShowForm(false);
     await load();
     setSaving(false);
+  }
+
+  async function deleteProposal(id: string) {
+    await API(`/api/proposals/${id}`, { method: 'DELETE' });
+    setProposals(prev => prev.filter(p => p.id !== id));
+    setConfirmDelete(null);
   }
 
   async function toggleBrokerEdit(id: string, current: boolean) {
@@ -511,6 +519,18 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
                             {p.allow_broker_edit ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
                           </button>
                         )}
+                        {isMaster && (
+                          <button
+                            onClick={() => setConfirmDelete(p)}
+                            className="p-1.5 rounded-lg transition-all"
+                            style={{ color: 'var(--text-3)' }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
+                            title="Excluir proposta"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -519,6 +539,26 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
             </table>
           </div>
           <Pagination total={filtered.length} page={page} perPage={perPage} onPage={setPage} onPerPage={setPerPage} />
+        </div>
+      )}
+
+      {/* Modal de confirmação de exclusão (só master) */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)' }}>
+          <div className="modal-panel rounded-2xl w-full max-w-sm p-6 animate-fade-up">
+            <h2 className="text-base font-bold mb-2" style={{ color: 'var(--text-1)' }}>Excluir Proposta</h2>
+            <p className="text-sm mb-1" style={{ color: 'var(--text-3)' }}>Tem certeza que deseja excluir a proposta de</p>
+            <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text-1)' }}>{confirmDelete.client_name}</p>
+            <p className="text-xs mb-4" style={{ color: '#f87171' }}>Esta ação é irreversível.</p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmDelete(null)} className="flex-1 py-2.5 text-sm rounded-xl btn-ghost">Cancelar</button>
+              <button onClick={() => deleteProposal(confirmDelete.id)}
+                className="flex-1 py-2.5 text-sm rounded-xl font-semibold"
+                style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}>
+                Excluir
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

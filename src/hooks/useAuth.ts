@@ -5,7 +5,7 @@ export interface AuthUser {
   id: string;
   email: string;
   full_name: string | null;
-  role: 'user' | 'admin';
+  role: 'user' | 'admin' | 'master';
 }
 
 export function useAuth() {
