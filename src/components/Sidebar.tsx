@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { ViewType } from '../types';
 import { LogoComponent } from './LogoComponent';
 import { useAppContext } from '../context/AppContext';
-import { ProfileModal } from './ProfileModal';
 
 interface SidebarProps {
   currentView: ViewType;
@@ -12,6 +11,7 @@ interface SidebarProps {
   user: User;
   onSignOut: () => void;
   isAdmin: boolean;
+  onOpenProfile: () => void;
 }
 
 const navItems = [
@@ -41,14 +41,11 @@ const adminItems = [
   { view: 'admin-personalizacao'    as ViewType, icon: Palette,       label: 'Personalização' },
 ];
 
-export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin }: SidebarProps) {
+export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin, onOpenProfile }: SidebarProps) {
   const { darkMode, toggleDarkMode } = useAppContext();
-  const [showProfile, setShowProfile] = useState(false);
-  const [localName, setLocalName] = useState<string | null>(null);
-  const [localEmail, setLocalEmail] = useState<string | null>(null);
 
-  const displayName = localName ?? user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'Usuário';
-  const displayEmail = localEmail ?? user.email ?? '';
+  const displayName = user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'Usuário';
+  const displayEmail = user.email ?? '';
   const initials = displayName
     .split(' ')
     .slice(0, 2)
@@ -191,7 +188,7 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin }: S
 
         {/* User */}
         <button
-          onClick={() => setShowProfile(true)}
+          onClick={onOpenProfile}
           className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl mt-1 transition-all text-left"
           style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.09)'; }}
@@ -214,14 +211,6 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin }: S
           </div>
           <UserCog className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#475569' }} />
         </button>
-
-        {showProfile && (
-          <ProfileModal
-            user={{ full_name: displayName, email: displayEmail }}
-            onClose={() => setShowProfile(false)}
-            onUpdated={(name, email) => { setLocalName(name); setLocalEmail(email); }}
-          />
-        )}
 
         <button
           onClick={onSignOut}

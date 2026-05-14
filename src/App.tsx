@@ -25,6 +25,7 @@ import { ContaCorrente } from './components/ContaCorrente';
 import { AdminContaCorrente } from './components/admin/AdminContaCorrente';
 import { AdminLojas } from './components/admin/AdminLojas';
 import { AdminContaEmpresa } from './components/admin/AdminContaEmpresa';
+import { ProfileModal } from './components/ProfileModal';
 import { useAuth } from './hooks/useAuth';
 import { useCourses, useCourseDetail } from './hooks/useCourses';
 import { useEnrollments, useLessonProgress } from './hooks/useEnrollments';
@@ -47,6 +48,7 @@ function AppInner() {
   const { progress: lessonProgress, completeLesson } = useLessonProgress(user?.id ?? null, selectedCourseId);
   const { isAdmin } = useIsAdmin(user);
   const [simPrefill, setSimPrefill] = useState<SimPrefill | null>(null);
+  const [showProfile, setShowProfile] = useState(false);
 
   if (authLoading) {
     return (
@@ -117,7 +119,19 @@ function AppInner() {
         user={adaptedUser}
         onSignOut={signOut}
         isAdmin={isAdmin}
+        onOpenProfile={() => setShowProfile(true)}
       />
+      {showProfile && (
+        <ProfileModal
+          user={{ full_name: user.full_name, email: user.email }}
+          onClose={() => setShowProfile(false)}
+          onUpdated={(name, email) => {
+            user.full_name = name;
+            user.email = email;
+            setShowProfile(false);
+          }}
+        />
+      )}
 
       <main className="flex-1 overflow-y-auto" style={{ background: 'var(--bg-base)' }}>
         {currentView === 'dashboard' && (
