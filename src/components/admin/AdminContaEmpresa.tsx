@@ -93,6 +93,7 @@ function ExtratoView({ loja, onBack }: { loja: LojaBalance; onBack: () => void }
           {items.length === 0 ? (
             <div className="text-center py-16 text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma movimentação encontrada</div>
           ) : (
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
@@ -141,6 +142,7 @@ function ExtratoView({ loja, onBack }: { loja: LojaBalance; onBack: () => void }
                 })}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       )}
@@ -212,6 +214,7 @@ export function AdminContaEmpresa() {
           ) : (
             <div className="rounded-2xl overflow-hidden animate-fade-up"
               style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)', animationDelay: '80ms' }}>
+              <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
@@ -260,6 +263,7 @@ export function AdminContaEmpresa() {
                   })}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </>

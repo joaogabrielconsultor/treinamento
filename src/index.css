@@ -461,3 +461,25 @@ body {
    NUMERIC TABULAR
 ═══════════════════════════════════════════════════════════════ */
 .num { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; }
+
+/* ═══════════════════════════════════════════════════════════════
+   SCROLLBAR HORIZONTAL VISÍVEL
+═══════════════════════════════════════════════════════════════ */
+.overflow-x-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(20,184,166,0.4) rgba(255,255,255,0.04);
+}
+.overflow-x-auto::-webkit-scrollbar {
+  height: 6px;
+}
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.04);
+  border-radius: 99px;
+}
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: rgba(20,184,166,0.4);
+  border-radius: 99px;
+}
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(20,184,166,0.7);
+}

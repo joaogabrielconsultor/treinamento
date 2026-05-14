@@ -422,6 +422,7 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
           animationDelay: '60ms',
         }}
       >
+        <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
@@ -552,6 +553,7 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
             })}
           </tbody>
         </table>
+        </div>
 
         {users.length === 0 && (
           <div className="text-center py-16">

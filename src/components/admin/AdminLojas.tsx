@@ -152,6 +152,7 @@ export function AdminLojas() {
               <p className="text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma loja cadastrada</p>
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
@@ -200,6 +201,7 @@ export function AdminLojas() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       )}
