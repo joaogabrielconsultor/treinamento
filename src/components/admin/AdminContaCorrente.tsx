@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Wallet, Clock, CheckCircle, DollarSign, Users, ChevronDown, Search, AlertCircle } from 'lucide-react';
+import { Wallet, Clock, CheckCircle, DollarSign, Users, ChevronDown, Search, AlertCircle, Key } from 'lucide-react';
 import { Proposal } from '../../types';
 import { Pagination } from '../ui/Pagination';
 
@@ -8,10 +8,16 @@ const API = (p: string, opts?: RequestInit) =>
 
 const fmtBRL = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
+const PIX_TYPE_LABELS: Record<string, string> = {
+  cpf: 'CPF', cnpj: 'CNPJ', email: 'E-mail', telefone: 'Telefone', aleatoria: 'Chave Aleatória',
+};
+
 interface BrokerSummary {
   user_id: string;
   user_name: string;
   user_email: string;
+  pix_key: string | null;
+  pix_key_type: string | null;
   pending_count: number;
   pending_value: number;
   paid_count: number;
@@ -156,7 +162,7 @@ export function AdminContaCorrente() {
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                {['Corretor', 'A Receber', 'Já Pago', 'Total'].map(h => (
+                {['Corretor', 'Chave PIX', 'A Receber', 'Já Pago', 'Total'].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
                 ))}
               </tr>
@@ -167,6 +173,21 @@ export function AdminContaCorrente() {
                   <td className="px-4 py-3">
                     <p className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{b.user_name || b.user_email}</p>
                     <p className="text-xs" style={{ color: 'var(--text-3)' }}>{b.user_email}</p>
+                  </td>
+                  <td className="px-4 py-3">
+                    {b.pix_key ? (
+                      <div className="flex items-center gap-1.5">
+                        <Key className="w-3 h-3 flex-shrink-0" style={{ color: '#14B8A6' }} />
+                        <div>
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ background: 'rgba(20,184,166,0.12)', color: '#2DD4BF' }}>
+                            {PIX_TYPE_LABELS[b.pix_key_type || ''] || b.pix_key_type}
+                          </span>
+                          <p className="text-xs font-mono mt-0.5" style={{ color: 'var(--text-2)' }}>{b.pix_key}</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-xs" style={{ color: 'var(--text-3)' }}>—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <p className="font-bold num" style={{ color: b.pending_value > 0 ? '#f59e0b' : 'var(--text-3)' }}>

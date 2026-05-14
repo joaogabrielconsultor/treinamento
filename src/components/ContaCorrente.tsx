@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Wallet, Clock, CheckCircle, DollarSign, FileText, ChevronDown } from 'lucide-react';
+import { Wallet, Clock, CheckCircle, DollarSign, FileText, ChevronDown, Key, Edit2, X, Save } from 'lucide-react';
 import { Proposal } from '../types';
 import { Pagination } from './ui/Pagination';
 
@@ -8,6 +8,14 @@ const API = (p: string, opts?: RequestInit) =>
 
 const fmtBRL = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
+const PIX_TYPE_LABELS: Record<string, string> = {
+  cpf: 'CPF',
+  cnpj: 'CNPJ',
+  email: 'E-mail',
+  telefone: 'Telefone',
+  aleatoria: 'Chave Aleatória',
+};
+
 interface Summary {
   pending_count: number;
   pending_value: number;
@@ -15,10 +23,68 @@ interface Summary {
   paid_value: number;
 }
 
+interface PixInfo {
+  pix_key: string | null;
+  pix_key_type: string | null;
+}
+
 const STATUS_BADGE: Record<string, string> = {
   'Ag. Comissão': 'badge badge-amber',
   'Comissão Paga': 'badge badge-green',
 };
+
+function PixModal({ current, onClose, onSave }: { current: PixInfo; onClose: () => void; onSave: (info: PixInfo) => Promise<void> }) {
+  const [type, setType] = useState(current.pix_key_type || '');
+  const [key, setKey] = useState(current.pix_key || '');
+  const [saving, setSaving] = useState(false);
+
+  async function handleSave() {
+    setSaving(true);
+    await onSave({ pix_key: key.trim() || null, pix_key_type: type || null });
+    setSaving(false);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }}>
+      <div className="rounded-2xl p-6 w-full max-w-md animate-fade-up" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <Key className="w-4 h-4" style={{ color: '#14B8A6' }} />
+            <h2 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>Cadastrar Chave PIX</h2>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg" style={{ color: 'var(--text-3)' }}><X className="w-4 h-4" /></button>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: 'var(--text-3)' }}>Tipo de chave</label>
+            <div className="relative">
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+              <select value={type} onChange={e => setType(e.target.value)}
+                className="input-cyber w-full appearance-none pl-3 pr-9 py-2.5 text-sm rounded-xl">
+                <option value="">Selecione o tipo</option>
+                {Object.entries(PIX_TYPE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: 'var(--text-3)' }}>Chave PIX</label>
+            <input value={key} onChange={e => setKey(e.target.value)} placeholder="Digite sua chave PIX"
+              className="input-cyber w-full px-3 py-2.5 text-sm rounded-xl" />
+          </div>
+        </div>
+        <div className="flex gap-3 mt-6">
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
+            style={{ background: 'var(--card-border)', color: 'var(--text-2)' }}>Cancelar</button>
+          <button onClick={handleSave} disabled={saving || !type || !key.trim()}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold btn-cyber disabled:opacity-50">
+            <Save className="w-4 h-4" />
+            {saving ? 'Salvando...' : 'Salvar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function ContaCorrente() {
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -27,13 +93,25 @@ export function ContaCorrente() {
   const [filterStatus, setFilterStatus] = useState('');
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
+  const [pixInfo, setPixInfo] = useState<PixInfo>({ pix_key: null, pix_key_type: null });
+  const [showPixModal, setShowPixModal] = useState(false);
 
   async function load() {
     setLoading(true);
-    const data = await API('/api/conta-corrente').then(r => r.json());
-    setProposals(Array.isArray(data.proposals) ? data.proposals : []);
-    if (data.summary) setSummary(data.summary);
+    const [contaData, meData] = await Promise.all([
+      API('/api/conta-corrente').then(r => r.json()),
+      API('/api/auth/me').then(r => r.json()),
+    ]);
+    setProposals(Array.isArray(contaData.proposals) ? contaData.proposals : []);
+    if (contaData.summary) setSummary(contaData.summary);
+    if (meData) setPixInfo({ pix_key: meData.pix_key || null, pix_key_type: meData.pix_key_type || null });
     setLoading(false);
+  }
+
+  async function savePix(info: PixInfo) {
+    await API('/api/profile/pix', { method: 'PUT', body: JSON.stringify(info) });
+    setPixInfo(info);
+    setShowPixModal(false);
   }
 
   useEffect(() => { load(); }, []);
@@ -53,6 +131,34 @@ export function ContaCorrente() {
           </div>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Acompanhe suas comissões a receber e já recebidas</p>
         </div>
+      </div>
+
+      {/* Chave PIX */}
+      <div className="rounded-2xl p-4 mb-6 animate-fade-up flex items-center justify-between gap-4"
+        style={{ background: 'rgba(20,184,166,0.06)', border: '1px solid rgba(20,184,166,0.2)', boxShadow: 'var(--shadow-card)' }}>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(20,184,166,0.12)' }}>
+            <Key className="w-4 h-4" style={{ color: '#14B8A6' }} />
+          </div>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-3)' }}>Chave PIX</p>
+            {pixInfo.pix_key ? (
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-lg" style={{ background: 'rgba(20,184,166,0.15)', color: '#2DD4BF' }}>
+                  {PIX_TYPE_LABELS[pixInfo.pix_key_type || ''] || pixInfo.pix_key_type}
+                </span>
+                <span className="text-sm font-mono font-semibold" style={{ color: 'var(--text-1)' }}>{pixInfo.pix_key}</span>
+              </div>
+            ) : (
+              <p className="text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma chave cadastrada</p>
+            )}
+          </div>
+        </div>
+        <button onClick={() => setShowPixModal(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold btn-cyber flex-shrink-0">
+          <Edit2 className="w-3.5 h-3.5" />
+          {pixInfo.pix_key ? 'Editar' : 'Cadastrar'}
+        </button>
       </div>
 
       {/* Cards de resumo */}
@@ -150,6 +256,10 @@ export function ContaCorrente() {
           </div>
           <Pagination total={filtered.length} page={page} perPage={perPage} onPage={setPage} onPerPage={setPerPage} />
         </div>
+      )}
+
+      {showPixModal && (
+        <PixModal current={pixInfo} onClose={() => setShowPixModal(false)} onSave={savePix} />
       )}
     </div>
   );

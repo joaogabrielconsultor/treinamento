@@ -58,8 +58,16 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 app.get('/api/auth/me', auth, async (req, res) => {
-  const { rows } = await pool.query('SELECT id, email, full_name, role, created_at FROM users WHERE id = $1', [req.user.id]);
+  const { rows } = await pool.query('SELECT id, email, full_name, role, pix_key, pix_key_type, created_at FROM users WHERE id = $1', [req.user.id]);
   res.json(rows[0] || null);
+});
+
+app.put('/api/profile/pix', auth, async (req, res) => {
+  const { pix_key, pix_key_type } = req.body;
+  const validTypes = ['cpf', 'cnpj', 'email', 'telefone', 'aleatoria'];
+  if (pix_key_type && !validTypes.includes(pix_key_type)) return res.status(400).json({ error: 'Tipo de chave inválido' });
+  await pool.query('UPDATE users SET pix_key = $1, pix_key_type = $2 WHERE id = $3', [pix_key || null, pix_key_type || null, req.user.id]);
+  res.json({ ok: true });
 });
 
 // ─── COURSES ───────────────────────────────────────────────────────────────────
@@ -1423,6 +1431,7 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
 
   const { rows: brokerSummary } = await pool.query(`
     SELECT u.id as user_id, u.full_name as user_name, u.email as user_email,
+           u.pix_key, u.pix_key_type,
            COUNT(*) FILTER (WHERE p.status_comissao = 'Ag. Comissão')::int as pending_count,
            COALESCE(SUM(ROUND(p.value * COALESCE(
              (SELECT cr.comissao_corretor FROM commission_ranges cr
