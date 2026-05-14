@@ -14,10 +14,12 @@ interface AdminUser {
   loja_name: string | null;
 }
 
-export function useIsAdmin(user: { role: 'user' | 'admin' | 'master' } | null) {
+const MASTER_EMAIL = 'admin@aprovamais.com';
+export function useIsAdmin(user: { role: 'user' | 'admin' | 'master'; email: string } | null) {
+  const isMaster = user?.role === 'master' || user?.email === MASTER_EMAIL;
   return {
-    isAdmin: user?.role === 'admin' || user?.role === 'master',
-    isMaster: user?.role === 'master',
+    isAdmin: user?.role === 'admin' || isMaster,
+    isMaster,
     loading: false,
   };
 }
