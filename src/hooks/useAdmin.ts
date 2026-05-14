@@ -62,7 +62,12 @@ export function useAdminUsers(showArchived = false) {
     await api.put(`/admin/users/${userId}/password`, { password }, true);
   };
 
-  return { users, loading, toggleRole, createUser, updateLoja, archiveUser, unarchiveUser, changePassword, refetch: fetchUsers };
+  const editUser = async (userId: string, full_name: string, email: string) => {
+    const updated = await api.put<AdminUser>(`/admin/users/${userId}/profile`, { full_name, email }, true);
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, full_name: updated.full_name, email: updated.email } : u));
+  };
+
+  return { users, loading, toggleRole, createUser, updateLoja, editUser, archiveUser, unarchiveUser, changePassword, refetch: fetchUsers };
 }
 
 export function useAdminCourses() {

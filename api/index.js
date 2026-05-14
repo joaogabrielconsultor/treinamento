@@ -418,6 +418,27 @@ app.put('/api/admin/users/:id/password', auth, adminOnly, async (req, res) => {
   res.json({ success: true });
 });
 
+app.put('/api/admin/users/:id/profile', auth, adminOnly, async (req, res) => {
+  const { full_name, email } = req.body;
+  if (!full_name?.trim()) return res.status(400).json({ error: 'Nome obrigatório' });
+  if (!email?.trim()) return res.status(400).json({ error: 'Email obrigatório' });
+  const { rows: target } = await pool.query('SELECT email FROM users WHERE id = $1', [req.params.id]);
+  if (!target[0]) return res.status(404).json({ error: 'Usuário não encontrado' });
+  if (target[0].email === MASTER_ADMIN_EMAIL && req.user.email !== MASTER_ADMIN_EMAIL) {
+    return res.status(403).json({ error: 'Sem permissão para editar o master admin' });
+  }
+  try {
+    const { rows } = await pool.query(
+      'UPDATE users SET full_name=$1, email=$2 WHERE id=$3 RETURNING id, full_name, email, role',
+      [full_name.trim(), email.trim().toLowerCase(), req.params.id]
+    );
+    res.json(rows[0]);
+  } catch (e) {
+    if (e.code === '23505') return res.status(400).json({ error: 'Este email já está em uso' });
+    res.status(500).json({ error: 'Erro ao atualizar usuário' });
+  }
+});
+
 // ─── LOJAS ────────────────────────────────────────────────────────────────────
 app.get('/api/admin/lojas', auth, adminOnly, async (req, res) => {
   const { rows } = await pool.query(`

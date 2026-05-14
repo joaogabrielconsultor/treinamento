@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { Users, Shield, ShieldOff, BookOpen, RefreshCw, Plus, X, Eye, EyeOff, Crown, Archive, ArchiveRestore, KeyRound, Store } from 'lucide-react';
+import { Users, Shield, ShieldOff, BookOpen, RefreshCw, Plus, X, Eye, EyeOff, Crown, Archive, ArchiveRestore, KeyRound, Store, Edit2, Save } from 'lucide-react';
 import { useAdminUsers } from '../../hooks/useAdmin';
 import { Pagination } from '../ui/Pagination';
 
@@ -268,11 +268,72 @@ function ArchiveConfirmModal({ userName, isUnarchive, onClose, onConfirm }: {
   );
 }
 
+function EditUserModal({ user, onClose, onSave }: {
+  user: { id: string; name: string; email: string };
+  onClose: () => void;
+  onSave: (full_name: string, email: string) => Promise<void>;
+}) {
+  const [name, setName] = useState(user.name);
+  const [email, setEmail] = useState(user.email);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      await onSave(name, email);
+      onClose();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao salvar');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)' }}>
+      <div className="modal-panel rounded-2xl w-full max-w-sm p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>Editar Usuário</h2>
+          <button onClick={onClose} className="p-1.5 rounded-lg" style={{ color: 'var(--text-3)' }}><X className="w-5 h-5" /></button>
+        </div>
+        <form onSubmit={submit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Nome completo</label>
+            <input value={name} onChange={e => setName(e.target.value)} required
+              className="input-cyber w-full px-3 py-2.5 text-sm rounded-xl" placeholder="Nome do usuário" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Email</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
+              className="input-cyber w-full px-3 py-2.5 text-sm rounded-xl" placeholder="email@empresa.com" />
+          </div>
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2 text-sm text-red-600 dark:text-red-400">
+              {error}
+            </div>
+          )}
+          <div className="flex gap-3 pt-1">
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 text-sm rounded-xl btn-ghost">Cancelar</button>
+            <button type="submit" disabled={loading} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm rounded-xl btn-cyber">
+              <Save className="w-3.5 h-3.5" />
+              {loading ? 'Salvando...' : 'Salvar'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
   const [showArchived, setShowArchived] = useState(false);
-  const { users, loading, toggleRole, createUser, updateLoja, archiveUser, unarchiveUser, changePassword, refetch } = useAdminUsers(showArchived);
+  const { users, loading, toggleRole, createUser, updateLoja, editUser, archiveUser, unarchiveUser, changePassword, refetch } = useAdminUsers(showArchived);
   const [lojas, setLojas] = useState<{ id: string; name: string }[]>([]);
   const [showCreate, setShowCreate] = useState(false);
+  const [editTarget, setEditTarget] = useState<{ id: string; name: string; email: string } | null>(null);
   const [changePwdUser, setChangePwdUser] = useState<{ id: string; name: string } | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<{ id: string; name: string; isUnarchive?: boolean } | null>(null);
   const [page, setPage] = useState(1);
@@ -302,6 +363,13 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
           onClose={() => setShowCreate(false)}
           onCreate={createUser}
           lojas={lojas}
+        />
+      )}
+      {editTarget && (
+        <EditUserModal
+          user={editTarget}
+          onClose={() => setEditTarget(null)}
+          onSave={(name, email) => editUser(editTarget.id, name, email)}
         />
       )}
       {changePwdUser && (
@@ -438,6 +506,12 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
                       <div className="flex items-center justify-end gap-1.5">
                         {!showArchived && (
                           <>
+                            <button
+                              onClick={() => setEditTarget({ id: user.id, name, email: user.email })}
+                              className="badge badge-blue inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" /> Editar
+                            </button>
                             <button
                               onClick={() => toggleRole(user.id, user.role)}
                               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
