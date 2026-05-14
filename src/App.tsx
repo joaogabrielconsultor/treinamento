@@ -23,6 +23,8 @@ import { Ranking } from './components/Ranking';
 import { Production } from './components/Production';
 import { ContaCorrente } from './components/ContaCorrente';
 import { AdminContaCorrente } from './components/admin/AdminContaCorrente';
+import { AdminLojas } from './components/admin/AdminLojas';
+import { AdminContaEmpresa } from './components/admin/AdminContaEmpresa';
 import { useAuth } from './hooks/useAuth';
 import { useCourses, useCourseDetail } from './hooks/useCourses';
 import { useEnrollments, useLessonProgress } from './hooks/useEnrollments';
@@ -186,6 +188,8 @@ function AppInner() {
         {currentView === 'production'           && <Production isAdmin={isAdmin} />}
         {currentView === 'conta-corrente'       && <ContaCorrente />}
         {currentView === 'admin-conta-corrente' && isAdmin && <AdminContaCorrente />}
+        {currentView === 'admin-lojas'           && isAdmin && <AdminLojas />}
+        {currentView === 'admin-conta-empresa'   && isAdmin && <AdminContaEmpresa />}
       </main>
     </div>
   );

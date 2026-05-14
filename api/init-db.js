@@ -119,6 +119,16 @@ async function initDb() {
       )
     `);
 
+    // ─── LOJAS ────────────────────────────────────────────────────────────────
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS lojas (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        name text NOT NULL,
+        created_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS loja_id uuid REFERENCES lojas(id) ON DELETE SET NULL`);
+
     // ─── PRODUTOS ─────────────────────────────────────────────────────────────
     await client.query(`
       CREATE TABLE IF NOT EXISTS products (

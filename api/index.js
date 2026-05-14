@@ -301,11 +301,13 @@ app.get('/api/admin/users', auth, adminOnly, async (req, res) => {
   const showArchived = req.query.archived === 'true';
   const { rows } = await pool.query(
     `SELECT u.id, u.full_name, u.email, u.role, u.created_at, u.archived_at,
+            u.loja_id, l.name AS loja_name,
             COUNT(e.id)::int AS enrollment_count
      FROM users u
      LEFT JOIN enrollments e ON e.user_id = u.id
+     LEFT JOIN lojas l ON l.id = u.loja_id
      WHERE ${showArchived ? 'u.archived_at IS NOT NULL' : 'u.archived_at IS NULL'}
-     GROUP BY u.id ORDER BY u.created_at DESC`
+     GROUP BY u.id, l.name ORDER BY u.created_at DESC`
   );
   res.json(rows);
 });
@@ -329,19 +331,25 @@ app.put('/api/admin/users/:id/role', auth, adminOnly, async (req, res) => {
 
 // ─── ADMIN: CREATE USER ────────────────────────────────────────────────────────
 app.post('/api/admin/users', auth, adminOnly, async (req, res) => {
-  const { email, password, full_name, role } = req.body;
+  const { email, password, full_name, role, loja_id } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email e senha obrigatórios' });
   try {
     const hash = await bcrypt.hash(password, 10);
     const { rows } = await pool.query(
-      'INSERT INTO users (email, password_hash, full_name, role) VALUES ($1, $2, $3, $4) RETURNING id, email, full_name, role, created_at',
-      [email, hash, full_name || null, role || 'user']
+      'INSERT INTO users (email, password_hash, full_name, role, loja_id) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, full_name, role, loja_id, created_at',
+      [email, hash, full_name || null, role || 'user', loja_id || null]
     );
     res.json(rows[0]);
   } catch (e) {
     if (e.code === '23505') return res.status(400).json({ error: 'Email já cadastrado' });
     res.status(500).json({ error: 'Erro ao criar usuário' });
   }
+});
+
+app.put('/api/admin/users/:id/loja', auth, adminOnly, async (req, res) => {
+  const { loja_id } = req.body;
+  await pool.query('UPDATE users SET loja_id = $1 WHERE id = $2', [loja_id || null, req.params.id]);
+  res.json({ ok: true });
 });
 
 // ─── ADMIN: ARCHIVE USER ──────────────────────────────────────────────────────
@@ -379,6 +387,119 @@ app.put('/api/admin/users/:id/password', auth, adminOnly, async (req, res) => {
   const hash = await bcrypt.hash(password, 10);
   await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, req.params.id]);
   res.json({ success: true });
+});
+
+// ─── LOJAS ────────────────────────────────────────────────────────────────────
+app.get('/api/admin/lojas', auth, adminOnly, async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT l.id, l.name, l.created_at,
+           COUNT(u.id)::int AS user_count
+    FROM lojas l
+    LEFT JOIN users u ON u.loja_id = l.id AND u.archived_at IS NULL
+    GROUP BY l.id ORDER BY l.name ASC
+  `);
+  res.json(rows);
+});
+
+app.get('/api/admin/lojas/all', auth, async (req, res) => {
+  const { rows } = await pool.query('SELECT id, name FROM lojas ORDER BY name ASC');
+  res.json(rows);
+});
+
+app.post('/api/admin/lojas', auth, adminOnly, async (req, res) => {
+  const { name } = req.body;
+  if (!name?.trim()) return res.status(400).json({ error: 'Nome obrigatório' });
+  const { rows } = await pool.query('INSERT INTO lojas (name) VALUES ($1) RETURNING *', [name.trim()]);
+  res.json(rows[0]);
+});
+
+app.put('/api/admin/lojas/:id', auth, adminOnly, async (req, res) => {
+  const { name } = req.body;
+  if (!name?.trim()) return res.status(400).json({ error: 'Nome obrigatório' });
+  const { rows } = await pool.query('UPDATE lojas SET name = $1 WHERE id = $2 RETURNING *', [name.trim(), req.params.id]);
+  if (!rows[0]) return res.status(404).json({ error: 'Loja não encontrada' });
+  res.json(rows[0]);
+});
+
+app.delete('/api/admin/lojas/:id', auth, adminOnly, async (req, res) => {
+  const { rows: check } = await pool.query('SELECT id FROM users WHERE loja_id = $1 AND archived_at IS NULL LIMIT 1', [req.params.id]);
+  if (check.length > 0) return res.status(400).json({ error: 'Loja possui usuários ativos. Remova-os antes de excluir.' });
+  await pool.query('DELETE FROM lojas WHERE id = $1', [req.params.id]);
+  res.json({ ok: true });
+});
+
+// ─── CONTA EMPRESA ────────────────────────────────────────────────────────────
+app.get('/api/admin/conta-empresa', auth, adminOnly, async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT l.id AS loja_id, l.name AS loja_name,
+           COUNT(DISTINCT u.id)::int AS broker_count,
+           COALESCE(SUM(
+             CASE WHEN p.status = 'Paga' THEN
+               ROUND(p.value * COALESCE(
+                 (SELECT cr.comissao_empresa FROM commission_ranges cr
+                  WHERE cr.financial_table_id = p.table_id
+                    AND cr.min_value <= p.value AND (cr.max_value IS NULL OR cr.max_value >= p.value)
+                  ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_empresa, 0) / 100, 2)
+             END
+           ), 0)::numeric AS total_creditos,
+           COALESCE((
+             SELECT SUM(cp.total_value) FROM commission_payments cp
+             JOIN users pu ON pu.id = cp.user_id
+             WHERE pu.loja_id = l.id
+           ), 0)::numeric AS total_debitos,
+           COALESCE(SUM(
+             CASE WHEN p.status_comissao = 'Ag. Comissão' THEN
+               ROUND(p.value * COALESCE(
+                 (SELECT cr.comissao_corretor FROM commission_ranges cr
+                  WHERE cr.financial_table_id = p.table_id
+                    AND cr.min_value <= p.value AND (cr.max_value IS NULL OR cr.max_value >= p.value)
+                  ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_corretor, 0) / 100, 2)
+             END
+           ), 0)::numeric AS comissao_pendente
+    FROM lojas l
+    LEFT JOIN users u ON u.loja_id = l.id AND u.archived_at IS NULL
+    LEFT JOIN proposals p ON p.user_id = u.id
+    LEFT JOIN financial_tables ft ON ft.id = p.table_id
+    GROUP BY l.id ORDER BY l.name ASC
+  `);
+  res.json(rows);
+});
+
+app.get('/api/admin/conta-empresa/:loja_id/extrato', auth, adminOnly, async (req, res) => {
+  const { loja_id } = req.params;
+  // Créditos: propostas pagas dessa loja
+  const { rows: creditos } = await pool.query(`
+    SELECT 'credito' AS type,
+           p.id AS reference_id,
+           p.proposal_number AS description_ref,
+           u.full_name AS broker_name,
+           ROUND(p.value * COALESCE(
+             (SELECT cr.comissao_empresa FROM commission_ranges cr
+              WHERE cr.financial_table_id = p.table_id
+                AND cr.min_value <= p.value AND (cr.max_value IS NULL OR cr.max_value >= p.value)
+              ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_empresa, 0) / 100, 2) AS value,
+           p.client_name,
+           p.updated_at AS date
+    FROM proposals p
+    JOIN users u ON u.id = p.user_id
+    LEFT JOIN financial_tables ft ON ft.id = p.table_id
+    WHERE u.loja_id = $1 AND p.status = 'Paga'
+  `, [loja_id]);
+  // Débitos: pagamentos de comissão feitos a corretores dessa loja
+  const { rows: debitos } = await pool.query(`
+    SELECT 'debito' AS type,
+           cp.id AS reference_id,
+           NULL AS description_ref,
+           u.full_name AS broker_name,
+           cp.total_value AS value,
+           NULL AS client_name,
+           cp.created_at AS date
+    FROM commission_payments cp
+    JOIN users u ON u.id = cp.user_id
+    WHERE u.loja_id = $1
+  `, [loja_id]);
+  const extrato = [...creditos, ...debitos].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  res.json(extrato);
 });
 
 // ─── APP SETTINGS ─────────────────────────────────────────────────────────────

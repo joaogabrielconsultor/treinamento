@@ -86,6 +86,13 @@ export interface Bank {
   created_at: string;
 }
 
+export interface Loja {
+  id: string;
+  name: string;
+  user_count?: number;
+  created_at: string;
+}
+
 export interface Convenio {
   id: string;
   name: string;
@@ -287,6 +294,8 @@ export type ViewType =
   | 'admin-products'
   | 'admin-reports'
   | 'conta-corrente'
-  | 'admin-conta-corrente';
+  | 'admin-conta-corrente'
+  | 'admin-lojas'
+  | 'admin-conta-empresa';
 
 export type AuthMode = 'login';

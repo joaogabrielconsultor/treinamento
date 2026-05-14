@@ -1,18 +1,23 @@
-﻿import { useState } from 'react';
-import { Users, Shield, ShieldOff, BookOpen, RefreshCw, Plus, X, Eye, EyeOff, Crown, Archive, ArchiveRestore, KeyRound } from 'lucide-react';
+﻿import { useState, useEffect } from 'react';
+import { Users, Shield, ShieldOff, BookOpen, RefreshCw, Plus, X, Eye, EyeOff, Crown, Archive, ArchiveRestore, KeyRound, Store } from 'lucide-react';
 import { useAdminUsers } from '../../hooks/useAdmin';
 import { Pagination } from '../ui/Pagination';
 
+const API = (p: string, opts?: RequestInit) =>
+  fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
+
 const MASTER_ADMIN_EMAIL = 'adm@rozesstartflow.com';
 
-function CreateUserModal({ onClose, onCreate }: {
+function CreateUserModal({ onClose, onCreate, lojas }: {
   onClose: () => void;
-  onCreate: (email: string, password: string, name: string, role: 'user' | 'admin') => Promise<void>;
+  onCreate: (email: string, password: string, name: string, role: 'user' | 'admin', loja_id?: string) => Promise<void>;
+  lojas: { id: string; name: string }[];
 }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState<'user' | 'admin'>('user');
+  const [lojaId, setLojaId] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -22,7 +27,7 @@ function CreateUserModal({ onClose, onCreate }: {
     setLoading(true);
     setError('');
     try {
-      await onCreate(email, password, name, role);
+      await onCreate(email, password, name, role, lojaId || undefined);
       onClose();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erro ao criar usuário');
@@ -92,6 +97,16 @@ function CreateUserModal({ onClose, onCreate }: {
               <option value="admin">Administrador</option>
             </select>
           </div>
+          {lojas.length > 0 && (
+            <div>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Loja</label>
+              <select value={lojaId} onChange={e => setLojaId(e.target.value)}
+                className="input-cyber w-full px-3 py-2.5 text-sm rounded-xl">
+                <option value="">Sem loja</option>
+                {lojas.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+              </select>
+            </div>
+          )}
 
           {error && (
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2 text-sm text-red-600 dark:text-red-400">
@@ -255,7 +270,8 @@ function ArchiveConfirmModal({ userName, isUnarchive, onClose, onConfirm }: {
 
 export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
   const [showArchived, setShowArchived] = useState(false);
-  const { users, loading, toggleRole, createUser, archiveUser, unarchiveUser, changePassword, refetch } = useAdminUsers(showArchived);
+  const { users, loading, toggleRole, createUser, updateLoja, archiveUser, unarchiveUser, changePassword, refetch } = useAdminUsers(showArchived);
+  const [lojas, setLojas] = useState<{ id: string; name: string }[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [changePwdUser, setChangePwdUser] = useState<{ id: string; name: string } | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<{ id: string; name: string; isUnarchive?: boolean } | null>(null);
@@ -264,6 +280,12 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
   const paginated = users.slice((page - 1) * perPage, page * perPage);
 
   const isMasterAdmin = currentUserEmail === MASTER_ADMIN_EMAIL;
+
+  useEffect(() => {
+    API('/api/admin/lojas/all').then(r => r.json()).then(data => {
+      if (Array.isArray(data)) setLojas(data);
+    });
+  }, []);
 
   if (loading) {
     return (
@@ -279,6 +301,7 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
         <CreateUserModal
           onClose={() => setShowCreate(false)}
           onCreate={createUser}
+          lojas={lojas}
         />
       )}
       {changePwdUser && (
@@ -334,7 +357,7 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
         <table className="w-full">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-              {['Usuário', 'Função', 'Matrículas', 'Cadastro', ''].map(h => (
+              {['Usuário', 'Loja', 'Função', 'Matrículas', 'Cadastro', ''].map(h => (
                 <th key={h} className="text-left px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
               ))}
             </tr>
@@ -374,6 +397,26 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
                         <p className="text-xs" style={{ color: 'var(--text-3)' }}>{user.email}</p>
                       </div>
                     </div>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    {!showArchived && lojas.length > 0 ? (
+                      <select value={user.loja_id || ''} onChange={e => updateLoja(user.id, e.target.value || null)}
+                        className="input-cyber text-xs rounded-lg px-2 py-1.5" style={{ minWidth: '120px' }}>
+                        <option value="">Sem loja</option>
+                        {lojas.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                      </select>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        {user.loja_name ? (
+                          <>
+                            <Store className="w-3.5 h-3.5" style={{ color: '#14B8A6' }} />
+                            <span className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>{user.loja_name}</span>
+                          </>
+                        ) : (
+                          <span className="text-xs" style={{ color: 'var(--text-3)' }}>—</span>
+                        )}
+                      </div>
+                    )}
                   </td>
                   <td className="px-5 py-3.5">
                     <span className={`badge ${user.role === 'admin' ? 'badge-purple' : 'badge-neutral'} inline-flex items-center gap-1.5`}>

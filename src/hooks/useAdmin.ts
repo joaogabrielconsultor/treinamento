@@ -10,6 +10,8 @@ interface AdminUser {
   created_at: string;
   enrollment_count: number;
   archived_at: string | null;
+  loja_id: string | null;
+  loja_name: string | null;
 }
 
 export function useIsAdmin(user: { role: 'user' | 'admin' } | null) {
@@ -36,9 +38,14 @@ export function useAdminUsers(showArchived = false) {
     setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, role: newRole } : u));
   };
 
-  const createUser = async (email: string, password: string, full_name: string, role: 'user' | 'admin') => {
-    const newUser = await api.post<AdminUser>('/admin/users', { email, password, full_name, role }, true);
-    setUsers((prev) => [{ ...newUser, enrollment_count: 0 }, ...prev]);
+  const createUser = async (email: string, password: string, full_name: string, role: 'user' | 'admin', loja_id?: string) => {
+    const newUser = await api.post<AdminUser>('/admin/users', { email, password, full_name, role, loja_id }, true);
+    setUsers((prev) => [{ ...newUser, enrollment_count: 0, loja_id: newUser.loja_id ?? null, loja_name: null }, ...prev]);
+  };
+
+  const updateLoja = async (userId: string, loja_id: string | null) => {
+    await api.put(`/admin/users/${userId}/loja`, { loja_id }, true);
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, loja_id } : u));
   };
 
   const archiveUser = async (userId: string) => {
@@ -55,7 +62,7 @@ export function useAdminUsers(showArchived = false) {
     await api.put(`/admin/users/${userId}/password`, { password }, true);
   };
 
-  return { users, loading, toggleRole, createUser, archiveUser, unarchiveUser, changePassword, refetch: fetchUsers };
+  return { users, loading, toggleRole, createUser, updateLoja, archiveUser, unarchiveUser, changePassword, refetch: fetchUsers };
 }
 
 export function useAdminCourses() {
