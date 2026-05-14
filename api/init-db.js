@@ -255,6 +255,31 @@ async function initDb() {
     `);
     await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS status_comissao text CHECK (status_comissao IN ('Ag. Comissão', 'Comissão Paga'))`);
     await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS allow_broker_edit boolean NOT NULL DEFAULT false`);
+    await client.query(`ALTER TABLE proposals DROP CONSTRAINT IF EXISTS proposals_status_check`);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS proposal_statuses (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        name text NOT NULL UNIQUE,
+        color text NOT NULL DEFAULT 'blue',
+        order_index integer NOT NULL DEFAULT 0,
+        is_system boolean NOT NULL DEFAULT false,
+        created_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+    const defaultStatuses = [
+      { name: 'Digitada',    color: 'blue',   order: 0, is_system: true },
+      { name: 'Em análise',  color: 'amber',  order: 1, is_system: true },
+      { name: 'Aprovada',    color: 'purple', order: 2, is_system: true },
+      { name: 'Paga',        color: 'green',  order: 3, is_system: true },
+      { name: 'Cancelada',   color: 'red',    order: 4, is_system: true },
+    ];
+    for (const s of defaultStatuses) {
+      await client.query(
+        `INSERT INTO proposal_statuses (name, color, order_index, is_system) VALUES ($1,$2,$3,$4) ON CONFLICT (name) DO NOTHING`,
+        [s.name, s.color, s.order, s.is_system]
+      );
+    }
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS commission_payments (

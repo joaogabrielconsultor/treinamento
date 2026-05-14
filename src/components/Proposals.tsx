@@ -1,20 +1,31 @@
 ﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import { SimPrefill } from './Simulator';
 import { Plus, Search, FileText, ChevronDown, CheckCircle, Clock, DollarSign, XCircle, Edit2, User, CreditCard, ChevronRight, AlertTriangle, Lock, Unlock } from 'lucide-react';
-import { Proposal, ProposalStatus, FinancialTable, Bank, Convenio, Product } from '../types';
+import { Proposal, ProposalStatusDef, FinancialTable, Bank, Convenio, Product } from '../types';
 import { Modal } from './ui/Modal';
 import { Pagination } from './ui/Pagination';
 
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
 
-const STATUS_CONFIG: Record<ProposalStatus, { color: string; icon: React.ReactNode }> = {
-  Digitada:    { color: 'badge badge-blue',   icon: <FileText className="w-3 h-3" /> },
-  'Em análise':{ color: 'badge badge-amber',  icon: <Clock className="w-3 h-3" /> },
-  Aprovada:    { color: 'badge badge-purple', icon: <CheckCircle className="w-3 h-3" /> },
-  Paga:        { color: 'badge badge-green',  icon: <DollarSign className="w-3 h-3" /> },
-  Cancelada:   { color: 'badge badge-red',    icon: <XCircle className="w-3 h-3" /> },
+const COLOR_MAP: Record<string, string> = {
+  blue:   'badge badge-blue',
+  amber:  'badge badge-amber',
+  purple: 'badge badge-purple',
+  green:  'badge badge-green',
+  red:    'badge badge-red',
+  teal:   'badge badge-teal',
 };
+const ICON_MAP: Record<string, React.ReactNode> = {
+  Digitada:    <FileText className="w-3 h-3" />,
+  'Em análise':<Clock className="w-3 h-3" />,
+  Aprovada:    <CheckCircle className="w-3 h-3" />,
+  Paga:        <DollarSign className="w-3 h-3" />,
+  Cancelada:   <XCircle className="w-3 h-3" />,
+};
+function statusBadge(name: string, color: string) {
+  return COLOR_MAP[color] || 'badge badge-blue';
+}
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -82,6 +93,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
   const [filterStatus, setFilterStatus] = useState('');
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
+  const [statusDefs, setStatusDefs] = useState<ProposalStatusDef[]>([]);
 
   // Cascade data
   const [convenios, setConvenios] = useState<Convenio[]>([]);
@@ -99,15 +111,22 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
 
   async function load() {
     setLoading(true);
-    const [pr, cv, pd] = await Promise.all([
+    const [pr, cv, pd, st] = await Promise.all([
       API('/api/proposals').then(r => r.json()),
       API('/api/convenios').then(r => r.json()),
       API('/api/products').then(r => r.json()),
+      API('/api/proposal-statuses').then(r => r.json()),
     ]);
     setProposals(Array.isArray(pr) ? pr : []);
     setConvenios(Array.isArray(cv) ? cv : []);
     setProducts(Array.isArray(pd) ? pd : []);
+    setStatusDefs(Array.isArray(st) ? st : []);
     setLoading(false);
+  }
+
+  async function quickStatusChange(id: string, newStatus: string) {
+    await API(`/api/proposals/${id}`, { method: 'PUT', body: JSON.stringify({ status: newStatus }) });
+    setProposals(prev => prev.map(p => p.id === id ? { ...p, status: newStatus as Proposal['status'] } : p));
   }
 
   useEffect(() => { load(); }, []);
@@ -353,7 +372,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
             style={{ minWidth: '160px' }}
           >
             <option value="">Todos os status</option>
-            {Object.keys(STATUS_CONFIG).map(s => <option key={s} value={s}>{s}</option>)}
+            {statusDefs.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
           </select>
         </div>
       </div>
@@ -387,7 +406,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                  {['Proposta', 'Nome do Cliente', 'CPF', 'Convênio / Banco / Tabela', 'Valor', 'Produto', 'Status', 'Data Digitação', 'Data Status', 'Comissão', 'Pontos', ''].map(h => (
+                  {['Proposta', 'Corretor', 'Nome do Cliente', 'CPF', 'Convênio / Banco / Tabela', 'Valor', 'Produto', 'Status', 'Data Digitação', 'Data Status', 'Comissão', 'Pontos', ''].map(h => (
                     <th
                       key={h}
                       className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest"
@@ -403,6 +422,9 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
                   <tr key={p.id} className="table-row-cyber">
                     <td className="px-4 py-3 font-mono text-xs num" style={{ color: 'var(--text-2)' }}>{p.proposal_number || '—'}</td>
                     <td className="px-4 py-3">
+                      <p className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>{p.user_name || p.user_email || '—'}</p>
+                    </td>
+                    <td className="px-4 py-3">
                       <p className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{p.client_name}</p>
                     </td>
                     <td className="px-4 py-3">
@@ -416,9 +438,28 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
                     <td className="px-4 py-3 font-bold num" style={{ color: 'var(--text-1)' }}>{formatCurrency(Number(p.value))}</td>
                     <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-3)' }}>{p.product_name || p.product}</td>
                     <td className="px-4 py-3">
-                      <span className={`${STATUS_CONFIG[p.status]?.color} inline-flex items-center gap-1`}>
-                        {STATUS_CONFIG[p.status]?.icon} {p.status}
-                      </span>
+                      {isAdmin ? (
+                        <div className="relative">
+                          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+                          <select
+                            value={p.status}
+                            onChange={e => quickStatusChange(p.id, e.target.value)}
+                            className="appearance-none text-xs font-semibold pl-2 pr-6 py-1 rounded-lg cursor-pointer"
+                            style={{ background: 'var(--bg-surface)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }}
+                          >
+                            {statusDefs.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+                          </select>
+                        </div>
+                      ) : (
+                        (() => {
+                          const sd = statusDefs.find(s => s.name === p.status);
+                          return (
+                            <span className={`${sd ? statusBadge(sd.name, sd.color) : 'badge badge-blue'} inline-flex items-center gap-1`}>
+                              {ICON_MAP[p.status] || <FileText className="w-3 h-3" />} {p.status}
+                            </span>
+                          );
+                        })()
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-xs num" style={{ color: 'var(--text-3)' }}>
@@ -585,7 +626,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
                     <div className="relative">
                       <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
                       <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className={`${inp} appearance-none pr-8`}>
-                        {Object.keys(STATUS_CONFIG).map(s => <option key={s} value={s}>{s}</option>)}
+                        {statusDefs.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
                       </select>
                     </div>
                   </Field>

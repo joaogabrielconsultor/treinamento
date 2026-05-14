@@ -25,6 +25,7 @@ import { ContaCorrente } from './components/ContaCorrente';
 import { AdminContaCorrente } from './components/admin/AdminContaCorrente';
 import { AdminLojas } from './components/admin/AdminLojas';
 import { AdminContaEmpresa } from './components/admin/AdminContaEmpresa';
+import { AdminProposalStatuses } from './components/admin/AdminProposalStatuses';
 import { ProfileModal } from './components/ProfileModal';
 import { useAuth } from './hooks/useAuth';
 import { useCourses, useCourseDetail } from './hooks/useCourses';
@@ -204,6 +205,7 @@ function AppInner() {
         {currentView === 'admin-conta-corrente' && isAdmin && <AdminContaCorrente />}
         {currentView === 'admin-lojas'           && isAdmin && <AdminLojas />}
         {currentView === 'admin-conta-empresa'   && isAdmin && <AdminContaEmpresa />}
+        {currentView === 'admin-proposal-statuses' && isAdmin && <AdminProposalStatuses />}
       </main>
     </div>
   );

@@ -1333,6 +1333,42 @@ app.delete('/api/proposals/:id', auth, adminOnly, async (req, res) => {
   res.status(405).json({ error: 'Exclusão de propostas não é permitida.' });
 });
 
+// ─── PROPOSAL STATUSES ────────────────────────────────────────────────────────
+app.get('/api/proposal-statuses', auth, async (req, res) => {
+  const { rows } = await pool.query('SELECT * FROM proposal_statuses ORDER BY order_index, name');
+  res.json(rows);
+});
+
+app.post('/api/admin/proposal-statuses', auth, adminOnly, async (req, res) => {
+  const { name, color, order_index } = req.body;
+  if (!name?.trim()) return res.status(400).json({ error: 'Nome obrigatório' });
+  const { rows: [s] } = await pool.query(
+    'INSERT INTO proposal_statuses (name, color, order_index) VALUES ($1,$2,$3) RETURNING *',
+    [name.trim(), color || 'blue', order_index ?? 99]
+  );
+  res.json(s);
+});
+
+app.put('/api/admin/proposal-statuses/:id', auth, adminOnly, async (req, res) => {
+  const { name, color, order_index } = req.body;
+  const { rows: [s] } = await pool.query(
+    'UPDATE proposal_statuses SET name=$1, color=$2, order_index=$3 WHERE id=$4 RETURNING *',
+    [name, color, order_index, req.params.id]
+  );
+  if (!s) return res.status(404).json({ error: 'Status não encontrado' });
+  res.json(s);
+});
+
+app.delete('/api/admin/proposal-statuses/:id', auth, adminOnly, async (req, res) => {
+  const { rows: [s] } = await pool.query('SELECT * FROM proposal_statuses WHERE id=$1', [req.params.id]);
+  if (!s) return res.status(404).json({ error: 'Status não encontrado' });
+  if (s.is_system) return res.status(400).json({ error: 'Status do sistema não pode ser excluído' });
+  const { rows: using } = await pool.query('SELECT COUNT(*) FROM proposals WHERE status=$1', [s.name]);
+  if (parseInt(using[0].count) > 0) return res.status(400).json({ error: `${using[0].count} proposta(s) usam esse status` });
+  await pool.query('DELETE FROM proposal_statuses WHERE id=$1', [req.params.id]);
+  res.json({ ok: true });
+});
+
 // ─── RANKING ──────────────────────────────────────────────────────────────────
 app.get('/api/ranking', auth, async (req, res) => {
   const { period } = req.query; // 'weekly' | 'monthly' | all (default)

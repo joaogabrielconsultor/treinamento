@@ -297,6 +297,15 @@ export type ViewType =
   | 'conta-corrente'
   | 'admin-conta-corrente'
   | 'admin-lojas'
-  | 'admin-conta-empresa';
+  | 'admin-conta-empresa'
+  | 'admin-proposal-statuses';
 
 export type AuthMode = 'login';
+
+export interface ProposalStatusDef {
+  id: string;
+  name: string;
+  color: string;
+  order_index: number;
+  is_system: boolean;
+}
