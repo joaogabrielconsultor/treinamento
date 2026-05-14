@@ -360,7 +360,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                  {['Proposta', 'Nome do Cliente', 'CPF', 'Convênio / Banco / Tabela', 'Valor', 'Produto', 'Status', 'Comissão', 'Pontos', ''].map(h => (
+                  {['Proposta', 'Nome do Cliente', 'CPF', 'Convênio / Banco / Tabela', 'Valor', 'Produto', 'Status', 'Data Digitação', 'Data Status', 'Comissão', 'Pontos', ''].map(h => (
                     <th
                       key={h}
                       className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest"
@@ -391,6 +391,16 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false }: Proposal
                     <td className="px-4 py-3">
                       <span className={`${STATUS_CONFIG[p.status]?.color} inline-flex items-center gap-1`}>
                         {STATUS_CONFIG[p.status]?.icon} {p.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs num" style={{ color: 'var(--text-3)' }}>
+                        {p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '—'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs num" style={{ color: 'var(--text-3)' }}>
+                        {p.updated_at ? new Date(p.updated_at).toLocaleDateString('pt-BR') : '—'}
                       </span>
                     </td>
                     <td className="px-4 py-3">
