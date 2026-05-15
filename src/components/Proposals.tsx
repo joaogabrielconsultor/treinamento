@@ -462,9 +462,11 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
         const clean = withSpaces.replace(/\s+/g, '_');
         return colMap[withSpaces] || colMap[clean] || clean;
       };
-      const headers = lines[0].split(';').map(normalizeHeader);
+      const firstLine = lines[0];
+      const sep = firstLine.includes(';') ? ';' : firstLine.includes('\t') ? '\t' : ',';
+      const headers = firstLine.split(sep).map(normalizeHeader);
       const rows = lines.slice(1).map(line => {
-        const vals = line.split(';').map(v => v.trim());
+        const vals = line.split(sep).map(v => v.trim());
         return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? '']));
       }).filter(r => r.proposta && r.proposta !== '');
       setImportPreview(rows); setImportResult(null); setImportProgress(0); setShowImport(true);
