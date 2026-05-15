@@ -1341,6 +1341,139 @@ app.delete('/api/proposals/:id', auth, masterOnly, async (req, res) => {
   res.json({ ok: true });
 });
 
+// ─── IMPORTAÇÃO CSV DE PROPOSTAS ─────────────────────────────────────────────
+app.post('/api/admin/proposals/import', auth, adminOnly, async (req, res) => {
+  const rows = req.body.rows;
+  if (!Array.isArray(rows) || rows.length === 0) return res.status(400).json({ error: 'Nenhuma linha' });
+
+  function parseDate(val) {
+    if (!val || !val.trim()) return new Date();
+    const v = val.trim();
+    if (/^\d{5}$/.test(v)) return new Date((parseInt(v) - 25569) * 86400 * 1000);
+    const m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (m) return new Date(`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`);
+    return new Date();
+  }
+
+  function parseValue(val) {
+    if (!val) return 0;
+    return parseFloat(String(val).replace(/\./g, '').replace(',', '.')) || 0;
+  }
+
+  function mapStatus(esteira) {
+    const s = (esteira || '').replace(/[^\w\s]/g, '').trim().toLowerCase();
+    if (s.includes('paga'))                                           return 'Paga';
+    if (s.includes('reprovado') || s.includes('cancelad'))           return 'Cancelada';
+    if (s.includes('aprovad'))                                        return 'Aprovada';
+    if (s.includes('analise') || s.includes('análise') || s.includes('verificando') ||
+        s.includes('assinatura') || s.includes('averbacao') || s.includes('averbação') ||
+        s.includes('ag '))                                            return 'Em análise';
+    return 'Digitada';
+  }
+
+  // cache de lookups para evitar N+1
+  const userCache = {};
+  const bankCache = {};
+  const convenioCache = {};
+  const tableCache = {};
+
+  async function lookupUser(name) {
+    if (!name) return null;
+    const k = name.trim().toLowerCase();
+    if (k in userCache) return userCache[k];
+    const { rows: r } = await pool.query(`SELECT id FROM users WHERE LOWER(TRIM(full_name)) = $1 LIMIT 1`, [k]);
+    userCache[k] = r[0]?.id || null;
+    return userCache[k];
+  }
+
+  async function lookupBank(name) {
+    if (!name) return null;
+    const k = name.trim().toLowerCase();
+    if (k in bankCache) return bankCache[k];
+    const { rows: r } = await pool.query(`SELECT id FROM banks WHERE LOWER(TRIM(name)) = $1 LIMIT 1`, [k]);
+    bankCache[k] = r[0]?.id || null;
+    return bankCache[k];
+  }
+
+  async function lookupConvenio(name) {
+    if (!name) return null;
+    const k = name.trim().toLowerCase();
+    if (k in convenioCache) return convenioCache[k];
+    const { rows: r } = await pool.query(`SELECT id FROM convenios WHERE LOWER(TRIM(name)) = $1 LIMIT 1`, [k]);
+    convenioCache[k] = r[0]?.id || null;
+    return convenioCache[k];
+  }
+
+  async function lookupTable(name, bank_id, convenio_id) {
+    if (!name) return null;
+    const k = `${name}|${bank_id}|${convenio_id}`.toLowerCase();
+    if (k in tableCache) return tableCache[k];
+    const { rows: r } = await pool.query(
+      `SELECT id FROM financial_tables WHERE LOWER(TRIM(name)) = $1 LIMIT 1`, [name.trim().toLowerCase()]
+    );
+    tableCache[k] = r[0]?.id || null;
+    return tableCache[k];
+  }
+
+  let imported = 0, updated = 0;
+  const errors = [];
+
+  for (const row of rows) {
+    try {
+      const proposalNumber = (row.proposta || '').trim();
+      if (!proposalNumber) { errors.push({ row: row.proposta, error: 'Número de proposta vazio' }); continue; }
+
+      const clientName  = (row.nome_cliente || '').trim();
+      const clientCpf   = (row.cpf || '').trim();
+      const value       = parseValue(row.valor);
+      const createdAt   = parseDate(row.data_digitacao);
+      const status      = mapStatus(row.esteira);
+      const tipoProposta = (row.tipo || '').trim();
+      const bankText    = (row.banco || '').trim();
+      const convenioText = (row.convenio || '').trim();
+      const tableText   = (row.tabela || '').trim();
+
+      const userId     = await lookupUser(row.corretor);
+      const bankId     = await lookupBank(bankText);
+      const convenioId = await lookupConvenio(convenioText);
+      const tableId    = await lookupTable(tableText, bankId, convenioId);
+
+      const { rows: existing } = await pool.query(
+        'SELECT id FROM proposals WHERE proposal_number = $1', [proposalNumber]
+      );
+
+      if (existing.length > 0) {
+        await pool.query(
+          `UPDATE proposals SET
+            client_name=$1, client_cpf=$2, value=$3, bank=$4, convenio=$5, table_id=$6,
+            bank_id=$7, convenio_id=$8, status=$9, created_at=$10, updated_at=now(),
+            tipo_proposta=$11
+           WHERE id=$12`,
+          [clientName, clientCpf, value, bankText, convenioText, tableId,
+           bankId, convenioId, status, createdAt, tipoProposta, existing[0].id]
+        );
+        if (userId) await pool.query('UPDATE proposals SET user_id=$1 WHERE id=$2', [userId, existing[0].id]);
+        updated++;
+      } else {
+        const uid = userId || req.user.id;
+        await pool.query(
+          `INSERT INTO proposals
+            (user_id, proposal_number, value, product, bank, convenio, table_id, bank_id, convenio_id,
+             client_name, client_cpf, client_phone, status, created_at, tipo_proposta)
+           VALUES ($1,$2,$3,'',$4,$5,$6,$7,$8,$9,$10,'',$11,$12,$13)`,
+          [uid, proposalNumber, value, bankText, convenioText, tableId,
+           bankId, convenioId, clientName, clientCpf, status, createdAt, tipoProposta]
+        );
+        imported++;
+      }
+    } catch (err) {
+      errors.push({ row: row.proposta, error: err.message });
+    }
+  }
+
+  res.json({ imported, updated, errors });
+});
+
 // ─── PROPOSAL STATUSES ────────────────────────────────────────────────────────
 app.get('/api/proposal-statuses', auth, async (req, res) => {
   const { rows } = await pool.query('SELECT * FROM proposal_statuses ORDER BY order_index, name');
