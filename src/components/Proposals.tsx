@@ -96,6 +96,9 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
   const [perPage, setPerPage] = useState(10);
   const [statusDefs, setStatusDefs] = useState<ProposalStatusDef[]>([]);
   const [confirmDelete, setConfirmDelete] = useState<Proposal | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [batchStatus, setBatchStatus] = useState('');
+  const [applyingBatch, setApplyingBatch] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [importPreview, setImportPreview] = useState<Record<string, string>[]>([]);
   const [importing, setImporting] = useState(false);
@@ -318,6 +321,18 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
     setProposals(prev => prev.map(p => p.id === id ? { ...p, allow_broker_edit: !current } : p));
   }
 
+  async function applyBatchStatus() {
+    if (!batchStatus || selected.size === 0) return;
+    setApplyingBatch(true);
+    await Promise.all([...selected].map(id =>
+      API(`/api/proposals/${id}`, { method: 'PUT', body: JSON.stringify({ status: batchStatus }) })
+    ));
+    setProposals(prev => prev.map(p => selected.has(p.id) ? { ...p, status: batchStatus } : p));
+    setSelected(new Set());
+    setBatchStatus('');
+    setApplyingBatch(false);
+  }
+
   function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -466,6 +481,29 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
         </div>
       </div>
 
+      {/* Barra de ação em lote */}
+      {isAdmin && selected.size > 0 && (
+        <div className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-xl animate-fade-up"
+          style={{ background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)' }}>
+          <span className="text-xs font-semibold" style={{ color: '#14B8A6' }}>{selected.size} selecionada(s)</span>
+          <div className="relative flex-1 max-w-xs">
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+            <select value={batchStatus} onChange={e => setBatchStatus(e.target.value)}
+              className="input-cyber appearance-none w-full pl-3 pr-8 py-1.5 text-xs rounded-lg">
+              <option value="">Selecionar novo status...</option>
+              {statusDefs.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+            </select>
+          </div>
+          <button onClick={applyBatchStatus} disabled={!batchStatus || applyingBatch}
+            className="px-4 py-1.5 text-xs font-semibold rounded-lg transition-all disabled:opacity-50"
+            style={{ background: '#14B8A6', color: '#000' }}>
+            {applyingBatch ? 'Aplicando...' : 'Aplicar'}
+          </button>
+          <button onClick={() => setSelected(new Set())}
+            className="px-3 py-1.5 text-xs rounded-lg btn-ghost">Limpar</button>
+        </div>
+      )}
+
       {/* Table */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
@@ -492,8 +530,9 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
           }}
         >
           <div className="overflow-x-auto">
-            <table className="text-xs" style={{ tableLayout: 'fixed', width: '100%', minWidth: '1380px' }}>
+            <table className="text-xs" style={{ tableLayout: 'fixed', width: '100%', minWidth: '1420px' }}>
               <colgroup>
+                <col style={{ width: '36px' }} />  {/* checkbox */}
                 <col style={{ width: '110px' }} />{/* Proposta */}
                 <col style={{ width: '90px' }} /> {/* Corretor */}
                 <col style={{ width: '130px' }} />{/* Cliente */}
@@ -512,6 +551,18 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
               </colgroup>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
+                  {isAdmin && (
+                    <th className="px-2 py-2.5">
+                      <input type="checkbox"
+                        checked={paginated.length > 0 && paginated.every(p => selected.has(p.id))}
+                        onChange={e => {
+                          const next = new Set(selected);
+                          paginated.forEach(p => e.target.checked ? next.add(p.id) : next.delete(p.id));
+                          setSelected(next);
+                        }}
+                        className="w-3.5 h-3.5 cursor-pointer accent-teal-500" />
+                    </th>
+                  )}
                   {['Proposta','Corretor','Cliente','CPF','Convênio','Banco','Tabela','Valor','Produto','Status','Dt. Digit.','Dt. Status','Comissão','Pts',''].map(h => (
                     <th key={h} className="text-left px-2 py-2.5 text-[9px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
                   ))}
@@ -519,7 +570,18 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
               </thead>
               <tbody>
                 {paginated.map(p => (
-                  <tr key={p.id} className="table-row-cyber">
+                  <tr key={p.id} className="table-row-cyber" style={{ background: selected.has(p.id) ? 'rgba(20,184,166,0.06)' : undefined }}>
+                    {isAdmin && (
+                      <td className="px-2 py-2">
+                        <input type="checkbox" checked={selected.has(p.id)}
+                          onChange={e => {
+                            const next = new Set(selected);
+                            e.target.checked ? next.add(p.id) : next.delete(p.id);
+                            setSelected(next);
+                          }}
+                          className="w-3.5 h-3.5 cursor-pointer accent-teal-500" />
+                      </td>
+                    )}
                     <td className="px-2 py-2 font-mono num truncate" style={{ color: 'var(--text-2)', fontSize: '10px' }}>{p.proposal_number || '—'}</td>
                     <td className="px-2 py-2 truncate" style={{ color: 'var(--text-2)' }}>{p.user_name || p.user_email || '—'}</td>
                     <td className="px-2 py-2 font-semibold truncate" style={{ color: 'var(--text-1)', fontSize: '11px' }}>{p.client_name}</td>
