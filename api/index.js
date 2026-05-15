@@ -1825,14 +1825,19 @@ const contaCorrenteSelect = `
             ORDER BY cr.min_value DESC LIMIT 1),
            ft.comissao_corretor, 0
          ) as comissao_corretor_pct,
-         ROUND(p.value * COALESCE(
-           (SELECT cr.comissao_corretor FROM commission_ranges cr
-            WHERE cr.financial_table_id = p.table_id
-              AND cr.min_value <= p.value
-              AND (cr.max_value IS NULL OR cr.max_value >= p.value)
-            ORDER BY cr.min_value DESC LIMIT 1),
-           ft.comissao_corretor, 0
-         ) / 100, 2) as comissao_valor
+         COALESCE(p.comissao_corretor_override,
+           ROUND(p.value * COALESCE(
+             (SELECT cr.comissao_corretor FROM commission_ranges cr
+              WHERE cr.financial_table_id = p.table_id
+                AND cr.min_value <= p.value
+                AND (cr.max_value IS NULL OR cr.max_value >= p.value)
+              ORDER BY cr.min_value DESC LIMIT 1),
+             ft.comissao_corretor, 0
+           ) / 100, 2)
+         ) as comissao_valor,
+         COALESCE(p.comissao_empresa_override,
+           ROUND(p.value * COALESCE(ft.comissao_empresa, 0) / 100, 2)
+         ) as comissao_empresa_valor
   FROM proposals p
   JOIN users u ON u.id = p.user_id
   LEFT JOIN financial_tables ft ON ft.id = p.table_id
@@ -1967,7 +1972,13 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
               WHERE cr.financial_table_id = p.table_id
                 AND cr.min_value <= p.value AND (cr.max_value IS NULL OR cr.max_value >= p.value)
               ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_corretor, 0) / 100, 2)
-           ) FILTER (WHERE p.status_comissao = 'Comissão Paga'), 0)::numeric as paid_value
+           ) FILTER (WHERE p.status_comissao = 'Comissão Paga'), 0)::numeric as paid_value,
+           COALESCE(SUM(COALESCE(p.comissao_empresa_override,
+             ROUND(p.value * COALESCE(ft.comissao_empresa, 0) / 100, 2))
+           ) FILTER (WHERE p.status_comissao = 'Ag. Comissão'), 0)::numeric as empresa_pending_value,
+           COALESCE(SUM(COALESCE(p.comissao_empresa_override,
+             ROUND(p.value * COALESCE(ft.comissao_empresa, 0) / 100, 2))
+           ) FILTER (WHERE p.status_comissao = 'Comissão Paga'), 0)::numeric as empresa_paid_value
     FROM proposals p
     JOIN users u ON u.id = p.user_id
     LEFT JOIN financial_tables ft ON ft.id = p.table_id

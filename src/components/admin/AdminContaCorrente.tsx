@@ -22,6 +22,8 @@ interface BrokerSummary {
   pending_value: number;
   paid_count: number;
   paid_value: number;
+  empresa_pending_value: number;
+  empresa_paid_value: number;
 }
 
 const SAQUE_STATUS_COLOR: Record<string, { text: string; bg: string; border: string }> = {
@@ -111,6 +113,8 @@ export function AdminContaCorrente() {
 
   const totalPending   = brokers.reduce((a, b) => a + parseFloat(String(b.pending_value)), 0);
   const totalPaid      = brokers.reduce((a, b) => a + parseFloat(String(b.paid_value)), 0);
+  const totalEmpresaPending = brokers.reduce((a, b) => a + parseFloat(String(b.empresa_pending_value || 0)), 0);
+  const totalEmpresaPaid    = brokers.reduce((a, b) => a + parseFloat(String(b.empresa_paid_value || 0)), 0);
   const brokersWithPending = brokers.filter(b => b.pending_count > 0).length;
 
   async function markAsPaid() {
@@ -257,12 +261,14 @@ export function AdminContaCorrente() {
       {tab === 'comissoes' && <>
 
       {/* Cards globais */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {[
-          { label: 'Total Pendente',     value: fmtBRL(totalPending),       sub: `${brokers.reduce((a, b) => a + b.pending_count, 0)} propostas`,    icon: Clock,        color: '#f59e0b', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.2)'  },
-          { label: 'Total Pago',         value: fmtBRL(totalPaid),          sub: `${brokers.reduce((a, b) => a + b.paid_count, 0)} pagas`,            icon: CheckCircle,  color: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.2)'  },
-          { label: 'Corretores Pend.',   value: String(brokersWithPending),  sub: 'aguardando pagamento',                                             icon: Users,        color: '#60a5fa', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.2)'  },
-          { label: 'Total Acumulado',    value: fmtBRL(totalPending + totalPaid), sub: 'todas as comissões',                                          icon: DollarSign,   color: '#14B8A6', bg: 'rgba(20,184,166,0.08)', border: 'rgba(20,184,166,0.2)'  },
+          { label: 'Corretor Pendente',  value: fmtBRL(totalPending),            sub: `${brokers.reduce((a, b) => a + b.pending_count, 0)} propostas`, icon: Clock,        color: '#f59e0b', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.2)'  },
+          { label: 'Corretor Pago',      value: fmtBRL(totalPaid),               sub: `${brokers.reduce((a, b) => a + b.paid_count, 0)} pagas`,        icon: CheckCircle,  color: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.2)'  },
+          { label: 'Empresa Pendente',   value: fmtBRL(totalEmpresaPending),      sub: 'comissão empresa a receber',                                    icon: Clock,        color: '#fb923c', bg: 'rgba(251,146,60,0.08)', border: 'rgba(251,146,60,0.2)'  },
+          { label: 'Empresa Recebida',   value: fmtBRL(totalEmpresaPaid),         sub: 'comissão empresa recebida',                                     icon: DollarSign,   color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.2)' },
+          { label: 'Corretores Pend.',   value: String(brokersWithPending),       sub: 'aguardando pagamento',                                          icon: Users,        color: '#60a5fa', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.2)'  },
+          { label: 'Total Geral',        value: fmtBRL(totalPending + totalPaid + totalEmpresaPending + totalEmpresaPaid), sub: 'corretor + empresa',   icon: Wallet,       color: '#14B8A6', bg: 'rgba(20,184,166,0.08)', border: 'rgba(20,184,166,0.2)'  },
         ].map((c, i) => (
           <div key={c.label} className="rounded-2xl p-4 animate-fade-up" style={{ background: c.bg, border: `1px solid ${c.border}`, boxShadow: 'var(--shadow-card)', animationDelay: `${i * 50}ms` }}>
             <div className="flex items-start justify-between">
@@ -289,7 +295,7 @@ export function AdminContaCorrente() {
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                {['Corretor', 'Chave PIX', 'A Receber', 'Já Pago', 'Total'].map(h => (
+                {['Corretor', 'Chave PIX', 'Corr. A Receber', 'Corr. Pago', 'Emp. Pendente', 'Emp. Recebida', 'Total Corretor'].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
                 ))}
               </tr>
@@ -325,6 +331,16 @@ export function AdminContaCorrente() {
                   <td className="px-4 py-3">
                     <p className="font-bold num" style={{ color: '#4ade80' }}>{fmtBRL(parseFloat(String(b.paid_value)))}</p>
                     <p className="text-xs" style={{ color: 'var(--text-3)' }}>{b.paid_count} paga{b.paid_count !== 1 ? 's' : ''}</p>
+                  </td>
+                  <td className="px-4 py-3">
+                    <p className="font-bold num" style={{ color: (b.empresa_pending_value || 0) > 0 ? '#fb923c' : 'var(--text-3)' }}>
+                      {fmtBRL(parseFloat(String(b.empresa_pending_value || 0)))}
+                    </p>
+                  </td>
+                  <td className="px-4 py-3">
+                    <p className="font-bold num" style={{ color: '#a78bfa' }}>
+                      {fmtBRL(parseFloat(String(b.empresa_paid_value || 0)))}
+                    </p>
                   </td>
                   <td className="px-4 py-3">
                     <p className="font-bold num" style={{ color: 'var(--text-1)' }}>
@@ -394,7 +410,7 @@ export function AdminContaCorrente() {
                     <input type="checkbox" checked={allPageSelected} onChange={toggleSelectAll}
                       className="w-3.5 h-3.5 rounded cursor-pointer accent-teal-500" />
                   </th>
-                  {['Proposta', 'Corretor', 'Nome do Cliente', 'CPF', 'Banco / Tabela', 'Valor', 'Comissão', 'Status'].map(h => (
+                  {['Proposta', 'Corretor', 'Nome do Cliente', 'CPF', 'Banco / Tabela', 'Valor', 'Comissão Corretor', 'Comissão Empresa', 'Status'].map(h => (
                     <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
                   ))}
                 </tr>
@@ -402,7 +418,7 @@ export function AdminContaCorrente() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="text-center py-16 text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma comissão encontrada</td>
+                    <td colSpan={10} className="text-center py-16 text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma comissão encontrada</td>
                   </tr>
                 ) : paginated.map(p => {
                   const isPending = p.status_comissao === 'Ag. Comissão';
@@ -438,6 +454,13 @@ export function AdminContaCorrente() {
                           <div>
                             <span className="font-bold text-sm num" style={{ color: '#4ade80' }}>{fmtBRL(Number(p.comissao_valor))}</span>
                             <p className="text-xs num" style={{ color: 'var(--text-3)' }}>{Number(p.comissao_corretor_pct || 0).toFixed(2)}%</p>
+                          </div>
+                        ) : <span style={{ color: 'var(--text-3)' }}>—</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        {Number(p.comissao_empresa_valor) > 0 ? (
+                          <div>
+                            <span className="font-bold text-sm num" style={{ color: '#a78bfa' }}>{fmtBRL(Number(p.comissao_empresa_valor))}</span>
                           </div>
                         ) : <span style={{ color: 'var(--text-3)' }}>—</span>}
                       </td>
