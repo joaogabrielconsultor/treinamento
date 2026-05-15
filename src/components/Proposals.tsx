@@ -230,9 +230,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
     setLoading(false);
   }
 
-  useEffect(() => { load(); }, []);
-
-  // Date preset change triggers reload
+  // Único efeito de carga — dispara no mount e a cada troca de preset
   useEffect(() => {
     if (datePreset === 'custom') { setShowCustom(true); return; }
     setShowCustom(false);
@@ -646,11 +644,23 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
       )}
 
       {/* ── Cards ── */}
+      <div className="mb-2 flex items-center gap-2">
+        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Período:</span>
+        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-lg" style={{ background: 'rgba(20,184,166,0.1)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.2)' }}>
+          {datePreset === 'all' ? 'Todos os registros' :
+           datePreset === 'custom' && dateFrom && dateTo
+             ? `${new Date(dateFrom + 'T00:00:00').toLocaleDateString('pt-BR')} — ${new Date(dateTo + 'T00:00:00').toLocaleDateString('pt-BR')}`
+             : dateFrom && dateTo
+               ? `${new Date(dateFrom + 'T00:00:00').toLocaleDateString('pt-BR')} — ${new Date(dateTo + 'T00:00:00').toLocaleDateString('pt-BR')}`
+               : '—'}
+        </span>
+        <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>{proposals.length} proposta{proposals.length !== 1 ? 's' : ''} carregada{proposals.length !== 1 ? 's' : ''}</span>
+      </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-5">
         {visibleCards.map((c, i) => (
           <div key={c.key} className="stat-card rounded-xl p-4 animate-fade-up" style={{ animationDelay: `${i * 40}ms` }}>
             <p className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-3)' }}>{c.label}</p>
-            <p className="text-base font-black num" style={{ color: c.color }}>{c.fmt === 'num' ? c.value : c.value}</p>
+            <p className="text-base font-black num" style={{ color: c.color }}>{c.value}</p>
           </div>
         ))}
       </div>
