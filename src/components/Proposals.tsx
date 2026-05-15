@@ -453,6 +453,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
           'nome do cliente': 'nome_cliente', 'nome_do_cliente': 'nome_cliente',
           'situao': 'situacao', 'situação': 'situacao',
           'convnio': 'convenio', 'convênio': 'convenio',
+          'id': 'id',
           'proposta': 'proposta', 'cpf': 'cpf', 'corretor': 'corretor',
           'banco': 'banco', 'tabela': 'tabela', 'tipo': 'tipo', 'produto': 'tipo',
           'valor': 'valor', 'esteira': 'esteira', 'status': 'esteira',

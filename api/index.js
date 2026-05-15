@@ -1448,18 +1448,21 @@ app.post('/api/admin/proposals/import', auth, adminOnly, async (req, res) => {
   let imported = 0, updated = 0;
   const errors = [];
 
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
   for (const row of rows) {
     try {
       const proposalNumber = (row.proposta || '').trim();
       if (!proposalNumber) { errors.push({ row: row.proposta, error: 'Número de proposta vazio' }); continue; }
 
+      const rowId        = (row.id || '').trim();
       const clientName   = (row.nome_cliente || '').trim();
       const clientCpf    = (row.cpf || '').trim();
       const value        = parseValue(row.valor);
       const createdAt    = parseDate(row.data_digitacao);
       const status       = mapStatus(row.esteira || row.situacao);
-      const productText  = (row.tipo || '').trim();   // "Produto"
-      const situacao     = (row.situacao || '').trim(); // "Situação" → tipo_proposta
+      const productText  = (row.tipo || '').trim();
+      const situacao     = (row.situacao || '').trim();
       const bankText     = (row.banco || '').trim();
       const convenioText = (row.convenio || '').trim();
       const tableText    = (row.tabela || '').trim();
@@ -1470,34 +1473,55 @@ app.post('/api/admin/proposals/import', auth, adminOnly, async (req, res) => {
       const tableId    = await lookupTable(tableText, bankId, convenioId);
       const productId  = await lookupProduct(productText);
 
-      const { rows: existing } = await pool.query(
-        'SELECT id FROM proposals WHERE proposal_number = $1 AND client_cpf = $2',
-        [proposalNumber, clientCpf]
-      );
+      const useIdMatch = rowId && UUID_RE.test(rowId);
 
-      if (existing.length > 0) {
+      let existingId = null;
+      if (useIdMatch) {
+        const { rows: r } = await pool.query('SELECT id FROM proposals WHERE id = $1', [rowId]);
+        existingId = r[0]?.id || null;
+      } else {
+        const { rows: r } = await pool.query(
+          'SELECT id FROM proposals WHERE proposal_number = $1 AND client_cpf = $2',
+          [proposalNumber, clientCpf]
+        );
+        existingId = r[0]?.id || null;
+      }
+
+      if (existingId) {
         await pool.query(
           `UPDATE proposals SET
             client_name=$1, client_cpf=$2, value=$3, bank=$4, convenio=$5, table_id=$6,
             bank_id=$7, convenio_id=$8, status=$9, created_at=$10, updated_at=now(),
-            tipo_proposta=$11, product=$12, product_id=$13
+            tipo_proposta=$11, product=$12, product_id=$13, proposal_number=$15
            WHERE id=$14`,
           [clientName, clientCpf, value, bankText, convenioText, tableId,
            bankId, convenioId, status, createdAt, situacao,
-           productText, productId, existing[0].id]
+           productText, productId, existingId, proposalNumber]
         );
-        if (userId) await pool.query('UPDATE proposals SET user_id=$1 WHERE id=$2', [userId, existing[0].id]);
+        if (userId) await pool.query('UPDATE proposals SET user_id=$1 WHERE id=$2', [userId, existingId]);
         updated++;
       } else {
         const uid = userId || req.user.id;
-        await pool.query(
-          `INSERT INTO proposals
-            (user_id, proposal_number, value, product, product_id, bank, convenio, table_id, bank_id, convenio_id,
-             client_name, client_cpf, client_phone, status, created_at, tipo_proposta)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'',$13,$14,$15)`,
-          [uid, proposalNumber, value, productText, productId, bankText, convenioText, tableId,
-           bankId, convenioId, clientName, clientCpf, status, createdAt, situacao]
-        );
+        const insertId = (useIdMatch && rowId) ? rowId : undefined;
+        if (insertId) {
+          await pool.query(
+            `INSERT INTO proposals
+              (id, user_id, proposal_number, value, product, product_id, bank, convenio, table_id, bank_id, convenio_id,
+               client_name, client_cpf, client_phone, status, created_at, tipo_proposta)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'',$14,$15,$16)`,
+            [insertId, uid, proposalNumber, value, productText, productId, bankText, convenioText, tableId,
+             bankId, convenioId, clientName, clientCpf, status, createdAt, situacao]
+          );
+        } else {
+          await pool.query(
+            `INSERT INTO proposals
+              (user_id, proposal_number, value, product, product_id, bank, convenio, table_id, bank_id, convenio_id,
+               client_name, client_cpf, client_phone, status, created_at, tipo_proposta)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'',$13,$14,$15)`,
+            [uid, proposalNumber, value, productText, productId, bankText, convenioText, tableId,
+             bankId, convenioId, clientName, clientCpf, status, createdAt, situacao]
+          );
+        }
         imported++;
       }
     } catch (err) {
