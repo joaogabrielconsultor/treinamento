@@ -104,6 +104,8 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const [importResult, setImportResult] = useState<{ imported: number; updated: number; errors: { row: string; error: string }[] } | null>(null);
+  const [sortCol, setSortCol] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc' | null>(null);
 
   // Cascade data
   const [convenios, setConvenios] = useState<Convenio[]>([]);
@@ -407,9 +409,42 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
     return matchSearch && matchStatus;
   });
 
-  useEffect(() => { setPage(1); }, [search, filterStatus]);
+  useEffect(() => { setPage(1); }, [search, filterStatus, sortCol, sortDir]);
 
-  const paginated = filtered.slice((page - 1) * perPage, page * perPage);
+  function handleSort(col: string) {
+    if (sortCol !== col) { setSortCol(col); setSortDir('asc'); return; }
+    if (sortDir === 'asc') { setSortDir('desc'); return; }
+    setSortCol(null); setSortDir(null);
+  }
+
+  const SORT_FIELDS: Record<string, (p: Proposal) => string | number> = {
+    'Proposta':    p => p.proposal_number || '',
+    'Corretor':    p => (p.user_name || p.user_email || '').toLowerCase(),
+    'Cliente':     p => p.client_name.toLowerCase(),
+    'CPF':         p => p.client_cpf || '',
+    'Convênio':    p => (p.convenio_name || p.convenio || '').toLowerCase(),
+    'Banco':       p => (p.bank_name || p.bank || '').toLowerCase(),
+    'Tabela':      p => (p.table_name || '').toLowerCase(),
+    'Valor':       p => Number(p.value),
+    'Produto':     p => (p.product_name || p.product || '').toLowerCase(),
+    'Status':      p => p.status.toLowerCase(),
+    'Dt. Digit.':  p => p.created_at || '',
+    'Dt. Status':  p => p.updated_at || '',
+    'Comissão':    p => Number(p.comissao_valor || 0),
+    'Pts':         p => p.points_earned || 0,
+  };
+
+  const sorted = sortCol && sortDir && SORT_FIELDS[sortCol]
+    ? [...filtered].sort((a, b) => {
+        const va = SORT_FIELDS[sortCol](a);
+        const vb = SORT_FIELDS[sortCol](b);
+        if (va < vb) return sortDir === 'asc' ? -1 : 1;
+        if (va > vb) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+      })
+    : filtered;
+
+  const paginated = sorted.slice((page - 1) * perPage, page * perPage);
   const totalPaid = proposals.filter(p => p.status === 'Paga').reduce((a, b) => a + Number(b.value), 0);
   const totalPoints = proposals.reduce((a, b) => a + (b.points_earned || 0), 0);
   const totalComissao = proposals.filter(p => p.status === 'Paga').reduce((a, b) => a + Number(b.comissao_valor || 0), 0);
@@ -563,9 +598,29 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
                         className="w-3.5 h-3.5 cursor-pointer accent-teal-500" />
                     </th>
                   )}
-                  {['Proposta','Corretor','Cliente','CPF','Convênio','Banco','Tabela','Valor','Produto','Status','Dt. Digit.','Dt. Status','Comissão','Pts',''].map(h => (
-                    <th key={h} className="text-left px-2 py-2.5 text-[9px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
-                  ))}
+                  {['Proposta','Corretor','Cliente','CPF','Convênio','Banco','Tabela','Valor','Produto','Status','Dt. Digit.','Dt. Status','Comissão','Pts',''].map(h => {
+                    const sortable = h !== '' && SORT_FIELDS[h];
+                    const isActive = sortCol === h;
+                    return (
+                      <th
+                        key={h}
+                        onClick={sortable ? () => handleSort(h) : undefined}
+                        className="text-left px-2 py-2.5 text-[9px] font-bold uppercase tracking-wider whitespace-nowrap select-none"
+                        style={{ color: isActive ? '#14B8A6' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default' }}
+                        onMouseEnter={e => { if (sortable) (e.currentTarget as HTMLElement).style.color = isActive ? '#14B8A6' : '#94A3B8'; }}
+                        onMouseLeave={e => { if (sortable) (e.currentTarget as HTMLElement).style.color = isActive ? '#14B8A6' : 'var(--text-3)'; }}
+                      >
+                        <span className="inline-flex items-center gap-0.5">
+                          {h}
+                          {sortable && (
+                            <span style={{ fontSize: '8px', opacity: isActive ? 1 : 0.4, marginLeft: '2px' }}>
+                              {isActive && sortDir === 'asc' ? '▲' : isActive && sortDir === 'desc' ? '▼' : '⇅'}
+                            </span>
+                          )}
+                        </span>
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
