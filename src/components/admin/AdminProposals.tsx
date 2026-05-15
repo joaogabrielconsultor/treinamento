@@ -42,9 +42,11 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
   const [confirmDelete, setConfirmDelete] = useState<Proposal | null>(null);
+  const [showImport, setShowImport] = useState(false);
+  const [importPreview, setImportPreview] = useState<Record<string, string>[]>([]);
   const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
   const [importResult, setImportResult] = useState<{ imported: number; updated: number; errors: { row: string; error: string }[] } | null>(null);
-  const importRef = useRef<HTMLInputElement>(null);
 
   async function load() {
     setLoading(true);
@@ -78,54 +80,70 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = async (ev) => {
+    reader.onload = (ev) => {
       const text = ev.target?.result as string;
       const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
-      if (lines.length < 2) return;
-      const headers = lines[0].split(';').map(h => h.trim().replace(/^﻿/, '').replace(/[^\w\s]/g, '').trim().toLowerCase()
-        .replace('data digitao', 'data_digitacao')
-        .replace('data digita', 'data_digitacao')
-        .replace('nome do cliente', 'nome_cliente')
-        .replace('situao', 'situacao')
-        .replace('situação', 'situacao')
-        .replace('convnio', 'convenio')
-        .replace(/\s+/g, '_'));
+      if (lines.length < 2) { alert('Arquivo vazio ou sem dados.'); return; }
 
-      // normaliza cabeçalhos conhecidos
-      const colMap: Record<string, string> = {
-        'data_digitao': 'data_digitacao',
-        'nome_do_cliente': 'nome_cliente',
-        'situao': 'situacao',
-        'convnio': 'convenio',
-        'proposta': 'proposta',
-        'cpf': 'cpf',
-        'corretor': 'corretor',
-        'banco': 'banco',
-        'tabela': 'tabela',
-        'tipo': 'tipo',
-        'valor': 'valor',
-        'esteira': 'esteira',
+      const normalizeHeader = (h: string) => {
+        const colMap: Record<string, string> = {
+          'data digitao': 'data_digitacao', 'data digita': 'data_digitacao',
+          'data_digitao': 'data_digitacao', 'data digitação': 'data_digitacao',
+          'nome do cliente': 'nome_cliente', 'nome_do_cliente': 'nome_cliente',
+          'situao': 'situacao', 'situação': 'situacao',
+          'convnio': 'convenio', 'convênio': 'convenio',
+          'proposta': 'proposta', 'cpf': 'cpf', 'corretor': 'corretor',
+          'banco': 'banco', 'tabela': 'tabela', 'tipo': 'tipo',
+          'valor': 'valor', 'esteira': 'esteira',
+        };
+        const clean = h.trim().replace(/^﻿/, '').replace(/[^\w\s]/g, '').trim().toLowerCase().replace(/\s+/g, '_');
+        const withSpaces = h.trim().replace(/^﻿/, '').replace(/[^\w\s]/g, '').trim().toLowerCase();
+        return colMap[withSpaces] || colMap[clean] || clean;
       };
 
-      const normHeaders = headers.map(h => colMap[h] || h);
-
+      const headers = lines[0].split(';').map(normalizeHeader);
       const rows = lines.slice(1).map(line => {
         const vals = line.split(';').map(v => v.trim());
-        return Object.fromEntries(normHeaders.map((h, i) => [h, vals[i] ?? '']));
-      }).filter(r => r.proposta || r.cpf || r.nome_cliente);
+        return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? '']));
+      }).filter(r => (r.proposta || r.cpf || r.nome_cliente) && r.proposta !== '');
 
-      setImporting(true);
-      const res = await API('/api/admin/proposals/import', {
-        method: 'POST',
-        body: JSON.stringify({ rows }),
-      });
-      const result = await res.json();
-      setImportResult(result);
-      setImporting(false);
-      if ((result.imported || 0) + (result.updated || 0) > 0) await load();
+      setImportPreview(rows);
+      setImportResult(null);
+      setImportProgress(0);
+      setShowImport(true);
     };
     reader.readAsText(file, 'windows-1252');
     e.target.value = '';
+  }
+
+  async function doImport() {
+    if (importPreview.length === 0) return;
+    setImporting(true);
+    setImportProgress(0);
+    const BATCH = 50;
+    let totalImported = 0, totalUpdated = 0;
+    const allErrors: { row: string; error: string }[] = [];
+    const batches = Math.ceil(importPreview.length / BATCH);
+    for (let b = 0; b < batches; b++) {
+      const slice = importPreview.slice(b * BATCH, (b + 1) * BATCH);
+      const res = await API('/api/admin/proposals/import', { method: 'POST', body: JSON.stringify({ rows: slice }) });
+      const result = await res.json();
+      totalImported += result.imported || 0;
+      totalUpdated  += result.updated  || 0;
+      allErrors.push(...(result.errors || []));
+      setImportProgress(Math.round(((b + 1) / batches) * 100));
+    }
+    setImportResult({ imported: totalImported, updated: totalUpdated, errors: allErrors });
+    setImporting(false);
+    if (totalImported + totalUpdated > 0) await load();
+  }
+
+  function closeImport() {
+    if (importing) return;
+    setShowImport(false);
+    setImportPreview([]);
+    setImportResult(null);
+    setImportProgress(0);
   }
 
   const corretores = Array.from(new Set(proposals.map(p => p.user_name).filter(Boolean))) as string[];
@@ -154,12 +172,11 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{proposals.length} propostas no sistema</p>
         </div>
         <div className="flex items-center gap-2">
-          <input ref={importRef} type="file" accept=".csv" className="hidden" onChange={handleImportFile} />
-          <button onClick={() => importRef.current?.click()} disabled={importing}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-50"
+          <button onClick={() => { setShowImport(true); setImportPreview([]); setImportResult(null); }}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
             style={{ background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' }}>
             <Upload className="w-4 h-4" />
-            {importing ? 'Importando...' : 'Importar CSV'}
+            Importar CSV
           </button>
         </div>
       </div>
@@ -315,34 +332,117 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
         </div>
       )}
 
-      {importResult && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)' }}>
-          <div className="modal-panel rounded-2xl w-full max-w-md p-6 animate-fade-up">
-            <h2 className="text-base font-bold mb-4" style={{ color: 'var(--text-1)' }}>Resultado da Importação</h2>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)' }}>
-                <p className="text-2xl font-black num" style={{ color: '#4ade80' }}>{importResult.imported}</p>
-                <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>Novas propostas</p>
+      {/* Modal de Importação CSV */}
+      <Modal
+        open={showImport}
+        onClose={closeImport}
+        title="Importar Propostas — CSV"
+        size="lg"
+        footer={
+          !importResult ? (
+            <div className="flex gap-3">
+              <button type="button" onClick={closeImport} disabled={importing} className={btnCancel}>Cancelar</button>
+              <button onClick={doImport} disabled={importPreview.length === 0 || importing}
+                className={`${btnPrimary} flex items-center gap-2`} style={primaryBg}>
+                <Upload className="w-4 h-4" />
+                {importing ? `Importando... ${importProgress}%` : `Importar ${importPreview.length} proposta(s)`}
+              </button>
+            </div>
+          ) : (
+            <button onClick={closeImport} className={`${btnPrimary} w-full`} style={primaryBg}>Fechar</button>
+          )
+        }
+      >
+        <div className="space-y-4">
+          {/* Seletor de arquivo */}
+          {!importResult && (
+            <div>
+              <label className="block text-xs font-semibold mb-2" style={{ color: 'var(--text-3)' }}>Arquivo CSV (separador: ponto-e-vírgula)</label>
+              <input type="file" accept=".csv"
+                onChange={handleImportFile}
+                className="block w-full text-sm cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold"
+                style={{ color: 'var(--text-3)' }} />
+            </div>
+          )}
+
+          {/* Barra de progresso */}
+          {importing && (
+            <div>
+              <div className="flex justify-between text-xs mb-1.5" style={{ color: 'var(--text-3)' }}>
+                <span>Processando lotes...</span>
+                <span className="num font-semibold" style={{ color: '#14B8A6' }}>{importProgress}%</span>
               </div>
-              <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.2)' }}>
-                <p className="text-2xl font-black num" style={{ color: '#60a5fa' }}>{importResult.updated}</p>
-                <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>Atualizadas</p>
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--card-border)' }}>
+                <div className="h-full rounded-full transition-all duration-300" style={{ width: `${importProgress}%`, background: 'linear-gradient(90deg,#14B8A6,#60a5fa)' }} />
               </div>
             </div>
-            {importResult.errors.length > 0 && (
-              <div className="mb-4 rounded-xl p-3 max-h-40 overflow-y-auto" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
-                <p className="text-xs font-semibold mb-2" style={{ color: '#f87171' }}>{importResult.errors.length} erro(s):</p>
-                {importResult.errors.map((e, i) => (
-                  <p key={i} className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>
-                    <span style={{ color: '#f87171' }}>#{e.row}</span> — {e.error}
-                  </p>
-                ))}
+          )}
+
+          {/* Prévia das linhas */}
+          {importPreview.length > 0 && !importResult && !importing && (
+            <div>
+              <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-3)' }}>
+                {importPreview.length} linha(s) detectada(s) — prévia das primeiras 10:
+              </p>
+              <div className="rounded-xl overflow-hidden overflow-x-auto max-h-56" style={{ border: '1px solid var(--card-border)' }}>
+                <table className="w-full text-xs" style={{ minWidth: '700px' }}>
+                  <thead>
+                    <tr style={{ background: 'var(--card-border)' }}>
+                      {['Proposta','Cliente','CPF','Corretor','Banco','Convênio','Tabela','Valor','Status'].map(h => (
+                        <th key={h} className="px-3 py-2 text-left font-semibold" style={{ color: 'var(--text-3)' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {importPreview.slice(0, 10).map((row, i) => (
+                      <tr key={i} style={{ borderBottom: '1px solid var(--card-border)' }}>
+                        <td className="px-3 py-1.5 font-mono" style={{ color: 'var(--text-2)' }}>{row.proposta || '—'}</td>
+                        <td className="px-3 py-1.5 max-w-[120px] truncate" style={{ color: 'var(--text-1)' }}>{row.nome_cliente || '—'}</td>
+                        <td className="px-3 py-1.5 font-mono" style={{ color: 'var(--text-3)' }}>{row.cpf || '—'}</td>
+                        <td className="px-3 py-1.5" style={{ color: !row.corretor ? '#f87171' : 'var(--text-2)' }}>{row.corretor || '—'}{!row.corretor && ' ⚠'}</td>
+                        <td className="px-3 py-1.5" style={{ color: 'var(--text-2)' }}>{row.banco || '—'}</td>
+                        <td className="px-3 py-1.5" style={{ color: 'var(--text-2)' }}>{row.convenio || '—'}</td>
+                        <td className="px-3 py-1.5 max-w-[120px] truncate" style={{ color: 'var(--text-3)' }}>{row.tabela || '—'}</td>
+                        <td className="px-3 py-1.5 num font-semibold" style={{ color: 'var(--text-1)' }}>{row.valor || '—'}</td>
+                        <td className="px-3 py-1.5" style={{ color: 'var(--text-3)' }}>{row.esteira || row.situacao || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            )}
-            <button onClick={() => setImportResult(null)} className={`${btnPrimary} w-full`}>Fechar</button>
-          </div>
+              {importPreview.length > 10 && (
+                <p className="text-xs mt-1.5" style={{ color: 'var(--text-3)' }}>...e mais {importPreview.length - 10} linha(s)</p>
+              )}
+            </div>
+          )}
+
+          {/* Resultado */}
+          {importResult && (
+            <div>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)' }}>
+                  <p className="text-2xl font-black num" style={{ color: '#4ade80' }}>{importResult.imported}</p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>Novas propostas</p>
+                </div>
+                <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.2)' }}>
+                  <p className="text-2xl font-black num" style={{ color: '#60a5fa' }}>{importResult.updated}</p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>Atualizadas</p>
+                </div>
+              </div>
+              {importResult.errors.length > 0 && (
+                <div className="rounded-xl p-3 max-h-40 overflow-y-auto" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                  <p className="text-xs font-semibold mb-2" style={{ color: '#f87171' }}>{importResult.errors.length} erro(s):</p>
+                  {importResult.errors.map((e, i) => (
+                    <p key={i} className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>
+                      <span style={{ color: '#f87171' }}>#{e.row}</span> — {e.error}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
-      )}
+      </Modal>
 
       <Modal
         open={!!editProposal}
