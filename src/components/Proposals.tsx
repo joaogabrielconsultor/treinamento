@@ -454,9 +454,13 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
           'situao': 'situacao', 'situação': 'situacao',
           'convnio': 'convenio', 'convênio': 'convenio',
           'id': 'id',
-          'proposta': 'proposta', 'cpf': 'cpf', 'corretor': 'corretor',
+          'proposta': 'proposta', 'nr proposta': 'proposta', 'nr_proposta': 'proposta', 'nrproposta': 'proposta',
+          'cpf': 'cpf', 'corretor': 'corretor',
           'banco': 'banco', 'tabela': 'tabela', 'tipo': 'tipo', 'produto': 'tipo',
-          'valor': 'valor', 'esteira': 'esteira', 'status': 'esteira',
+          'valor': 'valor', 'vl proposta': 'valor', 'vl_proposta': 'valor', 'vlproposta': 'valor', 'vl proposta': 'valor',
+          'esteira': 'esteira', 'status': 'esteira',
+          'emisso': 'data_digitacao', 'emissao': 'data_digitacao', 'emiss': 'data_digitacao', 'data emissao': 'data_digitacao', 'data_emissao': 'data_digitacao',
+          'cliente': 'nome_cliente', 'nome': 'nome_cliente', 'nome cliente': 'nome_cliente', 'nome_cliente': 'nome_cliente',
         };
         const withSpaces = h.trim().replace(/^﻿/, '').replace(/[^\w\s]/g, '').trim().toLowerCase();
         const clean = withSpaces.replace(/\s+/g, '_');
