@@ -159,7 +159,7 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
             <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                  {['Proposta', 'Corretor', 'Nome do Cliente', 'CPF', 'Banco / Tabela', 'Valor', 'Status', 'Pontos', 'Ações'].map(h => (
+                  {['Proposta', 'Corretor', 'Nome do Cliente', 'CPF', 'Convênio', 'Banco', 'Tabela', 'Valor', 'Status', 'Pontos', 'Ações'].map(h => (
                     <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
                   ))}
                 </tr>
@@ -167,7 +167,7 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="text-center py-12 text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma proposta encontrada</td>
+                    <td colSpan={11} className="text-center py-12 text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma proposta encontrada</td>
                   </tr>
                 ) : paginated.map(p => (
                   <tr key={p.id} className="table-row-cyber">
@@ -182,8 +182,13 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
                       <p className="text-xs font-mono" style={{ color: 'var(--text-3)' }}>{p.client_cpf || '—'}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-sm" style={{ color: 'var(--text-2)' }}>{p.bank}</p>
-                      <p className="text-xs truncate max-w-[160px]" style={{ color: 'var(--text-3)' }}>{p.table_name || p.convenio}</p>
+                      <p className="text-xs" style={{ color: 'var(--text-2)' }}>{p.convenio_name || p.convenio || '—'}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-xs" style={{ color: 'var(--text-2)' }}>{p.bank_name || p.bank || '—'}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-xs truncate max-w-[160px]" style={{ color: 'var(--text-3)' }}>{p.table_name || '—'}</p>
                     </td>
                     <td className="px-4 py-3 font-bold num" style={{ color: 'var(--text-1)' }}>{fmtBRL(Number(p.value))}</td>
                     <td className="px-4 py-3">

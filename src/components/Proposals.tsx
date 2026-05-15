@@ -414,7 +414,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                  {['Proposta', 'Corretor', 'Nome do Cliente', 'CPF', 'Convênio / Banco / Tabela', 'Valor', 'Produto', 'Status', 'Data Digitação', 'Data Status', 'Comissão', 'Pontos', ''].map(h => (
+                  {['Proposta', 'Corretor', 'Nome do Cliente', 'CPF', 'Convênio', 'Banco', 'Tabela', 'Valor', 'Produto', 'Status', 'Data Digitação', 'Data Status', 'Comissão', 'Pontos', ''].map(h => (
                     <th
                       key={h}
                       className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest"
@@ -439,9 +439,13 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
                       <p className="text-xs font-mono" style={{ color: 'var(--text-3)' }}>{p.client_cpf || '—'}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-xs" style={{ color: 'var(--text-3)' }}>{p.convenio_name || p.convenio || '—'}</p>
-                      <p className="text-sm" style={{ color: 'var(--text-2)' }}>{p.bank_name || p.bank || '—'}</p>
-                      <p className="text-xs truncate max-w-[200px]" style={{ color: 'var(--text-3)' }}>{p.table_name || '—'}</p>
+                      <p className="text-xs" style={{ color: 'var(--text-2)' }}>{p.convenio_name || p.convenio || '—'}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-xs" style={{ color: 'var(--text-2)' }}>{p.bank_name || p.bank || '—'}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-xs truncate max-w-[160px]" style={{ color: 'var(--text-3)' }}>{p.table_name || '—'}</p>
                     </td>
                     <td className="px-4 py-3 font-bold num" style={{ color: 'var(--text-1)' }}>{formatCurrency(Number(p.value))}</td>
                     <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-3)' }}>{p.product_name || p.product}</td>
