@@ -400,7 +400,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
   const totalComissao = proposals.filter(p => p.status === 'Paga').reduce((a, b) => a + Number(b.comissao_valor || 0), 0);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto" style={{ color: 'var(--text-1)' }}>
+    <div className="p-4 w-full" style={{ color: 'var(--text-1)' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6 animate-fade-up">
         <div>
@@ -492,53 +492,52 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
           }}
         >
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="text-xs" style={{ tableLayout: 'fixed', width: '100%', minWidth: '1380px' }}>
+              <colgroup>
+                <col style={{ width: '110px' }} />{/* Proposta */}
+                <col style={{ width: '90px' }} /> {/* Corretor */}
+                <col style={{ width: '130px' }} />{/* Cliente */}
+                <col style={{ width: '100px' }} />{/* CPF */}
+                <col style={{ width: '90px' }} /> {/* Convênio */}
+                <col style={{ width: '90px' }} /> {/* Banco */}
+                <col style={{ width: '110px' }} />{/* Tabela */}
+                <col style={{ width: '85px' }} /> {/* Valor */}
+                <col style={{ width: '80px' }} /> {/* Produto */}
+                <col style={{ width: '130px' }} />{/* Status */}
+                <col style={{ width: '72px' }} /> {/* Dt Digitação */}
+                <col style={{ width: '72px' }} /> {/* Dt Status */}
+                <col style={{ width: '80px' }} /> {/* Comissão */}
+                <col style={{ width: '55px' }} /> {/* Pontos */}
+                <col style={{ width: '70px' }} /> {/* Ações */}
+              </colgroup>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                  {['Proposta', 'Corretor', 'Nome do Cliente', 'CPF', 'Convênio', 'Banco', 'Tabela', 'Valor', 'Produto', 'Status', 'Data Digitação', 'Data Status', 'Comissão', 'Pontos', ''].map(h => (
-                    <th
-                      key={h}
-                      className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest"
-                      style={{ color: 'var(--text-3)' }}
-                    >
-                      {h}
-                    </th>
+                  {['Proposta','Corretor','Cliente','CPF','Convênio','Banco','Tabela','Valor','Produto','Status','Dt. Digit.','Dt. Status','Comissão','Pts',''].map(h => (
+                    <th key={h} className="text-left px-2 py-2.5 text-[9px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {paginated.map(p => (
                   <tr key={p.id} className="table-row-cyber">
-                    <td className="px-4 py-3 font-mono text-xs num" style={{ color: 'var(--text-2)' }}>{p.proposal_number || '—'}</td>
-                    <td className="px-4 py-3">
-                      <p className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>{p.user_name || p.user_email || '—'}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{p.client_name}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="text-xs font-mono" style={{ color: 'var(--text-3)' }}>{p.client_cpf || '—'}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="text-xs" style={{ color: 'var(--text-2)' }}>{p.convenio_name || p.convenio || '—'}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="text-xs" style={{ color: 'var(--text-2)' }}>{p.bank_name || p.bank || '—'}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="text-xs truncate max-w-[160px]" style={{ color: 'var(--text-3)' }}>{p.table_name || '—'}</p>
-                    </td>
-                    <td className="px-4 py-3 font-bold num" style={{ color: 'var(--text-1)' }}>{formatCurrency(Number(p.value))}</td>
-                    <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-3)' }}>{p.product_name || p.product}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-2 py-2 font-mono num truncate" style={{ color: 'var(--text-2)', fontSize: '10px' }}>{p.proposal_number || '—'}</td>
+                    <td className="px-2 py-2 truncate" style={{ color: 'var(--text-2)' }}>{p.user_name || p.user_email || '—'}</td>
+                    <td className="px-2 py-2 font-semibold truncate" style={{ color: 'var(--text-1)', fontSize: '11px' }}>{p.client_name}</td>
+                    <td className="px-2 py-2 font-mono truncate" style={{ color: 'var(--text-3)', fontSize: '10px' }}>{p.client_cpf || '—'}</td>
+                    <td className="px-2 py-2 truncate" style={{ color: 'var(--text-2)' }}>{p.convenio_name || p.convenio || '—'}</td>
+                    <td className="px-2 py-2 truncate" style={{ color: 'var(--text-2)' }}>{p.bank_name || p.bank || '—'}</td>
+                    <td className="px-2 py-2 truncate" style={{ color: 'var(--text-3)' }}>{p.table_name || '—'}</td>
+                    <td className="px-2 py-2 font-bold num whitespace-nowrap" style={{ color: 'var(--text-1)' }}>{formatCurrency(Number(p.value))}</td>
+                    <td className="px-2 py-2 truncate" style={{ color: 'var(--text-3)' }}>{p.product_name || p.product || '—'}</td>
+                    <td className="px-2 py-2">
                       {isAdmin ? (
                         <div className="relative">
-                          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+                          <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
                           <select
                             value={p.status}
                             onChange={e => quickStatusChange(p.id, e.target.value)}
-                            className="appearance-none text-xs font-semibold pl-2 pr-6 py-1 rounded-lg cursor-pointer"
-                            style={{ background: 'var(--bg-surface)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }}
+                            className="appearance-none font-semibold pl-1.5 pr-5 py-0.5 rounded-lg cursor-pointer w-full truncate"
+                            style={{ background: 'var(--bg-surface)', border: '1px solid var(--card-border)', color: 'var(--text-1)', fontSize: '10px' }}
                           >
                             {statusDefs.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
                           </select>
@@ -547,73 +546,65 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
                         (() => {
                           const sd = statusDefs.find(s => s.name === p.status);
                           return (
-                            <span className={`${sd ? statusBadge(sd.name, sd.color) : 'badge badge-blue'} inline-flex items-center gap-1`}>
-                              {ICON_MAP[p.status] || <FileText className="w-3 h-3" />} {p.status}
+                            <span className={`${sd ? statusBadge(sd.name, sd.color) : 'badge badge-blue'} inline-flex items-center gap-1 truncate max-w-full`} style={{ fontSize: '9px' }}>
+                              {ICON_MAP[p.status] || <FileText className="w-2.5 h-2.5" />} {p.status}
                             </span>
                           );
                         })()
                       )}
                     </td>
-                    <td className="px-4 py-3">
-                      <span className="text-xs num" style={{ color: 'var(--text-3)' }}>
-                        {p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '—'}
-                      </span>
+                    <td className="px-2 py-2 num whitespace-nowrap" style={{ color: 'var(--text-3)', fontSize: '10px' }}>
+                      {p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '—'}
                     </td>
-                    <td className="px-4 py-3">
-                      <span className="text-xs num" style={{ color: 'var(--text-3)' }}>
-                        {p.updated_at ? new Date(p.updated_at).toLocaleDateString('pt-BR') : '—'}
-                      </span>
+                    <td className="px-2 py-2 num whitespace-nowrap" style={{ color: 'var(--text-3)', fontSize: '10px' }}>
+                      {p.updated_at ? new Date(p.updated_at).toLocaleDateString('pt-BR') : '—'}
                     </td>
-                    <td className="px-4 py-3">
-                      {p.status === 'Paga' && Number(p.comissao_valor) > 0 ? (
-                        <div>
-                          <span className="font-bold text-sm num" style={{ color: '#4ade80' }}>{formatCurrency(Number(p.comissao_valor))}</span>
-                          <p className="text-xs num" style={{ color: 'var(--text-3)' }}>{Number(p.comissao_corretor_pct || 0).toFixed(2)}%</p>
-                        </div>
-                      ) : <span style={{ color: 'var(--text-3)' }}>—</span>}
+                    <td className="px-2 py-2">
+                      {p.status === 'Paga' && Number(p.comissao_valor) > 0
+                        ? <span className="font-bold num whitespace-nowrap" style={{ color: '#4ade80', fontSize: '10px' }}>{formatCurrency(Number(p.comissao_valor))}</span>
+                        : <span style={{ color: 'var(--text-3)' }}>—</span>}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-2 py-2">
                       {p.points_earned > 0
-                        ? <span className="font-bold text-sm num" style={{ color: '#fbbf24' }}>+{p.points_earned}</span>
-                        : <span style={{ color: 'var(--text-3)' }}>—</span>
-                      }
+                        ? <span className="font-bold num" style={{ color: '#fbbf24', fontSize: '10px' }}>+{p.points_earned}</span>
+                        : <span style={{ color: 'var(--text-3)' }}>—</span>}
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1">
+                    <td className="px-2 py-2">
+                      <div className="flex items-center gap-0.5">
                         {(isAdmin || p.allow_broker_edit) && (
                           <button
                             onClick={() => openEdit(p)}
-                            className="p-1.5 rounded-lg transition-all"
+                            className="p-1 rounded-lg transition-all"
                             style={{ color: 'var(--text-3)' }}
                             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
                             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
                             title="Editar proposta"
                           >
-                            <Edit2 className="w-3.5 h-3.5" />
+                            <Edit2 className="w-3 h-3" />
                           </button>
                         )}
                         {isAdmin && (
                           <button
                             onClick={() => toggleBrokerEdit(p.id, p.allow_broker_edit)}
-                            className="p-1.5 rounded-lg transition-all"
+                            className="p-1 rounded-lg transition-all"
                             style={{ color: p.allow_broker_edit ? '#4ade80' : 'var(--text-3)' }}
                             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; }}
                             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                             title={p.allow_broker_edit ? 'Travar edição do corretor' : 'Liberar edição ao corretor'}
                           >
-                            {p.allow_broker_edit ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                            {p.allow_broker_edit ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
                           </button>
                         )}
                         {isMaster && (
                           <button
                             onClick={() => setConfirmDelete(p)}
-                            className="p-1.5 rounded-lg transition-all"
+                            className="p-1 rounded-lg transition-all"
                             style={{ color: 'var(--text-3)' }}
                             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
                             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
                             title="Excluir proposta"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-3 h-3" />
                           </button>
                         )}
                       </div>
