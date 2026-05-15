@@ -1134,7 +1134,7 @@ app.get('/api/proposals/check-number', auth, async (req, res) => {
 // ─── PROPOSTAS ────────────────────────────────────────────────────────────────
 app.get('/api/proposals', auth, async (req, res) => {
   const isAdmin = req.user.role === 'admin' || req.user.role === 'master';
-  const { bank, bank_id, table_id, convenio, convenio_id, product, product_id, status, start_date, end_date, user_id } = req.query;
+  const { bank, bank_id, table_id, convenio, convenio_id, product, product_id, status, start_date, end_date, user_id, search, min_value, max_value, tipo_proposta, only_paid, no_commission, locked } = req.query;
   const conditions = [];
   const values = [];
   let i = 1;
@@ -1150,6 +1150,14 @@ app.get('/api/proposals', auth, async (req, res) => {
   if (status)     { conditions.push(`p.status = $${i++}`);         values.push(status); }
   if (start_date) { conditions.push(`p.created_at >= $${i++}`);    values.push(start_date); }
   if (end_date)   { conditions.push(`p.created_at <= $${i++}`);    values.push(end_date + ' 23:59:59'); }
+  if (search)     { conditions.push(`(p.client_name ILIKE $${i} OR p.proposal_number ILIKE $${i} OR u.full_name ILIKE $${i} OR u.email ILIKE $${i})`); values.push(`%${search}%`); i++; }
+  if (min_value)  { conditions.push(`p.value >= $${i++}`);         values.push(parseFloat(min_value)); }
+  if (max_value)  { conditions.push(`p.value <= $${i++}`);         values.push(parseFloat(max_value)); }
+  if (tipo_proposta) { conditions.push(`p.tipo_proposta ILIKE $${i++}`); values.push(`%${tipo_proposta}%`); }
+  if (only_paid === 'true') { conditions.push(`p.status = 'Paga'`); }
+  if (no_commission === 'true') { conditions.push(`p.status_comissao IS NULL AND p.status = 'Paga'`); }
+  if (locked === 'true')  { conditions.push(`p.allow_broker_edit = false`); }
+  if (locked === 'false') { conditions.push(`p.allow_broker_edit = true`); }
   const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
   const { rows } = await pool.query(`
     SELECT p.*, u.full_name as user_name, u.email as user_email,
