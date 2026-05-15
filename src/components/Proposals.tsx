@@ -574,19 +574,19 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
 
   const paginated = sorted.slice((page - 1) * perPage, page * perPage);
 
-  // ── Cards stats ──
-  const paidProps    = proposals.filter(p => p.status === 'Paga');
-  const analysisProps = proposals.filter(p => p.status === 'Em análise');
-  const cancelledProps = proposals.filter(p => p.status === 'Cancelada');
+  // ── Cards stats — calculam sobre `filtered` para refletir filtros ativos ──
+  const paidProps    = filtered.filter(p => p.status === 'Paga');
+  const analysisProps = filtered.filter(p => p.status === 'Em análise');
+  const cancelledProps = filtered.filter(p => p.status === 'Cancelada');
   const totalPaid    = paidProps.reduce((a, b) => a + Number(b.value), 0);
-  const totalVolume  = proposals.reduce((a, b) => a + Number(b.value), 0);
-  const totalPoints  = proposals.reduce((a, b) => a + (b.points_earned || 0), 0);
+  const totalVolume  = filtered.reduce((a, b) => a + Number(b.value), 0);
+  const totalPoints  = filtered.reduce((a, b) => a + (b.points_earned || 0), 0);
   const totalComissao = paidProps.reduce((a, b) => a + Number(b.comissao_valor || 0), 0);
-  const pendingComissao = proposals.filter(p => p.status === 'Paga' && !p.status_comissao).reduce((a, b) => a + Number(b.comissao_valor || 0), 0);
+  const pendingComissao = filtered.filter(p => p.status === 'Paga' && !p.status_comissao).reduce((a, b) => a + Number(b.comissao_valor || 0), 0);
   const avgTicket    = paidProps.length > 0 ? totalPaid / paidProps.length : 0;
 
   const allCards = [
-    { key: 'total',     label: 'Total',          value: proposals.length,                 color: '#60a5fa', fmt: 'num' },
+    { key: 'total',     label: 'Total',          value: filtered.length,                  color: '#60a5fa', fmt: 'num' },
     { key: 'pagas',     label: 'Pagas',           value: paidProps.length,                color: '#4ade80', fmt: 'num' },
     { key: 'analise',   label: 'Em Análise',      value: analysisProps.length,            color: '#fbbf24', fmt: 'num' },
     { key: 'cancelada', label: 'Canceladas',      value: cancelledProps.length,           color: '#f87171', fmt: 'num' },
