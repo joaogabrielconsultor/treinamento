@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Wallet, Clock, CheckCircle, DollarSign, Users, ChevronDown, Search, AlertCircle, Key } from 'lucide-react';
-import { Proposal } from '../../types';
+import { Wallet, Clock, CheckCircle, DollarSign, Users, ChevronDown, Search, AlertCircle, Key, Send, XCircle, Inbox } from 'lucide-react';
+import { Proposal, WithdrawalRequest } from '../../types';
 import { Pagination } from '../ui/Pagination';
 
 const API = (p: string, opts?: RequestInit) =>
@@ -24,7 +24,15 @@ interface BrokerSummary {
   paid_value: number;
 }
 
+const SAQUE_STATUS_COLOR: Record<string, { text: string; bg: string; border: string }> = {
+  'Pendente': { text: '#fbbf24', bg: 'rgba(251,191,36,0.1)',   border: 'rgba(251,191,36,0.3)' },
+  'Aprovado': { text: '#60a5fa', bg: 'rgba(96,165,250,0.1)',   border: 'rgba(96,165,250,0.3)' },
+  'Pago':     { text: '#4ade80', bg: 'rgba(74,222,128,0.1)',   border: 'rgba(74,222,128,0.3)' },
+  'Recusado': { text: '#f87171', bg: 'rgba(248,113,113,0.1)',  border: 'rgba(248,113,113,0.3)' },
+};
+
 export function AdminContaCorrente() {
+  const [tab, setTab] = useState<'comissoes' | 'saques'>('comissoes');
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [brokers, setBrokers] = useState<BrokerSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +44,10 @@ export function AdminContaCorrente() {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(15);
   const [successMsg, setSuccessMsg] = useState('');
+
+  const [saques, setSaques] = useState<WithdrawalRequest[]>([]);
+  const [loadingSaques, setLoadingSaques] = useState(false);
+  const [actionId, setActionId] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -49,7 +61,22 @@ export function AdminContaCorrente() {
     setLoading(false);
   }
 
+  async function loadSaques() {
+    setLoadingSaques(true);
+    const data = await API('/api/admin/saques').then(r => r.json());
+    setSaques(Array.isArray(data) ? data : []);
+    setLoadingSaques(false);
+  }
+
+  async function updateSaque(id: string, status: string) {
+    setActionId(id);
+    await API(`/api/admin/saques/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) });
+    setActionId(null);
+    loadSaques();
+  }
+
   useEffect(() => { load(); }, [filterCorretor, filterStatus]);
+  useEffect(() => { if (tab === 'saques') loadSaques(); }, [tab]);
 
   const filtered = proposals.filter(p => {
     const q = search.toLowerCase();
@@ -99,18 +126,20 @@ export function AdminContaCorrente() {
     setSaving(false);
   }
 
+  const pendingSaques = saques.filter(s => s.status === 'Pendente').length;
+
   return (
     <div className="p-6 max-w-7xl mx-auto" style={{ color: 'var(--text-1)' }}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 animate-fade-up">
+      <div className="flex items-center justify-between mb-4 animate-fade-up">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Wallet className="w-5 h-5" style={{ color: '#14B8A6' }} />
             <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Conta Corrente — Admin</h1>
           </div>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Gerencie o pagamento de comissões por corretor</p>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Gerencie comissões e solicitações de saque</p>
         </div>
-        {selected.size > 0 && (
+        {selected.size > 0 && tab === 'comissoes' && (
           <button
             onClick={markAsPaid}
             disabled={saving}
@@ -122,12 +151,110 @@ export function AdminContaCorrente() {
         )}
       </div>
 
-      {successMsg && (
+      {/* Tabs */}
+      <div className="flex gap-1 mb-6 p-1 rounded-xl w-fit" style={{ background: 'var(--surface-subtle)', border: '1px solid var(--card-border)' }}>
+        {([
+          { key: 'comissoes', label: 'Comissões', icon: CheckCircle },
+          { key: 'saques',    label: `Saques${pendingSaques > 0 ? ` (${pendingSaques})` : ''}`, icon: Send },
+        ] as const).map(t => (
+          <button key={t.key} onClick={() => setTab(t.key)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all"
+            style={tab === t.key
+              ? { background: 'var(--card-bg)', color: '#14B8A6', boxShadow: 'var(--shadow-card)' }
+              : { color: 'var(--text-3)' }}>
+            <t.icon className="w-3.5 h-3.5" />{t.label}
+          </button>
+        ))}
+      </div>
+
+      {successMsg && tab === 'comissoes' && (
         <div className="mb-4 rounded-xl px-4 py-3 text-sm font-medium animate-fade-up"
           style={{ background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)', color: '#4ade80' }}>
           ✅ {successMsg}
         </div>
       )}
+
+      {/* ── ABA SAQUES ── */}
+      {tab === 'saques' && (
+        <div className="animate-fade-up">
+          {loadingSaques ? (
+            <div className="flex items-center justify-center py-20"><div className="spinner-cyber" /></div>
+          ) : saques.length === 0 ? (
+            <div className="text-center py-20">
+              <Inbox className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--text-3)' }} />
+              <p className="text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma solicitação de saque</p>
+            </div>
+          ) : (
+            <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
+                    {['Corretor','Chave PIX','Valor','Status','Data','Ações'].map(h => (
+                      <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {saques.map(s => {
+                    const sc = SAQUE_STATUS_COLOR[s.status] || SAQUE_STATUS_COLOR['Pendente'];
+                    const isPending = s.status === 'Pendente';
+                    const isApproved = s.status === 'Aprovado';
+                    return (
+                      <tr key={s.id} className="table-row-cyber">
+                        <td className="px-4 py-3">
+                          <p className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{s.user_name || s.user_email}</p>
+                          <p className="text-xs" style={{ color: 'var(--text-3)' }}>{s.user_email}</p>
+                        </td>
+                        <td className="px-4 py-3">
+                          {s.pix_key ? (
+                            <div>
+                              <p className="text-xs font-mono" style={{ color: 'var(--text-2)' }}>{s.pix_key}</p>
+                              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{PIX_TYPE_LABELS[s.pix_key_type || ''] || s.pix_key_type}</p>
+                            </div>
+                          ) : <span style={{ color: 'var(--text-3)' }}>—</span>}
+                        </td>
+                        <td className="px-4 py-3 font-bold num text-base" style={{ color: '#14B8A6' }}>{fmtBRL(Number(s.amount))}</td>
+                        <td className="px-4 py-3">
+                          <span className="text-xs font-semibold px-2 py-1 rounded-lg" style={{ background: sc.bg, color: sc.text, border: `1px solid ${sc.border}` }}>{s.status}</span>
+                        </td>
+                        <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-3)' }}>{new Date(s.created_at).toLocaleDateString('pt-BR')}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1.5">
+                            {isPending && (
+                              <button onClick={() => updateSaque(s.id, 'Aprovado')} disabled={actionId === s.id}
+                                className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg font-semibold transition-all disabled:opacity-50"
+                                style={{ background: 'rgba(96,165,250,0.1)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.25)' }}>
+                                <CheckCircle className="w-3 h-3" /> Aprovar
+                              </button>
+                            )}
+                            {isApproved && (
+                              <button onClick={() => updateSaque(s.id, 'Pago')} disabled={actionId === s.id}
+                                className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg font-semibold transition-all disabled:opacity-50"
+                                style={{ background: 'rgba(74,222,128,0.1)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.25)' }}>
+                                <DollarSign className="w-3 h-3" /> Marcar Pago
+                              </button>
+                            )}
+                            {(isPending || isApproved) && (
+                              <button onClick={() => updateSaque(s.id, 'Recusado')} disabled={actionId === s.id}
+                                className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg font-semibold transition-all disabled:opacity-50"
+                                style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171', border: '1px solid rgba(248,113,113,0.25)' }}>
+                                <XCircle className="w-3 h-3" /> Recusar
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── ABA COMISSÕES ── */}
+      {tab === 'comissoes' && <>
 
       {/* Cards globais */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -329,6 +456,7 @@ export function AdminContaCorrente() {
           <Pagination total={filtered.length} page={page} perPage={perPage} onPage={setPage} onPerPage={setPerPage} />
         </div>
       )}
+      </>}
     </div>
   );
 }

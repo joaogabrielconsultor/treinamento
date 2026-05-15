@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Wallet, Clock, CheckCircle, DollarSign, FileText, ChevronDown, Key, Edit2, X, Save } from 'lucide-react';
-import { Proposal } from '../types';
+import { Wallet, Clock, CheckCircle, DollarSign, FileText, ChevronDown, Key, Edit2, X, Save, Send, ArrowDownToLine, AlertCircle } from 'lucide-react';
+import { Proposal, WithdrawalRequest } from '../types';
 import { Pagination } from './ui/Pagination';
 
 const API = (p: string, opts?: RequestInit) =>
@@ -21,6 +21,7 @@ interface Summary {
   pending_value: number;
   paid_count: number;
   paid_value: number;
+  available_balance: number;
 }
 
 interface PixInfo {
@@ -86,9 +87,16 @@ function PixModal({ current, onClose, onSave }: { current: PixInfo; onClose: () 
   );
 }
 
+const SAQUE_STATUS_COLOR: Record<string, { text: string; bg: string; border: string }> = {
+  'Pendente': { text: '#fbbf24', bg: 'rgba(251,191,36,0.1)',   border: 'rgba(251,191,36,0.3)' },
+  'Aprovado': { text: '#60a5fa', bg: 'rgba(96,165,250,0.1)',   border: 'rgba(96,165,250,0.3)' },
+  'Pago':     { text: '#4ade80', bg: 'rgba(74,222,128,0.1)',   border: 'rgba(74,222,128,0.3)' },
+  'Recusado': { text: '#f87171', bg: 'rgba(248,113,113,0.1)',  border: 'rgba(248,113,113,0.3)' },
+};
+
 export function ContaCorrente() {
   const [proposals, setProposals] = useState<Proposal[]>([]);
-  const [summary, setSummary] = useState<Summary>({ pending_count: 0, pending_value: 0, paid_count: 0, paid_value: 0 });
+  const [summary, setSummary] = useState<Summary>({ pending_count: 0, pending_value: 0, paid_count: 0, paid_value: 0, available_balance: 0 });
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('');
   const [page, setPage] = useState(1);
@@ -96,15 +104,24 @@ export function ContaCorrente() {
   const [pixInfo, setPixInfo] = useState<PixInfo>({ pix_key: null, pix_key_type: null });
   const [showPixModal, setShowPixModal] = useState(false);
 
+  const [saques, setSaques] = useState<WithdrawalRequest[]>([]);
+  const [showSaqueModal, setShowSaqueModal] = useState(false);
+  const [saqueAmount, setSaqueAmount] = useState('');
+  const [requestingSaque, setRequestingSaque] = useState(false);
+  const [saqueError, setSaqueError] = useState('');
+  const [saqueSuccess, setSaqueSuccess] = useState('');
+
   async function load() {
     setLoading(true);
-    const [contaData, meData] = await Promise.all([
+    const [contaData, meData, saquesData] = await Promise.all([
       API('/api/conta-corrente').then(r => r.json()),
       API('/api/auth/me').then(r => r.json()),
+      API('/api/conta-corrente/saques').then(r => r.json()),
     ]);
     setProposals(Array.isArray(contaData.proposals) ? contaData.proposals : []);
     if (contaData.summary) setSummary(contaData.summary);
     if (meData) setPixInfo({ pix_key: meData.pix_key || null, pix_key_type: meData.pix_key_type || null });
+    setSaques(Array.isArray(saquesData) ? saquesData : []);
     setLoading(false);
   }
 
@@ -112,6 +129,19 @@ export function ContaCorrente() {
     await API('/api/profile/pix', { method: 'PUT', body: JSON.stringify(info) });
     setPixInfo(info);
     setShowPixModal(false);
+  }
+
+  async function requestSaque() {
+    const amt = parseFloat(saqueAmount.replace(',', '.'));
+    if (!amt || amt <= 0) { setSaqueError('Informe um valor válido'); return; }
+    setRequestingSaque(true); setSaqueError('');
+    const res = await API('/api/conta-corrente/saque', { method: 'POST', body: JSON.stringify({ amount: amt }) });
+    const data = await res.json();
+    if (!res.ok) { setSaqueError(data.error || 'Erro ao solicitar'); setRequestingSaque(false); return; }
+    setSaqueSuccess('Solicitação enviada com sucesso!');
+    setShowSaqueModal(false); setSaqueAmount(''); setRequestingSaque(false);
+    setTimeout(() => setSaqueSuccess(''), 5000);
+    load();
   }
 
   useEffect(() => { load(); }, []);
@@ -154,20 +184,36 @@ export function ContaCorrente() {
             )}
           </div>
         </div>
-        <button onClick={() => setShowPixModal(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold btn-cyber flex-shrink-0">
-          <Edit2 className="w-3.5 h-3.5" />
-          {pixInfo.pix_key ? 'Editar' : 'Cadastrar'}
-        </button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {summary.available_balance > 0 && (
+            <button onClick={() => { setShowSaqueModal(true); setSaqueError(''); setSaqueAmount(''); }}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold"
+              style={{ background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' }}>
+              <Send className="w-3.5 h-3.5" /> Solicitar Saque
+            </button>
+          )}
+          <button onClick={() => setShowPixModal(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold btn-cyber">
+            <Edit2 className="w-3.5 h-3.5" />
+            {pixInfo.pix_key ? 'Editar PIX' : 'Cadastrar PIX'}
+          </button>
+        </div>
       </div>
+
+      {saqueSuccess && (
+        <div className="mb-4 rounded-xl px-4 py-3 text-sm font-medium animate-fade-up flex items-center gap-2"
+          style={{ background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)', color: '#4ade80' }}>
+          <CheckCircle className="w-4 h-4 flex-shrink-0" /> {saqueSuccess}
+        </div>
+      )}
 
       {/* Cards de resumo */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {[
-          { label: 'A Receber',        value: fmtBRL(summary.pending_value), sub: `${summary.pending_count} proposta${summary.pending_count !== 1 ? 's' : ''}`, icon: Clock,        color: '#f59e0b', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.2)'  },
-          { label: 'Já Recebido',      value: fmtBRL(summary.paid_value),    sub: `${summary.paid_count} paga${summary.paid_count !== 1 ? 's' : ''}`,            icon: CheckCircle,  color: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.2)'  },
-          { label: 'Total em Aberto',  value: String(summary.pending_count),  sub: 'aguardando pagamento',                                                         icon: FileText,     color: '#60a5fa', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.2)'  },
-          { label: 'Total Acumulado',  value: fmtBRL(summary.pending_value + summary.paid_value), sub: 'comissões totais',                                          icon: DollarSign,   color: '#14B8A6', bg: 'rgba(20,184,166,0.08)', border: 'rgba(20,184,166,0.2)'  },
+          { label: 'A Receber',             value: fmtBRL(summary.pending_value),    sub: `${summary.pending_count} proposta${summary.pending_count !== 1 ? 's' : ''}`, icon: Clock,            color: '#f59e0b', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.2)'  },
+          { label: 'Empresa Liberou',        value: fmtBRL(summary.paid_value),       sub: `${summary.paid_count} comissão${summary.paid_count !== 1 ? 'ões' : ''} paga${summary.paid_count !== 1 ? 's' : ''}`, icon: CheckCircle, color: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.2)' },
+          { label: 'Disponível p/ Saque',   value: fmtBRL(summary.available_balance), sub: 'saldo disponível',                                                          icon: ArrowDownToLine,  color: '#14B8A6', bg: 'rgba(20,184,166,0.08)', border: 'rgba(20,184,166,0.2)'  },
+          { label: 'Total Acumulado',        value: fmtBRL(summary.pending_value + summary.paid_value), sub: 'comissões totais',                                         icon: DollarSign,       color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.2)' },
         ].map((c, i) => (
           <div key={c.label} className="rounded-2xl p-4 animate-fade-up" style={{ background: c.bg, border: `1px solid ${c.border}`, boxShadow: 'var(--shadow-card)', animationDelay: `${i * 50}ms` }}>
             <div className="flex items-start justify-between">
@@ -258,8 +304,87 @@ export function ContaCorrente() {
         </div>
       )}
 
+      {/* Histórico de solicitações de saque */}
+      {saques.length > 0 && (
+        <div className="mt-8 animate-fade-up">
+          <h2 className="text-sm font-bold mb-3 uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Solicitações de Saque</h2>
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
+                  {['Data', 'Valor', 'Status', 'Observação'].map(h => (
+                    <th key={h} className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {saques.map(s => {
+                  const sc = SAQUE_STATUS_COLOR[s.status] || SAQUE_STATUS_COLOR['Pendente'];
+                  return (
+                    <tr key={s.id} className="table-row-cyber">
+                      <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-3)' }}>{new Date(s.created_at).toLocaleDateString('pt-BR')}</td>
+                      <td className="px-4 py-3 font-bold num" style={{ color: '#14B8A6' }}>{fmtBRL(Number(s.amount))}</td>
+                      <td className="px-4 py-3">
+                        <span className="text-xs font-semibold px-2 py-1 rounded-lg" style={{ background: sc.bg, color: sc.text, border: `1px solid ${sc.border}` }}>{s.status}</span>
+                      </td>
+                      <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-3)' }}>{s.notes || '—'}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {showPixModal && (
         <PixModal current={pixInfo} onClose={() => setShowPixModal(false)} onSave={savePix} />
+      )}
+
+      {/* Modal solicitar saque */}
+      {showSaqueModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)' }}>
+          <div className="rounded-2xl w-full max-w-sm p-6 animate-fade-up" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <Send className="w-4 h-4" style={{ color: '#14B8A6' }} />
+                <h2 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>Solicitar Saque</h2>
+              </div>
+              <button onClick={() => setShowSaqueModal(false)} className="p-1.5 rounded-lg" style={{ color: 'var(--text-3)' }}><X className="w-4 h-4" /></button>
+            </div>
+            <div className="rounded-xl p-3 mb-4" style={{ background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)' }}>
+              <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>Disponível para Saque</p>
+              <p className="text-xl font-black num" style={{ color: '#14B8A6' }}>{fmtBRL(summary.available_balance)}</p>
+            </div>
+            {pixInfo.pix_key ? (
+              <div className="rounded-xl p-3 mb-4" style={{ background: 'rgba(96,165,250,0.06)', border: '1px solid rgba(96,165,250,0.15)' }}>
+                <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>Chave PIX de destino</p>
+                <p className="text-sm font-mono font-semibold" style={{ color: 'var(--text-1)' }}>{pixInfo.pix_key}</p>
+                <p className="text-xs" style={{ color: 'var(--text-3)' }}>{PIX_TYPE_LABELS[pixInfo.pix_key_type || ''] || pixInfo.pix_key_type}</p>
+              </div>
+            ) : (
+              <div className="rounded-xl p-3 mb-4 flex items-center gap-2" style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)' }}>
+                <AlertCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#f87171' }} />
+                <p className="text-xs" style={{ color: '#f87171' }}>Cadastre uma chave PIX antes de solicitar o saque.</p>
+              </div>
+            )}
+            <div className="mb-4">
+              <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: 'var(--text-3)' }}>Valor desejado (R$)</label>
+              <input value={saqueAmount} onChange={e => setSaqueAmount(e.target.value)} placeholder="0,00"
+                type="number" step="0.01" max={summary.available_balance}
+                className="input-cyber w-full px-3 py-2.5 text-sm rounded-xl" />
+              {saqueError && <p className="text-xs mt-1.5 flex items-center gap-1" style={{ color: '#f87171' }}><AlertCircle className="w-3 h-3" />{saqueError}</p>}
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setShowSaqueModal(false)} className="flex-1 py-2.5 text-sm rounded-xl btn-ghost">Cancelar</button>
+              <button onClick={requestSaque} disabled={requestingSaque || !pixInfo.pix_key || !saqueAmount}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm rounded-xl font-semibold btn-cyber disabled:opacity-50">
+                <Send className="w-4 h-4" />
+                {requestingSaque ? 'Enviando...' : 'Solicitar'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

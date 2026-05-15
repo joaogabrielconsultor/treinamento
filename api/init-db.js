@@ -287,6 +287,20 @@ async function initDb() {
     }
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS withdrawal_requests (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id uuid NOT NULL REFERENCES users(id),
+        amount numeric(15,2) NOT NULL,
+        status text NOT NULL DEFAULT 'Pendente' CHECK (status IN ('Pendente', 'Aprovado', 'Pago', 'Recusado')),
+        notes text DEFAULT '',
+        reviewed_by uuid REFERENCES users(id),
+        reviewed_at timestamptz,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS commission_payments (
         id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id uuid NOT NULL REFERENCES users(id),

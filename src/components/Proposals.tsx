@@ -311,17 +311,40 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
 
   // ── CSV Export ──
   function exportCSV() {
-    const headers = ['Proposta','Data Digitação','Cliente','CPF','Telefone','Corretor','Convênio','Banco','Tabela','Produto','Valor','Status','Comissão Corretor','Comissão Empresa','Pontos','Status Comissão'];
-    const rows = filtered.map(p => [
-      p.proposal_number, p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '',
+    const headers = [
+      'ID','Nr.Proposta','Data Digitação','Data Atualização',
+      'Cliente','CPF','Telefone',
+      'Corretor','Email Corretor',
+      'Convênio','Banco','Tabela','Categoria','Produto','Tipo Proposta',
+      'Valor','Coeficiente','Status',
+      '% Comissão Corretor','Comissão Corretor R$','Override Corretor R$',
+      'Comissão Empresa R$','Override Empresa R$',
+      'Pontos','Status Comissão','Edição Corretor',
+    ];
+    const rows = (selected.size > 0 ? filtered.filter(p => selected.has(p.id)) : filtered).map(p => [
+      p.id,
+      p.proposal_number,
+      p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '',
+      p.updated_at ? new Date(p.updated_at).toLocaleDateString('pt-BR') : '',
       p.client_name, p.client_cpf, p.client_phone,
-      p.user_name || p.user_email || '',
+      p.user_name || '', p.user_email || '',
       p.convenio_name || p.convenio || '',
       p.bank_name || p.bank || '',
-      p.table_name || '', p.product_name || p.product || '',
-      String(p.value), p.status,
-      String(p.comissao_valor || ''), String(p.comissao_empresa_valor || ''),
-      String(p.points_earned || ''), p.status_comissao || '',
+      p.table_name || '',
+      p.category_name || '',
+      p.product_name || p.product || '',
+      p.tipo_proposta || '',
+      String(p.value),
+      p.coeficiente ? String(p.coeficiente) : '',
+      p.status,
+      p.comissao_corretor_pct ? String(p.comissao_corretor_pct) : '',
+      String(p.comissao_valor || ''),
+      p.comissao_corretor_override != null ? String(p.comissao_corretor_override) : '',
+      String(p.comissao_empresa_valor || ''),
+      p.comissao_empresa_override != null ? String(p.comissao_empresa_override) : '',
+      String(p.points_earned || ''),
+      p.status_comissao || '',
+      p.allow_broker_edit ? 'Sim' : 'Não',
     ]);
     const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\n');
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });

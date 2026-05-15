@@ -209,6 +209,24 @@ export interface Proposal {
   comissao_empresa_override?: number | null;
   status_comissao?: 'Ag. Comissão' | 'Comissão Paga' | null;
   allow_broker_edit: boolean;
+  tipo_proposta?: string | null;
+}
+
+export interface WithdrawalRequest {
+  id: string;
+  user_id: string;
+  amount: number;
+  status: 'Pendente' | 'Aprovado' | 'Pago' | 'Recusado';
+  notes: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  user_name?: string;
+  user_email?: string;
+  pix_key?: string | null;
+  pix_key_type?: string | null;
+  reviewed_by_name?: string | null;
 }
 
 export interface RankingEntry {

@@ -1844,15 +1844,93 @@ app.get('/api/conta-corrente', auth, async (req, res) => {
   );
   const pending = rows.filter(r => r.status_comissao === 'Ag. Comissão');
   const paid    = rows.filter(r => r.status_comissao === 'Comissão Paga');
+  const paid_value = paid.reduce((a, b) => a + parseFloat(b.comissao_valor || 0), 0);
+  const { rows: [req_total] } = await pool.query(
+    `SELECT COALESCE(SUM(amount),0) as total FROM withdrawal_requests WHERE user_id=$1 AND status != 'Recusado'`,
+    [req.user.id]
+  );
+  const available_balance = Math.max(0, paid_value - parseFloat(req_total.total));
   res.json({
     proposals: rows,
     summary: {
       pending_count: pending.length,
       pending_value: pending.reduce((a, b) => a + parseFloat(b.comissao_valor || 0), 0),
       paid_count: paid.length,
-      paid_value: paid.reduce((a, b) => a + parseFloat(b.comissao_valor || 0), 0),
+      paid_value,
+      available_balance,
     }
   });
+});
+
+// Corretor: listar suas solicitações de saque
+app.get('/api/conta-corrente/saques', auth, async (req, res) => {
+  const { rows } = await pool.query(
+    `SELECT wr.*, r.full_name as reviewed_by_name FROM withdrawal_requests wr
+     LEFT JOIN users r ON r.id = wr.reviewed_by
+     WHERE wr.user_id = $1 ORDER BY wr.created_at DESC`,
+    [req.user.id]
+  );
+  res.json(rows);
+});
+
+// Corretor: criar solicitação de saque
+app.post('/api/conta-corrente/saque', auth, async (req, res) => {
+  const amt = parseFloat(req.body.amount);
+  if (!amt || amt <= 0) return res.status(400).json({ error: 'Valor inválido' });
+  // Calcular disponível
+  const { rows: [paid] } = await pool.query(
+    `SELECT COALESCE(SUM(ROUND(p.value * COALESCE(
+       (SELECT cr.comissao_corretor FROM commission_ranges cr
+        WHERE cr.financial_table_id = p.table_id
+          AND cr.min_value <= p.value AND (cr.max_value IS NULL OR cr.max_value >= p.value)
+        ORDER BY cr.min_value DESC LIMIT 1),
+       ft.comissao_corretor, 0) / 100, 2)), 0) as paid_value
+     FROM proposals p LEFT JOIN financial_tables ft ON ft.id = p.table_id
+     WHERE p.user_id = $1 AND p.status_comissao = 'Comissão Paga'`,
+    [req.user.id]
+  );
+  const { rows: [already] } = await pool.query(
+    `SELECT COALESCE(SUM(amount),0) as total FROM withdrawal_requests WHERE user_id=$1 AND status != 'Recusado'`,
+    [req.user.id]
+  );
+  const available = parseFloat(paid.paid_value) - parseFloat(already.total);
+  if (amt > available + 0.01) return res.status(400).json({ error: `Valor excede o disponível (R$ ${available.toFixed(2)})` });
+  await pool.query(`INSERT INTO withdrawal_requests (user_id, amount) VALUES ($1,$2)`, [req.user.id, amt]);
+  const { rows: [me] } = await pool.query(`SELECT full_name FROM users WHERE id=$1`, [req.user.id]);
+  const { rows: admins } = await pool.query(`SELECT id FROM users WHERE role IN ('admin','master') AND archived_at IS NULL`);
+  for (const a of admins) {
+    await pool.query(`INSERT INTO notifications (user_id, message) VALUES ($1,$2)`,
+      [a.id, `${me.full_name || 'Corretor'} solicitou saque de R$ ${amt.toFixed(2)}`]);
+  }
+  res.json({ ok: true });
+});
+
+// Admin: listar todas as solicitações de saque
+app.get('/api/admin/saques', auth, adminOnly, async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT wr.*, u.full_name as user_name, u.email as user_email,
+           u.pix_key, u.pix_key_type, r.full_name as reviewed_by_name
+    FROM withdrawal_requests wr
+    JOIN users u ON u.id = wr.user_id
+    LEFT JOIN users r ON r.id = wr.reviewed_by
+    ORDER BY CASE WHEN wr.status='Pendente' THEN 0 ELSE 1 END, wr.created_at DESC
+  `);
+  res.json(rows);
+});
+
+// Admin: atualizar status de solicitação de saque
+app.patch('/api/admin/saques/:id', auth, adminOnly, async (req, res) => {
+  const { status, notes } = req.body;
+  if (!['Aprovado','Pago','Recusado'].includes(status)) return res.status(400).json({ error: 'Status inválido' });
+  const { rows: [wr] } = await pool.query(
+    `UPDATE withdrawal_requests SET status=$1, notes=COALESCE($2,notes), reviewed_by=$3, reviewed_at=now(), updated_at=now()
+     WHERE id=$4 RETURNING *`,
+    [status, notes || null, req.user.id, req.params.id]
+  );
+  if (!wr) return res.status(404).json({ error: 'Solicitação não encontrada' });
+  const msgs = { 'Aprovado': 'Sua solicitação de saque foi aprovada!', 'Pago': 'Seu saque foi pago! Verifique sua conta PIX.', 'Recusado': 'Sua solicitação de saque não foi aprovada.' };
+  await pool.query(`INSERT INTO notifications (user_id, message) VALUES ($1,$2)`, [wr.user_id, msgs[status]]);
+  res.json({ ok: true });
 });
 
 // Visão do admin — resumo por corretor + lista completa
