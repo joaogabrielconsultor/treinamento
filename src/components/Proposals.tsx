@@ -363,10 +363,12 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
     setDupAlert(null); setBanks([]); setTables([]); setShowForm(true);
   }
   function openEdit(p: Proposal) {
+    pendingBankIdRef.current  = p.bank_id  || null;
+    pendingTableIdRef.current = p.table_id || null;
     setForm({
       client_name: p.client_name, client_cpf: p.client_cpf, client_phone: p.client_phone,
       proposal_number: p.proposal_number, value: String(p.value), product_id: p.product_id || '',
-      convenio_id: p.convenio_id || '', bank_id: p.bank_id || '', table_id: p.table_id || '',
+      convenio_id: p.convenio_id || '', bank_id: '', table_id: '',
       created_at: p.created_at ? p.created_at.slice(0, 10) : todayStr(),
       status: p.status, coeficiente: p.coeficiente ? String(p.coeficiente) : '',
       comissao_corretor_override: p.comissao_corretor_override != null ? String(p.comissao_corretor_override) : '',
