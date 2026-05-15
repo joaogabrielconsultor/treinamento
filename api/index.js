@@ -1358,6 +1358,14 @@ app.delete('/api/proposals/:id', auth, masterOnly, async (req, res) => {
   res.json({ ok: true });
 });
 
+app.post('/api/proposals/bulk-delete', auth, masterOnly, async (req, res) => {
+  const { ids } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ error: 'Nenhum id informado' });
+  const placeholders = ids.map((_, i) => `$${i + 1}`).join(',');
+  await pool.query(`DELETE FROM proposals WHERE id IN (${placeholders})`, ids);
+  res.json({ ok: true, deleted: ids.length });
+});
+
 // ─── IMPORTAÇÃO CSV DE PROPOSTAS ─────────────────────────────────────────────
 app.post('/api/admin/proposals/import', auth, adminOnly, async (req, res) => {
   const rows = req.body.rows;
@@ -1463,7 +1471,8 @@ app.post('/api/admin/proposals/import', auth, adminOnly, async (req, res) => {
       const productId  = await lookupProduct(productText);
 
       const { rows: existing } = await pool.query(
-        'SELECT id FROM proposals WHERE proposal_number = $1', [proposalNumber]
+        'SELECT id FROM proposals WHERE proposal_number = $1 AND client_cpf = $2',
+        [proposalNumber, clientCpf]
       );
 
       if (existing.length > 0) {

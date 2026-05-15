@@ -75,7 +75,7 @@ const DATE_PRESETS = [
   { key: 'custom',     label: <><Calendar className="w-3 h-3 inline mr-1" />Personalizado</> },
 ];
 
-const ALL_COL_KEYS = ['Proposta','Corretor','Cliente','CPF','Convênio','Banco','Tabela','Valor','Produto','Status','Dt. Digit.','Dt. Status','Comissão','Pts'];
+const ALL_COL_KEYS = ['ID','Proposta','Corretor','Cliente','CPF','Convênio','Banco','Tabela','Valor','Produto','Status','Dt. Digit.','Dt. Status','Comissão','Pts'];
 const DEFAULT_COLS = new Set(['Proposta','Corretor','Cliente','Convênio','Banco','Tabela','Valor','Produto','Status','Dt. Digit.','Comissão']);
 
 function loadSavedCols(): Set<string> {
@@ -199,6 +199,8 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [batchStatus, setBatchStatus] = useState('');
   const [applyingBatch, setApplyingBatch] = useState(false);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [deletingBulk, setDeletingBulk] = useState(false);
 
   // ── Import CSV ──
   const [showImport, setShowImport] = useState(false);
@@ -418,6 +420,14 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
     setProposals(prev => prev.map(p => p.id === id ? { ...p, allow_broker_edit: !current } : p));
   }
 
+  async function deleteBulkSelected() {
+    if (selected.size === 0) return;
+    setDeletingBulk(true);
+    await API('/api/proposals/bulk-delete', { method: 'POST', body: JSON.stringify({ ids: [...selected] }) });
+    setProposals(prev => prev.filter(p => !selected.has(p.id)));
+    setSelected(new Set()); setConfirmBulkDelete(false); setDeletingBulk(false);
+  }
+
   async function applyBatchStatus() {
     if (!batchStatus || selected.size === 0) return;
     setApplyingBatch(true);
@@ -529,6 +539,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
   }
 
   const SORT_FIELDS: Record<string, (p: Proposal) => string | number> = {
+    'ID':         p => p.id,
     'Proposta':   p => p.proposal_number || '',
     'Corretor':   p => (p.user_name || p.user_email || '').toLowerCase(),
     'Cliente':    p => p.client_name.toLowerCase(),
@@ -862,6 +873,13 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
             style={{ background: 'rgba(96,165,250,0.1)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.2)' }}>
             <Download className="w-3 h-3" /> Exportar seleção
           </button>
+          {isMaster && (
+            <button onClick={() => setConfirmBulkDelete(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg font-semibold"
+              style={{ background: 'rgba(239,68,68,0.12)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}>
+              <Trash2 className="w-3 h-3" /> Excluir selecionadas
+            </button>
+          )}
           <button onClick={() => setSelected(new Set())} className="px-3 py-1.5 text-xs rounded-lg btn-ghost">Limpar</button>
         </div>
       )}
@@ -933,6 +951,15 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
                           <input type="checkbox" checked={selected.has(p.id)}
                             onChange={e => { const next = new Set(selected); e.target.checked ? next.add(p.id) : next.delete(p.id); setSelected(next); }}
                             className="w-3.5 h-3.5 cursor-pointer accent-teal-500" />
+                        </td>
+                      )}
+                      {visibleCols.has('ID') && (
+                        <td className="px-2 py-2" title={p.id}>
+                          <button onClick={() => navigator.clipboard.writeText(p.id)}
+                            className="font-mono text-[10px] px-1.5 py-0.5 rounded hover:opacity-80 transition-opacity"
+                            style={{ background: 'rgba(20,184,166,0.08)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.2)', letterSpacing: '0.02em' }}>
+                            {p.id.slice(0, 8)}
+                          </button>
                         </td>
                       )}
                       {visibleCols.has('Proposta') && <td className="px-2 py-2 font-mono num truncate max-w-[100px]" style={{ color: 'var(--text-2)', fontSize: '10px' }}>{p.proposal_number || '—'}</td>}
@@ -1040,6 +1067,26 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
                 className="flex-1 py-2.5 text-sm rounded-xl font-semibold"
                 style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}>
                 Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Confirm bulk delete ── */}
+      {confirmBulkDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)' }}>
+          <div className="modal-panel rounded-2xl w-full max-w-sm p-6 animate-fade-up">
+            <h2 className="text-base font-bold mb-2" style={{ color: 'var(--text-1)' }}>Excluir Propostas</h2>
+            <p className="text-sm mb-1" style={{ color: 'var(--text-3)' }}>Você está prestes a excluir</p>
+            <p className="text-lg font-bold mb-1" style={{ color: '#f87171' }}>{selected.size} proposta(s)</p>
+            <p className="text-xs mb-4" style={{ color: '#f87171' }}>Esta ação é irreversível.</p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmBulkDelete(false)} disabled={deletingBulk} className="flex-1 py-2.5 text-sm rounded-xl btn-ghost">Cancelar</button>
+              <button onClick={deleteBulkSelected} disabled={deletingBulk}
+                className="flex-1 py-2.5 text-sm rounded-xl font-semibold"
+                style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}>
+                {deletingBulk ? 'Excluindo...' : 'Confirmar Exclusão'}
               </button>
             </div>
           </div>
