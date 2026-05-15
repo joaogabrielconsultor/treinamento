@@ -1361,14 +1361,9 @@ app.post('/api/admin/proposals/import', auth, adminOnly, async (req, res) => {
   }
 
   function mapStatus(esteira) {
-    const s = (esteira || '').replace(/[^\w\s]/g, '').trim().toLowerCase();
-    if (s.includes('paga'))                                           return 'Paga';
-    if (s.includes('reprovado') || s.includes('cancelad'))           return 'Cancelada';
-    if (s.includes('aprovad'))                                        return 'Aprovada';
-    if (s.includes('analise') || s.includes('análise') || s.includes('verificando') ||
-        s.includes('assinatura') || s.includes('averbacao') || s.includes('averbação') ||
-        s.includes('ag '))                                            return 'Em análise';
-    return 'Digitada';
+    // salva o valor bruto do CSV, removendo apenas o caractere de encoding no início (ex: °Proposta Paga)
+    const raw = (esteira || '').replace(/^[^\w\dÀ-ÿ]+/, '').trim();
+    return raw || 'Digitada';
   }
 
   // cache de lookups para evitar N+1
