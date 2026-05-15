@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import { SimPrefill } from './Simulator';
-import { Plus, Search, FileText, ChevronDown, CheckCircle, Clock, DollarSign, XCircle, Edit2, User, CreditCard, ChevronRight, AlertTriangle, Lock, Unlock, Trash2 } from 'lucide-react';
+import { Plus, Search, FileText, ChevronDown, CheckCircle, Clock, DollarSign, XCircle, Edit2, User, CreditCard, ChevronRight, AlertTriangle, Lock, Unlock, Trash2, Upload } from 'lucide-react';
 import { Proposal, ProposalStatusDef, FinancialTable, Bank, Convenio, Product } from '../types';
 import { Modal } from './ui/Modal';
 import { Pagination } from './ui/Pagination';
@@ -96,6 +96,11 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
   const [perPage, setPerPage] = useState(10);
   const [statusDefs, setStatusDefs] = useState<ProposalStatusDef[]>([]);
   const [confirmDelete, setConfirmDelete] = useState<Proposal | null>(null);
+  const [showImport, setShowImport] = useState(false);
+  const [importPreview, setImportPreview] = useState<Record<string, string>[]>([]);
+  const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
+  const [importResult, setImportResult] = useState<{ imported: number; updated: number; errors: { row: string; error: string }[] } | null>(null);
 
   // Cascade data
   const [convenios, setConvenios] = useState<Convenio[]>([]);
@@ -313,6 +318,73 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
     setProposals(prev => prev.map(p => p.id === id ? { ...p, allow_broker_edit: !current } : p));
   }
 
+  function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
+      if (lines.length < 2) { alert('Arquivo vazio ou sem dados.'); return; }
+      const normalizeHeader = (h: string) => {
+        const colMap: Record<string, string> = {
+          'data digitao': 'data_digitacao', 'data digita': 'data_digitacao',
+          'data_digitao': 'data_digitacao', 'data digitação': 'data_digitacao',
+          'nome do cliente': 'nome_cliente', 'nome_do_cliente': 'nome_cliente',
+          'situao': 'situacao', 'situação': 'situacao',
+          'convnio': 'convenio', 'convênio': 'convenio',
+          'proposta': 'proposta', 'cpf': 'cpf', 'corretor': 'corretor',
+          'banco': 'banco', 'tabela': 'tabela', 'tipo': 'tipo', 'produto': 'tipo',
+          'valor': 'valor', 'esteira': 'esteira', 'status': 'esteira',
+        };
+        const withSpaces = h.trim().replace(/^﻿/, '').replace(/[^\w\s]/g, '').trim().toLowerCase();
+        const clean = withSpaces.replace(/\s+/g, '_');
+        return colMap[withSpaces] || colMap[clean] || clean;
+      };
+      const headers = lines[0].split(';').map(normalizeHeader);
+      const rows = lines.slice(1).map(line => {
+        const vals = line.split(';').map(v => v.trim());
+        return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? '']));
+      }).filter(r => r.proposta && r.proposta !== '');
+      setImportPreview(rows);
+      setImportResult(null);
+      setImportProgress(0);
+      setShowImport(true);
+    };
+    reader.readAsText(file, 'windows-1252');
+    e.target.value = '';
+  }
+
+  async function doImport() {
+    if (importPreview.length === 0) return;
+    setImporting(true);
+    setImportProgress(0);
+    const BATCH = 50;
+    let totalImported = 0, totalUpdated = 0;
+    const allErrors: { row: string; error: string }[] = [];
+    const batches = Math.ceil(importPreview.length / BATCH);
+    for (let b = 0; b < batches; b++) {
+      const slice = importPreview.slice(b * BATCH, (b + 1) * BATCH);
+      const res = await API('/api/admin/proposals/import', { method: 'POST', body: JSON.stringify({ rows: slice }) });
+      const result = await res.json();
+      totalImported += result.imported || 0;
+      totalUpdated  += result.updated  || 0;
+      allErrors.push(...(result.errors || []));
+      setImportProgress(Math.round(((b + 1) / batches) * 100));
+    }
+    setImportResult({ imported: totalImported, updated: totalUpdated, errors: allErrors });
+    setImporting(false);
+    if (totalImported + totalUpdated > 0) await load();
+  }
+
+  function closeImport() {
+    if (importing) return;
+    setShowImport(false);
+    setImportPreview([]);
+    setImportResult(null);
+    setImportProgress(0);
+  }
+
   const filtered = proposals.filter(p => {
     const q = search.toLowerCase();
     const matchSearch = !q || p.client_name.toLowerCase().includes(q) || p.proposal_number.includes(q) || (p.bank_name || p.bank || '').toLowerCase().includes(q);
@@ -332,12 +404,21 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
       {/* Header */}
       <div className="flex items-center justify-between mb-6 animate-fade-up">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Minhas Propostas</h1>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>{isAdmin ? 'Propostas' : 'Minhas Propostas'}</h1>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{proposals.length} propostas cadastradas</p>
         </div>
-        <button onClick={openNew} className="btn-cyber flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm">
-          <Plus className="w-4 h-4" /> Nova Proposta
-        </button>
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <button onClick={() => { setShowImport(true); setImportPreview([]); setImportResult(null); }}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+              style={{ background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' }}>
+              <Upload className="w-4 h-4" /> Importar CSV
+            </button>
+          )}
+          <button onClick={openNew} className="btn-cyber flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm">
+            <Plus className="w-4 h-4" /> Nova Proposta
+          </button>
+        </div>
       </div>
 
       {/* Summary cards */}
@@ -561,6 +642,95 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
                 style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}>
                 Excluir
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Importar CSV */}
+      {showImport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)' }}>
+          <div className="modal-panel rounded-2xl w-full max-w-2xl p-6 animate-fade-up">
+            <h2 className="text-base font-bold mb-4" style={{ color: 'var(--text-1)' }}>Importar Propostas — CSV</h2>
+            <div className="space-y-4">
+              {!importResult && (
+                <div>
+                  <label className="block text-xs font-semibold mb-2" style={{ color: 'var(--text-3)' }}>Arquivo CSV (separador: ponto-e-vírgula)</label>
+                  <input type="file" accept=".csv" onChange={handleImportFile}
+                    className="block w-full text-sm cursor-pointer" style={{ color: 'var(--text-3)' }} />
+                </div>
+              )}
+              {importing && (
+                <div>
+                  <div className="flex justify-between text-xs mb-1.5" style={{ color: 'var(--text-3)' }}>
+                    <span>Processando...</span>
+                    <span className="font-semibold" style={{ color: '#14B8A6' }}>{importProgress}%</span>
+                  </div>
+                  <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--card-border)' }}>
+                    <div className="h-full rounded-full transition-all duration-300" style={{ width: `${importProgress}%`, background: 'linear-gradient(90deg,#14B8A6,#60a5fa)' }} />
+                  </div>
+                </div>
+              )}
+              {importPreview.length > 0 && !importResult && !importing && (
+                <div>
+                  <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-3)' }}>{importPreview.length} linha(s) — prévia das primeiras 10:</p>
+                  <div className="rounded-xl overflow-hidden overflow-x-auto max-h-56" style={{ border: '1px solid var(--card-border)' }}>
+                    <table className="w-full text-xs" style={{ minWidth: '600px' }}>
+                      <thead><tr style={{ background: 'var(--card-border)' }}>
+                        {['Proposta','Cliente','Corretor','Banco','Valor','Status'].map(h => (
+                          <th key={h} className="px-3 py-2 text-left font-semibold" style={{ color: 'var(--text-3)' }}>{h}</th>
+                        ))}
+                      </tr></thead>
+                      <tbody>
+                        {importPreview.slice(0, 10).map((row, i) => (
+                          <tr key={i} style={{ borderBottom: '1px solid var(--card-border)' }}>
+                            <td className="px-3 py-1.5 font-mono" style={{ color: 'var(--text-2)' }}>{row.proposta || '—'}</td>
+                            <td className="px-3 py-1.5 max-w-[120px] truncate" style={{ color: 'var(--text-1)' }}>{row.nome_cliente || '—'}</td>
+                            <td className="px-3 py-1.5" style={{ color: 'var(--text-2)' }}>{row.corretor || '—'}</td>
+                            <td className="px-3 py-1.5" style={{ color: 'var(--text-2)' }}>{row.banco || '—'}</td>
+                            <td className="px-3 py-1.5 num" style={{ color: 'var(--text-1)' }}>{row.valor || '—'}</td>
+                            <td className="px-3 py-1.5" style={{ color: 'var(--text-3)' }}>{row.esteira || '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {importPreview.length > 10 && <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>...e mais {importPreview.length - 10} linha(s)</p>}
+                </div>
+              )}
+              {importResult && (
+                <div>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)' }}>
+                      <p className="text-2xl font-black num" style={{ color: '#4ade80' }}>{importResult.imported}</p>
+                      <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>Novas</p>
+                    </div>
+                    <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.2)' }}>
+                      <p className="text-2xl font-black num" style={{ color: '#60a5fa' }}>{importResult.updated}</p>
+                      <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>Atualizadas</p>
+                    </div>
+                  </div>
+                  {importResult.errors.length > 0 && (
+                    <div className="rounded-xl p-3 max-h-40 overflow-y-auto" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                      <p className="text-xs font-semibold mb-2" style={{ color: '#f87171' }}>{importResult.errors.length} erro(s)</p>
+                      {importResult.errors.map((e, i) => (
+                        <p key={i} className="text-xs mb-1" style={{ color: 'var(--text-3)' }}><span style={{ color: '#f87171' }}>#{e.row}</span> — {e.error}</p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button onClick={closeImport} disabled={importing} className="flex-1 py-2.5 text-sm rounded-xl btn-ghost">Cancelar</button>
+              {!importResult
+                ? <button onClick={doImport} disabled={importPreview.length === 0 || importing}
+                    className="flex-1 py-2.5 text-sm rounded-xl font-semibold btn-cyber flex items-center justify-center gap-2">
+                    <Upload className="w-4 h-4" />
+                    {importing ? `Importando... ${importProgress}%` : `Importar ${importPreview.length} proposta(s)`}
+                  </button>
+                : <button onClick={closeImport} className="flex-1 py-2.5 text-sm rounded-xl font-semibold btn-cyber">Fechar</button>
+              }
             </div>
           </div>
         </div>

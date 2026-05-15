@@ -27,7 +27,6 @@ const navItems = [
 
 const adminItems = [
   { view: 'admin-users'             as ViewType, icon: Users,         label: 'Usuários' },
-  { view: 'admin-proposals'         as ViewType, icon: ClipboardList, label: 'Propostas' },
   { view: 'admin-convenios'         as ViewType, icon: Handshake,     label: 'Convênios' },
   { view: 'admin-banks'             as ViewType, icon: Building2,     label: 'Bancos' },
   { view: 'admin-products'          as ViewType, icon: Package,       label: 'Produtos' },
