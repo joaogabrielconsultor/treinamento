@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Building2, TrendingUp, TrendingDown, DollarSign, Clock, ChevronLeft, ArrowUpRight, ArrowDownLeft, Store } from 'lucide-react';
+import { Building2, TrendingUp, TrendingDown, DollarSign, Clock, ChevronLeft, ArrowUpRight, ArrowDownLeft, Store, Trash2 } from 'lucide-react';
 
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
@@ -29,18 +29,36 @@ interface ExtratoItem {
 function ExtratoView({ loja, onBack }: { loja: LojaBalance; onBack: () => void }) {
   const [items, setItems] = useState<ExtratoItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDel, setConfirmDel] = useState(false);
 
-  useEffect(() => {
+  function loadExtrato() {
     setLoading(true);
     API(`/api/admin/conta-empresa/${loja.loja_id}/extrato`).then(r => r.json()).then(data => {
       setItems(Array.isArray(data) ? data : []);
       setLoading(false);
     });
-  }, [loja.loja_id]);
+  }
 
-  const creditos = items.reduce((a, i) => a + (i.type === 'credito' ? Number(i.value) : 0), 0);
-  const debitos = items.reduce((a, i) => a + (i.type === 'debito' ? Number(i.value) : 0), 0);
-  const saldo = creditos - debitos;
+  useEffect(() => { loadExtrato(); }, [loja.loja_id]);
+
+  async function deleteSelected() {
+    setDeleting(true);
+    await API('/api/admin/commission-payments/bulk-delete', {
+      method: 'POST',
+      body: JSON.stringify({ ids: [...selected] }),
+    });
+    setSelected(new Set());
+    setConfirmDel(false);
+    setDeleting(false);
+    loadExtrato();
+  }
+
+  const debitoItems = items.filter(i => i.type === 'debito');
+  const totalCreditos = items.reduce((a, i) => a + (i.type === 'credito' ? Number(i.value) : 0), 0);
+  const totalDebitos  = items.reduce((a, i) => a + (i.type === 'debito'  ? Number(i.value) : 0), 0);
+  const saldo = totalCreditos - totalDebitos;
 
   return (
     <div>
@@ -64,8 +82,8 @@ function ExtratoView({ loja, onBack }: { loja: LojaBalance; onBack: () => void }
 
       <div className="grid grid-cols-3 gap-4 mb-6">
         {[
-          { label: 'Total Entradas', value: fmtBRL(creditos), color: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.2)', icon: TrendingUp },
-          { label: 'Total Saídas', value: fmtBRL(debitos), color: '#f87171', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)', icon: TrendingDown },
+          { label: 'Total Entradas', value: fmtBRL(totalCreditos), color: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.2)', icon: TrendingUp },
+          { label: 'Total Saídas', value: fmtBRL(totalDebitos), color: '#f87171', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)', icon: TrendingDown },
           { label: 'Saldo', value: fmtBRL(saldo), color: saldo >= 0 ? '#4ade80' : '#f87171', bg: saldo >= 0 ? 'rgba(74,222,128,0.08)' : 'rgba(239,68,68,0.08)', border: saldo >= 0 ? 'rgba(74,222,128,0.2)' : 'rgba(239,68,68,0.2)', icon: DollarSign },
         ].map(c => (
           <div key={c.label} className="rounded-2xl p-4" style={{ background: c.bg, border: `1px solid ${c.border}`, boxShadow: 'var(--shadow-card)' }}>
@@ -87,8 +105,17 @@ function ExtratoView({ loja, onBack }: { loja: LojaBalance; onBack: () => void }
       ) : (
         <div className="rounded-2xl overflow-hidden"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
-          <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
+          <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--card-border)' }}>
             <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Extrato</h3>
+            {selected.size > 0 && (
+              <button
+                onClick={() => setConfirmDel(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Excluir {selected.size} saída{selected.size > 1 ? 's' : ''}
+              </button>
+            )}
           </div>
           {items.length === 0 ? (
             <div className="text-center py-16 text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma movimentação encontrada</div>
@@ -97,6 +124,18 @@ function ExtratoView({ loja, onBack }: { loja: LojaBalance; onBack: () => void }
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
+                  <th className="px-3 py-3 w-8">
+                    <input type="checkbox"
+                      className="w-3.5 h-3.5 cursor-pointer accent-red-500"
+                      checked={debitoItems.length > 0 && debitoItems.every(d => selected.has(d.reference_id))}
+                      onChange={e => {
+                        const next = new Set(selected);
+                        debitoItems.forEach(d => e.target.checked ? next.add(d.reference_id) : next.delete(d.reference_id));
+                        setSelected(next);
+                      }}
+                      title="Selecionar todas as saídas"
+                    />
+                  </th>
                   {['Tipo', 'Corretor', 'Descrição', 'Valor', 'Data'].map(h => (
                     <th key={h} className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
                   ))}
@@ -105,8 +144,23 @@ function ExtratoView({ loja, onBack }: { loja: LojaBalance; onBack: () => void }
               <tbody>
                 {items.map((item, i) => {
                   const isCredito = item.type === 'credito';
+                  const isSelected = !isCredito && selected.has(item.reference_id);
                   return (
-                    <tr key={`${item.reference_id}-${i}`} className="table-row-cyber">
+                    <tr key={`${item.reference_id}-${i}`} className="table-row-cyber"
+                      style={{ background: isSelected ? 'rgba(239,68,68,0.05)' : undefined }}>
+                      <td className="px-3 py-3">
+                        {!isCredito && (
+                          <input type="checkbox"
+                            className="w-3.5 h-3.5 cursor-pointer accent-red-500"
+                            checked={isSelected}
+                            onChange={e => {
+                              const next = new Set(selected);
+                              e.target.checked ? next.add(item.reference_id) : next.delete(item.reference_id);
+                              setSelected(next);
+                            }}
+                          />
+                        )}
+                      </td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold`}
                           style={isCredito
@@ -142,6 +196,25 @@ function ExtratoView({ loja, onBack }: { loja: LojaBalance; onBack: () => void }
                 })}
               </tbody>
             </table>
+            </div>
+          )}
+          {/* Modal confirmação exclusão */}
+          {confirmDel && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)' }}>
+              <div className="modal-panel rounded-2xl w-full max-w-sm p-6 animate-fade-up">
+                <h2 className="text-base font-bold mb-2" style={{ color: 'var(--text-1)' }}>Excluir Saídas</h2>
+                <p className="text-sm mb-4" style={{ color: 'var(--text-3)' }}>
+                  Excluir {selected.size} registro{selected.size > 1 ? 's' : ''} de saída? Esta ação é irreversível.
+                </p>
+                <div className="flex gap-3">
+                  <button onClick={() => setConfirmDel(false)} className="flex-1 py-2.5 text-sm rounded-xl btn-ghost">Cancelar</button>
+                  <button onClick={deleteSelected} disabled={deleting}
+                    className="flex-1 py-2.5 text-sm rounded-xl font-semibold disabled:opacity-50"
+                    style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}>
+                    {deleting ? 'Excluindo...' : 'Excluir'}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>

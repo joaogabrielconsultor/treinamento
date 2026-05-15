@@ -1891,6 +1891,23 @@ app.post('/api/admin/conta-corrente/pay', auth, adminOnly, async (req, res) => {
   res.json({ ok: true, updated: proposal_ids.length });
 });
 
+// Excluir pagamento de comissão (saída) — somente master
+app.delete('/api/admin/commission-payments/:id', auth, masterOnly, async (req, res) => {
+  const { rows: [cp] } = await pool.query('SELECT id FROM commission_payments WHERE id=$1', [req.params.id]);
+  if (!cp) return res.status(404).json({ error: 'Registro não encontrado' });
+  await pool.query('DELETE FROM commission_payments WHERE id=$1', [req.params.id]);
+  res.json({ ok: true });
+});
+
+// Excluir múltiplos pagamentos (bulk) — somente master
+app.post('/api/admin/commission-payments/bulk-delete', auth, masterOnly, async (req, res) => {
+  const { ids } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ error: 'IDs obrigatórios' });
+  const placeholders = ids.map((_, i) => `$${i + 1}`).join(',');
+  await pool.query(`DELETE FROM commission_payments WHERE id IN (${placeholders})`, ids);
+  res.json({ ok: true, deleted: ids.length });
+});
+
 // Histórico de pagamentos de comissão
 app.get('/api/admin/conta-corrente/payments', auth, adminOnly, async (req, res) => {
   const { rows } = await pool.query(`
