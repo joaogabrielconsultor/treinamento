@@ -95,6 +95,7 @@ const EMPTY_FORM = {
   coeficiente: '' as string,
   comissao_corretor_override: '' as string,
   comissao_empresa_override: '' as string,
+  user_id: '' as string,
 };
 
 const inp = 'input-cyber w-full px-3 py-2.5 rounded-xl text-sm';
@@ -144,6 +145,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
   const [convenios, setConvenios] = useState<Convenio[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [allBanks, setAllBanks] = useState<Bank[]>([]);
+  const [allUsers, setAllUsers] = useState<{ id: string; full_name: string; email: string }[]>([]);
 
   // ── Date filter ──
   const [datePreset, setDatePreset] = useState('this_month');
@@ -217,18 +219,21 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
     const t = to ?? dateTo;
     if (f) params.set('start_date', f);
     if (t) params.set('end_date', t);
-    const [pr, cv, pd, st, bk] = await Promise.all([
+    const fetches: Promise<unknown>[] = [
       API(`/api/proposals?${params}`).then(r => r.json()),
       API('/api/convenios').then(r => r.json()),
       API('/api/products').then(r => r.json()),
       API('/api/proposal-statuses').then(r => r.json()),
       API('/api/banks').then(r => r.json()),
-    ]);
+    ];
+    if (isMaster) fetches.push(API('/api/admin/users').then(r => r.json()));
+    const [pr, cv, pd, st, bk, us] = await Promise.all(fetches) as [unknown, unknown, unknown, unknown, unknown, unknown];
     setProposals(Array.isArray(pr) ? pr : []);
     setConvenios(Array.isArray(cv) ? cv : []);
     setProducts(Array.isArray(pd) ? pd : []);
     setStatusDefs(Array.isArray(st) ? st : []);
     setAllBanks(Array.isArray(bk) ? bk : []);
+    if (isMaster && Array.isArray(us)) setAllUsers(us);
     setLoading(false);
   }
 
@@ -366,6 +371,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
       status: p.status, coeficiente: p.coeficiente ? String(p.coeficiente) : '',
       comissao_corretor_override: p.comissao_corretor_override != null ? String(p.comissao_corretor_override) : '',
       comissao_empresa_override:  p.comissao_empresa_override  != null ? String(p.comissao_empresa_override)  : '',
+      user_id: p.user_id || '',
     });
     setEditId(p.id); setStep(0); setErrors({}); setDupAlert(null); setShowForm(true);
   }
@@ -417,6 +423,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
       if (form.coeficiente !== '') body.coeficiente = form.coeficiente;
       body.comissao_corretor_override = form.comissao_corretor_override !== '' ? parseFloat(form.comissao_corretor_override) : '';
       body.comissao_empresa_override  = form.comissao_empresa_override  !== '' ? parseFloat(form.comissao_empresa_override)  : '';
+      if (isMaster && form.user_id) body.user_id = form.user_id;
     }
     const resp = await API(editId ? `/api/proposals/${editId}` : '/api/proposals', {
       method: editId ? 'PUT' : 'POST', body: JSON.stringify(body),
@@ -1310,6 +1317,23 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
               const currentProp = proposals.find(p => p.id === editId);
               return (
                 <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--card-border)' }}>
+                  {isMaster && allUsers.length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2" style={{ color: '#a78bfa' }}>
+                        <User className="w-3.5 h-3.5" /> Transferir Corretor
+                      </p>
+                      <div className="relative">
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+                        <select value={form.user_id} onChange={e => setForm(f => ({ ...f, user_id: e.target.value }))}
+                          className="input-cyber appearance-none w-full pl-3 pr-9 py-2.5 text-sm rounded-xl">
+                          <option value="">— Manter corretor atual —</option>
+                          {allUsers.map(u => (
+                            <option key={u.id} value={u.id}>{u.full_name || u.email} {u.full_name ? `(${u.email})` : ''}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  )}
                   <p className="text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2" style={{ color: '#14B8A6' }}>
                     <DollarSign className="w-3.5 h-3.5" /> Comissões desta proposta
                   </p>

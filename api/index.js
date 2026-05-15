@@ -1256,7 +1256,9 @@ app.put('/api/proposals/:id', auth, async (req, res) => {
 
   const brokerFields = ['proposal_number','value','product','product_id','bank','convenio','table_id','bank_id','convenio_id','client_name','client_cpf','client_phone','created_at'];
   const adminFields = [...brokerFields, 'status', 'allow_broker_edit', 'comissao_corretor_override', 'comissao_empresa_override'];
-  const fields = isAdmin ? adminFields : brokerFields;
+  const masterFields = [...adminFields, 'user_id'];
+  const isMaster = req.user.role === 'master' || req.user.email === 'adm@rozesstartflow.com';
+  const fields = isMaster ? masterFields : isAdmin ? adminFields : brokerFields;
 
   // Normaliza overrides de comissão: string vazia = null (limpa override)
   if (req.body.comissao_corretor_override === '') req.body.comissao_corretor_override = null;
