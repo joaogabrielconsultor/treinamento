@@ -226,14 +226,12 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
       API('/api/proposal-statuses').then(r => r.json()),
       API('/api/banks').then(r => r.json()),
     ];
-    if (isMaster) fetches.push(API('/api/admin/users').then(r => r.json()));
-    const [pr, cv, pd, st, bk, us] = await Promise.all(fetches) as [unknown, unknown, unknown, unknown, unknown, unknown];
+    const [pr, cv, pd, st, bk] = await Promise.all(fetches) as [unknown, unknown, unknown, unknown, unknown];
     setProposals(Array.isArray(pr) ? pr : []);
     setConvenios(Array.isArray(cv) ? cv : []);
     setProducts(Array.isArray(pd) ? pd : []);
     setStatusDefs(Array.isArray(st) ? st : []);
     setAllBanks(Array.isArray(bk) ? bk : []);
-    if (isMaster && Array.isArray(us)) setAllUsers(us);
     setLoading(false);
   }
 
@@ -245,6 +243,14 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
     setDateFrom(from); setDateTo(to);
     load(from, to);
   }, [datePreset]);
+
+  // Carrega lista de usuários separadamente para o master (garante que sempre carrega)
+  useEffect(() => {
+    if (!isMaster) return;
+    API('/api/admin/users').then(r => r.json()).then(d => {
+      if (Array.isArray(d)) setAllUsers(d);
+    });
+  }, [isMaster]);
 
   function applyCustomRange() {
     if (!customFrom || !customTo) return;
@@ -1319,7 +1325,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
               const currentProp = proposals.find(p => p.id === editId);
               return (
                 <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--card-border)' }}>
-                  {isMaster && allUsers.length > 0 && (
+                  {isMaster && (
                     <div className="mb-4">
                       <p className="text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2" style={{ color: '#a78bfa' }}>
                         <User className="w-3.5 h-3.5" /> Transferir Corretor
@@ -1327,8 +1333,9 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
                       <div className="relative">
                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
                         <select value={form.user_id} onChange={e => setForm(f => ({ ...f, user_id: e.target.value }))}
+                          disabled={allUsers.length === 0}
                           className="input-cyber appearance-none w-full pl-3 pr-9 py-2.5 text-sm rounded-xl">
-                          <option value="">— Manter corretor atual —</option>
+                          <option value="">{allUsers.length === 0 ? 'Carregando corretores...' : '— Manter corretor atual —'}</option>
                           {allUsers.map(u => (
                             <option key={u.id} value={u.id}>{u.full_name || u.email} {u.full_name ? `(${u.email})` : ''}</option>
                           ))}
