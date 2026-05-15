@@ -647,28 +647,35 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
                     <td className="px-2 py-2 font-bold num whitespace-nowrap" style={{ color: 'var(--text-1)' }}>{formatCurrency(Number(p.value))}</td>
                     <td className="px-2 py-2 truncate" style={{ color: 'var(--text-3)' }}>{p.product_name || p.product || '—'}</td>
                     <td className="px-2 py-2">
-                      {isAdmin ? (
-                        <div className="relative">
-                          <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
-                          <select
-                            value={p.status}
-                            onChange={e => quickStatusChange(p.id, e.target.value)}
-                            className="appearance-none font-semibold pl-1.5 pr-5 py-0.5 rounded-lg cursor-pointer w-full truncate"
-                            style={{ background: 'var(--bg-surface)', border: '1px solid var(--card-border)', color: 'var(--text-1)', fontSize: '10px' }}
-                          >
-                            {statusDefs.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
-                          </select>
-                        </div>
-                      ) : (
-                        (() => {
-                          const sd = statusDefs.find(s => s.name === p.status);
-                          return (
-                            <span className={`${sd ? statusBadge(sd.name, sd.color) : 'badge badge-blue'} inline-flex items-center gap-1 truncate max-w-full`} style={{ fontSize: '9px' }}>
-                              {ICON_MAP[p.status] || <FileText className="w-2.5 h-2.5" />} {p.status}
-                            </span>
-                          );
-                        })()
-                      )}
+                      {(() => {
+                        const sd = statusDefs.find(s => s.name === p.status);
+                        const SC: Record<string, { text: string; border: string; bg: string }> = {
+                          blue:   { text: '#60a5fa', border: 'rgba(96,165,250,0.4)',   bg: 'rgba(96,165,250,0.1)' },
+                          amber:  { text: '#fbbf24', border: 'rgba(245,158,11,0.4)',   bg: 'rgba(245,158,11,0.1)' },
+                          purple: { text: '#a78bfa', border: 'rgba(139,92,246,0.4)',   bg: 'rgba(139,92,246,0.1)' },
+                          green:  { text: '#4ade80', border: 'rgba(34,197,94,0.4)',    bg: 'rgba(34,197,94,0.1)' },
+                          red:    { text: '#f87171', border: 'rgba(248,113,113,0.4)',  bg: 'rgba(248,113,113,0.1)' },
+                          teal:   { text: '#2DD4BF', border: 'rgba(20,184,166,0.4)',   bg: 'rgba(20,184,166,0.1)' },
+                        };
+                        const c = SC[sd?.color || 'blue'] || SC.blue;
+                        return isAdmin ? (
+                          <div className="relative">
+                            <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 pointer-events-none" style={{ color: c.text }} />
+                            <select
+                              value={p.status}
+                              onChange={e => quickStatusChange(p.id, e.target.value)}
+                              className="appearance-none font-semibold pl-1.5 pr-5 py-0.5 rounded-lg cursor-pointer w-full truncate"
+                              style={{ background: c.bg, border: `1px solid ${c.border}`, color: c.text, fontSize: '10px' }}
+                            >
+                              {statusDefs.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+                            </select>
+                          </div>
+                        ) : (
+                          <span className={`${sd ? statusBadge(sd.name, sd.color) : 'badge badge-blue'} inline-flex items-center gap-1 truncate max-w-full`} style={{ fontSize: '9px' }}>
+                            {ICON_MAP[p.status] || <FileText className="w-2.5 h-2.5" />} {p.status}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="px-2 py-2 num whitespace-nowrap" style={{ color: 'var(--text-3)', fontSize: '10px' }}>
                       {p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '—'}
