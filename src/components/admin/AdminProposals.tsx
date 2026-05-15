@@ -93,8 +93,8 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
           'situao': 'situacao', 'situação': 'situacao',
           'convnio': 'convenio', 'convênio': 'convenio',
           'proposta': 'proposta', 'cpf': 'cpf', 'corretor': 'corretor',
-          'banco': 'banco', 'tabela': 'tabela', 'tipo': 'tipo',
-          'valor': 'valor', 'esteira': 'esteira',
+          'banco': 'banco', 'tabela': 'tabela', 'tipo': 'tipo', 'produto': 'tipo',
+          'valor': 'valor', 'esteira': 'esteira', 'status': 'esteira',
         };
         const clean = h.trim().replace(/^﻿/, '').replace(/[^\w\s]/g, '').trim().toLowerCase().replace(/\s+/g, '_');
         const withSpaces = h.trim().replace(/^﻿/, '').replace(/[^\w\s]/g, '').trim().toLowerCase();
