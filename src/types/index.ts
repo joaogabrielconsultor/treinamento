@@ -204,6 +204,9 @@ export interface Proposal {
   product_name?: string;
   comissao_corretor_pct?: number;
   comissao_valor?: number;
+  comissao_empresa_valor?: number;
+  comissao_corretor_override?: number | null;
+  comissao_empresa_override?: number | null;
   status_comissao?: 'Ag. Comissão' | 'Comissão Paga' | null;
   allow_broker_edit: boolean;
 }

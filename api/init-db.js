@@ -259,6 +259,8 @@ async function initDb() {
     await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS allow_broker_edit boolean NOT NULL DEFAULT false`);
     await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS tipo_proposta text`);
     await client.query(`ALTER TABLE proposals DROP CONSTRAINT IF EXISTS proposals_status_check`);
+    await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS comissao_corretor_override numeric(15,2)`);
+    await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS comissao_empresa_override numeric(15,2)`);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS proposal_statuses (

@@ -36,6 +36,8 @@ const EMPTY_FORM = {
   created_at: today(),
   status: '' as string,
   coeficiente: '' as string,
+  comissao_corretor_override: '' as string,
+  comissao_empresa_override: '' as string,
 };
 
 const inp = 'input-cyber w-full px-3 py-2.5 rounded-xl text-sm';
@@ -227,6 +229,8 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
       created_at: p.created_at ? p.created_at.slice(0, 10) : today(),
       status: p.status,
       coeficiente: p.coeficiente ? String(p.coeficiente) : '',
+      comissao_corretor_override: p.comissao_corretor_override != null ? String(p.comissao_corretor_override) : '',
+      comissao_empresa_override: p.comissao_empresa_override != null ? String(p.comissao_empresa_override) : '',
     });
     setEditId(p.id);
     setStep(0);
@@ -297,6 +301,8 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
     if (editId && isAdmin) {
       if (form.status) body.status = form.status;
       if (form.coeficiente !== '') body.coeficiente = form.coeficiente;
+      body.comissao_corretor_override = form.comissao_corretor_override !== '' ? parseFloat(form.comissao_corretor_override) : '';
+      body.comissao_empresa_override  = form.comissao_empresa_override  !== '' ? parseFloat(form.comissao_empresa_override)  : '';
     }
     const url = editId ? `/api/proposals/${editId}` : '/api/proposals';
     const resp = await API(url, { method: editId ? 'PUT' : 'POST', body: JSON.stringify(body) });
@@ -967,6 +973,45 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
                 </>
               )}
             </div>
+            {isAdmin && editId && (() => {
+              const currentProp = proposals.find(p => p.id === editId);
+              return (
+                <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--card-border)' }}>
+                  <p className="text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2" style={{ color: '#14B8A6' }}>
+                    <DollarSign className="w-3.5 h-3.5" /> Comissões desta proposta
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>
+                        Comissão Corretor (R$)
+                      </label>
+                      <input
+                        type="number" step="0.01" min="0"
+                        value={form.comissao_corretor_override}
+                        onChange={e => setForm(f => ({ ...f, comissao_corretor_override: e.target.value }))}
+                        className={inp}
+                        placeholder={currentProp?.comissao_valor != null ? `Auto: ${formatCurrency(Number(currentProp.comissao_valor))}` : 'Calculado automaticamente'}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>
+                        Comissão Empresa (R$)
+                      </label>
+                      <input
+                        type="number" step="0.01" min="0"
+                        value={form.comissao_empresa_override}
+                        onChange={e => setForm(f => ({ ...f, comissao_empresa_override: e.target.value }))}
+                        className={inp}
+                        placeholder={currentProp?.comissao_empresa_valor != null ? `Auto: ${formatCurrency(Number(currentProp.comissao_empresa_valor))}` : 'Calculado automaticamente'}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[10px] mt-2" style={{ color: 'var(--text-3)' }}>
+                    Deixe vazio para calcular automaticamente pela tabela financeira. Preencha para fixar um valor manual.
+                  </p>
+                </div>
+              );
+            })()}
             {errors.submit && <p className="text-xs text-red-400">{errors.submit}</p>}
           </div>
         ) : (
