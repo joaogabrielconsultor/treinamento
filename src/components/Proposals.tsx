@@ -197,6 +197,8 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
   const [loadingTables, setLoadingTables] = useState(false);
   const pendingBankIdRef = useRef<string | null>(null);
   const pendingTableIdRef = useRef<string | null>(null);
+  const skipNextConvenioEffectRef = useRef(false);
+  const skipNextBankEffectRef = useRef(false);
 
   // ── Batch actions ──
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -269,6 +271,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
 
   // ── Form cascade ──
   useEffect(() => {
+    if (skipNextConvenioEffectRef.current) { skipNextConvenioEffectRef.current = false; return; }
     if (!form.convenio_id) { setBanks([]); setForm(f => ({ ...f, bank_id: '', table_id: '' })); return; }
     setLoadingBanks(true);
     API(`/api/banks?convenio_id=${form.convenio_id}`).then(r => r.json()).then(d => {
@@ -281,6 +284,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
   }, [form.convenio_id]);
 
   useEffect(() => {
+    if (skipNextBankEffectRef.current) { skipNextBankEffectRef.current = false; return; }
     if (!form.bank_id || !form.convenio_id) { setTables([]); setForm(f => ({ ...f, table_id: '' })); return; }
     setLoadingTables(true);
     API(`/api/financial-tables?convenio_id=${form.convenio_id}&bank_id=${form.bank_id}`).then(r => r.json()).then(d => {
@@ -376,13 +380,29 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
     setForm(EMPTY_FORM); setEditId(null); setStep(0); setErrors({});
     setDupAlert(null); setBanks([]); setTables([]); setShowForm(true);
   }
-  function openEdit(p: Proposal) {
-    pendingBankIdRef.current  = p.bank_id  || null;
-    pendingTableIdRef.current = p.table_id || null;
+  async function openEdit(p: Proposal) {
+    // Pré-carrega bancos e tabelas em paralelo antes de abrir o form
+    const [banksData, tablesData] = await Promise.all([
+      p.convenio_id
+        ? API(`/api/banks?convenio_id=${p.convenio_id}`).then(r => r.json())
+        : Promise.resolve([]),
+      p.convenio_id && p.bank_id
+        ? API(`/api/financial-tables?convenio_id=${p.convenio_id}&bank_id=${p.bank_id}`).then(r => r.json())
+        : Promise.resolve([]),
+    ]);
+    setBanks(Array.isArray(banksData) ? banksData : []);
+    setTables(Array.isArray(tablesData) ? tablesData : []);
+
+    // Pula a cascata automática pois já carregamos tudo
+    if (p.convenio_id) skipNextConvenioEffectRef.current = true;
+    if (p.bank_id)     skipNextBankEffectRef.current = true;
+    pendingBankIdRef.current  = null;
+    pendingTableIdRef.current = null;
+
     setForm({
       client_name: p.client_name, client_cpf: p.client_cpf, client_phone: p.client_phone,
       proposal_number: p.proposal_number, value: String(p.value), product_id: p.product_id || '',
-      convenio_id: p.convenio_id || '', bank_id: '', table_id: '',
+      convenio_id: p.convenio_id || '', bank_id: p.bank_id || '', table_id: p.table_id || '',
       created_at: p.created_at ? p.created_at.slice(0, 10) : todayStr(),
       status: p.status, coeficiente: p.coeficiente ? String(p.coeficiente) : '',
       comissao_corretor_override: p.comissao_corretor_override != null ? String(p.comissao_corretor_override) : '',
