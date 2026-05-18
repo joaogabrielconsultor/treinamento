@@ -375,6 +375,18 @@ async function initDb() {
       )
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS despesas (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        loja_id uuid REFERENCES lojas(id) ON DELETE SET NULL,
+        descricao text NOT NULL,
+        valor numeric(15,2) NOT NULL,
+        data date NOT NULL DEFAULT CURRENT_DATE,
+        created_by uuid REFERENCES users(id) ON DELETE SET NULL,
+        created_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+
     // Seed badges padrão
     const { rows: badgeCheck } = await client.query('SELECT id FROM badges LIMIT 1');
     if (badgeCheck.length === 0) {

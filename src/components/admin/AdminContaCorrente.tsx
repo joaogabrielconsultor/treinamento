@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Wallet, Clock, CheckCircle, DollarSign, Users, ChevronDown, Search, AlertCircle, Key, Send, XCircle, Inbox, Edit2, X, Check } from 'lucide-react';
+import { Wallet, Clock, CheckCircle, DollarSign, Users, ChevronDown, Search, AlertCircle, Key, Send, XCircle, Inbox, Edit2, X, Check, TrendingDown, Plus, Store } from 'lucide-react';
 import { Proposal, WithdrawalRequest } from '../../types';
 import { Pagination } from '../ui/Pagination';
 
@@ -26,6 +26,30 @@ interface BrokerSummary {
   empresa_paid_value: number;
 }
 
+interface Despesa {
+  id: string;
+  loja_id: string | null;
+  loja_name: string | null;
+  descricao: string;
+  valor: number;
+  data: string;
+  created_by_name: string | null;
+  created_at: string;
+}
+
+interface SaldoLoja {
+  loja_id: string;
+  loja_name: string;
+  total_empresa_recebido: number;
+  total_despesas: number;
+  saldo: number;
+}
+
+interface Loja {
+  id: string;
+  name: string;
+}
+
 const SAQUE_STATUS_COLOR: Record<string, { text: string; bg: string; border: string }> = {
   'Pendente': { text: '#fbbf24', bg: 'rgba(251,191,36,0.1)',   border: 'rgba(251,191,36,0.3)' },
   'Aprovado': { text: '#60a5fa', bg: 'rgba(96,165,250,0.1)',   border: 'rgba(96,165,250,0.3)' },
@@ -34,7 +58,7 @@ const SAQUE_STATUS_COLOR: Record<string, { text: string; bg: string; border: str
 };
 
 export function AdminContaCorrente() {
-  const [tab, setTab] = useState<'comissoes' | 'saques'>('comissoes');
+  const [tab, setTab] = useState<'comissoes' | 'saques' | 'despesas'>('comissoes');
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [brokers, setBrokers] = useState<BrokerSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +80,14 @@ export function AdminContaCorrente() {
   const [editEmp, setEditEmp] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
 
+  const [despesas, setDespesas] = useState<Despesa[]>([]);
+  const [saldoLojas, setSaldoLojas] = useState<SaldoLoja[]>([]);
+  const [lojas, setLojas] = useState<Loja[]>([]);
+  const [loadingDespesas, setLoadingDespesas] = useState(false);
+  const [showDespesaModal, setShowDespesaModal] = useState(false);
+  const [savingDespesa, setSavingDespesa] = useState(false);
+  const [despesaForm, setDespesaForm] = useState({ loja_id: '', descricao: '', valor: '', data: new Date().toISOString().split('T')[0] });
+
   async function load() {
     setLoading(true);
     const params = new URLSearchParams();
@@ -75,6 +107,37 @@ export function AdminContaCorrente() {
     setLoadingSaques(false);
   }
 
+  async function loadDespesas() {
+    setLoadingDespesas(true);
+    const [despData, saldoData, lojasData] = await Promise.all([
+      API('/api/admin/despesas').then(r => r.json()),
+      API('/api/admin/despesas/saldo-lojas').then(r => r.json()),
+      API('/api/admin/lojas/all').then(r => r.json()),
+    ]);
+    setDespesas(Array.isArray(despData) ? despData : []);
+    setSaldoLojas(Array.isArray(saldoData) ? saldoData : []);
+    setLojas(Array.isArray(lojasData) ? lojasData : []);
+    setLoadingDespesas(false);
+  }
+
+  async function saveDespesa() {
+    if (!despesaForm.descricao.trim() || !despesaForm.valor) return;
+    setSavingDespesa(true);
+    await API('/api/admin/despesas', {
+      method: 'POST',
+      body: JSON.stringify({
+        loja_id: despesaForm.loja_id || null,
+        descricao: despesaForm.descricao,
+        valor: parseFloat(despesaForm.valor.replace(',', '.')),
+        data: despesaForm.data,
+      }),
+    });
+    setSavingDespesa(false);
+    setShowDespesaModal(false);
+    setDespesaForm({ loja_id: '', descricao: '', valor: '', data: new Date().toISOString().split('T')[0] });
+    loadDespesas();
+  }
+
   async function updateSaque(id: string, status: string) {
     setActionId(id);
     await API(`/api/admin/saques/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) });
@@ -84,6 +147,7 @@ export function AdminContaCorrente() {
 
   useEffect(() => { load(); }, [filterCorretor, filterStatus]);
   useEffect(() => { if (tab === 'saques') loadSaques(); }, [tab]);
+  useEffect(() => { if (tab === 'despesas') loadDespesas(); }, [tab]);
 
   const filtered = proposals.filter(p => {
     const q = search.toLowerCase();
@@ -190,6 +254,7 @@ export function AdminContaCorrente() {
         {([
           { key: 'comissoes', label: 'Comissões', icon: CheckCircle },
           { key: 'saques',    label: `Saques${pendingSaques > 0 ? ` (${pendingSaques})` : ''}`, icon: Send },
+          { key: 'despesas',  label: 'Despesas', icon: TrendingDown },
         ] as const).map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all"
@@ -283,6 +348,177 @@ export function AdminContaCorrente() {
                 </tbody>
               </table>
             </div>
+          )}
+        </div>
+      )}
+
+      {/* ── ABA DESPESAS ── */}
+      {tab === 'despesas' && (
+        <div className="animate-fade-up">
+          {/* Botão lançar + modal */}
+          <div className="flex items-center justify-between mb-5">
+            <p className="text-xs" style={{ color: 'var(--text-3)' }}>Registre pagamentos feitos pela empresa e acompanhe o saldo por loja</p>
+            <button
+              onClick={() => setShowDespesaModal(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold btn-cyber"
+            >
+              <Plus className="w-4 h-4" /> Lançar Despesa
+            </button>
+          </div>
+
+          {/* Modal lançar despesa */}
+          {showDespesaModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+              <div className="w-full max-w-md rounded-2xl p-6 animate-fade-up" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <TrendingDown className="w-5 h-5" style={{ color: '#f87171' }} />
+                    <h2 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>Lançar Despesa</h2>
+                  </div>
+                  <button onClick={() => setShowDespesaModal(false)} className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-3)' }}>
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--text-3)' }}>Loja</label>
+                    <div className="relative">
+                      <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+                      <select
+                        value={despesaForm.loja_id}
+                        onChange={e => setDespesaForm(f => ({ ...f, loja_id: e.target.value }))}
+                        className="input-cyber w-full pl-9 pr-3 py-2.5 text-sm rounded-xl appearance-none"
+                      >
+                        <option value="">Sem loja específica</option>
+                        {lojas.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--text-3)' }}>Descrição</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Pagamento de aluguel, material..."
+                      value={despesaForm.descricao}
+                      onChange={e => setDespesaForm(f => ({ ...f, descricao: e.target.value }))}
+                      className="input-cyber w-full px-3 py-2.5 text-sm rounded-xl"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-semibold uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--text-3)' }}>Valor (R$)</label>
+                      <input
+                        type="text"
+                        placeholder="0,00"
+                        value={despesaForm.valor}
+                        onChange={e => setDespesaForm(f => ({ ...f, valor: e.target.value }))}
+                        className="input-cyber w-full px-3 py-2.5 text-sm rounded-xl num"
+                        style={{ color: '#f87171' }}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--text-3)' }}>Data</label>
+                      <input
+                        type="date"
+                        value={despesaForm.data}
+                        onChange={e => setDespesaForm(f => ({ ...f, data: e.target.value }))}
+                        className="input-cyber w-full px-3 py-2.5 text-sm rounded-xl"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-1">
+                    <button
+                      onClick={saveDespesa}
+                      disabled={savingDespesa || !despesaForm.descricao.trim() || !despesaForm.valor}
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold btn-cyber disabled:opacity-50"
+                    >
+                      <Check className="w-4 h-4" />
+                      {savingDespesa ? 'Salvando...' : 'Confirmar Despesa'}
+                    </button>
+                    <button
+                      onClick={() => setShowDespesaModal(false)}
+                      className="px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                      style={{ background: 'rgba(248,113,113,0.08)', color: '#f87171', border: '1px solid rgba(248,113,113,0.2)' }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {loadingDespesas ? (
+            <div className="flex items-center justify-center py-20"><div className="spinner-cyber" /></div>
+          ) : (
+            <>
+              {/* Saldo por loja */}
+              {saldoLojas.filter(l => l.total_empresa_recebido > 0 || l.total_despesas > 0).length > 0 && (
+                <div className="rounded-2xl overflow-hidden mb-6" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
+                  <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
+                    <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Saldo por Loja</h2>
+                  </div>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
+                        {['Loja', 'Emp. Recebido', 'Despesas', 'Saldo'].map(h => (
+                          <th key={h} className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {saldoLojas.filter(l => l.total_empresa_recebido > 0 || l.total_despesas > 0).map(l => (
+                        <tr key={l.loja_id} className="table-row-cyber">
+                          <td className="px-4 py-3 font-semibold" style={{ color: 'var(--text-1)' }}>{l.loja_name}</td>
+                          <td className="px-4 py-3 font-bold num" style={{ color: '#a78bfa' }}>{fmtBRL(Number(l.total_empresa_recebido))}</td>
+                          <td className="px-4 py-3 font-bold num" style={{ color: '#f87171' }}>− {fmtBRL(Number(l.total_despesas))}</td>
+                          <td className="px-4 py-3 font-black num text-base" style={{ color: Number(l.saldo) >= 0 ? '#4ade80' : '#f87171' }}>{fmtBRL(Number(l.saldo))}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Lista de despesas */}
+              {despesas.length === 0 ? (
+                <div className="text-center py-20">
+                  <TrendingDown className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--text-3)' }} />
+                  <p className="text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma despesa registrada</p>
+                </div>
+              ) : (
+                <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
+                        {['Data', 'Loja', 'Descrição', 'Valor', 'Lançado por'].map(h => (
+                          <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {despesas.map(d => (
+                        <tr key={d.id} className="table-row-cyber">
+                          <td className="px-4 py-3 text-xs num" style={{ color: 'var(--text-3)' }}>
+                            {new Date(d.data + 'T00:00:00').toLocaleDateString('pt-BR')}
+                          </td>
+                          <td className="px-4 py-3">
+                            {d.loja_name ? (
+                              <span className="text-xs font-semibold px-2 py-1 rounded-lg" style={{ background: 'rgba(167,139,250,0.1)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.25)' }}>
+                                {d.loja_name}
+                              </span>
+                            ) : <span style={{ color: 'var(--text-3)' }}>—</span>}
+                          </td>
+                          <td className="px-4 py-3" style={{ color: 'var(--text-1)' }}>{d.descricao}</td>
+                          <td className="px-4 py-3 font-bold num" style={{ color: '#f87171' }}>− {fmtBRL(Number(d.valor))}</td>
+                          <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-3)' }}>{d.created_by_name || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

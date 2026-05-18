@@ -1942,6 +1942,59 @@ app.patch('/api/admin/saques/:id', auth, adminOnly, async (req, res) => {
   res.json({ ok: true });
 });
 
+// Admin: listar despesas
+app.get('/api/admin/despesas', auth, adminOnly, async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT d.*, l.name as loja_name, u.full_name as created_by_name
+    FROM despesas d
+    LEFT JOIN lojas l ON l.id = d.loja_id
+    LEFT JOIN users u ON u.id = d.created_by
+    ORDER BY d.data DESC, d.created_at DESC
+  `);
+  res.json(rows);
+});
+
+// Admin: criar despesa
+app.post('/api/admin/despesas', auth, adminOnly, async (req, res) => {
+  const { loja_id, descricao, valor, data } = req.body;
+  if (!descricao || !valor) return res.status(400).json({ error: 'Descrição e valor são obrigatórios' });
+  const { rows: [d] } = await pool.query(
+    `INSERT INTO despesas (loja_id, descricao, valor, data, created_by) VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+    [loja_id || null, descricao.trim(), parseFloat(valor), data || new Date().toISOString().split('T')[0], req.user.id]
+  );
+  res.json(d);
+});
+
+// Admin: saldo por loja (empresa recebida - despesas)
+app.get('/api/admin/despesas/saldo-lojas', auth, adminOnly, async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT
+      l.id as loja_id,
+      l.name as loja_name,
+      COALESCE(emp.total_recebido, 0) as total_empresa_recebido,
+      COALESCE(desp.total_despesas, 0) as total_despesas,
+      COALESCE(emp.total_recebido, 0) - COALESCE(desp.total_despesas, 0) as saldo
+    FROM lojas l
+    LEFT JOIN (
+      SELECT u.loja_id,
+        SUM(CASE WHEN p.comissao_empresa_override IS NOT NULL THEN p.comissao_empresa_override
+                 ELSE COALESCE(p.comissao_empresa_valor, 0) END) as total_recebido
+      FROM proposals p
+      JOIN users u ON u.id = p.user_id
+      WHERE p.status_comissao = 'Comissão Paga' AND u.loja_id IS NOT NULL
+      GROUP BY u.loja_id
+    ) emp ON emp.loja_id = l.id
+    LEFT JOIN (
+      SELECT loja_id, SUM(valor) as total_despesas
+      FROM despesas
+      WHERE loja_id IS NOT NULL
+      GROUP BY loja_id
+    ) desp ON desp.loja_id = l.id
+    ORDER BY l.name ASC
+  `);
+  res.json(rows);
+});
+
 // Visão do admin — resumo por corretor + lista completa
 app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
   const { user_id, status_comissao } = req.query;
