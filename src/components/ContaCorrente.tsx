@@ -134,6 +134,10 @@ export function ContaCorrente() {
   async function requestSaque() {
     const amt = parseFloat(saqueAmount.replace(',', '.'));
     if (!amt || amt <= 0) { setSaqueError('Informe um valor válido'); return; }
+    if (Math.round(amt * 100) > Math.round(summary.available_balance * 100)) {
+      setSaqueError(`Valor excede o disponível (${fmtBRL(summary.available_balance)})`);
+      return;
+    }
     setRequestingSaque(true); setSaqueError('');
     const res = await API('/api/conta-corrente/saque', { method: 'POST', body: JSON.stringify({ amount: amt }) });
     const data = await res.json();
@@ -369,9 +373,19 @@ export function ContaCorrente() {
               </div>
             )}
             <div className="mb-4">
-              <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: 'var(--text-3)' }}>Valor desejado (R$)</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-3)' }}>Valor desejado (R$)</label>
+                <button
+                  type="button"
+                  onClick={() => setSaqueAmount(summary.available_balance.toFixed(2))}
+                  className="text-[10px] font-semibold px-2 py-0.5 rounded-lg transition-all"
+                  style={{ background: 'rgba(20,184,166,0.12)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.25)' }}
+                >
+                  Usar tudo
+                </button>
+              </div>
               <input value={saqueAmount} onChange={e => setSaqueAmount(e.target.value)} placeholder="0,00"
-                type="number" step="0.01" max={summary.available_balance}
+                type="number" step="0.01" min="0.01" max={summary.available_balance}
                 className="input-cyber w-full px-3 py-2.5 text-sm rounded-xl" />
               {saqueError && <p className="text-xs mt-1.5 flex items-center gap-1" style={{ color: '#f87171' }}><AlertCircle className="w-3 h-3" />{saqueError}</p>}
             </div>

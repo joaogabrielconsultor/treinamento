@@ -1963,7 +1963,7 @@ app.post('/api/conta-corrente/saque', auth, async (req, res) => {
     [req.user.id]
   );
   const available = parseFloat(paid.paid_value) - parseFloat(already.total);
-  if (amt > available + 0.01) return res.status(400).json({ error: `Valor excede o disponível (R$ ${available.toFixed(2)})` });
+  if (Math.round(amt * 100) > Math.round(available * 100)) return res.status(400).json({ error: `Valor excede o disponível (R$ ${available.toFixed(2)})` });
   await pool.query(`INSERT INTO withdrawal_requests (user_id, amount) VALUES ($1,$2)`, [req.user.id, amt]);
   const { rows: [me] } = await pool.query(`SELECT full_name FROM users WHERE id=$1`, [req.user.id]);
   const { rows: admins } = await pool.query(`SELECT id FROM users WHERE role IN ('admin','master') AND archived_at IS NULL`);
