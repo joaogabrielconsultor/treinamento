@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { AuthPage } from './components/AuthPage';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -36,11 +36,51 @@ import { ViewType, Lesson } from './types';
 
 function AppInner() {
   const { user, loading: authLoading, signIn, signOut } = useAuth();
-  const [currentView, setCurrentView] = useState<ViewType>('dashboard');
-  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+
+  const VALID_VIEWS = new Set<ViewType>([
+    'dashboard','catalog','course','lesson','admin-users','admin-courses',
+    'admin-course-edit','login-bancos','admin-personalizacao','proposals',
+    'simulator','ranking','production','admin-proposals','admin-financial-tables',
+    'admin-categories','admin-banks','admin-convenios','admin-products',
+    'admin-reports','conta-corrente','admin-conta-corrente','admin-lojas',
+    'admin-conta-empresa','admin-proposal-statuses',
+  ]);
+
+  function parseHash() {
+    const raw = window.location.hash.replace('#', '');
+    const [view, id] = raw.split('/');
+    return { view, id };
+  }
+
+  const [currentView, setCurrentView] = useState<ViewType>(() => {
+    const { view } = parseHash();
+    // lesson sem estado completo → volta ao course na próxima etapa
+    if (view === 'lesson') return 'course';
+    return VALID_VIEWS.has(view as ViewType) ? (view as ViewType) : 'dashboard';
+  });
+
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(() => {
+    const { view, id } = parseHash();
+    return (view === 'course' || view === 'lesson') && id ? id : null;
+  });
+
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
-  const [adminEditCourseId, setAdminEditCourseId] = useState<string | null>(null);
+
+  const [adminEditCourseId, setAdminEditCourseId] = useState<string | null>(() => {
+    const { view, id } = parseHash();
+    return view === 'admin-course-edit' && id ? id : null;
+  });
+
+  // Mantém o hash da URL sincronizado com a view atual
+  useEffect(() => {
+    if (authLoading) return;
+    let hash = currentView as string;
+    if (currentView === 'course' && selectedCourseId) hash = `course/${selectedCourseId}`;
+    else if (currentView === 'admin-course-edit' && adminEditCourseId) hash = `admin-course-edit/${adminEditCourseId}`;
+    const next = `#${hash}`;
+    if (window.location.hash !== next) window.location.hash = hash;
+  }, [currentView, selectedCourseId, adminEditCourseId, authLoading]);
 
   const { courses, loading: coursesLoading } = useCourses();
   const { course, modules, loading: courseDetailLoading } = useCourseDetail(selectedCourseId);
