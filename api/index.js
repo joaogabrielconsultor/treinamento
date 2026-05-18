@@ -2089,7 +2089,7 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
   const { rows: brokerSummary } = await pool.query(`
     SELECT u.id as user_id, u.full_name as user_name, u.email as user_email,
            u.pix_key, u.pix_key_type,
-           COUNT(p.id)::int as pending_count,
+           COUNT(*) FILTER (WHERE p.status_comissao = 'Comissão Paga')::int as pending_count,
            GREATEST(
              COALESCE(SUM(COALESCE(p.comissao_corretor_override,
                ROUND(p.value * COALESCE(
@@ -2097,7 +2097,8 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
                   WHERE cr.financial_table_id = p.table_id
                     AND cr.min_value <= p.value AND (cr.max_value IS NULL OR cr.max_value >= p.value)
                   ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_corretor, 0) / 100, 2)
-             )), 0) - COALESCE(MAX(wr_paid.total_paid), 0),
+             ) FILTER (WHERE p.status_comissao = 'Comissão Paga')), 0)
+             - COALESCE(MAX(wr_paid.total_paid), 0),
              0
            )::numeric as pending_value,
            COALESCE(MAX(wr_paid.count_paid), 0)::int as paid_count,

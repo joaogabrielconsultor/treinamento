@@ -575,7 +575,7 @@ export function AdminContaCorrente() {
       {/* Cards globais */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {[
-          { label: 'Corr. A Receber',    value: fmtBRL(totalPending),            sub: `${brokers.reduce((a, b) => a + b.pending_count, 0)} propostas`, icon: Clock,        color: '#f59e0b', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.2)'  },
+          { label: 'Corr. A Receber',    value: fmtBRL(totalPending),            sub: `disponível p/ saque`,                                          icon: Clock,        color: '#f59e0b', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.2)'  },
           { label: 'Corr. Pago (Saque)', value: fmtBRL(totalPaid),               sub: `${brokers.reduce((a, b) => a + b.paid_count, 0)} saque(s)`,     icon: CheckCircle,  color: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.2)'  },
           { label: 'Empresa Pendente',   value: fmtBRL(totalEmpresaPending),      sub: 'comissão empresa a receber',                                    icon: Clock,        color: '#fb923c', bg: 'rgba(251,146,60,0.08)', border: 'rgba(251,146,60,0.2)'  },
           { label: 'Empresa Recebida',   value: fmtBRL(totalEmpresaPaid),         sub: 'comissão empresa recebida',                                     icon: DollarSign,   color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.2)' },
@@ -657,7 +657,7 @@ export function AdminContaCorrente() {
                     <p className="font-bold num" style={{ color: b.pending_value > 0 ? '#f59e0b' : 'var(--text-3)' }}>
                       {fmtBRL(parseFloat(String(b.pending_value)))}
                     </p>
-                    <p className="text-xs" style={{ color: 'var(--text-3)' }}>{b.pending_count} proposta{b.pending_count !== 1 ? 's' : ''} no total</p>
+                    <p className="text-xs" style={{ color: 'var(--text-3)' }}>{b.pending_count} prop. liberada{b.pending_count !== 1 ? 's' : ''}</p>
                   </td>
                   <td className="px-4 py-3">
                     <p className="font-bold num" style={{ color: '#4ade80' }}>{fmtBRL(parseFloat(String(b.paid_value)))}</p>
