@@ -2083,6 +2083,7 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
   const brokerValues = [];
   let bi = 1;
   if (loja_id) { brokerConditions.push(`u.loja_id = $${bi++}`); brokerValues.push(loja_id); }
+  if (usuario_banco_id) { brokerConditions.push(`p.usuario_banco_id = $${bi++}`); brokerValues.push(usuario_banco_id); }
   const brokerWhere = 'WHERE ' + brokerConditions.join(' AND ');
 
   const { rows: brokerSummary } = await pool.query(`
