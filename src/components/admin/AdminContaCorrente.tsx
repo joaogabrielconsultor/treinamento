@@ -66,6 +66,7 @@ export function AdminContaCorrente() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [filterStatus, setFilterStatus] = useState('');
   const [filterCorretor, setFilterCorretor] = useState('');
+  const [filterLoja, setFilterLoja] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(15);
@@ -93,6 +94,7 @@ export function AdminContaCorrente() {
     const params = new URLSearchParams();
     if (filterCorretor) params.set('user_id', filterCorretor);
     if (filterStatus) params.set('status_comissao', filterStatus);
+    if (filterLoja) params.set('loja_id', filterLoja);
     const data = await API(`/api/admin/conta-corrente?${params}`).then(r => r.json());
     setProposals(Array.isArray(data.proposals) ? data.proposals : []);
     setBrokers(Array.isArray(data.brokers) ? data.brokers : []);
@@ -102,7 +104,9 @@ export function AdminContaCorrente() {
 
   async function loadSaques() {
     setLoadingSaques(true);
-    const data = await API('/api/admin/saques').then(r => r.json());
+    const params = new URLSearchParams();
+    if (filterLoja) params.set('loja_id', filterLoja);
+    const data = await API(`/api/admin/saques?${params}`).then(r => r.json());
     setSaques(Array.isArray(data) ? data : []);
     setLoadingSaques(false);
   }
@@ -145,8 +149,11 @@ export function AdminContaCorrente() {
     loadSaques();
   }
 
-  useEffect(() => { load(); }, [filterCorretor, filterStatus]);
-  useEffect(() => { if (tab === 'saques') loadSaques(); }, [tab]);
+  useEffect(() => {
+    API('/api/admin/lojas/all').then(r => r.json()).then(d => setLojas(Array.isArray(d) ? d : []));
+  }, []);
+  useEffect(() => { load(); }, [filterCorretor, filterStatus, filterLoja]);
+  useEffect(() => { if (tab === 'saques') loadSaques(); }, [tab, filterLoja]);
   useEffect(() => { if (tab === 'despesas') loadDespesas(); }, [tab]);
 
   const filtered = proposals.filter(p => {
@@ -249,21 +256,38 @@ export function AdminContaCorrente() {
         )}
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-6 p-1 rounded-xl w-fit" style={{ background: 'var(--surface-subtle)', border: '1px solid var(--card-border)' }}>
-        {([
-          { key: 'comissoes', label: 'Comissões', icon: CheckCircle },
-          { key: 'saques',    label: `Saques${pendingSaques > 0 ? ` (${pendingSaques})` : ''}`, icon: Send },
-          { key: 'despesas',  label: 'Despesas', icon: TrendingDown },
-        ] as const).map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all"
-            style={tab === t.key
-              ? { background: 'var(--card-bg)', color: '#14B8A6', boxShadow: 'var(--shadow-card)' }
-              : { color: 'var(--text-3)' }}>
-            <t.icon className="w-3.5 h-3.5" />{t.label}
-          </button>
-        ))}
+      {/* Tabs + filtro loja global */}
+      <div className="flex items-center gap-3 mb-6 flex-wrap">
+        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--surface-subtle)', border: '1px solid var(--card-border)' }}>
+          {([
+            { key: 'comissoes', label: 'Comissões', icon: CheckCircle },
+            { key: 'saques',    label: `Saques${pendingSaques > 0 ? ` (${pendingSaques})` : ''}`, icon: Send },
+            { key: 'despesas',  label: 'Despesas', icon: TrendingDown },
+          ] as const).map(t => (
+            <button key={t.key} onClick={() => setTab(t.key)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all"
+              style={tab === t.key
+                ? { background: 'var(--card-bg)', color: '#14B8A6', boxShadow: 'var(--shadow-card)' }
+                : { color: 'var(--text-3)' }}>
+              <t.icon className="w-3.5 h-3.5" />{t.label}
+            </button>
+          ))}
+        </div>
+        {lojas.length > 0 && (
+          <div className="relative">
+            <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+            <select
+              value={filterLoja}
+              onChange={e => setFilterLoja(e.target.value)}
+              className="input-cyber appearance-none pl-9 pr-9 py-2 text-xs rounded-xl"
+              style={{ minWidth: '170px' }}
+            >
+              <option value="">Todas as lojas</option>
+              {lojas.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+            </select>
+          </div>
+        )}
       </div>
 
       {successMsg && tab === 'comissoes' && (
@@ -481,7 +505,9 @@ export function AdminContaCorrente() {
               )}
 
               {/* Lista de despesas */}
-              {despesas.length === 0 ? (
+              {(() => {
+                const despesasFiltradas = filterLoja ? despesas.filter(d => d.loja_id === filterLoja) : despesas;
+                return despesasFiltradas.length === 0 ? (
                 <div className="text-center py-20">
                   <TrendingDown className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--text-3)' }} />
                   <p className="text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma despesa registrada</p>
@@ -497,7 +523,7 @@ export function AdminContaCorrente() {
                       </tr>
                     </thead>
                     <tbody>
-                      {despesas.map(d => (
+                      {despesasFiltradas.map(d => (
                         <tr key={d.id} className="table-row-cyber">
                           <td className="px-4 py-3 text-xs num" style={{ color: 'var(--text-3)' }}>
                             {new Date(d.data + 'T00:00:00').toLocaleDateString('pt-BR')}
@@ -517,7 +543,8 @@ export function AdminContaCorrente() {
                     </tbody>
                   </table>
                 </div>
-              )}
+              );
+              })()}
             </>
           )}
         </div>

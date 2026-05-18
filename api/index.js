@@ -1933,14 +1933,20 @@ app.post('/api/conta-corrente/saque', auth, async (req, res) => {
 
 // Admin: listar todas as solicitações de saque
 app.get('/api/admin/saques', auth, adminOnly, async (req, res) => {
+  const { loja_id } = req.query;
+  const conditions = [];
+  const values = [];
+  if (loja_id) { conditions.push(`u.loja_id = $${values.length + 1}`); values.push(loja_id); }
+  const where = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
   const { rows } = await pool.query(`
     SELECT wr.*, u.full_name as user_name, u.email as user_email,
            u.pix_key, u.pix_key_type, r.full_name as reviewed_by_name
     FROM withdrawal_requests wr
     JOIN users u ON u.id = wr.user_id
     LEFT JOIN users r ON r.id = wr.reviewed_by
+    ${where}
     ORDER BY CASE WHEN wr.status='Pendente' THEN 0 ELSE 1 END, wr.created_at DESC
-  `);
+  `, values);
   res.json(rows);
 });
 
@@ -2014,19 +2020,26 @@ app.get('/api/admin/despesas/saldo-lojas', auth, adminOnly, async (req, res) => 
 
 // Visão do admin — resumo por corretor + lista completa
 app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
-  const { user_id, status_comissao } = req.query;
+  const { user_id, status_comissao, loja_id } = req.query;
 
   const conditions = ['p.status_comissao IS NOT NULL'];
   const values = [];
   let i = 1;
   if (user_id) { conditions.push(`p.user_id = $${i++}`); values.push(user_id); }
   if (status_comissao) { conditions.push(`p.status_comissao = $${i++}`); values.push(status_comissao); }
+  if (loja_id) { conditions.push(`u.loja_id = $${i++}`); values.push(loja_id); }
   const where = 'WHERE ' + conditions.join(' AND ');
 
   const { rows: proposals } = await pool.query(
     `${contaCorrenteSelect} ${where} ORDER BY p.updated_at DESC`,
     values
   );
+
+  const brokerConditions = ['p.status_comissao IS NOT NULL'];
+  const brokerValues = [];
+  let bi = 1;
+  if (loja_id) { brokerConditions.push(`u.loja_id = $${bi++}`); brokerValues.push(loja_id); }
+  const brokerWhere = 'WHERE ' + brokerConditions.join(' AND ');
 
   const { rows: brokerSummary } = await pool.query(`
     SELECT u.id as user_id, u.full_name as user_name, u.email as user_email,
@@ -2054,10 +2067,10 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
     FROM proposals p
     JOIN users u ON u.id = p.user_id
     LEFT JOIN financial_tables ft ON ft.id = p.table_id
-    WHERE p.status_comissao IS NOT NULL
+    ${brokerWhere}
     GROUP BY u.id, u.full_name, u.email
     ORDER BY pending_value DESC
-  `);
+  `, brokerValues);
 
   res.json({ proposals, brokers: brokerSummary });
 });
