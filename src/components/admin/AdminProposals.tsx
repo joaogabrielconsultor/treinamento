@@ -92,9 +92,16 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
           'nome do cliente': 'nome_cliente', 'nome_do_cliente': 'nome_cliente',
           'situao': 'situacao', 'situação': 'situacao',
           'convnio': 'convenio', 'convênio': 'convenio',
-          'proposta': 'proposta', 'cpf': 'cpf', 'corretor': 'corretor',
+          'proposta': 'proposta', 'nrproposta': 'proposta', 'nr proposta': 'proposta',
+          'numero proposta': 'proposta', 'número proposta': 'proposta',
+          'cliente': 'nome_cliente',
+          'cpf': 'cpf', 'corretor': 'corretor',
           'banco': 'banco', 'tabela': 'tabela', 'tipo': 'tipo', 'produto': 'tipo',
           'valor': 'valor', 'esteira': 'esteira', 'status': 'esteira',
+          'dt status': 'data_status', 'dt. status': 'data_status',
+          'data status': 'data_status', 'data_status': 'data_status',
+          'dt_status': 'data_status', 'data alteracao': 'data_status',
+          'data alteração': 'data_status',
         };
         const clean = h.trim().replace(/^﻿/, '').replace(/[^\w\s]/g, '').trim().toLowerCase().replace(/\s+/g, '_');
         const withSpaces = h.trim().replace(/^﻿/, '').replace(/[^\w\s]/g, '').trim().toLowerCase();

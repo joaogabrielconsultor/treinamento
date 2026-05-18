@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Wallet, Clock, CheckCircle, DollarSign, Users, ChevronDown, Search, AlertCircle, Key, Send, XCircle, Inbox } from 'lucide-react';
+import { Wallet, Clock, CheckCircle, DollarSign, Users, ChevronDown, Search, AlertCircle, Key, Send, XCircle, Inbox, Edit2, X, Check } from 'lucide-react';
 import { Proposal, WithdrawalRequest } from '../../types';
 import { Pagination } from '../ui/Pagination';
 
@@ -50,6 +50,11 @@ export function AdminContaCorrente() {
   const [saques, setSaques] = useState<WithdrawalRequest[]>([]);
   const [loadingSaques, setLoadingSaques] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
+
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editCorr, setEditCorr] = useState('');
+  const [editEmp, setEditEmp] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -128,6 +133,31 @@ export function AdminContaCorrente() {
     setTimeout(() => setSuccessMsg(''), 4000);
     await load();
     setSaving(false);
+  }
+
+  function startEdit(p: Proposal) {
+    const corrVal = p.comissao_corretor_override != null ? p.comissao_corretor_override : (p.comissao_valor ?? '');
+    const empVal  = p.comissao_empresa_override  != null ? p.comissao_empresa_override  : (p.comissao_empresa_valor ?? '');
+    setEditId(p.id);
+    setEditCorr(String(corrVal));
+    setEditEmp(String(empVal));
+  }
+
+  function cancelEdit() { setEditId(null); }
+
+  async function saveEdit(id: string) {
+    setSavingEdit(true);
+    const parseVal = (v: string) => v.trim() === '' ? null : parseFloat(v.replace(',', '.')) || 0;
+    await API(`/api/proposals/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        comissao_corretor_override: parseVal(editCorr),
+        comissao_empresa_override:  parseVal(editEmp),
+      }),
+    });
+    setSavingEdit(false);
+    setEditId(null);
+    await load();
   }
 
   const pendingSaques = saques.filter(s => s.status === 'Pendente').length;
@@ -410,7 +440,7 @@ export function AdminContaCorrente() {
                     <input type="checkbox" checked={allPageSelected} onChange={toggleSelectAll}
                       className="w-3.5 h-3.5 rounded cursor-pointer accent-teal-500" />
                   </th>
-                  {['Proposta', 'Corretor', 'Nome do Cliente', 'CPF', 'Banco / Tabela', 'Valor', 'Comissão Corretor', 'Comissão Empresa', 'Status'].map(h => (
+                  {['Proposta', 'Corretor', 'Nome do Cliente', 'CPF', 'Banco / Tabela', 'Valor', 'Comissão Corretor', 'Comissão Empresa', 'Status', ''].map(h => (
                     <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
                   ))}
                 </tr>
@@ -418,7 +448,7 @@ export function AdminContaCorrente() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="text-center py-16 text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma comissão encontrada</td>
+                    <td colSpan={11} className="text-center py-16 text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma comissão encontrada</td>
                   </tr>
                 ) : paginated.map(p => {
                   const isPending = p.status_comissao === 'Ag. Comissão';
@@ -450,17 +480,40 @@ export function AdminContaCorrente() {
                       </td>
                       <td className="px-4 py-3 font-bold num" style={{ color: 'var(--text-1)' }}>{fmtBRL(Number(p.value))}</td>
                       <td className="px-4 py-3">
-                        {Number(p.comissao_valor) > 0 ? (
+                        {editId === p.id ? (
+                          <input
+                            type="text"
+                            value={editCorr}
+                            onChange={e => setEditCorr(e.target.value)}
+                            placeholder="0,00"
+                            className="input-cyber w-28 px-2 py-1 text-sm rounded-lg num"
+                            style={{ color: '#4ade80' }}
+                          />
+                        ) : Number(p.comissao_valor) > 0 ? (
                           <div>
                             <span className="font-bold text-sm num" style={{ color: '#4ade80' }}>{fmtBRL(Number(p.comissao_valor))}</span>
-                            <p className="text-xs num" style={{ color: 'var(--text-3)' }}>{Number(p.comissao_corretor_pct || 0).toFixed(2)}%</p>
+                            {p.comissao_corretor_override != null && (
+                              <p className="text-[10px]" style={{ color: '#94a3b8' }}>override</p>
+                            )}
                           </div>
                         ) : <span style={{ color: 'var(--text-3)' }}>—</span>}
                       </td>
                       <td className="px-4 py-3">
-                        {Number(p.comissao_empresa_valor) > 0 ? (
+                        {editId === p.id ? (
+                          <input
+                            type="text"
+                            value={editEmp}
+                            onChange={e => setEditEmp(e.target.value)}
+                            placeholder="0,00"
+                            className="input-cyber w-28 px-2 py-1 text-sm rounded-lg num"
+                            style={{ color: '#a78bfa' }}
+                          />
+                        ) : Number(p.comissao_empresa_valor) > 0 ? (
                           <div>
                             <span className="font-bold text-sm num" style={{ color: '#a78bfa' }}>{fmtBRL(Number(p.comissao_empresa_valor))}</span>
+                            {p.comissao_empresa_override != null && (
+                              <p className="text-[10px]" style={{ color: '#94a3b8' }}>override</p>
+                            )}
                           </div>
                         ) : <span style={{ color: 'var(--text-3)' }}>—</span>}
                       </td>
@@ -469,6 +522,36 @@ export function AdminContaCorrente() {
                           {isPending ? <Clock className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
                           {p.status_comissao}
                         </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {editId === p.id ? (
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => saveEdit(p.id)}
+                              disabled={savingEdit}
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg font-semibold transition-all disabled:opacity-50"
+                              style={{ background: 'rgba(74,222,128,0.12)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.3)' }}
+                            >
+                              <Check className="w-3 h-3" />{savingEdit ? '...' : 'Salvar'}
+                            </button>
+                            <button
+                              onClick={cancelEdit}
+                              disabled={savingEdit}
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg transition-all disabled:opacity-50"
+                              style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171', border: '1px solid rgba(248,113,113,0.25)' }}
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => startEdit(p)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg transition-all"
+                            style={{ background: 'rgba(96,165,250,0.08)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.2)' }}
+                          >
+                            <Edit2 className="w-3 h-3" /> Editar
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );

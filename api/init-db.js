@@ -220,10 +220,6 @@ async function initDb() {
         created_at timestamptz NOT NULL DEFAULT now()
       )
     `);
-    await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS bank_id uuid REFERENCES banks(id) ON DELETE SET NULL`);
-    await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS convenio_id uuid REFERENCES convenios(id) ON DELETE SET NULL`);
-    await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS product_id uuid REFERENCES products(id) ON DELETE SET NULL`);
-    await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS coeficiente numeric(10,7) NOT NULL DEFAULT 0`);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS scoring_rules (
@@ -255,6 +251,10 @@ async function initDb() {
         updated_at timestamptz NOT NULL DEFAULT now()
       )
     `);
+    await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS bank_id uuid REFERENCES banks(id) ON DELETE SET NULL`);
+    await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS convenio_id uuid REFERENCES convenios(id) ON DELETE SET NULL`);
+    await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS product_id uuid REFERENCES products(id) ON DELETE SET NULL`);
+    await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS coeficiente numeric(10,7) NOT NULL DEFAULT 0`);
     await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS status_comissao text CHECK (status_comissao IN ('Ag. Comissão', 'Comissão Paga'))`);
     await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS allow_broker_edit boolean NOT NULL DEFAULT false`);
     await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS tipo_proposta text`);
