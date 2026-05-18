@@ -210,6 +210,8 @@ export interface Proposal {
   status_comissao?: 'Ag. Comissão' | 'Comissão Paga' | null;
   allow_broker_edit: boolean;
   tipo_proposta?: string | null;
+  usuario_banco_id?: string | null;
+  usuario_banco_nome?: string | null;
 }
 
 export interface WithdrawalRequest {
@@ -319,7 +321,8 @@ export type ViewType =
   | 'admin-conta-corrente'
   | 'admin-lojas'
   | 'admin-conta-empresa'
-  | 'admin-proposal-statuses';
+  | 'admin-proposal-statuses'
+  | 'admin-usuarios-banco';
 
 export type AuthMode = 'login';
 

@@ -50,6 +50,22 @@ interface Loja {
   name: string;
 }
 
+interface UsuarioBancoSummary {
+  usuario_banco_id: string;
+  usuario_banco_nome: string;
+  pending_count: number;
+  pending_value: number;
+  paid_count: number;
+  paid_value: number;
+  empresa_pending_value: number;
+  empresa_paid_value: number;
+}
+
+interface UsuarioBanco {
+  id: string;
+  nome: string;
+}
+
 const SAQUE_STATUS_COLOR: Record<string, { text: string; bg: string; border: string }> = {
   'Pendente': { text: '#fbbf24', bg: 'rgba(251,191,36,0.1)',   border: 'rgba(251,191,36,0.3)' },
   'Aprovado': { text: '#60a5fa', bg: 'rgba(96,165,250,0.1)',   border: 'rgba(96,165,250,0.3)' },
@@ -67,6 +83,9 @@ export function AdminContaCorrente() {
   const [filterStatus, setFilterStatus] = useState('');
   const [filterCorretor, setFilterCorretor] = useState('');
   const [filterLoja, setFilterLoja] = useState('');
+  const [filterUsuarioBanco, setFilterUsuarioBanco] = useState('');
+  const [usuariosBanco, setUsuariosBanco] = useState<UsuarioBanco[]>([]);
+  const [usuariosBancoSummary, setUsuariosBancoSummary] = useState<UsuarioBancoSummary[]>([]);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(15);
@@ -95,9 +114,11 @@ export function AdminContaCorrente() {
     if (filterCorretor) params.set('user_id', filterCorretor);
     if (filterStatus) params.set('status_comissao', filterStatus);
     if (filterLoja) params.set('loja_id', filterLoja);
+    if (filterUsuarioBanco) params.set('usuario_banco_id', filterUsuarioBanco);
     const data = await API(`/api/admin/conta-corrente?${params}`).then(r => r.json());
     setProposals(Array.isArray(data.proposals) ? data.proposals : []);
     setBrokers(Array.isArray(data.brokers) ? data.brokers : []);
+    setUsuariosBancoSummary(Array.isArray(data.usuariosBanco) ? data.usuariosBanco : []);
     setSelected(new Set());
     setLoading(false);
   }
@@ -151,8 +172,9 @@ export function AdminContaCorrente() {
 
   useEffect(() => {
     API('/api/admin/lojas/all').then(r => r.json()).then(d => setLojas(Array.isArray(d) ? d : []));
+    API('/api/usuarios-banco').then(r => r.json()).then(d => setUsuariosBanco(Array.isArray(d) ? d : []));
   }, []);
-  useEffect(() => { load(); }, [filterCorretor, filterStatus, filterLoja]);
+  useEffect(() => { load(); }, [filterCorretor, filterStatus, filterLoja, filterUsuarioBanco]);
   useEffect(() => { if (tab === 'saques') loadSaques(); }, [tab, filterLoja]);
   useEffect(() => { if (tab === 'despesas') loadDespesas(); }, [tab]);
 
@@ -277,14 +299,21 @@ export function AdminContaCorrente() {
           <div className="relative">
             <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
-            <select
-              value={filterLoja}
-              onChange={e => setFilterLoja(e.target.value)}
-              className="input-cyber appearance-none pl-9 pr-9 py-2 text-xs rounded-xl"
-              style={{ minWidth: '170px' }}
-            >
+            <select value={filterLoja} onChange={e => setFilterLoja(e.target.value)}
+              className="input-cyber appearance-none pl-9 pr-9 py-2 text-xs rounded-xl" style={{ minWidth: '160px' }}>
               <option value="">Todas as lojas</option>
               {lojas.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+            </select>
+          </div>
+        )}
+        {usuariosBanco.length > 0 && (
+          <div className="relative">
+            <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+            <select value={filterUsuarioBanco} onChange={e => setFilterUsuarioBanco(e.target.value)}
+              className="input-cyber appearance-none pl-9 pr-9 py-2 text-xs rounded-xl" style={{ minWidth: '170px' }}>
+              <option value="">Todos os usuários banco</option>
+              {usuariosBanco.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
             </select>
           </div>
         )}
@@ -639,6 +668,57 @@ export function AdminContaCorrente() {
                     <p className="font-bold num" style={{ color: 'var(--text-1)' }}>
                       {fmtBRL(parseFloat(String(b.pending_value)) + parseFloat(String(b.paid_value)))}
                     </p>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Resumo por Usuário Banco */}
+      {usuariosBancoSummary.length > 0 && (
+        <div className="rounded-2xl overflow-hidden mb-6 animate-fade-up"
+          style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)', animationDelay: '90ms' }}>
+          <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
+            <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Resumo por Usuário Banco</h2>
+          </div>
+          <table className="w-full text-sm">
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
+                {['Usuário Banco', 'Corr. A Receber', 'Corr. Pago', 'Emp. Pendente', 'Emp. Recebida', 'Total Corretor'].map(h => (
+                  <th key={h} className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {usuariosBancoSummary.map(ub => (
+                <tr key={ub.usuario_banco_id} className="table-row-cyber">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                        style={{ background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.2)' }}>
+                        <Users className="w-3.5 h-3.5" style={{ color: '#60a5fa' }} />
+                      </div>
+                      <p className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{ub.usuario_banco_nome}</p>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <p className="font-bold num" style={{ color: ub.pending_value > 0 ? '#f59e0b' : 'var(--text-3)' }}>{fmtBRL(parseFloat(String(ub.pending_value)))}</p>
+                    <p className="text-xs" style={{ color: 'var(--text-3)' }}>{ub.pending_count} proposta{ub.pending_count !== 1 ? 's' : ''}</p>
+                  </td>
+                  <td className="px-4 py-3">
+                    <p className="font-bold num" style={{ color: '#4ade80' }}>{fmtBRL(parseFloat(String(ub.paid_value)))}</p>
+                    <p className="text-xs" style={{ color: 'var(--text-3)' }}>{ub.paid_count} paga{ub.paid_count !== 1 ? 's' : ''}</p>
+                  </td>
+                  <td className="px-4 py-3">
+                    <p className="font-bold num" style={{ color: (ub.empresa_pending_value || 0) > 0 ? '#fb923c' : 'var(--text-3)' }}>{fmtBRL(parseFloat(String(ub.empresa_pending_value || 0)))}</p>
+                  </td>
+                  <td className="px-4 py-3">
+                    <p className="font-bold num" style={{ color: '#a78bfa' }}>{fmtBRL(parseFloat(String(ub.empresa_paid_value || 0)))}</p>
+                  </td>
+                  <td className="px-4 py-3">
+                    <p className="font-bold num" style={{ color: 'var(--text-1)' }}>{fmtBRL(parseFloat(String(ub.pending_value)) + parseFloat(String(ub.paid_value)))}</p>
                   </td>
                 </tr>
               ))}

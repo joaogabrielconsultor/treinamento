@@ -96,6 +96,7 @@ const EMPTY_FORM = {
   comissao_corretor_override: '' as string,
   comissao_empresa_override: '' as string,
   user_id: '' as string,
+  usuario_banco_id: '' as string,
 };
 
 const inp = 'input-cyber w-full px-3 py-2.5 rounded-xl text-sm';
@@ -204,6 +205,9 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [deletingBulk, setDeletingBulk] = useState(false);
 
+  // ── Usuários banco ──
+  const [usuariosBanco, setUsuariosBanco] = useState<{ id: string; nome: string }[]>([]);
+
   // ── Import CSV ──
   const [showImport, setShowImport] = useState(false);
   const [importPreview, setImportPreview] = useState<Record<string, string>[]>([]);
@@ -234,6 +238,10 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
     setAllBanks(Array.isArray(bk) ? bk : []);
     setLoading(false);
   }
+
+  useEffect(() => {
+    API('/api/usuarios-banco').then(r => r.json()).then(d => setUsuariosBanco(Array.isArray(d) ? d : []));
+  }, []);
 
   // Único efeito de carga — dispara no mount e a cada troca de preset
   useEffect(() => {
@@ -380,6 +388,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
       comissao_corretor_override: p.comissao_corretor_override != null ? String(p.comissao_corretor_override) : '',
       comissao_empresa_override:  p.comissao_empresa_override  != null ? String(p.comissao_empresa_override)  : '',
       user_id: p.user_id || '',
+      usuario_banco_id: p.usuario_banco_id || '',
     });
     setEditId(p.id); setStep(0); setErrors({}); setDupAlert(null); setShowForm(true);
   }
@@ -425,6 +434,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
       bank_id: form.bank_id || null, convenio_id: form.convenio_id || null,
       bank: selectedBank?.name || '', convenio: selectedConvenio?.name || '',
       created_at: form.created_at || todayStr(),
+      usuario_banco_id: form.usuario_banco_id || null,
     };
     if (editId && isAdmin) {
       if (form.status) body.status = form.status;
@@ -1305,6 +1315,16 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
                   </select>
                 </div>
               </Field>
+              {usuariosBanco.length > 0 && (
+                <Field label="Usuário banco">
+                  <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <select value={form.usuario_banco_id} onChange={e => setForm(f => ({ ...f, usuario_banco_id: e.target.value }))} className={`${inp} appearance-none pr-8`}>
+                      <option value="">Nenhum</option>
+                      {usuariosBanco.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                    </select>
+                  </div>
+                </Field>
+              )}
               {isAdmin && (
                 <>
                   <Field label="Status">

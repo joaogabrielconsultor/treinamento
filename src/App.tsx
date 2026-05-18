@@ -26,6 +26,7 @@ import { AdminContaCorrente } from './components/admin/AdminContaCorrente';
 import { AdminLojas } from './components/admin/AdminLojas';
 import { AdminContaEmpresa } from './components/admin/AdminContaEmpresa';
 import { AdminProposalStatuses } from './components/admin/AdminProposalStatuses';
+import { AdminUsuariosBanco } from './components/admin/AdminUsuariosBanco';
 import { ProfileModal } from './components/ProfileModal';
 import { useAuth } from './hooks/useAuth';
 import { useCourses, useCourseDetail } from './hooks/useCourses';
@@ -43,7 +44,7 @@ function AppInner() {
     'simulator','ranking','production','admin-proposals','admin-financial-tables',
     'admin-categories','admin-banks','admin-convenios','admin-products',
     'admin-reports','conta-corrente','admin-conta-corrente','admin-lojas',
-    'admin-conta-empresa','admin-proposal-statuses',
+    'admin-conta-empresa','admin-proposal-statuses','admin-usuarios-banco',
   ]);
 
   function parseHash() {
@@ -245,6 +246,7 @@ function AppInner() {
         {currentView === 'admin-lojas'           && isAdmin && <AdminLojas />}
         {currentView === 'admin-conta-empresa'   && isAdmin && <AdminContaEmpresa />}
         {currentView === 'admin-proposal-statuses' && isAdmin && <AdminProposalStatuses />}
+        {currentView === 'admin-usuarios-banco'  && isAdmin && <AdminUsuariosBanco />}
       </main>
     </div>
   );

@@ -483,6 +483,43 @@ app.delete('/api/admin/lojas/:id', auth, adminOnly, async (req, res) => {
   res.json({ ok: true });
 });
 
+// ─── USUÁRIOS BANCO ────────────────────────────────────────────────────────────
+app.get('/api/usuarios-banco', auth, async (req, res) => {
+  const { rows } = await pool.query('SELECT id, nome, descricao FROM usuarios_banco ORDER BY nome ASC');
+  res.json(rows);
+});
+
+app.get('/api/admin/usuarios-banco', auth, adminOnly, async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT ub.*, COUNT(p.id)::int as proposal_count
+    FROM usuarios_banco ub
+    LEFT JOIN proposals p ON p.usuario_banco_id = ub.id
+    GROUP BY ub.id ORDER BY ub.nome ASC
+  `);
+  res.json(rows);
+});
+
+app.post('/api/admin/usuarios-banco', auth, adminOnly, async (req, res) => {
+  const { nome, descricao } = req.body;
+  if (!nome?.trim()) return res.status(400).json({ error: 'Nome obrigatório' });
+  const { rows } = await pool.query('INSERT INTO usuarios_banco (nome, descricao) VALUES ($1,$2) RETURNING *', [nome.trim(), descricao?.trim() || '']);
+  res.json(rows[0]);
+});
+
+app.put('/api/admin/usuarios-banco/:id', auth, adminOnly, async (req, res) => {
+  const { nome, descricao } = req.body;
+  if (!nome?.trim()) return res.status(400).json({ error: 'Nome obrigatório' });
+  const { rows } = await pool.query('UPDATE usuarios_banco SET nome=$1, descricao=$2 WHERE id=$3 RETURNING *', [nome.trim(), descricao?.trim() || '', req.params.id]);
+  if (!rows[0]) return res.status(404).json({ error: 'Usuário banco não encontrado' });
+  res.json(rows[0]);
+});
+
+app.delete('/api/admin/usuarios-banco/:id', auth, adminOnly, async (req, res) => {
+  await pool.query('UPDATE proposals SET usuario_banco_id = NULL WHERE usuario_banco_id = $1', [req.params.id]);
+  await pool.query('DELETE FROM usuarios_banco WHERE id = $1', [req.params.id]);
+  res.json({ ok: true });
+});
+
 // ─── CONTA EMPRESA ────────────────────────────────────────────────────────────
 app.get('/api/admin/conta-empresa', auth, adminOnly, async (req, res) => {
   const { rows } = await pool.query(`
@@ -1200,7 +1237,8 @@ app.get('/api/proposals', auth, async (req, res) => {
            ) as comissao_valor,
            COALESCE(p.comissao_empresa_override,
              ROUND(p.value * COALESCE(ft.comissao_empresa, 0) / 100, 2)
-           ) as comissao_empresa_valor
+           ) as comissao_empresa_valor,
+           ub.id as usuario_banco_id, ub.nome as usuario_banco_nome
     FROM proposals p
     JOIN users u ON u.id = p.user_id
     LEFT JOIN financial_tables ft ON ft.id = p.table_id
@@ -1208,6 +1246,7 @@ app.get('/api/proposals', auth, async (req, res) => {
     LEFT JOIN banks b ON b.id = p.bank_id
     LEFT JOIN convenios cv ON cv.id = p.convenio_id
     LEFT JOIN products pr ON pr.id = p.product_id
+    LEFT JOIN usuarios_banco ub ON ub.id = p.usuario_banco_id
     ${where}
     ORDER BY p.value DESC, p.created_at DESC
   `, values);
@@ -1239,10 +1278,12 @@ app.post('/api/proposals', auth, async (req, res) => {
   }
   // Corretor sempre cria como Digitada
   const proposalDate = created_at ? new Date(created_at) : new Date();
+  const { body: reqBody } = req;
+  const usuario_banco_id = reqBody.usuario_banco_id || null;
   const { rows } = await pool.query(
-    `INSERT INTO proposals (user_id, proposal_number, value, product, product_id, bank, convenio, table_id, bank_id, convenio_id, client_name, client_cpf, client_phone, coeficiente, status, created_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'Digitada',$15) RETURNING *`,
-    [req.user.id, proposal_number, value, productName, product_id||null, bank||'', convenio||'', table_id||null, bank_id||null, convenio_id||null, client_name, client_cpf, client_phone, coeficiente, proposalDate]
+    `INSERT INTO proposals (user_id, proposal_number, value, product, product_id, bank, convenio, table_id, bank_id, convenio_id, client_name, client_cpf, client_phone, coeficiente, status, created_at, usuario_banco_id)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'Digitada',$15,$16) RETURNING *`,
+    [req.user.id, proposal_number, value, productName, product_id||null, bank||'', convenio||'', table_id||null, bank_id||null, convenio_id||null, client_name, client_cpf, client_phone, coeficiente, proposalDate, usuario_banco_id]
   );
   res.json(rows[0]);
 });
@@ -1271,7 +1312,7 @@ app.put('/api/proposals/:id', auth, async (req, res) => {
     return res.status(403).json({ error: 'Apenas o administrador pode alterar o status da proposta' });
   }
 
-  const brokerFields = ['proposal_number','value','product','product_id','bank','convenio','table_id','bank_id','convenio_id','client_name','client_cpf','client_phone','created_at'];
+  const brokerFields = ['proposal_number','value','product','product_id','bank','convenio','table_id','bank_id','convenio_id','client_name','client_cpf','client_phone','created_at','usuario_banco_id'];
   const adminFields = [...brokerFields, 'status', 'allow_broker_edit', 'comissao_corretor_override', 'comissao_empresa_override'];
   const masterFields = [...adminFields, 'user_id'];
   const isMaster = req.user.role === 'master' || req.user.email === 'adm@rozesstartflow.com';
@@ -1836,6 +1877,7 @@ const contaCorrenteSelect = `
          p.client_name, p.client_cpf, p.bank, p.created_at, p.updated_at,
          u.id as user_id, u.full_name as user_name, u.email as user_email,
          ft.name as table_name,
+         ub.id as usuario_banco_id, ub.nome as usuario_banco_nome,
          COALESCE(
            (SELECT cr.comissao_corretor FROM commission_ranges cr
             WHERE cr.financial_table_id = p.table_id
@@ -1860,6 +1902,7 @@ const contaCorrenteSelect = `
   FROM proposals p
   JOIN users u ON u.id = p.user_id
   LEFT JOIN financial_tables ft ON ft.id = p.table_id
+  LEFT JOIN usuarios_banco ub ON ub.id = p.usuario_banco_id
 `;
 
 // Visão do corretor
@@ -2020,7 +2063,7 @@ app.get('/api/admin/despesas/saldo-lojas', auth, adminOnly, async (req, res) => 
 
 // Visão do admin — resumo por corretor + lista completa
 app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
-  const { user_id, status_comissao, loja_id } = req.query;
+  const { user_id, status_comissao, loja_id, usuario_banco_id } = req.query;
 
   const conditions = ['p.status_comissao IS NOT NULL'];
   const values = [];
@@ -2028,6 +2071,7 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
   if (user_id) { conditions.push(`p.user_id = $${i++}`); values.push(user_id); }
   if (status_comissao) { conditions.push(`p.status_comissao = $${i++}`); values.push(status_comissao); }
   if (loja_id) { conditions.push(`u.loja_id = $${i++}`); values.push(loja_id); }
+  if (usuario_banco_id) { conditions.push(`p.usuario_banco_id = $${i++}`); values.push(usuario_banco_id); }
   const where = 'WHERE ' + conditions.join(' AND ');
 
   const { rows: proposals } = await pool.query(
@@ -2072,7 +2116,33 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
     ORDER BY pending_value DESC
   `, brokerValues);
 
-  res.json({ proposals, brokers: brokerSummary });
+  // Resumo por usuario_banco
+  const { rows: ubSummary } = await pool.query(`
+    SELECT ub.id as usuario_banco_id, ub.nome as usuario_banco_nome,
+           COUNT(*) FILTER (WHERE p.status_comissao = 'Ag. Comissão')::int as pending_count,
+           COALESCE(SUM(COALESCE(p.comissao_corretor_override,
+             ROUND(p.value * COALESCE(ft.comissao_corretor, 0) / 100, 2))
+           ) FILTER (WHERE p.status_comissao = 'Ag. Comissão'), 0)::numeric as pending_value,
+           COUNT(*) FILTER (WHERE p.status_comissao = 'Comissão Paga')::int as paid_count,
+           COALESCE(SUM(COALESCE(p.comissao_corretor_override,
+             ROUND(p.value * COALESCE(ft.comissao_corretor, 0) / 100, 2))
+           ) FILTER (WHERE p.status_comissao = 'Comissão Paga'), 0)::numeric as paid_value,
+           COALESCE(SUM(COALESCE(p.comissao_empresa_override,
+             ROUND(p.value * COALESCE(ft.comissao_empresa, 0) / 100, 2))
+           ) FILTER (WHERE p.status_comissao = 'Ag. Comissão'), 0)::numeric as empresa_pending_value,
+           COALESCE(SUM(COALESCE(p.comissao_empresa_override,
+             ROUND(p.value * COALESCE(ft.comissao_empresa, 0) / 100, 2))
+           ) FILTER (WHERE p.status_comissao = 'Comissão Paga'), 0)::numeric as empresa_paid_value
+    FROM proposals p
+    JOIN users u ON u.id = p.user_id
+    LEFT JOIN financial_tables ft ON ft.id = p.table_id
+    JOIN usuarios_banco ub ON ub.id = p.usuario_banco_id
+    WHERE p.status_comissao IS NOT NULL
+    GROUP BY ub.id, ub.nome
+    ORDER BY ub.nome ASC
+  `);
+
+  res.json({ proposals, brokers: brokerSummary, usuariosBanco: ubSummary });
 });
 
 // Marcar propostas como comissão paga

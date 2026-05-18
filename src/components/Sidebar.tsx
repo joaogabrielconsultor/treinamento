@@ -35,6 +35,7 @@ const adminItems = [
   { view: 'admin-reports'           as ViewType, icon: FileBarChart,  label: 'Relatórios' },
   { view: 'admin-conta-corrente'    as ViewType, icon: Wallet,        label: 'Conta Corrente' },
   { view: 'admin-lojas'             as ViewType, icon: Store,         label: 'Lojas' },
+  { view: 'admin-usuarios-banco'    as ViewType, icon: UserCog,       label: 'Usuários Banco' },
   { view: 'admin-proposal-statuses' as ViewType, icon: Tag,          label: 'Status Propostas' },
   { view: 'admin-conta-empresa'     as ViewType, icon: Building2,     label: 'Conta Empresa' },
   { view: 'admin-courses'           as ViewType, icon: GraduationCap, label: 'Treinamentos' },

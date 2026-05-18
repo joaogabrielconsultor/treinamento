@@ -376,6 +376,16 @@ async function initDb() {
     `);
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS usuarios_banco (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        nome text NOT NULL,
+        descricao text DEFAULT '',
+        created_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+    await client.query(`ALTER TABLE proposals ADD COLUMN IF NOT EXISTS usuario_banco_id uuid REFERENCES usuarios_banco(id) ON DELETE SET NULL`);
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS despesas (
         id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
         loja_id uuid REFERENCES lojas(id) ON DELETE SET NULL,
