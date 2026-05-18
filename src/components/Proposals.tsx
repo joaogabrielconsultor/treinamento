@@ -75,8 +75,8 @@ const DATE_PRESETS = [
   { key: 'custom',     label: <><Calendar className="w-3 h-3 inline mr-1" />Personalizado</> },
 ];
 
-const ALL_COL_KEYS = ['ID','Proposta','Corretor','Cliente','CPF','Convênio','Banco','Tabela','Valor','Produto','Status','Dt. Digit.','Dt. Status','Comissão','Pts'];
-const DEFAULT_COLS = new Set(['Proposta','Corretor','Cliente','Convênio','Banco','Tabela','Valor','Produto','Status','Dt. Digit.','Comissão']);
+const ALL_COL_KEYS = ['ID','Proposta','Corretor','Cliente','CPF','Convênio','Banco','Tabela','Valor','Produto','Status','Dt. Digit.','Dt. Status','Comissão','Pts','Usr. Banco'];
+const DEFAULT_COLS = new Set(['Proposta','Corretor','Cliente','Convênio','Banco','Tabela','Valor','Produto','Status','Dt. Digit.','Comissão','Usr. Banco']);
 
 function loadSavedCols(): Set<string> {
   try {
@@ -481,6 +481,12 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
   async function quickStatusChange(id: string, newStatus: string) {
     await API(`/api/proposals/${id}`, { method: 'PUT', body: JSON.stringify({ status: newStatus }) });
     setProposals(prev => prev.map(p => p.id === id ? { ...p, status: newStatus as Proposal['status'] } : p));
+  }
+
+  async function quickUsuarioBanco(id: string, usuarioBancoId: string) {
+    await API(`/api/proposals/${id}`, { method: 'PUT', body: JSON.stringify({ usuario_banco_id: usuarioBancoId || null }) });
+    const ub = usuariosBanco.find(u => u.id === usuarioBancoId);
+    setProposals(prev => prev.map(p => p.id === id ? { ...p, usuario_banco_id: usuarioBancoId || null, usuario_banco_nome: ub?.nome || null } : p));
   }
 
   async function toggleBrokerEdit(id: string, current: boolean) {
@@ -1086,6 +1092,26 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
                           {p.points_earned > 0
                             ? <span className="font-bold num" style={{ color: '#fbbf24', fontSize: '10px' }}>+{p.points_earned}</span>
                             : <span style={{ color: 'var(--text-3)' }}>—</span>}
+                        </td>
+                      )}
+                      {visibleCols.has('Usr. Banco') && (
+                        <td className="px-2 py-2" style={{ minWidth: '110px' }}>
+                          {usuariosBanco.length > 0 ? (
+                            <div className="relative">
+                              <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 pointer-events-none" style={{ color: '#60a5fa' }} />
+                              <select
+                                value={p.usuario_banco_id || ''}
+                                onChange={e => quickUsuarioBanco(p.id, e.target.value)}
+                                className="appearance-none w-full pl-1.5 pr-5 py-0.5 rounded-lg cursor-pointer truncate"
+                                style={{ background: p.usuario_banco_id ? 'rgba(96,165,250,0.1)' : 'var(--surface-subtle)', border: `1px solid ${p.usuario_banco_id ? 'rgba(96,165,250,0.3)' : 'var(--card-border)'}`, color: p.usuario_banco_id ? '#60a5fa' : 'var(--text-3)', fontSize: '10px' }}
+                              >
+                                <option value="">— nenhum</option>
+                                {usuariosBanco.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                              </select>
+                            </div>
+                          ) : (
+                            <span style={{ color: 'var(--text-3)' }}>—</span>
+                          )}
                         </td>
                       )}
                       {/* Ações */}
