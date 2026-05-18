@@ -266,16 +266,6 @@ export function AdminContaCorrente() {
           </div>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Gerencie comissões e solicitações de saque</p>
         </div>
-        {selected.size > 0 && tab === 'comissoes' && (
-          <button
-            onClick={markAsPaid}
-            disabled={saving}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold btn-cyber"
-          >
-            <CheckCircle className="w-4 h-4" />
-            {saving ? 'Salvando...' : `Marcar ${selected.size} como Pago`}
-          </button>
-        )}
       </div>
 
       {/* Tabs + filtro loja global */}
@@ -585,8 +575,8 @@ export function AdminContaCorrente() {
       {/* Cards globais */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {[
-          { label: 'Corretor Pendente',  value: fmtBRL(totalPending),            sub: `${brokers.reduce((a, b) => a + b.pending_count, 0)} propostas`, icon: Clock,        color: '#f59e0b', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.2)'  },
-          { label: 'Corretor Pago',      value: fmtBRL(totalPaid),               sub: `${brokers.reduce((a, b) => a + b.paid_count, 0)} pagas`,        icon: CheckCircle,  color: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.2)'  },
+          { label: 'Corr. A Receber',    value: fmtBRL(totalPending),            sub: `${brokers.reduce((a, b) => a + b.pending_count, 0)} propostas`, icon: Clock,        color: '#f59e0b', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.2)'  },
+          { label: 'Corr. Pago (Saque)', value: fmtBRL(totalPaid),               sub: `${brokers.reduce((a, b) => a + b.paid_count, 0)} saque(s)`,     icon: CheckCircle,  color: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.2)'  },
           { label: 'Empresa Pendente',   value: fmtBRL(totalEmpresaPending),      sub: 'comissão empresa a receber',                                    icon: Clock,        color: '#fb923c', bg: 'rgba(251,146,60,0.08)', border: 'rgba(251,146,60,0.2)'  },
           { label: 'Empresa Recebida',   value: fmtBRL(totalEmpresaPaid),         sub: 'comissão empresa recebida',                                     icon: DollarSign,   color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.2)' },
           { label: 'Corretores Pend.',   value: String(brokersWithPending),       sub: 'aguardando pagamento',                                          icon: Users,        color: '#60a5fa', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.2)'  },
@@ -667,11 +657,11 @@ export function AdminContaCorrente() {
                     <p className="font-bold num" style={{ color: b.pending_value > 0 ? '#f59e0b' : 'var(--text-3)' }}>
                       {fmtBRL(parseFloat(String(b.pending_value)))}
                     </p>
-                    <p className="text-xs" style={{ color: 'var(--text-3)' }}>{b.pending_count} proposta{b.pending_count !== 1 ? 's' : ''}</p>
+                    <p className="text-xs" style={{ color: 'var(--text-3)' }}>{b.pending_count} proposta{b.pending_count !== 1 ? 's' : ''} no total</p>
                   </td>
                   <td className="px-4 py-3">
                     <p className="font-bold num" style={{ color: '#4ade80' }}>{fmtBRL(parseFloat(String(b.paid_value)))}</p>
-                    <p className="text-xs" style={{ color: 'var(--text-3)' }}>{b.paid_count} paga{b.paid_count !== 1 ? 's' : ''}</p>
+                    <p className="text-xs" style={{ color: 'var(--text-3)' }}>{b.paid_count} saque{b.paid_count !== 1 ? 's' : ''}</p>
                   </td>
                   <td className="px-4 py-3">
                     <p className="font-bold num" style={{ color: (b.empresa_pending_value || 0) > 0 ? '#fb923c' : 'var(--text-3)' }}>
@@ -797,9 +787,17 @@ export function AdminContaCorrente() {
         <div className="mb-3 flex items-center gap-3 px-4 py-2.5 rounded-xl animate-fade-up"
           style={{ background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)' }}>
           <AlertCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#14B8A6' }} />
-          <p className="text-sm" style={{ color: '#2DD4BF' }}>
-            <strong>{selected.size}</strong> proposta{selected.size !== 1 ? 's' : ''} selecionada{selected.size !== 1 ? 's' : ''} — clique em "Marcar como Pago" para confirmar.
+          <p className="text-sm flex-1" style={{ color: '#2DD4BF' }}>
+            <strong>{selected.size}</strong> proposta{selected.size !== 1 ? 's' : ''} selecionada{selected.size !== 1 ? 's' : ''}
           </p>
+          <button
+            onClick={markAsPaid}
+            disabled={saving}
+            className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold btn-cyber disabled:opacity-50"
+          >
+            <CheckCircle className="w-3.5 h-3.5" />
+            {saving ? 'Salvando...' : 'Comissão Recebida'}
+          </button>
         </div>
       )}
 

@@ -2089,20 +2089,19 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
   const { rows: brokerSummary } = await pool.query(`
     SELECT u.id as user_id, u.full_name as user_name, u.email as user_email,
            u.pix_key, u.pix_key_type,
-           COUNT(*) FILTER (WHERE p.status_comissao = 'Ag. Comissão')::int as pending_count,
-           COALESCE(SUM(ROUND(p.value * COALESCE(
-             (SELECT cr.comissao_corretor FROM commission_ranges cr
-              WHERE cr.financial_table_id = p.table_id
-                AND cr.min_value <= p.value AND (cr.max_value IS NULL OR cr.max_value >= p.value)
-              ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_corretor, 0) / 100, 2)
-           ) FILTER (WHERE p.status_comissao = 'Ag. Comissão'), 0)::numeric as pending_value,
-           COUNT(*) FILTER (WHERE p.status_comissao = 'Comissão Paga')::int as paid_count,
-           COALESCE(SUM(ROUND(p.value * COALESCE(
-             (SELECT cr.comissao_corretor FROM commission_ranges cr
-              WHERE cr.financial_table_id = p.table_id
-                AND cr.min_value <= p.value AND (cr.max_value IS NULL OR cr.max_value >= p.value)
-              ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_corretor, 0) / 100, 2)
-           ) FILTER (WHERE p.status_comissao = 'Comissão Paga'), 0)::numeric as paid_value,
+           COUNT(p.id)::int as pending_count,
+           GREATEST(
+             COALESCE(SUM(COALESCE(p.comissao_corretor_override,
+               ROUND(p.value * COALESCE(
+                 (SELECT cr.comissao_corretor FROM commission_ranges cr
+                  WHERE cr.financial_table_id = p.table_id
+                    AND cr.min_value <= p.value AND (cr.max_value IS NULL OR cr.max_value >= p.value)
+                  ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_corretor, 0) / 100, 2)
+             )), 0) - COALESCE(MAX(wr_paid.total_paid), 0),
+             0
+           )::numeric as pending_value,
+           COALESCE(MAX(wr_paid.count_paid), 0)::int as paid_count,
+           COALESCE(MAX(wr_paid.total_paid), 0)::numeric as paid_value,
            COALESCE(SUM(COALESCE(p.comissao_empresa_override,
              ROUND(p.value * COALESCE(ft.comissao_empresa, 0) / 100, 2))
            ) FILTER (WHERE p.status_comissao = 'Ag. Comissão'), 0)::numeric as empresa_pending_value,
@@ -2112,6 +2111,11 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
     FROM proposals p
     JOIN users u ON u.id = p.user_id
     LEFT JOIN financial_tables ft ON ft.id = p.table_id
+    LEFT JOIN (
+      SELECT user_id, SUM(amount)::numeric as total_paid, COUNT(*)::int as count_paid
+      FROM withdrawal_requests WHERE status = 'Pago'
+      GROUP BY user_id
+    ) wr_paid ON wr_paid.user_id = u.id
     ${brokerWhere}
     GROUP BY u.id, u.full_name, u.email
     ORDER BY pending_value DESC
