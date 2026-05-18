@@ -497,11 +497,13 @@ app.get('/api/admin/conta-empresa', auth, adminOnly, async (req, res) => {
                   ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_empresa, 0) / 100, 2)
              END
            ), 0)::numeric AS total_creditos,
-           COALESCE((
+           (COALESCE((
              SELECT SUM(cp.total_value) FROM commission_payments cp
              JOIN users pu ON pu.id = cp.user_id
              WHERE pu.loja_id = l.id
-           ), 0)::numeric AS total_debitos,
+           ), 0) + COALESCE((
+             SELECT SUM(d.valor) FROM despesas d WHERE d.loja_id = l.id
+           ), 0))::numeric AS total_debitos,
            COALESCE(SUM(
              CASE WHEN p.status_comissao = 'Ag. Comissão' THEN
                ROUND(p.value * COALESCE(
@@ -543,6 +545,7 @@ app.get('/api/admin/conta-empresa/:loja_id/extrato', auth, adminOnly, async (req
   // Débitos: pagamentos de comissão feitos a corretores dessa loja
   const { rows: debitos } = await pool.query(`
     SELECT 'debito' AS type,
+           'comissao' AS subtype,
            cp.id AS reference_id,
            NULL AS description_ref,
            u.full_name AS broker_name,
@@ -553,7 +556,21 @@ app.get('/api/admin/conta-empresa/:loja_id/extrato', auth, adminOnly, async (req
     JOIN users u ON u.id = cp.user_id
     WHERE u.loja_id = $1
   `, [loja_id]);
-  const extrato = [...creditos, ...debitos].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  // Débitos: despesas lançadas para essa loja
+  const { rows: despesasRows } = await pool.query(`
+    SELECT 'debito' AS type,
+           'despesa' AS subtype,
+           d.id AS reference_id,
+           d.descricao AS description_ref,
+           u.full_name AS broker_name,
+           d.valor AS value,
+           NULL AS client_name,
+           d.created_at AS date
+    FROM despesas d
+    LEFT JOIN users u ON u.id = d.created_by
+    WHERE d.loja_id = $1
+  `, [loja_id]);
+  const extrato = [...creditos, ...debitos, ...despesasRows].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   res.json(extrato);
 });
 

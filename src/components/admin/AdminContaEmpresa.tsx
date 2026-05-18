@@ -18,6 +18,7 @@ interface LojaBalance {
 
 interface ExtratoItem {
   type: 'credito' | 'debito';
+  subtype: 'comissao' | 'despesa' | null;
   reference_id: string;
   description_ref: string | null;
   broker_name: string;
@@ -55,7 +56,7 @@ function ExtratoView({ loja, onBack }: { loja: LojaBalance; onBack: () => void }
     loadExtrato();
   }
 
-  const debitoItems = items.filter(i => i.type === 'debito');
+  const debitoItems = items.filter(i => i.type === 'debito' && i.subtype === 'comissao');
   const totalCreditos = items.reduce((a, i) => a + (i.type === 'credito' ? Number(i.value) : 0), 0);
   const totalDebitos  = items.reduce((a, i) => a + (i.type === 'debito'  ? Number(i.value) : 0), 0);
   const saldo = totalCreditos - totalDebitos;
@@ -149,7 +150,7 @@ function ExtratoView({ loja, onBack }: { loja: LojaBalance; onBack: () => void }
                     <tr key={`${item.reference_id}-${i}`} className="table-row-cyber"
                       style={{ background: isSelected ? 'rgba(239,68,68,0.05)' : undefined }}>
                       <td className="px-3 py-3">
-                        {!isCredito && (
+                        {item.subtype === 'comissao' && (
                           <input type="checkbox"
                             className="w-3.5 h-3.5 cursor-pointer accent-red-500"
                             checked={isSelected}
@@ -162,13 +163,22 @@ function ExtratoView({ loja, onBack }: { loja: LojaBalance; onBack: () => void }
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold`}
-                          style={isCredito
-                            ? { background: 'rgba(74,222,128,0.1)', color: '#4ade80' }
-                            : { background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>
-                          {isCredito ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownLeft className="w-3 h-3" />}
-                          {isCredito ? 'Entrada' : 'Saída'}
-                        </span>
+                        {isCredito ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold"
+                            style={{ background: 'rgba(74,222,128,0.1)', color: '#4ade80' }}>
+                            <ArrowUpRight className="w-3 h-3" /> Entrada
+                          </span>
+                        ) : item.subtype === 'despesa' ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold"
+                            style={{ background: 'rgba(251,146,60,0.12)', color: '#fb923c', border: '1px solid rgba(251,146,60,0.25)' }}>
+                            <ArrowDownLeft className="w-3 h-3" /> Despesa
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold"
+                            style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>
+                            <ArrowDownLeft className="w-3 h-3" /> Saída
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{item.broker_name || '—'}</p>
@@ -179,6 +189,8 @@ function ExtratoView({ loja, onBack }: { loja: LojaBalance; onBack: () => void }
                             <p className="text-xs" style={{ color: 'var(--text-2)' }}>Proposta {item.description_ref || item.reference_id?.slice(0, 8)}</p>
                             {item.client_name && <p className="text-xs" style={{ color: 'var(--text-3)' }}>{item.client_name}</p>}
                           </div>
+                        ) : item.subtype === 'despesa' ? (
+                          <p className="text-xs font-medium" style={{ color: '#fb923c' }}>{item.description_ref}</p>
                         ) : (
                           <p className="text-xs" style={{ color: 'var(--text-2)' }}>Pagamento de comissão</p>
                         )}
