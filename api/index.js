@@ -2097,7 +2097,7 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
                   WHERE cr.financial_table_id = p.table_id
                     AND cr.min_value <= p.value AND (cr.max_value IS NULL OR cr.max_value >= p.value)
                   ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_corretor, 0) / 100, 2)
-             ) FILTER (WHERE p.status_comissao = 'Comissão Paga')), 0)
+             )) FILTER (WHERE p.status_comissao = 'Comissão Paga'), 0)
              - COALESCE(MAX(wr_paid.total_paid), 0),
              0
            )::numeric as pending_value,
