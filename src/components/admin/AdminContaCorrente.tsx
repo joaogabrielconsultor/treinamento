@@ -617,8 +617,27 @@ export function AdminContaCorrente() {
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                {['Corretor', 'Chave PIX', 'Corr. A Receber', 'Corr. Pago', 'Emp. Pendente', 'Emp. Recebida', 'Total Corretor'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
+                {([
+                  { label: 'Corretor',        tip: null },
+                  { label: 'Chave PIX',       tip: null },
+                  { label: 'Corr. A Receber', tip: 'Comissão do corretor nas propostas ainda não pagas — o que a empresa ainda deve ao corretor.' },
+                  { label: 'Corr. Pago',      tip: 'Comissão do corretor já paga pela empresa.' },
+                  { label: 'Emp. Pendente',   tip: 'Comissão da empresa em propostas pagas, mas ainda não recebida.' },
+                  { label: 'Emp. Recebida',   tip: 'Comissão da empresa já recebida.' },
+                  { label: 'Total Corretor',  tip: 'Soma do que o corretor tem a receber + já recebeu.' },
+                ] as const).map(({ label, tip }) => (
+                  <th key={label} className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>
+                    {tip ? (
+                      <span className="inline-flex items-center gap-1 group relative cursor-default">
+                        {label}
+                        <AlertCircle className="w-3 h-3 opacity-40 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                        <span className="absolute left-0 top-full mt-1.5 z-50 w-56 rounded-xl px-3 py-2 text-xs font-normal normal-case tracking-normal leading-relaxed pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
+                          style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)', color: 'var(--text-2)' }}>
+                          {tip}
+                        </span>
+                      </span>
+                    ) : label}
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -686,8 +705,26 @@ export function AdminContaCorrente() {
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                {['Usuário Banco', 'Corr. A Receber', 'Corr. Pago', 'Emp. Pendente', 'Emp. Recebida', 'Total Corretor'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
+                {([
+                  { label: 'Usuário Banco',   tip: null },
+                  { label: 'Corr. A Receber', tip: 'Comissão do corretor nas propostas ainda não pagas — o que a empresa ainda deve ao corretor.' },
+                  { label: 'Corr. Pago',      tip: 'Comissão do corretor já paga pela empresa.' },
+                  { label: 'Emp. Pendente',   tip: 'Comissão da empresa em propostas pagas, mas ainda não recebida na conta bancária.' },
+                  { label: 'Emp. Recebida',   tip: 'Comissão da empresa já recebida nesta conta bancária.' },
+                  { label: 'Total Corretor',  tip: 'Soma de tudo que o corretor tem a receber + já recebeu nesta conta.' },
+                ] as const).map(({ label, tip }) => (
+                  <th key={label} className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>
+                    {tip ? (
+                      <span className="inline-flex items-center gap-1 group relative cursor-default">
+                        {label}
+                        <AlertCircle className="w-3 h-3 opacity-40 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                        <span className="absolute left-0 top-full mt-1.5 z-50 w-56 rounded-xl px-3 py-2 text-xs font-normal normal-case tracking-normal leading-relaxed pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
+                          style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)', color: 'var(--text-2)' }}>
+                          {tip}
+                        </span>
+                      </span>
+                    ) : label}
+                  </th>
                 ))}
               </tr>
             </thead>
