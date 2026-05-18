@@ -2117,7 +2117,14 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
     ORDER BY pending_value DESC
   `, brokerValues);
 
-  // Resumo por usuario_banco
+  // Resumo por usuario_banco — respeita filtros de loja e usuario_banco
+  const ubConditions = ['p.status_comissao IS NOT NULL'];
+  const ubValues = [];
+  let ui = 1;
+  if (loja_id) { ubConditions.push(`u.loja_id = $${ui++}`); ubValues.push(loja_id); }
+  if (usuario_banco_id) { ubConditions.push(`p.usuario_banco_id = $${ui++}`); ubValues.push(usuario_banco_id); }
+  const ubWhere = 'WHERE ' + ubConditions.join(' AND ');
+
   const { rows: ubSummary } = await pool.query(`
     SELECT ub.id as usuario_banco_id, ub.nome as usuario_banco_nome,
            COUNT(*) FILTER (WHERE p.status_comissao = 'Ag. Comissão')::int as pending_count,
@@ -2138,10 +2145,10 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
     JOIN users u ON u.id = p.user_id
     LEFT JOIN financial_tables ft ON ft.id = p.table_id
     JOIN usuarios_banco ub ON ub.id = p.usuario_banco_id
-    WHERE p.status_comissao IS NOT NULL
+    ${ubWhere}
     GROUP BY ub.id, ub.nome
     ORDER BY ub.nome ASC
-  `);
+  `, ubValues);
 
   res.json({ proposals, brokers: brokerSummary, usuariosBanco: ubSummary });
 });
