@@ -366,8 +366,8 @@ body {
 }
 .stat-card:hover {
   border-color: var(--border-accent);
-  box-shadow: var(--shadow-lifted), 0 0 0 1px rgba(20,184,166,0.08);
-  transform: translateY(-1px);
+  box-shadow: var(--shadow-lifted), 0 0 20px rgba(20,184,166,0.10);
+  transform: translateY(-2px);
 }
 .stat-card::before {
   content: '';
@@ -375,6 +375,21 @@ body {
   top: 0; left: 0; right: 0;
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(20,184,166,0.15), transparent);
+}
+.stat-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(20,184,166,0.05) 50%, transparent 60%);
+  background-size: 200% 100%;
+  background-position: 200% 0;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+.stat-card:hover::after {
+  opacity: 1;
+  animation: shimmer 0.7s ease forwards;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -482,4 +497,62 @@ body {
 }
 .overflow-x-auto::-webkit-scrollbar-thumb:hover {
   background: rgba(20,184,166,0.7);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HOVER INTERACTIVO — BARRAS, LINHAS, FUNIL
+═══════════════════════════════════════════════════════════════ */
+
+/* Linha de barra (dimensões/corretores em Produção) */
+.agg-row {
+  transition: background 0.15s ease, padding-left 0.18s cubic-bezier(0.16,1,0.3,1);
+  border-radius: 8px;
+  margin: 0 -8px;
+  padding: 0 8px;
+  cursor: default;
+}
+.agg-row:hover {
+  background: var(--surface-hover);
+  padding-left: 14px;
+}
+.agg-row:hover .agg-bar-fill {
+  filter: brightness(1.3) saturate(1.1);
+  box-shadow: 0 0 10px rgba(255,255,255,0.12);
+}
+
+/* Linha de ranking */
+.rank-row {
+  transition: background 0.15s ease, transform 0.18s cubic-bezier(0.16,1,0.3,1), border-color 0.15s ease;
+  border-left: 2px solid transparent;
+  border-radius: 0 8px 8px 0;
+}
+.rank-row:hover {
+  background: var(--surface-hover);
+  transform: translateX(4px);
+  border-left-color: rgba(20,184,166,0.5);
+}
+
+/* Linha de funil */
+.funnel-row {
+  transition: background 0.15s ease;
+  border-radius: 6px;
+  margin: 0 -6px;
+  padding: 4px 6px;
+}
+.funnel-row:hover {
+  background: var(--surface-hover);
+}
+.funnel-row:hover .funnel-bar-fill {
+  filter: brightness(1.25) saturate(1.1);
+}
+
+/* Coluna do gráfico de 7 dias */
+.chart-col {
+  transition: transform 0.15s ease, filter 0.15s ease;
+  cursor: default;
+}
+.chart-col:hover {
+  transform: scaleY(1.04);
+  transform-origin: bottom;
+  filter: brightness(1.2);
 }

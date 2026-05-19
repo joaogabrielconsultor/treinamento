@@ -31,7 +31,7 @@ function AnimBar({ pct, color, delay = 0 }: { pct: number; color: string; delay?
   }, [pct, delay]);
   return (
     <div className="h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.05)' }}>
-      <div className="h-1.5 rounded-full" style={{ width: w, background: color, transition: 'width 0.75s cubic-bezier(0.16,1,0.3,1)' }} />
+      <div className="funnel-bar-fill h-1.5 rounded-full" style={{ width: w, background: color, transition: 'width 0.75s cubic-bezier(0.16,1,0.3,1)' }} />
     </div>
   );
 }
@@ -175,7 +175,7 @@ export function Dashboard({ user, onNavigate, isAdmin = false }: DashboardProps)
                 const pct = totalFunnel > 0 ? (f.count / totalFunnel) * 100 : 0;
                 const color = STATUS_COLORS[f.status] || '#475569';
                 return (
-                  <div key={f.status}>
+                  <div key={f.status} className="funnel-row">
                     <div className="flex justify-between text-xs mb-1.5">
                       <div className="flex items-center gap-2">
                         <div className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />

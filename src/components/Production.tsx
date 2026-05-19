@@ -113,7 +113,7 @@ function AggBar({ item, maxVal, color, metric, index = 0 }: {
     fmtR(item.value);
 
   return (
-    <div className="py-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+    <div className="agg-row py-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
       <div className="flex items-center justify-between text-xs mb-1.5">
         <span className="font-medium truncate max-w-[55%]" style={{ color: 'var(--text-2)' }}>{item.label}</span>
         <div className="flex items-center gap-3 flex-shrink-0">
@@ -122,7 +122,7 @@ function AggBar({ item, maxVal, color, metric, index = 0 }: {
         </div>
       </div>
       <div className="h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.05)' }}>
-        <div className="h-1.5 rounded-full" style={{ width: w, background: color, transition: 'width 0.8s cubic-bezier(0.16,1,0.3,1)' }} />
+        <div className="agg-bar-fill h-1.5 rounded-full" style={{ width: w, background: color, transition: 'width 0.8s cubic-bezier(0.16,1,0.3,1)' }} />
       </div>
     </div>
   );
@@ -142,6 +142,32 @@ function StatusBar({ pct, cls, delay = 0 }: { pct: number; cls: string; delay?: 
   );
 }
 
+// ── Linha de ranking all-time ──
+function RankRow({ r, maxPts, index }: { r: any; maxPts: number; index: number }) {
+  const pct = maxPts > 0 ? (r.total_points / maxPts) * 100 : 0;
+  const [w, setW] = useState('0%');
+  useEffect(() => {
+    const t = setTimeout(() => setW(`${pct}%`), 250 + index * 50);
+    return () => clearTimeout(t);
+  }, [pct, index]);
+  return (
+    <div className="rank-row py-2.5 px-2" style={index > 0 ? { borderTop: '1px solid var(--card-border)' } : {}}>
+      <div className="flex items-center gap-3 mb-1">
+        <span className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black flex-shrink-0"
+          style={{ background: index < 3 ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.05)', color: index < 3 ? '#fbbf24' : '#475569' }}>
+          {r.position}
+        </span>
+        <span className="flex-1 text-sm truncate" style={{ color: 'var(--text-1)' }}>{r.full_name || r.email}</span>
+        <span className="text-xs num" style={{ color: 'var(--text-3)' }}>{r.proposals_paid} pagas</span>
+        <span className="text-sm font-black num" style={{ color: '#fbbf24' }}>{r.total_points} pts</span>
+      </div>
+      <div className="h-1 rounded-full ml-9" style={{ background: 'rgba(255,255,255,0.05)' }}>
+        <div className="h-1 rounded-full" style={{ width: w, background: '#fbbf24', transition: 'width 0.7s cubic-bezier(0.16,1,0.3,1)' }} />
+      </div>
+    </div>
+  );
+}
+
 // ── Coluna do gráfico de barras ──
 function ChartCol({ h, label, paid, value, index }: { h: number; label: string; paid: number; value: number; index: number }) {
   const [colH, setColH] = useState('0%');
@@ -150,7 +176,7 @@ function ChartCol({ h, label, paid, value, index }: { h: number; label: string; 
     return () => clearTimeout(t);
   }, [h, index]);
   return (
-    <div className="flex-1 flex flex-col items-center gap-1" title={`${label}: ${fmtR(value)} (${paid} pagas)`}>
+    <div className="chart-col flex-1 flex flex-col items-center gap-1" title={`${label}: ${fmtR(value)} (${paid} pagas)`}>
       <span className="text-[9px] font-bold num" style={{ color: paid > 0 ? '#4ade80' : 'transparent' }}>{paid || ''}</span>
       <div className="w-full flex flex-col justify-end rounded-t-lg" style={{ height: '80px', background: 'rgba(255,255,255,0.04)' }}>
         <div className="w-full rounded-t-lg" style={{ height: colH, background: 'linear-gradient(to top, #14B8A6, #22c55e)', minHeight: h > 0 ? '4px' : '0', transition: 'height 0.7s cubic-bezier(0.16,1,0.3,1)' }} />
@@ -464,7 +490,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                     const count = proposals.filter(p => p.status === s.key).length;
                     const pct   = totalAll > 0 ? (count / totalAll) * 100 : 0;
                     return (
-                      <div key={s.key}>
+                      <div key={s.key} className="funnel-row">
                         <div className="flex justify-between text-xs mb-1.5">
                           <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full" style={{ background: s.color }} />
@@ -474,7 +500,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                             {count} <span style={{ color: 'var(--text-3)' }}>({fmtPct(pct)})</span>
                           </span>
                         </div>
-                        <StatusBar pct={pct} cls={s.cls} delay={200 + i * 80} />
+                        <StatusBar pct={pct} cls={`funnel-bar-fill ${s.cls}`} delay={200 + i * 80} />
                       </div>
                     );
                   })}
@@ -676,7 +702,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                 : aggBrok.map((b, i) => {
                   const mc = i === 0 ? '#fbbf24' : i === 1 ? '#94a3b8' : i === 2 ? '#cd7c2f' : '#475569';
                   return (
-                    <div key={b.label} className="py-3" style={i > 0 ? { borderTop: '1px solid var(--card-border)' } : {}}>
+                    <div key={b.label} className="rank-row px-2 py-3" style={i > 0 ? { borderTop: '1px solid var(--card-border)' } : {}}>
                       <div className="flex items-center gap-3 mb-1.5">
                         <span className="w-7 h-7 rounded-xl flex items-center justify-center text-[11px] font-black flex-shrink-0"
                           style={{ background: `${mc}15`, color: mc, border: `1px solid ${mc}30` }}>
@@ -700,27 +726,9 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
             {ranking.length > 0 && (
               <Card delay={200}>
                 <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-1)' }}>Ranking All-Time (Pontos Acumulados)</h3>
-                {ranking.slice(0, 10).map((r, i) => {
-                  const pct = ranking[0].total_points > 0 ? (r.total_points / ranking[0].total_points) * 100 : 0;
-                  const [w, setW] = useState('0%');
-                  useEffect(() => { const t = setTimeout(() => setW(`${pct}%`), 250 + i * 50); return () => clearTimeout(t); }, [pct]);
-                  return (
-                    <div key={r.user_id} className="py-2.5" style={i > 0 ? { borderTop: '1px solid var(--card-border)' } : {}}>
-                      <div className="flex items-center gap-3 mb-1">
-                        <span className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black flex-shrink-0"
-                          style={{ background: i < 3 ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.05)', color: i < 3 ? '#fbbf24' : '#475569' }}>
-                          {r.position}
-                        </span>
-                        <span className="flex-1 text-sm truncate" style={{ color: 'var(--text-1)' }}>{r.full_name || r.email}</span>
-                        <span className="text-xs num" style={{ color: 'var(--text-3)' }}>{r.proposals_paid} pagas</span>
-                        <span className="text-sm font-black num" style={{ color: '#fbbf24' }}>{r.total_points} pts</span>
-                      </div>
-                      <div className="h-1 rounded-full ml-9" style={{ background: 'rgba(255,255,255,0.05)' }}>
-                        <div className="h-1 rounded-full" style={{ width: w, background: '#fbbf24', transition: 'width 0.7s cubic-bezier(0.16,1,0.3,1)' }} />
-                      </div>
-                    </div>
-                  );
-                })}
+                {ranking.slice(0, 10).map((r, i) => (
+                  <RankRow key={r.user_id} r={r} maxPts={ranking[0].total_points} index={i} />
+                ))}
               </Card>
             )}
           </div>
