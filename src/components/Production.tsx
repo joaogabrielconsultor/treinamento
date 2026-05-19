@@ -363,7 +363,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
   );
 
   return (
-    <div className="p-6 max-w-7xl mx-auto" style={{ color: 'var(--text-1)' }}>
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto" style={{ color: 'var(--text-1)' }}>
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6 animate-fade-up">
@@ -389,7 +389,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
             )}
           </button>
           {showNotif && (
-            <div className="absolute right-0 top-12 w-80 rounded-2xl z-50 overflow-hidden animate-fade-up"
+            <div className="absolute right-0 top-12 w-72 sm:w-80 rounded-2xl z-50 overflow-hidden animate-fade-up"
               style={{ background: 'rgba(8,13,24,0.97)', border: '1px solid var(--border-1)', boxShadow: '0 24px 60px rgba(0,0,0,0.7)' }}>
               <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
                 <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>Notificações</span>
@@ -417,7 +417,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-2 mb-5 animate-fade-up" style={{ animationDelay: '40ms' }}>
+      <div className="flex flex-wrap gap-2 mb-5 animate-fade-up overflow-x-auto pb-1" style={{ animationDelay: '40ms' }}>
         {(['today', 'week', 'month', 'all'] as const).map(p => (
           <button key={p} onClick={() => { setPeriod(p); setDateFrom(''); setDateTo(''); }}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${period === p && !dateFrom && !dateTo ? 'btn-cyber' : 'btn-ghost'}`}>
@@ -432,7 +432,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
           <div className="relative">
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
             <select value={filterLoja} onChange={e => { setFilterLoja(e.target.value); setFilterCorretor(''); }}
-              className="input-cyber appearance-none pl-3 pr-8 py-1.5 text-xs rounded-xl" style={{ minWidth: '140px' }}>
+              className="input-cyber appearance-none pl-3 pr-8 py-1.5 text-xs rounded-xl min-w-[130px]">
               <option value="">Todas as lojas</option>
               {lojas.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
             </select>
@@ -442,7 +442,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
           <div className="relative">
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
             <select value={filterCorretor} onChange={e => setFilterCorretor(e.target.value)}
-              className="input-cyber appearance-none pl-3 pr-8 py-1.5 text-xs rounded-xl" style={{ minWidth: '160px' }}>
+              className="input-cyber appearance-none pl-3 pr-8 py-1.5 text-xs rounded-xl min-w-[150px]">
               <option value="">{filterLoja ? 'Todos da loja' : 'Todos os vendedores'}</option>
               {corretoresFiltrados.map(u => <option key={u.id} value={u.id}>{u.full_name || u.email}</option>)}
             </select>
@@ -451,17 +451,19 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 p-1 rounded-xl animate-fade-up"
+      <div className="overflow-x-auto mb-6 pb-1">
+      <div className="flex gap-1 p-1 rounded-xl animate-fade-up"
         style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', width: 'fit-content', animationDelay: '60ms' }}>
         {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className="px-4 py-2 rounded-lg text-xs font-semibold transition-all"
+            className="px-4 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap"
             style={tab === t.id
               ? { background: 'linear-gradient(135deg,#14B8A6,#06B6D4)', color: '#fff', boxShadow: '0 2px 10px rgba(20,184,166,0.35)' }
               : { color: 'var(--text-3)' }}>
             {t.label}
           </button>
         ))}
+      </div>
       </div>
 
       {/* Tab content — key muda ao trocar aba, disparando animate-fade-up */}
@@ -470,7 +472,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
         {/* ── VISÃO GERAL ── */}
         {tab === 'overview' && (
           <div className="space-y-5">
-            <div className={`grid grid-cols-2 lg:grid-cols-5 gap-4`}>
+            <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4`}>
               <KPI label="Produção Total"    value={<AnimCount to={totalPaid} fmt="currency" delay={0} />}   sub={`${paid.length} propostas pagas`}  icon={DollarSign} color="#22c55e" delay={0}   />
               <KPI label="Hoje"              value={<AnimCount to={stats?.today?.value || 0} fmt="currency" delay={80} />} sub={`${stats?.today?.count || 0} pagas`} icon={Activity} color="#14B8A6" delay={60}  />
               <KPI label="Ticket Médio"      value={<AnimCount to={paid.length > 0 ? totalPaid / paid.length : 0} fmt="currency" delay={160} />} sub="por proposta paga" icon={BarChart2} color="#a78bfa" delay={120} />
@@ -648,7 +650,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                     {dimData.map((item, i) => (
                       <AggBar key={item.label + i} item={item} maxVal={dimData[0].value} color="#14B8A6" metric={dimSort} index={i} />
                     ))}
-                    <div className="mt-4 pt-4 grid grid-cols-4 gap-3 text-center" style={{ borderTop: '1px solid var(--card-border)' }}>
+                    <div className="mt-4 pt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center" style={{ borderTop: '1px solid var(--card-border)' }}>
                       {[
                         { label: 'Registros', value: dimData.length, color: 'var(--text-1)' },
                         { label: 'Volume', value: fmtR(dimData.reduce((s, i) => s + i.value, 0)), color: '#4ade80' },
@@ -923,7 +925,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                 {badges.some(b => b.earned) && (
                   <>
                     <p className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: '#fbbf24' }}>Conquistadas</p>
-                    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 mb-6">
+                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-8 gap-2 mb-6">
                       {badges.filter(b => b.earned).map((b, i) => (
                         <div key={b.id} title={`${b.name}: ${b.description}`}
                           className="badge-card flex flex-col items-center p-2.5 rounded-xl animate-fade-up"
@@ -938,7 +940,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                 {badges.some(b => !b.earned) && (
                   <>
                     <p className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--text-3)' }}>Em progresso</p>
-                    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2">
+                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-8 gap-2">
                       {badges.filter(b => !b.earned).map((b, i) => (
                         <div key={b.id} title={`${b.name}: ${b.description}`}
                           className="badge-card flex flex-col items-center p-2.5 rounded-xl opacity-50 animate-fade-up"

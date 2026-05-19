@@ -116,7 +116,7 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin, onO
               }}
             >
               <Icon className="w-[17px] h-[17px] flex-shrink-0" />
-              <span className="flex-1 text-left truncate">{label}</span>
+              <span className="flex-1 min-w-0 text-left truncate">{label}</span>
               {active && <ChevronRight className="w-3.5 h-3.5 opacity-60 flex-shrink-0" />}
             </button>
           );
@@ -156,7 +156,7 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin, onO
                   }}
                 >
                   <Icon className="w-[15px] h-[15px] flex-shrink-0" />
-                  <span className="flex-1 text-left truncate">{label}</span>
+                  <span className="flex-1 min-w-0 text-left truncate">{label}</span>
                   {active && <ChevronRight className="w-3 h-3 opacity-60 flex-shrink-0" />}
                 </button>
               );

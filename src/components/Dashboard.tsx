@@ -99,7 +99,7 @@ export function Dashboard({ user, onNavigate, isAdmin = false }: DashboardProps)
   const totalFunnel = funnel.reduce((s, f) => s + f.count, 0);
 
   return (
-    <div className="min-h-screen p-8 max-w-6xl mx-auto" style={{ color: 'var(--text-1)' }}>
+    <div className="min-h-screen p-4 sm:p-8 max-w-6xl mx-auto" style={{ color: 'var(--text-1)' }}>
 
       {/* Header */}
       <div className="mb-8 animate-fade-up">
@@ -116,7 +116,7 @@ export function Dashboard({ user, onNavigate, isAdmin = false }: DashboardProps)
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         {loading
           ? Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="stat-card rounded-2xl p-5 animate-pulse" style={{ animationDelay: `${i * 60}ms` }}>
