@@ -177,7 +177,7 @@ function AppInner() {
 
       <main className="flex-1 overflow-y-auto" style={{ background: 'var(--bg-base)' }}>
         {currentView === 'dashboard' && (
-          <Dashboard user={adaptedUser} courses={courses} enrollments={enrollments} onNavigate={navigate} />
+          <Dashboard user={adaptedUser} onNavigate={navigate} isAdmin={isAdmin} />
         )}
 
         {currentView === 'catalog' && (

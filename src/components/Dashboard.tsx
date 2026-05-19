@@ -1,73 +1,72 @@
-﻿import { Trophy, BookOpen, Clock, Target, ArrowRight, CheckCircle2, Play, Sparkles } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { DollarSign, FileText, Calculator, Trophy, Library, Wallet, TrendingUp, BarChart2, ArrowRight, Activity, Percent } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
-import { Course, Enrollment, ViewType } from '../types';
+import { ViewType } from '../types';
+
+const API = (p: string) =>
+  fetch(p, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+
+const fmtR = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
 interface DashboardProps {
   user: User;
-  courses: Course[];
-  enrollments: Enrollment[];
-  onNavigate: (view: ViewType, courseId?: string) => void;
+  onNavigate: (view: ViewType) => void;
+  isAdmin?: boolean;
 }
 
-interface StatCardProps {
-  icon: React.ElementType;
-  label: string;
-  value: string | number;
-  iconClass: string;
-  iconColor: string;
-  delay?: number;
-}
+const STATUS_COLORS: Record<string, string> = {
+  'Digitada':   '#60a5fa',
+  'Em análise': '#f59e0b',
+  'Aprovada':   '#a78bfa',
+  'Paga':       '#22c55e',
+  'Cancelada':  '#f87171',
+};
 
-function StatCard({ icon: Icon, label, value, iconClass, iconColor, delay = 0 }: StatCardProps) {
-  return (
-    <div
-      className="stat-card rounded-2xl p-5 animate-fade-up"
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      <div className={`inline-flex w-10 h-10 rounded-xl items-center justify-center mb-4 ${iconClass}`}>
-        <Icon className="w-5 h-5" style={{ color: iconColor }} />
-      </div>
-      <p className="text-2xl font-bold num" style={{ color: 'var(--text-1)' }}>{value}</p>
-      <p className="text-xs mt-1 font-medium" style={{ color: 'var(--text-3)' }}>{label}</p>
-    </div>
-  );
-}
+export function Dashboard({ user, onNavigate, isAdmin = false }: DashboardProps) {
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-export function Dashboard({ user, courses, enrollments, onNavigate }: DashboardProps) {
-  const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário';
+  const displayName = user.user_metadata?.full_name || (user as any).full_name || user.email?.split('@')[0] || 'Usuário';
   const firstName = displayName.split(' ')[0];
 
-  const enrolled  = enrollments.length;
-  const completed = enrollments.filter((e) => e.completed).length;
-  const inProgress = enrollments.filter((e) => !e.completed && e.progress_percent > 0).length;
-  const totalMinutes = enrollments.reduce((acc, e) => {
-    const course = courses.find((c) => c.id === e.course_id);
-    return course ? acc + Math.round((course.duration_minutes * e.progress_percent) / 100) : acc;
-  }, 0);
-  const hours = Math.floor(totalMinutes / 60);
-  const mins  = totalMinutes % 60;
+  useEffect(() => {
+    API('/api/production/dashboard?period=month')
+      .then(r => r.json())
+      .then(d => setStats(d))
+      .catch(() => setStats(null))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const enrolledCourses = enrollments
-    .filter((e) => !e.completed)
-    .map((e) => ({ enrollment: e, course: courses.find((c) => c.id === e.course_id) }))
-    .filter((item) => item.course)
-    .slice(0, 3);
+  const kpis = loading || !stats ? [] : [
+    { label: 'Produção Hoje',   value: fmtR(stats.today?.value || 0),   sub: `${stats.today?.count || 0} propostas pagas`,  icon: Activity,    color: '#14B8A6' },
+    { label: 'Este Mês',        value: fmtR(stats.month?.value || 0),   sub: `${stats.month?.count || 0} pagas`,            icon: DollarSign,  color: '#22c55e' },
+    { label: 'Ticket Médio',    value: fmtR(stats.avg_ticket || 0),     sub: 'por proposta paga',                           icon: BarChart2,   color: '#a78bfa' },
+    isAdmin
+      ? { label: 'Melhor Corretor', value: stats.best_broker?.full_name?.split(' ')[0] || '—', sub: `${stats.best_broker?.points || 0} pts`, icon: Trophy, color: '#fbbf24' }
+      : { label: 'Minha Comissão', value: fmtR(stats.my_commission_total || 0), sub: `#${stats.my_position || '—'} no ranking`, icon: Percent, color: '#60a5fa' },
+  ];
 
-  const suggestedCourses = courses
-    .filter((c) => !enrollments.find((e) => e.course_id === c.id))
-    .slice(0, 3);
+  const quickActions = [
+    { view: 'proposals'   as ViewType, icon: FileText,    label: 'Propostas',        desc: 'Ver e criar propostas',       color: '#60a5fa' },
+    { view: 'simulator'   as ViewType, icon: Calculator,  label: 'Simulador',        desc: 'Simular operações',           color: '#a78bfa' },
+    { view: 'production'  as ViewType, icon: TrendingUp,  label: 'Análise Detalhada',desc: 'Relatórios e gráficos',       color: '#14B8A6' },
+    { view: 'ranking'     as ViewType, icon: Trophy,      label: 'Ranking',          desc: 'Classificação da equipe',     color: '#fbbf24' },
+    { view: 'catalog'     as ViewType, icon: Library,     label: 'Treinamentos',     desc: 'Cursos e capacitação',        color: '#22c55e' },
+    { view: 'conta-corrente' as ViewType, icon: Wallet,   label: 'Conta Corrente',   desc: 'Saques e comissões',          color: '#f59e0b' },
+  ];
 
-  const levelBadge: Record<string, string> = {
-    Iniciante:    'badge-green',
-    Intermediário:'badge-amber',
-    Avançado:     'badge-red',
-  };
+  const funnel = !stats?.proposals ? [] : [
+    { label: 'Digitadas',  count: stats.proposals.typed       || 0, status: 'Digitada'   },
+    { label: 'Em Análise', count: stats.proposals.in_analysis || 0, status: 'Em análise' },
+    { label: 'Aprovadas',  count: stats.proposals.approved    || 0, status: 'Aprovada'   },
+    { label: 'Pagas',      count: stats.proposals.paid        || 0, status: 'Paga'       },
+    { label: 'Canceladas', count: stats.proposals.cancelled   || 0, status: 'Cancelada'  },
+  ];
+  const totalFunnel = funnel.reduce((s, f) => s + f.count, 0);
 
   return (
-    <div
-      className="min-h-screen p-8 max-w-6xl mx-auto"
-      style={{ color: 'var(--text-1)' }}
-    >
+    <div className="min-h-screen p-8 max-w-6xl mx-auto" style={{ color: 'var(--text-1)' }}>
+
       {/* Header */}
       <div className="mb-8 animate-fade-up">
         <div className="flex items-center gap-2 mb-1">
@@ -78,174 +77,98 @@ export function Dashboard({ user, courses, enrollments, onNavigate }: DashboardP
           Olá, {firstName}
         </h1>
         <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>
-          Continue sua jornada de aprendizado e evolua sua performance.
+          Aqui está o resumo da sua produção este mês.
         </p>
       </div>
 
-      {/* Stats */}
+      {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard icon={BookOpen}     label="Matriculados"   value={enrolled}   iconClass="icon-box-teal"   iconColor="#14B8A6" delay={0}   />
-        <StatCard icon={CheckCircle2} label="Concluídos"     value={completed}  iconClass="icon-box-green"  iconColor="#22c55e" delay={60}  />
-        <StatCard icon={Target}       label="Em andamento"   value={inProgress} iconClass="icon-box-amber"  iconColor="#f59e0b" delay={120} />
-        <StatCard
-          icon={Clock}
-          label="Horas estudadas"
-          value={`${hours}h${mins > 0 ? ` ${mins}m` : ''}`}
-          iconClass="icon-box-blue"
-          iconColor="#60a5fa"
-          delay={180}
-        />
-      </div>
-
-      {/* In progress courses */}
-      {enrolledCourses.length > 0 && (
-        <div className="mb-8 animate-fade-up" style={{ animationDelay: '200ms' }}>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Play className="w-4 h-4" style={{ color: '#14B8A6' }} />
-              <h2 className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>Continuar aprendendo</h2>
+        {loading
+          ? Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="stat-card rounded-2xl p-5 animate-pulse" style={{ animationDelay: `${i * 60}ms` }}>
+              <div className="h-3 rounded w-1/2 mb-4" style={{ background: 'rgba(255,255,255,0.06)' }} />
+              <div className="h-7 rounded w-3/4 mb-2" style={{ background: 'rgba(255,255,255,0.06)' }} />
+              <div className="h-2 rounded w-1/2" style={{ background: 'rgba(255,255,255,0.04)' }} />
             </div>
-            <button
-              onClick={() => onNavigate('catalog')}
-              className="flex items-center gap-1 text-xs font-medium transition-all"
-              style={{ color: '#14B8A6' }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#2DD4BF'; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
-            >
-              Ver todos <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-          <div className="grid gap-3">
-            {enrolledCourses.map(({ enrollment, course }) => {
-              if (!course) return null;
-              return (
-                <div
-                  key={enrollment.id}
-                  onClick={() => onNavigate('course', course.id)}
-                  className="glass-card rounded-2xl p-4 flex items-center gap-4 cursor-pointer group"
-                >
-                  <img
-                    src={course.thumbnail_url}
-                    alt={course.title}
-                    className="w-16 h-12 object-cover rounded-xl flex-shrink-0"
-                    style={{ border: '1px solid var(--card-border)' }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h3
-                      className="font-semibold text-sm truncate transition-colors"
-                      style={{ color: 'var(--text-1)' }}
-                    >
-                      {course.title}
-                    </h3>
-                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{course.instructor}</p>
-                    <div className="mt-2 flex items-center gap-2">
-                      <div className="flex-1 progress-track h-1.5">
-                        <div
-                          className="progress-bar h-1.5"
-                          style={{ width: `${enrollment.progress_percent}%` }}
-                        />
-                      </div>
-                      <span className="text-[11px] font-semibold flex-shrink-0 num" style={{ color: 'var(--text-3)' }}>
-                        {enrollment.progress_percent}%
-                      </span>
-                    </div>
-                  </div>
-                  <div
-                    className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200"
-                    style={{ background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.18)' }}
-                  >
-                    <Play className="w-3.5 h-3.5" style={{ color: '#14B8A6' }} />
-                  </div>
+          ))
+          : kpis.map(({ label, value, sub, icon: Icon, color }, i) => (
+            <div key={label} className="stat-card rounded-2xl p-5 animate-fade-up" style={{ animationDelay: `${i * 60}ms` }}>
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-3)' }}>{label}</p>
+                  <p className="text-xl font-black num" style={{ color: 'var(--text-1)' }}>{value}</p>
+                  {sub && <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{sub}</p>}
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Suggested courses */}
-      {suggestedCourses.length > 0 && (
-        <div className="animate-fade-up" style={{ animationDelay: '260ms' }}>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4" style={{ color: '#14B8A6' }} />
-              <h2 className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>
-                {enrolled === 0 ? 'Comece a aprender' : 'Recomendados para você'}
-              </h2>
-            </div>
-            <button
-              onClick={() => onNavigate('catalog')}
-              className="flex items-center gap-1 text-xs font-medium transition-all"
-              style={{ color: '#14B8A6' }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#2DD4BF'; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
-            >
-              Ver catálogo <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-          <div className="grid md:grid-cols-3 gap-4">
-            {suggestedCourses.map((course, i) => (
-              <div
-                key={course.id}
-                onClick={() => onNavigate('course', course.id)}
-                className="glass-card rounded-2xl overflow-hidden cursor-pointer group animate-fade-up"
-                style={{ animationDelay: `${260 + i * 80}ms` }}
-              >
-                <div className="relative overflow-hidden h-36">
-                  <img
-                    src={course.thumbnail_url}
-                    alt={course.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div
-                    className="absolute inset-0"
-                    style={{ background: 'linear-gradient(to top, rgba(8,13,24,0.8) 0%, transparent 60%)' }}
-                  />
-                </div>
-                <div className="p-4">
-                  <span className={`badge ${levelBadge[course.level] || 'badge-neutral'} mb-2`}>
-                    {course.level}
-                  </span>
-                  <h3
-                    className="font-semibold text-sm mt-2 line-clamp-2 leading-snug transition-colors"
-                    style={{ color: 'var(--text-1)' }}
-                  >
-                    {course.title}
-                  </h3>
-                  <div className="flex items-center gap-1.5 mt-2">
-                    <Clock className="w-3.5 h-3.5" style={{ color: 'var(--text-3)' }} />
-                    <span className="text-xs num" style={{ color: 'var(--text-3)' }}>
-                      {Math.floor(course.duration_minutes / 60)}h {course.duration_minutes % 60}min
-                    </span>
-                  </div>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}18`, border: `1px solid ${color}30` }}>
+                  <Icon className="w-5 h-5" style={{ color }} />
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+            </div>
+          ))
+        }
+      </div>
 
-      {/* Empty state */}
-      {enrolled === 0 && suggestedCourses.length === 0 && (
-        <div className="text-center py-20 animate-fade-up">
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-            style={{
-              background: 'rgba(20,184,166,0.08)',
-              border: '1px solid rgba(20,184,166,0.15)',
-              boxShadow: '0 0 30px rgba(20,184,166,0.08)',
-            }}
-          >
-            <Trophy className="w-8 h-8" style={{ color: '#14B8A6' }} />
+      {/* Quick actions */}
+      <div className="mb-8 animate-fade-up" style={{ animationDelay: '200ms' }}>
+        <h2 className="text-sm font-bold mb-4" style={{ color: 'var(--text-1)' }}>Acesso rápido</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {quickActions.map(({ view, icon: Icon, label, desc, color }) => (
+            <button key={view} onClick={() => onNavigate(view)}
+              className="glass-card rounded-2xl p-4 text-left group transition-all hover:scale-[1.02]"
+              style={{ border: '1px solid var(--card-border)' }}>
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all group-hover:scale-110"
+                  style={{ background: `${color}15`, border: `1px solid ${color}25` }}>
+                  <Icon className="w-4 h-4" style={{ color }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{label}</p>
+                  <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-3)' }}>{desc}</p>
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 flex-shrink-0 opacity-0 group-hover:opacity-60 transition-all translate-x-0 group-hover:translate-x-1" style={{ color: 'var(--text-3)' }} />
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Mini funnel */}
+      {funnel.length > 0 && totalFunnel > 0 && (
+        <div className="animate-fade-up" style={{ animationDelay: '300ms' }}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>Status das Propostas — Este Mês</h2>
+            <button onClick={() => onNavigate('production')} className="flex items-center gap-1 text-xs font-medium" style={{ color: '#14B8A6' }}>
+              Ver análise completa <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--text-1)' }}>Comece sua jornada</h3>
-          <p className="text-sm mb-5" style={{ color: 'var(--text-3)' }}>Explore o catálogo e matricule-se em um curso.</p>
-          <button
-            onClick={() => onNavigate('catalog')}
-            className="btn-cyber px-6 py-2.5 rounded-xl text-sm"
-          >
-            Ver treinamentos
-          </button>
+          <div className="rounded-2xl p-5" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
+            <div className="space-y-3">
+              {funnel.map(f => {
+                const pct = totalFunnel > 0 ? (f.count / totalFunnel) * 100 : 0;
+                const color = STATUS_COLORS[f.status] || '#475569';
+                return (
+                  <div key={f.status}>
+                    <div className="flex justify-between text-xs mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
+                        <span style={{ color: 'var(--text-2)' }}>{f.label}</span>
+                      </div>
+                      <span className="num font-semibold" style={{ color: 'var(--text-2)' }}>
+                        {f.count} <span style={{ color: 'var(--text-3)' }}>({pct.toFixed(0)}%)</span>
+                      </span>
+                    </div>
+                    <div className="h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                      <div className="h-1.5 rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: color }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-4 pt-4 flex justify-between text-xs" style={{ borderTop: '1px solid var(--card-border)' }}>
+              <span style={{ color: 'var(--text-3)' }}>Total de propostas</span>
+              <span className="font-bold num" style={{ color: 'var(--text-1)' }}>{totalFunnel}</span>
+            </div>
+          </div>
         </div>
       )}
     </div>
