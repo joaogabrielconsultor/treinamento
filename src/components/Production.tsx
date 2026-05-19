@@ -129,15 +129,17 @@ function AggBar({ item, maxVal, color, metric, index = 0 }: {
 }
 
 // ── Barra de status simples com animação ──
-function StatusBar({ pct, cls, delay = 0 }: { pct: number; cls: string; delay?: number }) {
+function StatusBar({ pct, cls = '', color, h = 'h-2', delay = 0 }: {
+  pct: number; cls?: string; color?: string; h?: string; delay?: number;
+}) {
   const [w, setW] = useState('0%');
   useEffect(() => {
     const t = setTimeout(() => setW(`${pct}%`), delay);
     return () => clearTimeout(t);
   }, [pct, delay]);
   return (
-    <div className="h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.05)' }}>
-      <div className={`h-2 rounded-full ${cls}`} style={{ width: w, transition: 'width 0.7s cubic-bezier(0.16,1,0.3,1)' }} />
+    <div className={`${h} rounded-full overflow-hidden`} style={{ background: 'rgba(255,255,255,0.05)' }}>
+      <div className={`${h} rounded-full ${cls}`} style={{ width: w, transition: 'width 0.7s cubic-bezier(0.16,1,0.3,1)', ...(color ? { background: color } : {}) }} />
     </div>
   );
 }
@@ -145,11 +147,6 @@ function StatusBar({ pct, cls, delay = 0 }: { pct: number; cls: string; delay?: 
 // ── Linha de ranking all-time ──
 function RankRow({ r, maxPts, index }: { r: any; maxPts: number; index: number }) {
   const pct = maxPts > 0 ? (r.total_points / maxPts) * 100 : 0;
-  const [w, setW] = useState('0%');
-  useEffect(() => {
-    const t = setTimeout(() => setW(`${pct}%`), 250 + index * 50);
-    return () => clearTimeout(t);
-  }, [pct, index]);
   return (
     <div className="rank-row py-2.5 px-2" style={index > 0 ? { borderTop: '1px solid var(--card-border)' } : {}}>
       <div className="flex items-center gap-3 mb-1">
@@ -161,8 +158,8 @@ function RankRow({ r, maxPts, index }: { r: any; maxPts: number; index: number }
         <span className="text-xs num" style={{ color: 'var(--text-3)' }}>{r.proposals_paid} pagas</span>
         <span className="text-sm font-black num" style={{ color: '#fbbf24' }}>{r.total_points} pts</span>
       </div>
-      <div className="h-1 rounded-full ml-9" style={{ background: 'rgba(255,255,255,0.05)' }}>
-        <div className="h-1 rounded-full" style={{ width: w, background: '#fbbf24', transition: 'width 0.7s cubic-bezier(0.16,1,0.3,1)' }} />
+      <div className="ml-9">
+        <StatusBar pct={pct} color="#fbbf24" h="h-1" delay={250 + index * 50} />
       </div>
     </div>
   );
@@ -765,9 +762,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                           </div>
                           <span className="font-bold num" style={{ color: s.color }}>{fmtR(s.value)} · {fmtPct(pct)}</span>
                         </div>
-                        <div className="h-3 rounded-full" style={{ background: 'rgba(255,255,255,0.05)' }}>
-                          <StatusBar pct={pct} cls="" delay={200 + si * 100} />
-                        </div>
+                        <StatusBar pct={pct} color={s.color} h="h-3" delay={200 + si * 100} />
                       </div>
                     );
                   })}
@@ -788,9 +783,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                             <span style={{ color: 'var(--text-2)' }}>{r.label}</span>
                             <span className="font-bold num" style={{ color: r.color }}>{fmtR(r.value)} ({fmtPct(pct)})</span>
                           </div>
-                          <div className="h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.05)' }}>
-                            <StatusBar pct={pct} cls="" delay={350 + ri * 100} />
-                          </div>
+                          <StatusBar pct={pct} color={r.color} delay={350 + ri * 100} />
                         </div>
                       );
                     })}
@@ -972,8 +965,8 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                         <span className="text-xs num" style={{ color: 'var(--text-3)' }}>{r.proposals_paid} pagas · {fmtR(r.total_value || 0)}</span>
                         <span className="text-sm font-black num" style={{ color: '#fbbf24' }}>{r.total_points} pts</span>
                       </div>
-                      <div className="h-1 rounded-full ml-9" style={{ background: 'rgba(255,255,255,0.05)' }}>
-                        <StatusBar pct={pct} cls="" delay={200 + i * 50} />
+                      <div className="ml-9">
+                        <StatusBar pct={pct} color="#fbbf24" h="h-1" delay={200 + i * 50} />
                       </div>
                     </div>
                   );
