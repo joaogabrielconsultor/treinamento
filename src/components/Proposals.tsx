@@ -301,7 +301,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
     if (!prefill) return;
     pendingBankIdRef.current = prefill.bank_id || null;
     pendingTableIdRef.current = prefill.table_id || null;
-    setForm({ ...EMPTY_FORM, value: prefill.value || '', convenio_id: prefill.convenio_id || '' });
+    setForm({ ...EMPTY_FORM, value: prefill.value || '', convenio_id: prefill.convenio_id || '', usuario_banco_id: prefill.usuario_banco_id || '' });
     setEditId(null); setStep(0); setErrors({}); setDupAlert(null);
     setBanks([]); setTables([]); setShowForm(true);
     onClearPrefill?.();
@@ -1567,6 +1567,16 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
                       );
                     })()}
                   </Field>
+                  {!editId && usuariosBanco.length > 0 && (
+                    <Field label="Usuário banco">
+                      <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                        <select value={form.usuario_banco_id} onChange={e => setForm(f => ({ ...f, usuario_banco_id: e.target.value }))} className={`${inp} appearance-none pr-8`}>
+                          <option value="">Nenhum</option>
+                          {usuariosBanco.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                        </select>
+                      </div>
+                    </Field>
+                  )}
                 </>
               )}
             </div>

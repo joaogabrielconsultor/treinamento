@@ -34,6 +34,7 @@ export interface SimPrefill {
   bank_id: string;
   table_id: string;
   value: string;
+  usuario_banco_id?: string;
 }
 
 interface SimulatorProps {
@@ -53,11 +54,13 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
   const [filterConvenioDesc, setFilterConvenioDesc] = useState('');
   const [filterBanco, setFilterBanco] = useState('');
   const [filterParceiro, setFilterParceiro] = useState('');
+  const [filterUsuarioBanco, setFilterUsuarioBanco] = useState('');
   const [showOptional, setShowOptional] = useState(false);
 
   const [allTables, setAllTables] = useState<FinancialTable[]>([]);
   const [banks, setBanks] = useState<Bank[]>([]);
   const [convenios, setConvenios] = useState<Convenio[]>([]);
+  const [usuariosBanco, setUsuariosBanco] = useState<{ id: string; nome: string }[]>([]);
   const [results, setResults] = useState<SimResult[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [simulated, setSimulated] = useState(false);
@@ -65,14 +68,16 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
   useEffect(() => {
     async function loadData() {
       setDataLoading(true);
-      const [tables, bks, cvs] = await Promise.all([
+      const [tables, bks, cvs, ubs] = await Promise.all([
         API('/api/financial-tables').then(r => r.json()),
         API('/api/banks').then(r => r.json()),
         API('/api/convenios').then(r => r.json()),
+        API('/api/usuarios-banco').then(r => r.json()),
       ]);
       if (Array.isArray(tables)) setAllTables(tables as FinancialTable[]);
       if (Array.isArray(bks)) setBanks(bks);
       if (Array.isArray(cvs)) setConvenios(cvs);
+      if (Array.isArray(ubs)) setUsuariosBanco(ubs);
       setDataLoading(false);
     }
     loadData();
@@ -163,7 +168,7 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
   const inpCls = 'input-cyber w-full px-3 py-2.5 text-sm rounded-xl appearance-none';
   const canSimulate = !!inputVal.trim() && !!filterConvenio && !!filterTipoProposta && !dataLoading;
 
-  const optionalActiveCount = [filterConvenioDesc, filterBanco, filterParceiro].filter(Boolean).length;
+  const optionalActiveCount = [filterConvenioDesc, filterBanco, filterParceiro, filterUsuarioBanco].filter(Boolean).length;
 
   return (
     <div className="p-6 max-w-[1400px] mx-auto">
@@ -320,6 +325,24 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
                 </select>
               </div>
             </div>
+
+            {/* Usuário banco */}
+            {usuariosBanco.length > 0 && (
+              <div>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>Usuário banco</label>
+                <div className="relative">
+                  <ChevronDown className="absolute right-2 top-2.5 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+                  <select
+                    value={filterUsuarioBanco}
+                    onChange={e => { setFilterUsuarioBanco(e.target.value); resetResults(); }}
+                    className={`${inpCls} pr-7`}
+                  >
+                    <option value="">Nenhum</option>
+                    {usuariosBanco.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                  </select>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -436,6 +459,7 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
                             bank_id: r.bank_id,
                             table_id: r.table_id,
                             value: r.valor_liberado.toFixed(2),
+                            usuario_banco_id: filterUsuarioBanco || undefined,
                           })}
                           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold btn-cyber whitespace-nowrap"
                         >
