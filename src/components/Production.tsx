@@ -142,6 +142,23 @@ function StatusBar({ pct, cls, delay = 0 }: { pct: number; cls: string; delay?: 
   );
 }
 
+// ── Coluna do gráfico de barras ──
+function ChartCol({ h, label, paid, value, index }: { h: number; label: string; paid: number; value: number; index: number }) {
+  const [colH, setColH] = useState('0%');
+  useEffect(() => {
+    const t = setTimeout(() => setColH(`${h}%`), 300 + index * 60);
+    return () => clearTimeout(t);
+  }, [h, index]);
+  return (
+    <div className="flex-1 flex flex-col items-center gap-1" title={`${label}: ${fmtR(value)} (${paid} pagas)`}>
+      <span className="text-[9px] font-bold num" style={{ color: paid > 0 ? '#4ade80' : 'transparent' }}>{paid || ''}</span>
+      <div className="w-full flex flex-col justify-end rounded-t-lg" style={{ height: '80px', background: 'rgba(255,255,255,0.04)' }}>
+        <div className="w-full rounded-t-lg" style={{ height: colH, background: 'linear-gradient(to top, #14B8A6, #22c55e)', minHeight: h > 0 ? '4px' : '0', transition: 'height 0.7s cubic-bezier(0.16,1,0.3,1)' }} />
+      </div>
+    </div>
+  );
+}
+
 const STATUS_CFG = [
   { key: 'Digitada',   label: 'Digitada',   color: '#60a5fa', cls: 'progress-bar-blue'   },
   { key: 'Em análise', label: 'Em Análise', color: '#f59e0b', cls: 'progress-bar-amber'  },
@@ -472,25 +489,16 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
               <Card delay={160}>
                 <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-1)' }}>Últimos 7 Dias</h3>
                 <div className="flex items-end gap-1.5 mb-2" style={{ height: '100px' }}>
-                  {last7.map((d, i) => {
-                    const h = d.value > 0 ? (d.value / maxDay) * 100 : 0;
-                    const [colH, setColH] = useState('0%');
-                    useEffect(() => {
-                      const t = setTimeout(() => setColH(`${h}%`), 300 + i * 60);
-                      return () => clearTimeout(t);
-                    }, [h, i]);
-                    return (
-                      <div key={d.ds} className="flex-1 flex flex-col items-center gap-1"
-                        title={`${d.label}: ${fmtR(d.value)} (${d.paid} pagas)`}>
-                        <span className="text-[9px] font-bold num" style={{ color: d.paid > 0 ? '#4ade80' : 'transparent' }}>
-                          {d.paid || ''}
-                        </span>
-                        <div className="w-full flex flex-col justify-end rounded-t-lg" style={{ height: '80px', background: 'rgba(255,255,255,0.04)' }}>
-                          <div className="w-full rounded-t-lg" style={{ height: colH, background: 'linear-gradient(to top, #14B8A6, #22c55e)', minHeight: h > 0 ? '4px' : '0', transition: 'height 0.7s cubic-bezier(0.16,1,0.3,1)' }} />
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {last7.map((d, i) => (
+                    <ChartCol
+                      key={d.ds}
+                      h={d.value > 0 ? (d.value / maxDay) * 100 : 0}
+                      label={d.label}
+                      paid={d.paid}
+                      value={d.value}
+                      index={i}
+                    />
+                  ))}
                 </div>
                 <div className="flex gap-1.5 mb-4">
                   {last7.map(d => (
