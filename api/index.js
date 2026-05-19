@@ -1188,12 +1188,13 @@ app.get('/api/proposals/check-number', auth, async (req, res) => {
 // ─── PROPOSTAS ────────────────────────────────────────────────────────────────
 app.get('/api/proposals', auth, async (req, res) => {
   const isAdmin = req.user.role === 'admin' || req.user.role === 'master';
-  const { bank, bank_id, table_id, convenio, convenio_id, product, product_id, status, start_date, end_date, user_id, search, min_value, max_value, tipo_proposta, only_paid, no_commission, locked } = req.query;
+  const { bank, bank_id, table_id, convenio, convenio_id, product, product_id, status, start_date, end_date, user_id, loja_id, search, min_value, max_value, tipo_proposta, only_paid, no_commission, locked } = req.query;
   const conditions = [];
   const values = [];
   let i = 1;
   if (!isAdmin) { conditions.push(`p.user_id = $${i++}`); values.push(req.user.id); }
   else if (user_id) { conditions.push(`p.user_id = $${i++}`); values.push(user_id); }
+  else if (loja_id) { conditions.push(`u.loja_id = $${i++}`); values.push(loja_id); }
   if (bank_id)    { conditions.push(`p.bank_id = $${i++}`);        values.push(bank_id); }
   else if (bank)  { conditions.push(`p.bank ILIKE $${i++}`);       values.push(`%${bank}%`); }
   if (table_id)   { conditions.push(`p.table_id = $${i++}`);       values.push(table_id); }
