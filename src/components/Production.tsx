@@ -100,11 +100,12 @@ function AggBar({ item, maxVal, color, metric, index = 0 }: {
   item: AggItem; maxVal: number; color: string; metric: SortKey; index?: number;
 }) {
   const [w, setW] = useState('0%');
+  const metricVal = metric === 'count' ? item.count : metric === 'ticket' ? item.ticket : metric === 'commission' ? item.commission : item.value;
   useEffect(() => {
-    const pct = maxVal > 0 ? (item.value / maxVal) * 100 : 0;
+    const pct = maxVal > 0 ? Math.min((metricVal / maxVal) * 100, 100) : 0;
     const t = setTimeout(() => setW(`${pct}%`), 80 + index * 45);
     return () => clearTimeout(t);
-  }, [item.value, maxVal, index]);
+  }, [metricVal, maxVal, index]);
 
   const display =
     metric === 'count'      ? `${item.count} props` :
