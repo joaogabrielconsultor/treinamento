@@ -75,7 +75,7 @@ const SAQUE_STATUS_COLOR: Record<string, { text: string; bg: string; border: str
   'Recusado': { text: '#f87171', bg: 'rgba(248,113,113,0.1)',  border: 'rgba(248,113,113,0.3)' },
 };
 
-export function AdminContaCorrente() {
+export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean }) {
   const [tab, setTab] = useState<'comissoes' | 'saques' | 'despesas'>('comissoes');
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [brokers, setBrokers] = useState<BrokerSummary[]>([]);
@@ -163,6 +163,12 @@ export function AdminContaCorrente() {
     setSavingDespesa(false);
     setShowDespesaModal(false);
     setDespesaForm({ loja_id: '', descricao: '', valor: '', data: new Date().toISOString().split('T')[0], usuario_banco_id: '' });
+    loadDespesas();
+  }
+
+  async function deleteDespesa(id: string) {
+    if (!window.confirm('Excluir esta despesa? Esta ação é irreversível.')) return;
+    await API(`/api/admin/despesas/${id}`, { method: 'DELETE' });
     loadDespesas();
   }
 
@@ -553,7 +559,7 @@ export function AdminContaCorrente() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                        {['Data', 'Loja', 'Pago de', 'Descrição', 'Valor', 'Lançado por'].map(h => (
+                        {['Data', 'Loja', 'Pago de', 'Descrição', 'Valor', 'Lançado por', ...(isMaster ? [''] : [])].map(h => (
                           <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
                         ))}
                       </tr>
@@ -581,6 +587,18 @@ export function AdminContaCorrente() {
                           <td className="px-4 py-3" style={{ color: 'var(--text-1)' }}>{d.descricao}</td>
                           <td className="px-4 py-3 font-bold num" style={{ color: '#f87171' }}>− {fmtBRL(Number(d.valor))}</td>
                           <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-3)' }}>{d.created_by_name || '—'}</td>
+                          {isMaster && (
+                            <td className="px-4 py-3">
+                              <button
+                                onClick={() => deleteDespesa(d.id)}
+                                className="flex items-center gap-1 px-2 py-1.5 text-xs rounded-lg transition-all"
+                                style={{ background: 'rgba(248,113,113,0.08)', color: '#f87171', border: '1px solid rgba(248,113,113,0.2)' }}
+                                title="Excluir despesa"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </td>
+                          )}
                         </tr>
                       ))}
                     </tbody>

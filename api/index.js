@@ -2088,6 +2088,14 @@ app.post('/api/admin/despesas', auth, adminOnly, async (req, res) => {
   res.json(d);
 });
 
+// Master: excluir despesa
+app.delete('/api/admin/despesas/:id', auth, masterOnly, async (req, res) => {
+  const { id } = req.params;
+  const { rowCount } = await pool.query(`DELETE FROM despesas WHERE id = $1`, [id]);
+  if (rowCount === 0) return res.status(404).json({ error: 'Despesa não encontrada' });
+  res.json({ ok: true });
+});
+
 // Admin: saldo por loja (empresa recebida - despesas)
 app.get('/api/admin/despesas/saldo-lojas', auth, adminOnly, async (req, res) => {
   const { rows } = await pool.query(`

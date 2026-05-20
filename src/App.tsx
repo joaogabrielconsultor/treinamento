@@ -242,7 +242,7 @@ function AppInner() {
         {currentView === 'ranking'              && <Ranking userId={user.id} />}
         {currentView === 'production'           && <Production isAdmin={isAdmin} />}
         {currentView === 'conta-corrente'       && <ContaCorrente />}
-        {currentView === 'admin-conta-corrente' && isAdmin && <AdminContaCorrente />}
+        {currentView === 'admin-conta-corrente' && isAdmin && <AdminContaCorrente isMaster={isMaster} />}
         {currentView === 'admin-lojas'           && isAdmin && <AdminLojas />}
         {currentView === 'admin-conta-empresa'   && isAdmin && <AdminContaEmpresa />}
         {currentView === 'admin-proposal-statuses' && isAdmin && <AdminProposalStatuses />}
