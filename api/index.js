@@ -522,49 +522,47 @@ app.delete('/api/admin/usuarios-banco/:id', auth, adminOnly, async (req, res) =>
 
 // ─── CONTA EMPRESA ────────────────────────────────────────────────────────────
 app.get('/api/admin/conta-empresa', auth, adminOnly, async (req, res) => {
+  const month = req.query.month ? parseInt(req.query.month) : null;
+  const year  = req.query.year  ? parseInt(req.query.year)  : null;
+  const hasPeriod = month && year && !isNaN(month) && !isNaN(year);
+  const pf  = hasPeriod ? `AND EXTRACT(MONTH FROM p.created_at) = ${month} AND EXTRACT(YEAR FROM p.created_at) = ${year}` : '';
+  const wrf = hasPeriod ? `AND EXTRACT(MONTH FROM wr.updated_at) = ${month} AND EXTRACT(YEAR FROM wr.updated_at) = ${year}` : '';
+  const df  = hasPeriod ? `AND EXTRACT(MONTH FROM d.data) = ${month} AND EXTRACT(YEAR FROM d.data) = ${year}` : '';
+
   const { rows } = await pool.query(`
     SELECT l.id AS loja_id, l.name AS loja_name,
            COUNT(DISTINCT u.id)::int AS broker_count,
            COALESCE(SUM(
-             CASE WHEN p.status_comissao = 'Comissão Paga' THEN
-               ROUND(p.value * COALESCE(
-                 (SELECT cr.comissao_empresa FROM commission_ranges cr
-                  WHERE cr.financial_table_id = p.table_id
-                    AND cr.min_value <= p.value AND (cr.max_value IS NULL OR cr.max_value >= p.value)
-                  ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_empresa, 0) / 100, 2)
+             CASE WHEN p.status_comissao = 'Comissão Paga' ${pf} THEN
+               COALESCE(p.comissao_empresa_override,
+                 ROUND(p.value * COALESCE(ft.comissao_empresa, 0) / 100, 2))
              END
            ), 0)::numeric AS total_creditos,
            COALESCE(SUM(
-             CASE WHEN p.status_comissao = 'Ag. Comissão' THEN
-               ROUND(p.value * COALESCE(
-                 (SELECT cr.comissao_empresa FROM commission_ranges cr
-                  WHERE cr.financial_table_id = p.table_id
-                    AND cr.min_value <= p.value AND (cr.max_value IS NULL OR cr.max_value >= p.value)
-                  ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_empresa, 0) / 100, 2)
+             CASE WHEN p.status_comissao = 'Ag. Comissão' ${pf} THEN
+               COALESCE(p.comissao_empresa_override,
+                 ROUND(p.value * COALESCE(ft.comissao_empresa, 0) / 100, 2))
              END
            ), 0)::numeric AS empresa_ag_comissao,
            COALESCE((
              SELECT SUM(wr.amount) FROM withdrawal_requests wr
              JOIN users pu ON pu.id = wr.user_id
-             WHERE pu.loja_id = l.id AND wr.status = 'Pago'
+             WHERE pu.loja_id = l.id AND wr.status = 'Pago' ${wrf}
            ), 0)::numeric AS total_comissao_paga,
            COALESCE((
-             SELECT SUM(d.valor) FROM despesas d WHERE d.loja_id = l.id
+             SELECT SUM(d.valor) FROM despesas d WHERE d.loja_id = l.id ${df}
            ), 0)::numeric AS total_despesas_loja,
            (COALESCE((
              SELECT SUM(wr.amount) FROM withdrawal_requests wr
              JOIN users pu ON pu.id = wr.user_id
-             WHERE pu.loja_id = l.id AND wr.status = 'Pago'
+             WHERE pu.loja_id = l.id AND wr.status = 'Pago' ${wrf}
            ), 0) + COALESCE((
-             SELECT SUM(d.valor) FROM despesas d WHERE d.loja_id = l.id
+             SELECT SUM(d.valor) FROM despesas d WHERE d.loja_id = l.id ${df}
            ), 0))::numeric AS total_debitos,
            COALESCE(SUM(
-             CASE WHEN p.status_comissao = 'Ag. Comissão' THEN
-               ROUND(p.value * COALESCE(
-                 (SELECT cr.comissao_corretor FROM commission_ranges cr
-                  WHERE cr.financial_table_id = p.table_id
-                    AND cr.min_value <= p.value AND (cr.max_value IS NULL OR cr.max_value >= p.value)
-                  ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_corretor, 0) / 100, 2)
+             CASE WHEN p.status_comissao = 'Ag. Comissão' ${pf} THEN
+               COALESCE(p.comissao_corretor_override,
+                 ROUND(p.value * COALESCE(ft.comissao_corretor, 0) / 100, 2))
              END
            ), 0)::numeric AS comissao_pendente
     FROM lojas l

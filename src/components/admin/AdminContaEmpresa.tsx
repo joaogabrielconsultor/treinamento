@@ -248,16 +248,23 @@ function ExtratoView({ loja, onBack }: { loja: LojaBalance; onBack: () => void }
   );
 }
 
+const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
 export function AdminContaEmpresa() {
   const [lojas, setLojas] = useState<LojaBalance[]>([]);
   const [ubByLoja, setUbByLoja] = useState<Record<string, UsuarioBancoBalance[]>>({});
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<LojaBalance | null>(null);
+  const now = new Date();
+  const [filterMonth, setFilterMonth] = useState(now.getMonth() + 1);
+  const [filterYear, setFilterYear] = useState(now.getFullYear());
+  const [allTime, setAllTime] = useState(false);
 
-  async function load() {
+  async function load(month: number, year: number, all: boolean) {
     setLoading(true);
+    const qs = all ? '' : `?month=${month}&year=${year}`;
     const [data, ubData] = await Promise.all([
-      API('/api/admin/conta-empresa').then(r => r.json()),
+      API(`/api/admin/conta-empresa${qs}`).then(r => r.json()),
       API('/api/admin/conta-empresa/usuarios-banco').then(r => r.json()),
     ]);
     setLojas(Array.isArray(data) ? data : []);
@@ -272,20 +279,38 @@ export function AdminContaEmpresa() {
     setLoading(false);
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(filterMonth, filterYear, allTime); }, [filterMonth, filterYear, allTime]);
 
   const totalCreditos = lojas.reduce((a, l) => a + Number(l.total_creditos), 0);
   const totalAgComissao = lojas.reduce((a, l) => a + Number(l.empresa_ag_comissao), 0);
   const totalDebitos = lojas.reduce((a, l) => a + Number(l.total_debitos), 0);
   const totalPendente = lojas.reduce((a, l) => a + Number(l.comissao_pendente), 0);
 
+  const years = Array.from({ length: 3 }, (_, i) => now.getFullYear() - i);
+  const inpSel = 'input-cyber px-2 py-1.5 rounded-lg text-xs';
+
   return (
     <div className="p-6 max-w-6xl mx-auto" style={{ color: 'var(--text-1)' }}>
-      <div className="flex items-center gap-2 mb-6 animate-fade-up">
-        <Building2 className="w-5 h-5" style={{ color: '#14B8A6' }} />
-        <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Conta Empresa</h1>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Saldo e extrato financeiro por loja</p>
+      <div className="flex items-center justify-between mb-6 animate-fade-up">
+        <div className="flex items-center gap-2">
+          <Building2 className="w-5 h-5" style={{ color: '#14B8A6' }} />
+          <div>
+            <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Conta Empresa</h1>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Saldo e extrato financeiro por loja</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <select value={filterMonth} onChange={e => setFilterMonth(Number(e.target.value))} disabled={allTime} className={inpSel} style={{ opacity: allTime ? 0.4 : 1 }}>
+            {MONTHS.map((m, i) => <option key={i+1} value={i+1}>{m}</option>)}
+          </select>
+          <select value={filterYear} onChange={e => setFilterYear(Number(e.target.value))} disabled={allTime} className={inpSel} style={{ opacity: allTime ? 0.4 : 1 }}>
+            {years.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+          <button onClick={() => setAllTime(v => !v)}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+            style={{ background: allTime ? 'rgba(20,184,166,0.15)' : 'var(--card-bg)', border: `1px solid ${allTime ? 'rgba(20,184,166,0.4)' : 'var(--card-border)'}`, color: allTime ? '#14B8A6' : 'var(--text-3)' }}>
+            Todo período
+          </button>
         </div>
       </div>
 
