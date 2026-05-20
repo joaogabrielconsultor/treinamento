@@ -561,7 +561,7 @@ app.get('/api/admin/conta-empresa', auth, adminOnly, async (req, res) => {
 
 app.get('/api/admin/conta-empresa/usuarios-banco', auth, adminOnly, async (req, res) => {
   const { rows } = await pool.query(`
-    SELECT ub.id, ub.nome, ub.descricao,
+    SELECT l.id AS loja_id, ub.id, ub.nome, ub.descricao,
            COUNT(p.id)::int AS proposal_count,
            COALESCE(SUM(
              ROUND(p.value * COALESCE(
@@ -570,11 +570,13 @@ app.get('/api/admin/conta-empresa/usuarios-banco', auth, adminOnly, async (req, 
                   AND cr.min_value <= p.value AND (cr.max_value IS NULL OR cr.max_value >= p.value)
                 ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_empresa, 0) / 100, 2)
            ), 0)::numeric AS total_empresa
-    FROM usuarios_banco ub
-    LEFT JOIN proposals p ON p.usuario_banco_id = ub.id AND p.status = 'Paga'
-    LEFT JOIN financial_tables ft ON ft.id = p.table_id
-    GROUP BY ub.id, ub.nome, ub.descricao
-    ORDER BY total_empresa DESC, ub.nome ASC
+    FROM lojas l
+    JOIN users u ON u.loja_id = l.id AND u.archived_at IS NULL
+    JOIN proposals p ON p.user_id = u.id AND p.status = 'Paga'
+    JOIN financial_tables ft ON ft.id = p.table_id
+    JOIN usuarios_banco ub ON ub.id = p.usuario_banco_id
+    GROUP BY l.id, ub.id, ub.nome, ub.descricao
+    ORDER BY l.id, total_empresa DESC
   `);
   res.json(rows);
 });

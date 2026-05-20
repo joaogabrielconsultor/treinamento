@@ -8,6 +8,7 @@ const fmtBRL = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency'
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 interface UsuarioBancoBalance {
+  loja_id: string;
   id: string;
   nome: string;
   descricao: string;
@@ -245,7 +246,7 @@ function ExtratoView({ loja, onBack }: { loja: LojaBalance; onBack: () => void }
 
 export function AdminContaEmpresa() {
   const [lojas, setLojas] = useState<LojaBalance[]>([]);
-  const [ubBalances, setUbBalances] = useState<UsuarioBancoBalance[]>([]);
+  const [ubByLoja, setUbByLoja] = useState<Record<string, UsuarioBancoBalance[]>>({});
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<LojaBalance | null>(null);
 
@@ -256,7 +257,14 @@ export function AdminContaEmpresa() {
       API('/api/admin/conta-empresa/usuarios-banco').then(r => r.json()),
     ]);
     setLojas(Array.isArray(data) ? data : []);
-    setUbBalances(Array.isArray(ubData) ? ubData : []);
+    const grouped: Record<string, UsuarioBancoBalance[]> = {};
+    if (Array.isArray(ubData)) {
+      for (const ub of ubData) {
+        if (!grouped[ub.loja_id]) grouped[ub.loja_id] = [];
+        grouped[ub.loja_id].push(ub);
+      }
+    }
+    setUbByLoja(grouped);
     setLoading(false);
   }
 
@@ -300,44 +308,6 @@ export function AdminContaEmpresa() {
               </div>
             ))}
           </div>
-
-          {/* Breakdown por usuário banco */}
-          {!loading && ubBalances.length > 0 && (
-            <div className="mb-6 animate-fade-up" style={{ animationDelay: '80ms' }}>
-              <div className="flex items-center gap-2 mb-3">
-                <UserCog className="w-4 h-4" style={{ color: '#60a5fa' }} />
-                <h2 className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>Saldo por Usuário Banco</h2>
-                <span className="text-xs" style={{ color: 'var(--text-3)' }}>— comissão empresa acumulada em cada conta</span>
-              </div>
-              <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
-                {ubBalances.map((ub, i) => (
-                  <div key={ub.id} className="flex items-center justify-between px-4 py-3 transition-colors"
-                    style={{ borderBottom: i < ubBalances.length - 1 ? '1px solid var(--card-border)' : undefined }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                        style={{ background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.18)' }}>
-                        <UserCog className="w-4 h-4" style={{ color: '#60a5fa' }} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{ub.nome}</p>
-                        {ub.descricao && <p className="text-xs" style={{ color: 'var(--text-3)' }}>{ub.descricao}</p>}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold num" style={{ color: Number(ub.total_empresa) > 0 ? '#4ade80' : 'var(--text-3)' }}>
-                        {fmtBRL(Number(ub.total_empresa))}
-                      </p>
-                      <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-                        {ub.proposal_count} proposta{ub.proposal_count !== 1 ? 's' : ''}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {loading ? (
             <div className="flex items-center justify-center py-20"><div className="spinner-cyber" /></div>
@@ -395,6 +365,23 @@ export function AdminContaEmpresa() {
                           </button>
                         </td>
                       </tr>
+                      {ubByLoja[l.loja_id]?.length > 0 && (
+                        <tr key={`${l.loja_id}-ub`} style={{ borderBottom: '1px solid var(--card-border)' }}>
+                          <td colSpan={7} className="px-4 pb-3 pt-0">
+                            <div className="flex flex-wrap gap-2 pl-10">
+                              {ubByLoja[l.loja_id].map(ub => (
+                                <span key={ub.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs"
+                                  style={{ background: 'rgba(96,165,250,0.07)', border: '1px solid rgba(96,165,250,0.14)' }}>
+                                  <UserCog className="w-3 h-3 flex-shrink-0" style={{ color: '#60a5fa' }} />
+                                  <span style={{ color: 'var(--text-2)' }}>{ub.nome}</span>
+                                  <span className="font-bold num" style={{ color: '#60a5fa' }}>{fmtBRL(Number(ub.total_empresa))}</span>
+                                  <span style={{ color: 'var(--text-3)' }}>· {ub.proposal_count} prop</span>
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
                     );
                   })}
                 </tbody>
