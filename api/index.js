@@ -798,7 +798,9 @@ app.get('/api/financial-tables', auth, async (req, res) => {
     ${where}
     ORDER BY ft.coeficiente DESC, ft.comissao_corretor DESC, ft.name ASC
   `, values);
-  res.json(rows);
+  const isAdminUser = req.user.role === 'admin' || req.user.role === 'master';
+  const result = isAdminUser ? rows : rows.map(({ comissao_empresa, ...rest }) => rest);
+  res.json(result);
 });
 
 app.post('/api/financial-tables/import', auth, adminOnly, async (req, res) => {
