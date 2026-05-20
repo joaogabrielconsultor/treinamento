@@ -189,7 +189,8 @@ export function ContaCorrente() {
   }
 
   async function requestSaque() {
-    const amt = parseFloat(saqueAmount.replace(/\./g, '').replace(',', '.'));
+    const parseBRL = (v: string) => v.includes(',') ? parseFloat(v.replace(/\./g, '').replace(',', '.')) : parseFloat(v);
+    const amt = parseBRL(saqueAmount);
     if (!amt || amt <= 0) { setSaqueError('Informe um valor válido'); return; }
     if (Math.round(amt * 100) > Math.round(summary.available_balance * 100)) {
       setSaqueError(`Valor excede o disponível (${fmtBRL(summary.available_balance)})`); return;

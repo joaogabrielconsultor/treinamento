@@ -112,8 +112,12 @@ function formatPhone(v: string) {
 function formatCurrency(v: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 }
+function parseBRL(value: string): number {
+  if (value.includes(',')) return parseFloat(value.replace(/\./g, '').replace(',', '.'));
+  return parseFloat(value);
+}
 function fmtInputBRL(raw: string): string {
-  const n = parseFloat(raw.replace(/\./g, '').replace(',', '.'));
+  const n = parseBRL(raw);
   if (isNaN(n)) return raw;
   return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -429,7 +433,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
     if (s === 1) {
       if (!form.proposal_number.trim()) e.proposal_number = 'Número obrigatório';
       if (dupAlert) e.proposal_number = dupAlert;
-      if (!form.value || parseFloat(String(form.value).replace(/\./g, '').replace(',', '.')) <= 0) e.value = 'Valor deve ser maior que zero';
+      if (!form.value || parseBRL(String(form.value)) <= 0) e.value = 'Valor deve ser maior que zero';
       if (!form.product_id) e.product_id = 'Selecione o produto';
     }
     if (s === 2) {
@@ -455,7 +459,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
     const selectedConvenio = convenios.find(c => c.id === form.convenio_id);
     const selectedBank = banks.find(b => b.id === form.bank_id);
     const body: Record<string, unknown> = {
-      ...form, value: parseFloat(String(form.value).replace(/\./g, '').replace(',', '.')),
+      ...form, value: parseBRL(String(form.value)),
       product_id: form.product_id || null, table_id: form.table_id || null,
       bank_id: form.bank_id || null, convenio_id: form.convenio_id || null,
       bank: selectedBank?.name || '', convenio: selectedConvenio?.name || '',
@@ -465,9 +469,8 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
     if (editId && isAdmin) {
       if (form.status) body.status = form.status;
       if (form.coeficiente !== '') body.coeficiente = form.coeficiente;
-      const parseMoney = (v: string) => parseFloat(v.replace(/\./g, '').replace(',', '.'));
-      body.comissao_corretor_override = form.comissao_corretor_override !== '' ? parseMoney(form.comissao_corretor_override) : '';
-      body.comissao_empresa_override  = form.comissao_empresa_override  !== '' ? parseMoney(form.comissao_empresa_override)  : '';
+      body.comissao_corretor_override = form.comissao_corretor_override !== '' ? parseBRL(form.comissao_corretor_override) : '';
+      body.comissao_empresa_override  = form.comissao_empresa_override  !== '' ? parseBRL(form.comissao_empresa_override)  : '';
       if (isMaster && form.user_id) body.user_id = form.user_id;
     }
     const resp = await API(editId ? `/api/proposals/${editId}` : '/api/proposals', {
