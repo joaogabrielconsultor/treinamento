@@ -421,7 +421,9 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
                       ...(isAdmin ? ['Emp %'] : []),
                       'Cor %',
                       ...(isAdmin ? ['Com. Empresa'] : []),
-                      'Com. Corretor','Rentab.',''
+                      'Com. Corretor',
+                      ...(isAdmin ? ['Rentab.'] : []),
+                      ''
                     ].map(h => (
                       <th key={h} className="text-left px-3 py-3 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
                     ))}
@@ -451,7 +453,7 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
                       <td className="px-3 py-3 text-xs num" style={{ color: '#4ade80' }}>{fmtPct(r.comissao_corretor_pct)}</td>
                       {isAdmin && <td className="px-3 py-3 text-xs num font-semibold" style={{ color: '#60a5fa' }}>{fmtBRL(r.comissao_empresa_val)}</td>}
                       <td className="px-3 py-3 text-xs num font-bold" style={{ color: '#4ade80' }}>{fmtBRL(r.comissao_corretor_val)}</td>
-                      <td className="px-3 py-3 text-xs num" style={{ color: r.rentabilidade > 0 ? '#f59e0b' : 'var(--text-3)' }}>{fmtPct(r.rentabilidade)}</td>
+                      {isAdmin && <td className="px-3 py-3 text-xs num" style={{ color: r.rentabilidade > 0 ? '#f59e0b' : 'var(--text-3)' }}>{fmtPct(r.rentabilidade)}</td>}
                       <td className="px-3 py-3">
                         <button
                           onClick={() => onSendProposal({
