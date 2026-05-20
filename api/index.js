@@ -1915,10 +1915,20 @@ app.get('/api/conta-corrente', auth, async (req, res) => {
   const pending = rows.filter(r => r.status_comissao === 'Ag. Comissão');
   const paid    = rows.filter(r => r.status_comissao === 'Comissão Paga');
   const paid_value = paid.reduce((a, b) => a + parseFloat(b.comissao_valor || 0), 0);
-  const { rows: [req_total] } = await pool.query(
-    `SELECT COALESCE(SUM(amount),0) as total FROM withdrawal_requests WHERE user_id=$1 AND status != 'Recusado'`,
-    [req.user.id]
-  );
+  const [{ rows: [req_total] }, { rows: [prod_month] }] = await Promise.all([
+    pool.query(
+      `SELECT COALESCE(SUM(amount),0) as total, COUNT(*)::int as count
+       FROM withdrawal_requests WHERE user_id=$1 AND status != 'Recusado'`,
+      [req.user.id]
+    ),
+    pool.query(
+      `SELECT COALESCE(SUM(p.value),0) as total, COUNT(*)::int as count
+       FROM proposals p
+       WHERE p.user_id=$1 AND p.status='Paga'
+         AND DATE_TRUNC('month', p.created_at) = DATE_TRUNC('month', NOW())`,
+      [req.user.id]
+    ),
+  ]);
   const available_balance = Math.max(0, paid_value - parseFloat(req_total.total));
   res.json({
     proposals: rows,
@@ -1928,6 +1938,10 @@ app.get('/api/conta-corrente', auth, async (req, res) => {
       paid_count: paid.length,
       paid_value,
       available_balance,
+      total_withdrawn: parseFloat(req_total.total),
+      withdrawn_count: req_total.count,
+      production_month: parseFloat(prod_month.total),
+      production_month_count: prod_month.count,
     }
   });
 });
