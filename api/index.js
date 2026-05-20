@@ -535,17 +535,17 @@ app.get('/api/admin/conta-empresa', auth, adminOnly, async (req, res) => {
              END
            ), 0)::numeric AS total_creditos,
            COALESCE((
-             SELECT SUM(cp.total_value) FROM commission_payments cp
-             JOIN users pu ON pu.id = cp.user_id
-             WHERE pu.loja_id = l.id
+             SELECT SUM(wr.amount) FROM withdrawal_requests wr
+             JOIN users pu ON pu.id = wr.user_id
+             WHERE pu.loja_id = l.id AND wr.status = 'Pago'
            ), 0)::numeric AS total_comissao_paga,
            COALESCE((
              SELECT SUM(d.valor) FROM despesas d WHERE d.loja_id = l.id
            ), 0)::numeric AS total_despesas_loja,
            (COALESCE((
-             SELECT SUM(cp.total_value) FROM commission_payments cp
-             JOIN users pu ON pu.id = cp.user_id
-             WHERE pu.loja_id = l.id
+             SELECT SUM(wr.amount) FROM withdrawal_requests wr
+             JOIN users pu ON pu.id = wr.user_id
+             WHERE pu.loja_id = l.id AND wr.status = 'Pago'
            ), 0) + COALESCE((
              SELECT SUM(d.valor) FROM despesas d WHERE d.loja_id = l.id
            ), 0))::numeric AS total_debitos,
@@ -611,19 +611,19 @@ app.get('/api/admin/conta-empresa/:loja_id/extrato', auth, adminOnly, async (req
     LEFT JOIN financial_tables ft ON ft.id = p.table_id
     WHERE u.loja_id = $1 AND p.status = 'Paga'
   `, [loja_id]);
-  // Débitos: pagamentos de comissão feitos a corretores dessa loja
+  // Débitos: saques pagos aos corretores dessa loja
   const { rows: debitos } = await pool.query(`
     SELECT 'debito' AS type,
            'comissao' AS subtype,
-           cp.id AS reference_id,
-           cp.notes AS description_ref,
+           wr.id AS reference_id,
+           CONCAT('Saque PIX — ', u.full_name) AS description_ref,
            u.full_name AS broker_name,
-           cp.total_value AS value,
+           wr.amount AS value,
            NULL AS client_name,
-           cp.created_at AS date
-    FROM commission_payments cp
-    JOIN users u ON u.id = cp.user_id
-    WHERE u.loja_id = $1
+           wr.updated_at AS date
+    FROM withdrawal_requests wr
+    JOIN users u ON u.id = wr.user_id
+    WHERE u.loja_id = $1 AND wr.status = 'Pago'
   `, [loja_id]);
   // Débitos: despesas lançadas para essa loja
   const { rows: despesasRows } = await pool.query(`
@@ -1840,9 +1840,10 @@ app.get('/api/production/dashboard', auth, async (req, res) => {
   if (isAdmin) {
     const [{ rows: [comPag] }, { rows: [desp] }, { rows: despByUb }] = await Promise.all([
       pool.query(`
-        SELECT COALESCE(SUM(total_value),0)::numeric as total, COUNT(*)::int as count
-        FROM commission_payments
-        WHERE DATE_TRUNC('month', created_at) = DATE_TRUNC('month', NOW())
+        SELECT COALESCE(SUM(amount),0)::numeric as total, COUNT(*)::int as count
+        FROM withdrawal_requests
+        WHERE status = 'Pago'
+          AND DATE_TRUNC('month', updated_at) = DATE_TRUNC('month', NOW())
       `),
       pool.query(`
         SELECT COALESCE(SUM(valor),0)::numeric as total, COUNT(*)::int as count
@@ -1996,10 +1997,15 @@ app.get('/api/conta-corrente', auth, async (req, res) => {
   const pending = monthRows.filter(r => r.status_comissao === 'Ag. Comissão');
   const paid    = monthRows.filter(r => r.status_comissao === 'Comissão Paga');
   const paid_value = paid.reduce((a, b) => a + parseFloat(b.comissao_valor || 0), 0);
-  const [{ rows: [req_total] }, { rows: [prod_month] }] = await Promise.all([
+  const [{ rows: [req_total] }, { rows: [req_paid] }, { rows: [prod_month] }] = await Promise.all([
     pool.query(
       `SELECT COALESCE(SUM(amount),0) as total, COUNT(*)::int as count
        FROM withdrawal_requests WHERE user_id=$1 AND status != 'Recusado'`,
+      [req.user.id]
+    ),
+    pool.query(
+      `SELECT COALESCE(SUM(amount),0) as total, COUNT(*)::int as count
+       FROM withdrawal_requests WHERE user_id=$1 AND status = 'Pago'`,
       [req.user.id]
     ),
     pool.query(
@@ -2009,7 +2015,27 @@ app.get('/api/conta-corrente', auth, async (req, res) => {
       monthParam
     ),
   ]);
-  const available_balance = Math.max(0, paid_value - parseFloat(req_total.total));
+
+  // Comissão recebida total (all-time) para calcular saldo real
+  const { rows: [allTimePaid] } = await pool.query(
+    `${contaCorrenteSelect} WHERE p.user_id = $1 AND p.status_comissao = 'Comissão Paga'`,
+    [req.user.id]
+  ).then(async () => {
+    const r = await pool.query(
+      `SELECT COALESCE(SUM(COALESCE(p.comissao_corretor_override,
+         ROUND(p.value * COALESCE(ft.comissao_corretor, 0) / 100, 2)
+       )), 0) as total
+       FROM proposals p
+       LEFT JOIN financial_tables ft ON ft.id = p.table_id
+       WHERE p.user_id = $1 AND p.status_comissao = 'Comissão Paga'`,
+      [req.user.id]
+    );
+    return r;
+  });
+
+  const all_time_paid_value = parseFloat(allTimePaid.total);
+  const available_balance = Math.max(0, all_time_paid_value - parseFloat(req_total.total));
+
   res.json({
     proposals: rows,
     summary: {
@@ -2017,9 +2043,12 @@ app.get('/api/conta-corrente', auth, async (req, res) => {
       pending_value: pending.reduce((a, b) => a + parseFloat(b.comissao_valor || 0), 0),
       paid_count: paid.length,
       paid_value,
+      all_time_paid_value,
       available_balance,
       total_withdrawn: parseFloat(req_total.total),
       withdrawn_count: req_total.count,
+      withdrawn_paid: parseFloat(req_paid.total),
+      withdrawn_paid_count: req_paid.count,
       production_month: parseFloat(prod_month.total),
       production_month_count: prod_month.count,
     }
@@ -2098,14 +2127,7 @@ app.patch('/api/admin/saques/:id', auth, adminOnly, async (req, res) => {
     [status, notes || null, req.user.id, req.params.id]
   );
   if (!wr) return res.status(404).json({ error: 'Solicitação não encontrada' });
-  // Quando saque é pago, registra saída automática na conta empresa
-  if (status === 'Pago') {
-    await pool.query(
-      `INSERT INTO commission_payments (user_id, total_value, proposal_count, notes, paid_by)
-       VALUES ($1, $2, 0, $3, $4)`,
-      [wr.user_id, wr.amount, `Saque PIX #${wr.id.slice(0,8)}`, req.user.id]
-    );
-  }
+  // Saque pago: o débito na conta empresa vem direto de withdrawal_requests (status='Pago')
   const msgs = { 'Aprovado': 'Sua solicitação de saque foi aprovada!', 'Pago': 'Seu saque foi pago! Verifique sua conta PIX.', 'Recusado': 'Sua solicitação de saque não foi aprovada.' };
   await pool.query(`INSERT INTO notifications (user_id, message) VALUES ($1,$2)`, [wr.user_id, msgs[status]]);
   res.json({ ok: true });

@@ -18,9 +18,12 @@ interface Summary {
   pending_value: number;
   paid_count: number;
   paid_value: number;
+  all_time_paid_value: number;
   available_balance: number;
   total_withdrawn: number;
   withdrawn_count: number;
+  withdrawn_paid: number;
+  withdrawn_paid_count: number;
   production_month: number;
   production_month_count: number;
 }
@@ -144,7 +147,9 @@ export function ContaCorrente() {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [summary, setSummary] = useState<Summary>({
     pending_count: 0, pending_value: 0, paid_count: 0, paid_value: 0,
-    available_balance: 0, total_withdrawn: 0, withdrawn_count: 0,
+    all_time_paid_value: 0, available_balance: 0,
+    total_withdrawn: 0, withdrawn_count: 0,
+    withdrawn_paid: 0, withdrawn_paid_count: 0,
     production_month: 0, production_month_count: 0,
   });
   const [loading, setLoading] = useState(true);
@@ -224,58 +229,10 @@ export function ContaCorrente() {
 
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
 
-  const kpis = [
-    {
-      label: 'Aguardando Comissão',
-      value: fmtBRL(summary.pending_value),
-      sub: `${summary.pending_count} proposta${summary.pending_count !== 1 ? 's' : ''}`,
-      icon: Clock,
-      color: '#f59e0b',
-      bg: 'rgba(245,158,11,0.08)',
-      border: 'rgba(245,158,11,0.2)',
-      info: 'Comissão das suas propostas pagas que a empresa ainda não liberou. O valor já existe, mas ainda aguarda confirmação.',
-    },
-    {
-      label: 'Comissão Recebida',
-      value: fmtBRL(summary.paid_value),
-      sub: `${summary.paid_count} comissão${summary.paid_count !== 1 ? 'ões' : ''} confirmada${summary.paid_count !== 1 ? 's' : ''}`,
-      icon: CheckCircle,
-      color: '#4ade80',
-      bg: 'rgba(74,222,128,0.08)',
-      border: 'rgba(74,222,128,0.2)',
-      info: 'Total de comissão que a empresa já confirmou e creditou para você. É a base do seu saldo disponível.',
-    },
-    {
-      label: 'Disponível p/ Saque',
-      value: fmtBRL(summary.available_balance),
-      sub: 'pronto para solicitar',
-      icon: ArrowDownToLine,
-      color: '#14B8A6',
-      bg: 'rgba(20,184,166,0.08)',
-      border: 'rgba(20,184,166,0.2)',
-      info: 'Comissão recebida menos os saques já solicitados. É o quanto você pode sacar agora.',
-    },
-    {
-      label: 'Saques Feitos',
-      value: fmtBRL(summary.total_withdrawn),
-      sub: `${summary.withdrawn_count} solicitação${summary.withdrawn_count !== 1 ? 'ões' : ''}`,
-      icon: Send,
-      color: '#60a5fa',
-      bg: 'rgba(96,165,250,0.08)',
-      border: 'rgba(96,165,250,0.2)',
-      info: 'Total já solicitado em saques (pendentes + aprovados + pagos). Saques recusados não entram neste total.',
-    },
-    {
-      label: 'Total Comissão Mês',
-      value: fmtBRL(summary.pending_value + summary.paid_value),
-      sub: `${summary.pending_count + summary.paid_count} proposta${(summary.pending_count + summary.paid_count) !== 1 ? 's' : ''} no mês`,
-      icon: TrendingUp,
-      color: '#a78bfa',
-      bg: 'rgba(167,139,250,0.08)',
-      border: 'rgba(167,139,250,0.2)',
-      info: 'Soma de toda a sua comissão do mês: o que está aguardando + o que já foi confirmado.',
-    },
-  ];
+  // Porcentagem sacada do total recebido (all-time)
+  const pctSacado = summary.all_time_paid_value > 0
+    ? Math.min(100, (summary.total_withdrawn / summary.all_time_paid_value) * 100)
+    : 0;
 
   return (
     <div className="p-4 sm:p-6 max-w-6xl mx-auto" style={{ color: 'var(--text-1)' }}>
@@ -334,9 +291,24 @@ export function ContaCorrente() {
         </div>
       )}
 
-      {/* KPI cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
-        {kpis.map((c, i) => (
+      {/* KPI cards — linha do mês */}
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        {[
+          {
+            label: 'Aguardando Comissão',
+            value: fmtBRL(summary.pending_value),
+            sub: `${summary.pending_count} proposta${summary.pending_count !== 1 ? 's' : ''} no mês`,
+            icon: Clock, color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)',
+            info: 'Comissão das suas propostas pagas que a empresa ainda não liberou. Aguarda confirmação.',
+          },
+          {
+            label: 'Total Comissão Mês',
+            value: fmtBRL(summary.pending_value + summary.paid_value),
+            sub: `${summary.pending_count + summary.paid_count} proposta${(summary.pending_count + summary.paid_count) !== 1 ? 's' : ''} no mês`,
+            icon: TrendingUp, color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.2)',
+            info: 'Soma de toda a sua comissão do mês: aguardando + confirmada.',
+          },
+        ].map((c, i) => (
           <div key={c.label} className="rounded-2xl p-4 animate-fade-up stat-card"
             style={{ background: c.bg, border: `1px solid ${c.border}`, animationDelay: `${i * 50}ms` }}>
             <div className="flex items-start justify-between mb-2">
@@ -347,6 +319,57 @@ export function ContaCorrente() {
             <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{c.sub}</p>
           </div>
         ))}
+      </div>
+
+      {/* Card de fluxo financeiro */}
+      <div className="rounded-2xl p-5 mb-4 animate-fade-up"
+        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)', animationDelay: '60ms' }}>
+        <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-3)' }}>Seu saldo — acumulado</p>
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          {/* Reservado */}
+          <div className="rounded-xl p-3" style={{ background: 'rgba(74,222,128,0.07)', border: '1px solid rgba(74,222,128,0.18)' }}>
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#4ade80' }} />
+              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Comissão Recebida</span>
+              <InfoCard text="Total que a empresa confirmou e reservou pra você. Esse valor ainda está na empresa, mas é seu." />
+            </div>
+            <p className="text-base font-black num" style={{ color: '#4ade80' }}>{fmtBRL(summary.all_time_paid_value)}</p>
+            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>reservado pela empresa</p>
+          </div>
+          {/* Sacado */}
+          <div className="rounded-xl p-3" style={{ background: 'rgba(248,113,113,0.07)', border: '1px solid rgba(248,113,113,0.18)' }}>
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <Send className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#f87171' }} />
+              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Já Sacado (Pago)</span>
+              <InfoCard text="Saques com status Pago — esse dinheiro já saiu da empresa e foi para o seu PIX." />
+            </div>
+            <p className="text-base font-black num" style={{ color: '#f87171' }}>{fmtBRL(summary.withdrawn_paid)}</p>
+            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>{summary.withdrawn_paid_count} saque{summary.withdrawn_paid_count !== 1 ? 's' : ''} pago{summary.withdrawn_paid_count !== 1 ? 's' : ''}</p>
+          </div>
+          {/* Disponível */}
+          <div className="rounded-xl p-3" style={{ background: 'rgba(20,184,166,0.07)', border: '1px solid rgba(20,184,166,0.18)' }}>
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <ArrowDownToLine className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#14B8A6' }} />
+              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Disponível p/ Saque</span>
+              <InfoCard text="Comissão recebida menos saques já solicitados (pagos + pendentes). É o que você pode sacar agora." />
+            </div>
+            <p className="text-base font-black num" style={{ color: '#14B8A6' }}>{fmtBRL(summary.available_balance)}</p>
+            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>pronto para solicitar</p>
+          </div>
+        </div>
+        {/* Barra de progresso: sacado vs disponível */}
+        {summary.all_time_paid_value > 0 && (
+          <div>
+            <div className="flex justify-between text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>
+              <span>Sacado: {pctSacado.toFixed(0)}%</span>
+              <span>Disponível: {(100 - pctSacado).toFixed(0)}%</span>
+            </div>
+            <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <div className="h-2 rounded-full transition-all duration-700"
+                style={{ width: `${pctSacado}%`, background: 'linear-gradient(90deg, #f87171, #fb923c)' }} />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Saques solicitados */}
