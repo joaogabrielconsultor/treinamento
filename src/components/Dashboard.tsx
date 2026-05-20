@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, FileText, Calculator, Trophy, Library, Wallet, TrendingUp, BarChart2, ArrowRight, Activity, Percent } from 'lucide-react';
+import { DollarSign, FileText, Calculator, Trophy, Library, Wallet, TrendingUp, BarChart2, ArrowRight, Activity, Percent, TrendingDown, Receipt } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { ViewType } from '../types';
 import { useCountUp } from '../hooks/useCountUp';
@@ -159,6 +159,44 @@ export function Dashboard({ user, onNavigate, isAdmin = false }: DashboardProps)
           ))}
         </div>
       </div>
+
+      {/* Saídas do Mês — admin only */}
+      {isAdmin && !loading && stats?.saidas_mes && (
+        <div className="mb-8 animate-fade-up" style={{ animationDelay: '420ms' }}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>Saídas do Mês</h2>
+            <button onClick={() => onNavigate('admin-conta-corrente')} className="flex items-center gap-1 text-xs font-medium" style={{ color: '#f87171' }}>
+              Ver detalhes <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="rounded-2xl p-4" style={{ background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.18)', boxShadow: 'var(--shadow-card)' }}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>Comissão Paga Corretores</p>
+                  <p className="text-xl font-black num" style={{ color: '#f87171' }}>{fmtR(stats.saidas_mes.comissao_paga.total)}</p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{stats.saidas_mes.comissao_paga.count} pagamento{stats.saidas_mes.comissao_paga.count !== 1 ? 's' : ''} este mês</p>
+                </div>
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)' }}>
+                  <TrendingDown className="w-4 h-4" style={{ color: '#f87171' }} />
+                </div>
+              </div>
+            </div>
+            <div className="rounded-2xl p-4" style={{ background: 'rgba(251,146,60,0.06)', border: '1px solid rgba(251,146,60,0.18)', boxShadow: 'var(--shadow-card)' }}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>Despesas</p>
+                  <p className="text-xl font-black num" style={{ color: '#fb923c' }}>{fmtR(stats.saidas_mes.despesas.total)}</p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{stats.saidas_mes.despesas.count} lançamento{stats.saidas_mes.despesas.count !== 1 ? 's' : ''} este mês</p>
+                </div>
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(251,146,60,0.1)', border: '1px solid rgba(251,146,60,0.2)' }}>
+                  <Receipt className="w-4 h-4" style={{ color: '#fb923c' }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mini funnel */}
       {funnel.length > 0 && totalFunnel > 0 && (

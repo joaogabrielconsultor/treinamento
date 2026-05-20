@@ -1828,6 +1828,26 @@ app.get('/api/production/dashboard', auth, async (req, res) => {
 
   const avgTicket = periodData.count > 0 ? parseFloat(periodData.value) / periodData.count : 0;
 
+  let saidasMes = null;
+  if (isAdmin) {
+    const [{ rows: [comPag] }, { rows: [desp] }] = await Promise.all([
+      pool.query(`
+        SELECT COALESCE(SUM(total_value),0)::numeric as total, COUNT(*)::int as count
+        FROM commission_payments
+        WHERE DATE_TRUNC('month', created_at) = DATE_TRUNC('month', NOW())
+      `),
+      pool.query(`
+        SELECT COALESCE(SUM(valor),0)::numeric as total, COUNT(*)::int as count
+        FROM despesas
+        WHERE DATE_TRUNC('month', data) = DATE_TRUNC('month', NOW())
+      `),
+    ]);
+    saidasMes = {
+      comissao_paga: { total: parseFloat(comPag.total), count: comPag.count },
+      despesas:      { total: parseFloat(desp.total),   count: desp.count   },
+    };
+  }
+
   res.json({
     today: { value: parseFloat(today.value), count: today.count },
     month: { value: parseFloat(month.value), count: month.count },
@@ -1839,6 +1859,7 @@ app.get('/api/production/dashboard', auth, async (req, res) => {
     my_points: myPoints,
     my_position: myPosition,
     my_commission_total: myCommissionTotal,
+    saidas_mes: saidasMes,
   });
 });
 
