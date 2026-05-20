@@ -112,6 +112,11 @@ function formatPhone(v: string) {
 function formatCurrency(v: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 }
+function fmtInputBRL(raw: string): string {
+  const n = parseFloat(raw.replace(/\./g, '').replace(',', '.'));
+  if (isNaN(n)) return raw;
+  return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 
 const STEPS = [
   { label: 'Dados do Cliente', icon: User },
@@ -302,7 +307,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
     if (!prefill) return;
     pendingBankIdRef.current = prefill.bank_id || null;
     pendingTableIdRef.current = prefill.table_id || null;
-    setForm({ ...EMPTY_FORM, value: prefill.value || '', convenio_id: prefill.convenio_id || '', usuario_banco_id: prefill.usuario_banco_id || '' });
+    setForm({ ...EMPTY_FORM, value: fmtInputBRL(prefill.value || ''), convenio_id: prefill.convenio_id || '', usuario_banco_id: prefill.usuario_banco_id || '' });
     setEditId(null); setStep(0); setErrors({}); setDupAlert(null);
     setBanks([]); setTables([]); setShowForm(true);
     onClearPrefill?.();
@@ -1324,7 +1329,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                 {dupAlert && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> {dupAlert}</p>}
               </Field>
               <Field label="Valor liberado (R$)" error={errors.value}>
-                <input type="text" inputMode="decimal" value={form.value} onChange={e => setForm(f => ({ ...f, value: e.target.value }))} onPaste={e => { e.preventDefault(); const t = e.clipboardData.getData('text'); setForm(f => ({ ...f, value: t.replace(/\./g, '').replace(',', '.') })); }} className={inp} />
+                <input type="text" inputMode="decimal" value={form.value} onChange={e => setForm(f => ({ ...f, value: e.target.value }))} onPaste={e => { e.preventDefault(); const t = e.clipboardData.getData('text'); setForm(f => ({ ...f, value: fmtInputBRL(t) })); }} className={inp} />
               </Field>
               <Field label="Data de digitação">
                 <input type="date" value={form.created_at} onChange={e => setForm(f => ({ ...f, created_at: e.target.value }))} className={inp} />
@@ -1490,7 +1495,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                     {form.proposal_number && !dupAlert && !checkingDup && <p className="text-xs text-green-600 mt-1 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Número disponível</p>}
                   </Field>
                   <Field label="Valor liberado (R$)" error={errors.value}>
-                    <input type="text" inputMode="decimal" value={form.value} onChange={e => setForm(f => ({ ...f, value: e.target.value }))} onPaste={e => { e.preventDefault(); const t = e.clipboardData.getData('text'); setForm(f => ({ ...f, value: t.replace(/\./g, '').replace(',', '.') })); }} className={inp} placeholder="0,00" />
+                    <input type="text" inputMode="decimal" value={form.value} onChange={e => setForm(f => ({ ...f, value: e.target.value }))} onPaste={e => { e.preventDefault(); const t = e.clipboardData.getData('text'); setForm(f => ({ ...f, value: fmtInputBRL(t) })); }} className={inp} placeholder="0,00" />
                   </Field>
                   <Field label="Data de digitação">
                     <input type="date" value={form.created_at} onChange={e => setForm(f => ({ ...f, created_at: e.target.value }))} className={inp} />

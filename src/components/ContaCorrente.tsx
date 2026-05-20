@@ -543,7 +543,7 @@ export function ContaCorrente() {
                 </button>
               </div>
               <input value={saqueAmount} onChange={e => setSaqueAmount(e.target.value)}
-                onPaste={e => { e.preventDefault(); const t = e.clipboardData.getData('text'); setSaqueAmount(t.replace(/\./g, '').replace(',', '.')); }}
+                onPaste={e => { e.preventDefault(); const t = e.clipboardData.getData('text'); const n = parseFloat(t.replace(/\./g, '').replace(',', '.')); setSaqueAmount(isNaN(n) ? t : n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })); }}
                 placeholder="0,00" type="text" inputMode="decimal"
                 className="input-cyber w-full px-3 py-2.5 text-sm rounded-xl" />
               {saqueError && <p className="text-xs mt-1.5 flex items-center gap-1" style={{ color: '#f87171' }}><AlertCircle className="w-3 h-3" />{saqueError}</p>}
