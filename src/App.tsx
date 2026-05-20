@@ -29,6 +29,7 @@ import { AdminProposalStatuses } from './components/admin/AdminProposalStatuses'
 import { AdminUsuariosBanco } from './components/admin/AdminUsuariosBanco';
 import { ProfileModal } from './components/ProfileModal';
 import { useAuth } from './hooks/useAuth';
+import { useIdleLogout } from './hooks/useIdleLogout';
 import { useCourses, useCourseDetail } from './hooks/useCourses';
 import { useEnrollments, useLessonProgress } from './hooks/useEnrollments';
 import { useIsAdmin } from './hooks/useAdmin';
@@ -37,6 +38,7 @@ import { ViewType, Lesson } from './types';
 
 function AppInner() {
   const { user, loading: authLoading, signIn, signOut } = useAuth();
+  useIdleLogout(signOut, !!user);
 
   const VALID_VIEWS = new Set<ViewType>([
     'dashboard','catalog','course','lesson','admin-users','admin-courses',
