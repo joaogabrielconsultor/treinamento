@@ -30,6 +30,8 @@ interface Despesa {
   id: string;
   loja_id: string | null;
   loja_name: string | null;
+  usuario_banco_id: string | null;
+  usuario_banco_nome: string | null;
   descricao: string;
   valor: number;
   data: string;
@@ -106,7 +108,7 @@ export function AdminContaCorrente() {
   const [loadingDespesas, setLoadingDespesas] = useState(false);
   const [showDespesaModal, setShowDespesaModal] = useState(false);
   const [savingDespesa, setSavingDespesa] = useState(false);
-  const [despesaForm, setDespesaForm] = useState({ loja_id: '', descricao: '', valor: '', data: new Date().toISOString().split('T')[0] });
+  const [despesaForm, setDespesaForm] = useState({ loja_id: '', descricao: '', valor: '', data: new Date().toISOString().split('T')[0], usuario_banco_id: '' });
 
   async function load() {
     setLoading(true);
@@ -155,11 +157,12 @@ export function AdminContaCorrente() {
         descricao: despesaForm.descricao,
         valor: parseFloat(despesaForm.valor.replace(',', '.')),
         data: despesaForm.data,
+        usuario_banco_id: despesaForm.usuario_banco_id || null,
       }),
     });
     setSavingDespesa(false);
     setShowDespesaModal(false);
-    setDespesaForm({ loja_id: '', descricao: '', valor: '', data: new Date().toISOString().split('T')[0] });
+    setDespesaForm({ loja_id: '', descricao: '', valor: '', data: new Date().toISOString().split('T')[0], usuario_banco_id: '' });
     loadDespesas();
   }
 
@@ -438,6 +441,20 @@ export function AdminContaCorrente() {
                     </div>
                   </div>
                   <div>
+                    <label className="text-xs font-semibold uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--text-3)' }}>Pago de (Usuário Banco)</label>
+                    <div className="relative">
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+                      <select
+                        value={despesaForm.usuario_banco_id}
+                        onChange={e => setDespesaForm(f => ({ ...f, usuario_banco_id: e.target.value }))}
+                        className="input-cyber w-full px-3 pr-8 py-2.5 text-sm rounded-xl appearance-none"
+                      >
+                        <option value="">Não especificado</option>
+                        {usuariosBanco.map(ub => <option key={ub.id} value={ub.id}>{ub.nome}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div>
                     <label className="text-xs font-semibold uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--text-3)' }}>Descrição</label>
                     <input
                       type="text"
@@ -536,7 +553,7 @@ export function AdminContaCorrente() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                        {['Data', 'Loja', 'Descrição', 'Valor', 'Lançado por'].map(h => (
+                        {['Data', 'Loja', 'Pago de', 'Descrição', 'Valor', 'Lançado por'].map(h => (
                           <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
                         ))}
                       </tr>
@@ -551,6 +568,13 @@ export function AdminContaCorrente() {
                             {d.loja_name ? (
                               <span className="text-xs font-semibold px-2 py-1 rounded-lg" style={{ background: 'rgba(167,139,250,0.1)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.25)' }}>
                                 {d.loja_name}
+                              </span>
+                            ) : <span style={{ color: 'var(--text-3)' }}>—</span>}
+                          </td>
+                          <td className="px-4 py-3">
+                            {d.usuario_banco_nome ? (
+                              <span className="text-xs font-semibold px-2 py-1 rounded-lg" style={{ background: 'rgba(96,165,250,0.1)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.2)' }}>
+                                {d.usuario_banco_nome}
                               </span>
                             ) : <span style={{ color: 'var(--text-3)' }}>—</span>}
                           </td>

@@ -2048,10 +2048,12 @@ app.patch('/api/admin/saques/:id', auth, adminOnly, async (req, res) => {
 // Admin: listar despesas
 app.get('/api/admin/despesas', auth, adminOnly, async (req, res) => {
   const { rows } = await pool.query(`
-    SELECT d.*, l.name as loja_name, u.full_name as created_by_name
+    SELECT d.*, l.name as loja_name, u.full_name as created_by_name,
+           ub.nome as usuario_banco_nome
     FROM despesas d
     LEFT JOIN lojas l ON l.id = d.loja_id
     LEFT JOIN users u ON u.id = d.created_by
+    LEFT JOIN usuarios_banco ub ON ub.id = d.usuario_banco_id
     ORDER BY d.data DESC, d.created_at DESC
   `);
   res.json(rows);
@@ -2059,11 +2061,11 @@ app.get('/api/admin/despesas', auth, adminOnly, async (req, res) => {
 
 // Admin: criar despesa
 app.post('/api/admin/despesas', auth, adminOnly, async (req, res) => {
-  const { loja_id, descricao, valor, data } = req.body;
+  const { loja_id, descricao, valor, data, usuario_banco_id } = req.body;
   if (!descricao || !valor) return res.status(400).json({ error: 'Descrição e valor são obrigatórios' });
   const { rows: [d] } = await pool.query(
-    `INSERT INTO despesas (loja_id, descricao, valor, data, created_by) VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-    [loja_id || null, descricao.trim(), parseFloat(valor), data || new Date().toISOString().split('T')[0], req.user.id]
+    `INSERT INTO despesas (loja_id, descricao, valor, data, created_by, usuario_banco_id) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+    [loja_id || null, descricao.trim(), parseFloat(valor), data || new Date().toISOString().split('T')[0], req.user.id, usuario_banco_id || null]
   );
   res.json(d);
 });

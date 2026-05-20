@@ -397,6 +397,8 @@ async function initDb() {
       )
     `);
 
+    await client.query(`ALTER TABLE despesas ADD COLUMN IF NOT EXISTS usuario_banco_id uuid REFERENCES usuarios_banco(id) ON DELETE SET NULL`);
+
     // Seed badges padrão
     const { rows: badgeCheck } = await client.query('SELECT id FROM badges LIMIT 1');
     if (badgeCheck.length === 0) {
