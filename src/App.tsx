@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { AuthPage } from './components/AuthPage';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -92,6 +92,7 @@ function AppInner() {
   const { progress: lessonProgress, completeLesson } = useLessonProgress(user?.id ?? null, selectedCourseId);
   const { isAdmin, isMaster } = useIsAdmin(user);
   const [simPrefill, setSimPrefill] = useState<SimPrefill | null>(null);
+  const simPrefillFromSim = useRef(false);
   const [showProfile, setShowProfile] = useState(false);
 
   if (authLoading) {
@@ -237,10 +238,11 @@ function AppInner() {
         {currentView === 'admin-products'         && isAdmin && <AdminProducts />}
         {currentView === 'admin-reports'           && isAdmin && <AdminReports />}
         {currentView === 'login-bancos' && <LoginBancos isAdmin={isAdmin} />}
-        {currentView === 'proposals'  && <Proposals prefill={simPrefill} onClearPrefill={() => setSimPrefill(null)} isAdmin={isAdmin} isMaster={isMaster} />}
-        {currentView === 'simulator'  && (
-          <Simulator onSendProposal={data => { setSimPrefill(data); navigate('proposals'); }} isAdmin={isAdmin} />
-        )}
+        {currentView === 'proposals'  && <Proposals prefill={simPrefill} onClearPrefill={() => setSimPrefill(null)} onFormClosed={() => { if (simPrefillFromSim.current) { simPrefillFromSim.current = false; navigate('simulator'); } }} isAdmin={isAdmin} isMaster={isMaster} />}
+        {/* Simulator permanece montado para preservar estado dos filtros */}
+        <div style={{ display: currentView === 'simulator' ? '' : 'none' }}>
+          <Simulator onSendProposal={data => { setSimPrefill(data); simPrefillFromSim.current = true; navigate('proposals'); }} isAdmin={isAdmin} />
+        </div>
         {currentView === 'ranking'              && <Ranking userId={user.id} />}
         {currentView === 'production'           && <Production isAdmin={isAdmin} />}
         {currentView === 'conta-corrente'       && <ContaCorrente />}

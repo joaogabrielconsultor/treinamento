@@ -539,7 +539,9 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
                             value: r.valor_liberado.toFixed(2),
                             usuario_banco_id: filterUsuarioBanco || undefined,
                           })}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold btn-cyber whitespace-nowrap"
+                          disabled={mode === 'compra-divida' && (r.troco_liquido ?? 0) < 0}
+                          title={mode === 'compra-divida' && (r.troco_liquido ?? 0) < 0 ? 'Valor liberado não cobre a dívida do cliente' : undefined}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold btn-cyber whitespace-nowrap disabled:opacity-30 disabled:cursor-not-allowed"
                         >
                           <ArrowRight className="w-3 h-3" /> Enviar Proposta
                         </button>

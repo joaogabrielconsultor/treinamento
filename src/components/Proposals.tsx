@@ -134,11 +134,12 @@ function Field({ label, children, error }: { label: string; children: React.Reac
 interface ProposalsProps {
   prefill?: SimPrefill | null;
   onClearPrefill?: () => void;
+  onFormClosed?: () => void;
   isAdmin?: boolean;
   isMaster?: boolean;
 }
 
-export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster = false }: ProposalsProps = {}) {
+export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = false, isMaster = false }: ProposalsProps = {}) {
   // ── Core data ──
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1283,7 +1284,7 @@ export function Proposals({ prefill, onClearPrefill, isAdmin = false, isMaster =
       )}
 
       {/* ── Edit/Create form modal ── */}
-      <Modal open={showForm} onClose={() => setShowForm(false)} title={editId ? 'Editar Proposta' : 'Nova Proposta'} size="lg"
+      <Modal open={showForm} onClose={() => { setShowForm(false); onFormClosed?.(); }} title={editId ? 'Editar Proposta' : 'Nova Proposta'} size="lg"
         footer={
           <div className="flex gap-3">
             {editId ? (
