@@ -1,11 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Building2, TrendingUp, TrendingDown, DollarSign, Clock, ChevronLeft, ArrowUpRight, ArrowDownLeft, Store, Trash2 } from 'lucide-react';
+import { Building2, TrendingUp, TrendingDown, DollarSign, Clock, ChevronLeft, ArrowUpRight, ArrowDownLeft, Store, Trash2, UserCog } from 'lucide-react';
 
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
 
 const fmtBRL = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v));
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+interface UsuarioBancoBalance {
+  id: string;
+  nome: string;
+  descricao: string;
+  proposal_count: number;
+  total_empresa: number;
+}
 
 interface LojaBalance {
   loja_id: string;
@@ -237,13 +245,18 @@ function ExtratoView({ loja, onBack }: { loja: LojaBalance; onBack: () => void }
 
 export function AdminContaEmpresa() {
   const [lojas, setLojas] = useState<LojaBalance[]>([]);
+  const [ubBalances, setUbBalances] = useState<UsuarioBancoBalance[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<LojaBalance | null>(null);
 
   async function load() {
     setLoading(true);
-    const data = await API('/api/admin/conta-empresa').then(r => r.json());
+    const [data, ubData] = await Promise.all([
+      API('/api/admin/conta-empresa').then(r => r.json()),
+      API('/api/admin/conta-empresa/usuarios-banco').then(r => r.json()),
+    ]);
     setLojas(Array.isArray(data) ? data : []);
+    setUbBalances(Array.isArray(ubData) ? ubData : []);
     setLoading(false);
   }
 
@@ -287,6 +300,44 @@ export function AdminContaEmpresa() {
               </div>
             ))}
           </div>
+
+          {/* Breakdown por usuário banco */}
+          {!loading && ubBalances.length > 0 && (
+            <div className="mb-6 animate-fade-up" style={{ animationDelay: '80ms' }}>
+              <div className="flex items-center gap-2 mb-3">
+                <UserCog className="w-4 h-4" style={{ color: '#60a5fa' }} />
+                <h2 className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>Saldo por Usuário Banco</h2>
+                <span className="text-xs" style={{ color: 'var(--text-3)' }}>— comissão empresa acumulada em cada conta</span>
+              </div>
+              <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
+                {ubBalances.map((ub, i) => (
+                  <div key={ub.id} className="flex items-center justify-between px-4 py-3 transition-colors"
+                    style={{ borderBottom: i < ubBalances.length - 1 ? '1px solid var(--card-border)' : undefined }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                        style={{ background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.18)' }}>
+                        <UserCog className="w-4 h-4" style={{ color: '#60a5fa' }} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{ub.nome}</p>
+                        {ub.descricao && <p className="text-xs" style={{ color: 'var(--text-3)' }}>{ub.descricao}</p>}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold num" style={{ color: Number(ub.total_empresa) > 0 ? '#4ade80' : 'var(--text-3)' }}>
+                        {fmtBRL(Number(ub.total_empresa))}
+                      </p>
+                      <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+                        {ub.proposal_count} proposta{ub.proposal_count !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {loading ? (
             <div className="flex items-center justify-center py-20"><div className="spinner-cyber" /></div>

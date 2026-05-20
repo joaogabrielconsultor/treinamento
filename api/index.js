@@ -559,6 +559,26 @@ app.get('/api/admin/conta-empresa', auth, adminOnly, async (req, res) => {
   res.json(rows);
 });
 
+app.get('/api/admin/conta-empresa/usuarios-banco', auth, adminOnly, async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT ub.id, ub.nome, ub.descricao,
+           COUNT(p.id)::int AS proposal_count,
+           COALESCE(SUM(
+             ROUND(p.value * COALESCE(
+               (SELECT cr.comissao_empresa FROM commission_ranges cr
+                WHERE cr.financial_table_id = p.table_id
+                  AND cr.min_value <= p.value AND (cr.max_value IS NULL OR cr.max_value >= p.value)
+                ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_empresa, 0) / 100, 2)
+           ), 0)::numeric AS total_empresa
+    FROM usuarios_banco ub
+    LEFT JOIN proposals p ON p.usuario_banco_id = ub.id AND p.status = 'Paga'
+    LEFT JOIN financial_tables ft ON ft.id = p.table_id
+    GROUP BY ub.id, ub.nome, ub.descricao
+    ORDER BY total_empresa DESC, ub.nome ASC
+  `);
+  res.json(rows);
+});
+
 app.get('/api/admin/conta-empresa/:loja_id/extrato', auth, adminOnly, async (req, res) => {
   const { loja_id } = req.params;
   // Créditos: propostas pagas dessa loja
