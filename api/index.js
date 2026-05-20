@@ -565,7 +565,11 @@ app.get('/api/admin/conta-empresa/usuarios-banco', auth, adminOnly, async (req, 
            COUNT(p.id)::int AS proposal_count,
            COALESCE(SUM(COALESCE(p.comissao_empresa_override,
              ROUND(p.value * COALESCE(ft.comissao_empresa, 0) / 100, 2))
-           ) FILTER (WHERE p.status_comissao = 'Comissão Paga'), 0)::numeric AS total_empresa
+           ) FILTER (WHERE p.status_comissao = 'Comissão Paga'), 0)::numeric AS total_empresa,
+           COALESCE((
+             SELECT SUM(d.valor) FROM despesas d
+             WHERE d.usuario_banco_id = ub.id AND d.loja_id = l.id
+           ), 0)::numeric AS total_despesas
     FROM lojas l
     JOIN users u ON u.loja_id = l.id AND u.archived_at IS NULL
     JOIN proposals p ON p.user_id = u.id

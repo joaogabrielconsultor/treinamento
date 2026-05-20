@@ -14,6 +14,7 @@ interface UsuarioBancoBalance {
   descricao: string;
   proposal_count: number;
   total_empresa: number;
+  total_despesas: number;
 }
 
 interface LojaBalance {
@@ -370,15 +371,22 @@ export function AdminContaEmpresa() {
                         <tr key={`${l.loja_id}-ub`} style={{ borderBottom: '1px solid var(--card-border)' }}>
                           <td colSpan={7} className="px-4 pb-3 pt-0">
                             <div className="flex flex-wrap gap-2 pl-10">
-                              {ubByLoja[l.loja_id].map(ub => (
+                              {ubByLoja[l.loja_id].map(ub => {
+                                const saldoUb = Number(ub.total_empresa) - Number(ub.total_despesas);
+                                return (
                                 <span key={ub.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs"
                                   style={{ background: 'rgba(96,165,250,0.07)', border: '1px solid rgba(96,165,250,0.14)' }}>
                                   <UserCog className="w-3 h-3 flex-shrink-0" style={{ color: '#60a5fa' }} />
                                   <span style={{ color: 'var(--text-2)' }}>{ub.nome}</span>
                                   <span className="font-bold num" style={{ color: '#60a5fa' }}>{fmtBRL(Number(ub.total_empresa))}</span>
+                                  {Number(ub.total_despesas) > 0 && (
+                                    <span className="num" style={{ color: '#f87171' }}>− {fmtBRL(Number(ub.total_despesas))}</span>
+                                  )}
+                                  <span className="font-bold num" style={{ color: saldoUb >= 0 ? '#4ade80' : '#f87171' }}>= {fmtBRL(saldoUb)}</span>
                                   <span style={{ color: 'var(--text-3)' }}>· {ub.proposal_count} prop</span>
                                 </span>
-                              ))}
+                                );
+                              })}
                             </div>
                           </td>
                         </tr>
