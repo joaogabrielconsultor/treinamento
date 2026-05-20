@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Wallet, Clock, CheckCircle, DollarSign, FileText, ChevronDown, Key, Edit2, X, Save, Send, ArrowDownToLine, AlertCircle, TrendingUp, Info } from 'lucide-react';
 import { Proposal, WithdrawalRequest } from '../types';
 import { Pagination } from './ui/Pagination';
@@ -36,22 +37,47 @@ const SAQUE_STATUS_COLOR: Record<string, { text: string; bg: string; border: str
 // ── Tooltip card de descrição ──
 function InfoCard({ text }: { text: string }) {
   const [show, setShow] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  function updatePos() {
+    if (!btnRef.current) return;
+    const r = btnRef.current.getBoundingClientRect();
+    setPos({ top: r.top + window.scrollY - 8, left: r.left + window.scrollX + r.width / 2 });
+  }
+
   return (
     <div className="relative inline-block">
       <button
-        onMouseEnter={() => setShow(true)}
+        ref={btnRef}
+        onMouseEnter={() => { updatePos(); setShow(true); }}
         onMouseLeave={() => setShow(false)}
-        onClick={() => setShow(v => !v)}
+        onClick={() => { updatePos(); setShow(v => !v); }}
         className="flex-shrink-0"
       >
         <Info className="w-3 h-3" style={{ color: 'var(--text-3)' }} />
       </button>
-      {show && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 rounded-xl px-3 py-2 text-[11px] leading-relaxed z-50 pointer-events-none animate-fade-up"
-          style={{ background: 'rgba(8,13,24,0.97)', border: '1px solid var(--border-1)', boxShadow: '0 8px 24px rgba(0,0,0,0.5)', color: 'var(--text-2)' }}>
+      {show && createPortal(
+        <div
+          className="w-52 rounded-xl px-3 py-2 text-[11px] leading-relaxed pointer-events-none animate-fade-up"
+          style={{
+            position: 'absolute',
+            top: pos.top,
+            left: pos.left,
+            transform: 'translate(-50%, -100%)',
+            marginTop: '-8px',
+            zIndex: 9999,
+            background: 'rgba(8,13,24,0.97)',
+            border: '1px solid var(--border-1)',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+            color: 'var(--text-2)',
+          }}
+        >
           {text}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0" style={{ borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '5px solid rgba(8,13,24,0.97)' }} />
-        </div>
+          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0"
+            style={{ borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '5px solid rgba(8,13,24,0.97)' }} />
+        </div>,
+        document.body
       )}
     </div>
   );
