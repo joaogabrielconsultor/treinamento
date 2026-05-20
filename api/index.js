@@ -526,7 +526,7 @@ app.get('/api/admin/conta-empresa', auth, adminOnly, async (req, res) => {
     SELECT l.id AS loja_id, l.name AS loja_name,
            COUNT(DISTINCT u.id)::int AS broker_count,
            COALESCE(SUM(
-             CASE WHEN p.status = 'Paga' THEN
+             CASE WHEN p.status_comissao = 'Comissão Paga' THEN
                ROUND(p.value * COALESCE(
                  (SELECT cr.comissao_empresa FROM commission_ranges cr
                   WHERE cr.financial_table_id = p.table_id
@@ -534,6 +534,15 @@ app.get('/api/admin/conta-empresa', auth, adminOnly, async (req, res) => {
                   ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_empresa, 0) / 100, 2)
              END
            ), 0)::numeric AS total_creditos,
+           COALESCE(SUM(
+             CASE WHEN p.status_comissao = 'Ag. Comissão' THEN
+               ROUND(p.value * COALESCE(
+                 (SELECT cr.comissao_empresa FROM commission_ranges cr
+                  WHERE cr.financial_table_id = p.table_id
+                    AND cr.min_value <= p.value AND (cr.max_value IS NULL OR cr.max_value >= p.value)
+                  ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_empresa, 0) / 100, 2)
+             END
+           ), 0)::numeric AS empresa_ag_comissao,
            COALESCE((
              SELECT SUM(wr.amount) FROM withdrawal_requests wr
              JOIN users pu ON pu.id = wr.user_id

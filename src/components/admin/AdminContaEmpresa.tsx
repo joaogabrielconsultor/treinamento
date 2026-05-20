@@ -22,6 +22,7 @@ interface LojaBalance {
   loja_name: string;
   broker_count: number;
   total_creditos: number;
+  empresa_ag_comissao: number;
   total_debitos: number;
   total_comissao_paga: number;
   total_despesas_loja: number;
@@ -274,6 +275,7 @@ export function AdminContaEmpresa() {
   useEffect(() => { load(); }, []);
 
   const totalCreditos = lojas.reduce((a, l) => a + Number(l.total_creditos), 0);
+  const totalAgComissao = lojas.reduce((a, l) => a + Number(l.empresa_ag_comissao), 0);
   const totalDebitos = lojas.reduce((a, l) => a + Number(l.total_debitos), 0);
   const totalPendente = lojas.reduce((a, l) => a + Number(l.comissao_pendente), 0);
 
@@ -291,11 +293,12 @@ export function AdminContaEmpresa() {
         <ExtratoView loja={selected} onBack={() => setSelected(null)} />
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-4 gap-4 mb-6">
             {[
-              { label: 'Total Entradas', value: fmtBRL(totalCreditos), sub: 'comissões empresa', color: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.2)', icon: TrendingUp },
-              { label: 'Total Saídas', value: fmtBRL(totalDebitos), sub: 'comissões pagas', color: '#f87171', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)', icon: TrendingDown },
-              { label: 'Pendente Pagar', value: fmtBRL(totalPendente), sub: 'a corretores', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)', icon: Clock },
+              { label: 'Comissão Recebida', value: fmtBRL(totalCreditos), sub: 'já recebida do banco', color: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.2)', icon: TrendingUp },
+              { label: 'Ag. Comissão', value: fmtBRL(totalAgComissao), sub: 'proposta paga, comissão pendente', color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.2)', icon: Clock },
+              { label: 'Total Saídas', value: fmtBRL(totalDebitos), sub: 'saques + despesas', color: '#f87171', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)', icon: TrendingDown },
+              { label: 'Pend. Corretores', value: fmtBRL(totalPendente), sub: 'a pagar aos corretores', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)', icon: Clock },
             ].map((c, i) => (
               <div key={c.label} className="rounded-2xl p-4 animate-fade-up" style={{ background: c.bg, border: `1px solid ${c.border}`, boxShadow: 'var(--shadow-card)', animationDelay: `${i * 50}ms` }}>
                 <div className="flex items-start justify-between">
@@ -327,7 +330,7 @@ export function AdminContaEmpresa() {
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                    {['Loja', 'Corretores', 'Entradas', 'Saídas', 'Saldo', 'Pend. Corretores', ''].map(h => (
+                    {['Loja', 'Corretores', 'Recebido', 'Ag. Comissão', 'Saídas', 'Saldo', 'Pend. Corretores', ''].map(h => (
                       <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
                     ))}
                   </tr>
@@ -352,6 +355,9 @@ export function AdminContaEmpresa() {
                         </td>
                         <td className="px-4 py-3.5">
                           <span className="font-semibold num" style={{ color: '#4ade80' }}>{fmtBRL(Number(l.total_creditos))}</span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className="font-semibold num" style={{ color: Number(l.empresa_ag_comissao) > 0 ? '#a78bfa' : 'var(--text-3)' }}>{fmtBRL(Number(l.empresa_ag_comissao))}</span>
                         </td>
                         <td className="px-4 py-3.5">
                           <span className="font-semibold num" style={{ color: '#f87171' }}>{fmtBRL(Number(l.total_debitos))}</span>
@@ -383,7 +389,7 @@ export function AdminContaEmpresa() {
                       </tr>
                       {ubByLoja[l.loja_id]?.length > 0 && (
                         <tr key={`${l.loja_id}-ub`} style={{ borderBottom: '1px solid var(--card-border)' }}>
-                          <td colSpan={7} className="px-4 pb-3 pt-0">
+                          <td colSpan={8} className="px-4 pb-3 pt-0">
                             <div className="flex flex-wrap gap-2 pl-10">
                               {ubByLoja[l.loja_id].map(ub => {
                                 const saldoUb = Number(ub.total_empresa) - Number(ub.total_despesas);
