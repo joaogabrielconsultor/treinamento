@@ -1934,8 +1934,8 @@ app.get('/api/conta-corrente', auth, async (req, res) => {
   const month = req.query.month && /^\d{4}-\d{2}$/.test(req.query.month)
     ? req.query.month : null;
   const monthFilter = month
-    ? `AND DATE_TRUNC('month', p.created_at) = $2`
-    : `AND DATE_TRUNC('month', p.created_at) = DATE_TRUNC('month', NOW())`;
+    ? `AND DATE_TRUNC('month', p.updated_at) = $2`
+    : `AND DATE_TRUNC('month', p.updated_at) = DATE_TRUNC('month', NOW())`;
   const monthParam = month ? [req.user.id, `${month}-01`] : [req.user.id];
 
   // Todos os registros para o extrato (sem filtro de mês — frontend filtra)
@@ -1960,7 +1960,8 @@ app.get('/api/conta-corrente', auth, async (req, res) => {
     ),
     pool.query(
       `SELECT COALESCE(SUM(p.value),0) as total, COUNT(*)::int as count
-       FROM proposals p WHERE p.user_id=$1 AND p.status='Paga' ${monthFilter}`,
+       FROM proposals p WHERE p.user_id=$1 AND p.status='Paga'
+       AND DATE_TRUNC('month', p.updated_at) = ${month ? '$2' : 'DATE_TRUNC(\'month\', NOW())'}`,
       monthParam
     ),
   ]);
