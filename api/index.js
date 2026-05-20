@@ -563,19 +563,17 @@ app.get('/api/admin/conta-empresa/usuarios-banco', auth, adminOnly, async (req, 
   const { rows } = await pool.query(`
     SELECT l.id AS loja_id, ub.id, ub.nome, ub.descricao,
            COUNT(p.id)::int AS proposal_count,
-           COALESCE(SUM(
-             ROUND(p.value * COALESCE(
-               (SELECT cr.comissao_empresa FROM commission_ranges cr
-                WHERE cr.financial_table_id = p.table_id
-                  AND cr.min_value <= p.value AND (cr.max_value IS NULL OR cr.max_value >= p.value)
-                ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_empresa, 0) / 100, 2)
-           ), 0)::numeric AS total_empresa
+           COALESCE(SUM(COALESCE(p.comissao_empresa_override,
+             ROUND(p.value * COALESCE(ft.comissao_empresa, 0) / 100, 2))
+           ) FILTER (WHERE p.status_comissao = 'Comissão Paga'), 0)::numeric AS total_empresa
     FROM lojas l
     JOIN users u ON u.loja_id = l.id AND u.archived_at IS NULL
-    JOIN proposals p ON p.user_id = u.id AND p.status = 'Paga'
-    JOIN financial_tables ft ON ft.id = p.table_id
+    JOIN proposals p ON p.user_id = u.id
+    LEFT JOIN financial_tables ft ON ft.id = p.table_id
     JOIN usuarios_banco ub ON ub.id = p.usuario_banco_id
+    WHERE p.status_comissao IS NOT NULL
     GROUP BY l.id, ub.id, ub.nome, ub.descricao
+    HAVING COUNT(p.id) FILTER (WHERE p.status_comissao = 'Comissão Paga') > 0
     ORDER BY l.id, total_empresa DESC
   `);
   res.json(rows);
