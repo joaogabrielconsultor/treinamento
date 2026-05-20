@@ -1930,12 +1930,20 @@ const contaCorrenteSelect = `
 
 // Visão do corretor
 app.get('/api/conta-corrente', auth, async (req, res) => {
+  // Todos os registros para o extrato
   const { rows } = await pool.query(
     `${contaCorrenteSelect} WHERE p.user_id = $1 AND p.status_comissao IS NOT NULL ORDER BY p.updated_at DESC`,
     [req.user.id]
   );
-  const pending = rows.filter(r => r.status_comissao === 'Ag. Comissão');
-  const paid    = rows.filter(r => r.status_comissao === 'Comissão Paga');
+  // Apenas mês atual para os KPIs
+  const { rows: monthRows } = await pool.query(
+    `${contaCorrenteSelect} WHERE p.user_id = $1 AND p.status_comissao IS NOT NULL
+     AND DATE_TRUNC('month', p.created_at) = DATE_TRUNC('month', NOW())
+     ORDER BY p.updated_at DESC`,
+    [req.user.id]
+  );
+  const pending = monthRows.filter(r => r.status_comissao === 'Ag. Comissão');
+  const paid    = monthRows.filter(r => r.status_comissao === 'Comissão Paga');
   const paid_value = paid.reduce((a, b) => a + parseFloat(b.comissao_valor || 0), 0);
   const [{ rows: [req_total] }, { rows: [prod_month] }] = await Promise.all([
     pool.query(
