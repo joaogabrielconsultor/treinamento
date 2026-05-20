@@ -240,14 +240,14 @@ export function ContaCorrente() {
       info: 'Total já solicitado em saques (pendentes + aprovados + pagos). Saques recusados não entram neste total.',
     },
     {
-      label: 'Produção do Mês',
-      value: fmtBRL(summary.production_month),
-      sub: `${summary.production_month_count} proposta${summary.production_month_count !== 1 ? 's' : ''} pagas`,
+      label: 'Total Comissão Mês',
+      value: fmtBRL(summary.pending_value + summary.paid_value),
+      sub: `${summary.pending_count + summary.paid_count} proposta${(summary.pending_count + summary.paid_count) !== 1 ? 's' : ''} no mês`,
       icon: TrendingUp,
       color: '#a78bfa',
       bg: 'rgba(167,139,250,0.08)',
       border: 'rgba(167,139,250,0.2)',
-      info: 'Valor total das propostas pagas neste mês corrente — sua produção bruta, antes das comissões.',
+      info: 'Soma de toda a sua comissão do mês: o que está aguardando + o que já foi confirmado.',
     },
   ];
 
