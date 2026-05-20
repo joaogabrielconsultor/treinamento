@@ -1324,7 +1324,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                 {dupAlert && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> {dupAlert}</p>}
               </Field>
               <Field label="Valor liberado (R$)" error={errors.value}>
-                <input type="number" step="0.01" min="0.01" value={form.value} onChange={e => setForm(f => ({ ...f, value: e.target.value }))} onPaste={e => { const t = e.clipboardData.getData('text'); if (/[,.]/.test(t)) { e.preventDefault(); setForm(f => ({ ...f, value: t.replace(/\./g, '').replace(',', '.') })); } }} className={inp} inputMode="decimal" />
+                <input type="text" inputMode="decimal" value={form.value} onChange={e => setForm(f => ({ ...f, value: e.target.value }))} onPaste={e => { e.preventDefault(); const t = e.clipboardData.getData('text'); setForm(f => ({ ...f, value: t.replace(/\./g, '').replace(',', '.') })); }} className={inp} />
               </Field>
               <Field label="Data de digitação">
                 <input type="date" value={form.created_at} onChange={e => setForm(f => ({ ...f, created_at: e.target.value }))} className={inp} />
@@ -1417,16 +1417,16 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>Comissão Corretor (R$)</label>
-                      <input type="number" step="0.01" min="0" value={form.comissao_corretor_override}
+                      <input type="text" inputMode="decimal" value={form.comissao_corretor_override}
                         onChange={e => setForm(f => ({ ...f, comissao_corretor_override: e.target.value }))}
-                        onPaste={e => { const t = e.clipboardData.getData('text'); if (/[,.]/.test(t)) { e.preventDefault(); setForm(f => ({ ...f, comissao_corretor_override: t.replace(/\./g, '').replace(',', '.') })); } }}
+                        onPaste={e => { e.preventDefault(); const t = e.clipboardData.getData('text'); setForm(f => ({ ...f, comissao_corretor_override: t.replace(/\./g, '').replace(',', '.') })); }}
                         className={inp} placeholder={currentProp?.comissao_valor != null ? `Auto: ${formatCurrency(Number(currentProp.comissao_valor))}` : 'Automático'} />
                     </div>
                     <div>
                       <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>Comissão Empresa (R$)</label>
-                      <input type="number" step="0.01" min="0" value={form.comissao_empresa_override}
+                      <input type="text" inputMode="decimal" value={form.comissao_empresa_override}
                         onChange={e => setForm(f => ({ ...f, comissao_empresa_override: e.target.value }))}
-                        onPaste={e => { const t = e.clipboardData.getData('text'); if (/[,.]/.test(t)) { e.preventDefault(); setForm(f => ({ ...f, comissao_empresa_override: t.replace(/\./g, '').replace(',', '.') })); } }}
+                        onPaste={e => { e.preventDefault(); const t = e.clipboardData.getData('text'); setForm(f => ({ ...f, comissao_empresa_override: t.replace(/\./g, '').replace(',', '.') })); }}
                         className={inp} placeholder={currentProp?.comissao_empresa_valor != null ? `Auto: ${formatCurrency(Number(currentProp.comissao_empresa_valor))}` : 'Automático'} />
                     </div>
                   </div>
@@ -1490,7 +1490,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                     {form.proposal_number && !dupAlert && !checkingDup && <p className="text-xs text-green-600 mt-1 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Número disponível</p>}
                   </Field>
                   <Field label="Valor liberado (R$)" error={errors.value}>
-                    <input type="number" step="0.01" min="0.01" value={form.value} onChange={e => setForm(f => ({ ...f, value: e.target.value }))} onPaste={e => { const t = e.clipboardData.getData('text'); if (/[,.]/.test(t)) { e.preventDefault(); setForm(f => ({ ...f, value: t.replace(/\./g, '').replace(',', '.') })); } }} className={inp} placeholder="0,00" inputMode="decimal" />
+                    <input type="text" inputMode="decimal" value={form.value} onChange={e => setForm(f => ({ ...f, value: e.target.value }))} onPaste={e => { e.preventDefault(); const t = e.clipboardData.getData('text'); setForm(f => ({ ...f, value: t.replace(/\./g, '').replace(',', '.') })); }} className={inp} placeholder="0,00" />
                   </Field>
                   <Field label="Data de digitação">
                     <input type="date" value={form.created_at} onChange={e => setForm(f => ({ ...f, created_at: e.target.value }))} className={inp} />

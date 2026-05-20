@@ -543,8 +543,8 @@ export function ContaCorrente() {
                 </button>
               </div>
               <input value={saqueAmount} onChange={e => setSaqueAmount(e.target.value)}
-                onPaste={e => { const t = e.clipboardData.getData('text'); if (/[,.]/.test(t)) { e.preventDefault(); setSaqueAmount(t.replace(/\./g, '').replace(',', '.')); } }}
-                placeholder="0,00" type="number" step="0.01" min="0.01" max={summary.available_balance}
+                onPaste={e => { e.preventDefault(); const t = e.clipboardData.getData('text'); setSaqueAmount(t.replace(/\./g, '').replace(',', '.')); }}
+                placeholder="0,00" type="text" inputMode="decimal"
                 className="input-cyber w-full px-3 py-2.5 text-sm rounded-xl" />
               {saqueError && <p className="text-xs mt-1.5 flex items-center gap-1" style={{ color: '#f87171' }}><AlertCircle className="w-3 h-3" />{saqueError}</p>}
             </div>
