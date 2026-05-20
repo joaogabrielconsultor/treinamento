@@ -534,6 +534,14 @@ app.get('/api/admin/conta-empresa', auth, adminOnly, async (req, res) => {
                   ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_empresa, 0) / 100, 2)
              END
            ), 0)::numeric AS total_creditos,
+           COALESCE((
+             SELECT SUM(cp.total_value) FROM commission_payments cp
+             JOIN users pu ON pu.id = cp.user_id
+             WHERE pu.loja_id = l.id
+           ), 0)::numeric AS total_comissao_paga,
+           COALESCE((
+             SELECT SUM(d.valor) FROM despesas d WHERE d.loja_id = l.id
+           ), 0)::numeric AS total_despesas_loja,
            (COALESCE((
              SELECT SUM(cp.total_value) FROM commission_payments cp
              JOIN users pu ON pu.id = cp.user_id
@@ -1830,7 +1838,7 @@ app.get('/api/production/dashboard', auth, async (req, res) => {
 
   let saidasMes = null;
   if (isAdmin) {
-    const [{ rows: [comPag] }, { rows: [desp] }] = await Promise.all([
+    const [{ rows: [comPag] }, { rows: [desp] }, { rows: despByUb }] = await Promise.all([
       pool.query(`
         SELECT COALESCE(SUM(total_value),0)::numeric as total, COUNT(*)::int as count
         FROM commission_payments
@@ -1841,10 +1849,21 @@ app.get('/api/production/dashboard', auth, async (req, res) => {
         FROM despesas
         WHERE DATE_TRUNC('month', data) = DATE_TRUNC('month', NOW())
       `),
+      pool.query(`
+        SELECT ub.id, ub.nome,
+               COALESCE(SUM(d.valor),0)::numeric as total,
+               COUNT(*)::int as count
+        FROM despesas d
+        JOIN usuarios_banco ub ON ub.id = d.usuario_banco_id
+        WHERE DATE_TRUNC('month', d.data) = DATE_TRUNC('month', NOW())
+        GROUP BY ub.id, ub.nome
+        ORDER BY total DESC
+      `),
     ]);
     saidasMes = {
       comissao_paga: { total: parseFloat(comPag.total), count: comPag.count },
       despesas:      { total: parseFloat(desp.total),   count: desp.count   },
+      despesas_por_banco: despByUb.map(r => ({ id: r.id, nome: r.nome, total: parseFloat(r.total), count: r.count })),
     };
   }
 

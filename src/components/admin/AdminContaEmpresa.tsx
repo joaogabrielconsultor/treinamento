@@ -23,6 +23,8 @@ interface LojaBalance {
   broker_count: number;
   total_creditos: number;
   total_debitos: number;
+  total_comissao_paga: number;
+  total_despesas_loja: number;
   comissao_pendente: number;
 }
 
@@ -353,6 +355,18 @@ export function AdminContaEmpresa() {
                         </td>
                         <td className="px-4 py-3.5">
                           <span className="font-semibold num" style={{ color: '#f87171' }}>{fmtBRL(Number(l.total_debitos))}</span>
+                          <div className="flex flex-col gap-0.5 mt-1">
+                            {Number(l.total_comissao_paga) > 0 && (
+                              <span className="text-[10px] num" style={{ color: 'var(--text-3)' }}>
+                                Corr: <span style={{ color: '#f87171' }}>{fmtBRL(Number(l.total_comissao_paga))}</span>
+                              </span>
+                            )}
+                            {Number(l.total_despesas_loja) > 0 && (
+                              <span className="text-[10px] num" style={{ color: 'var(--text-3)' }}>
+                                Desp: <span style={{ color: '#fb923c' }}>{fmtBRL(Number(l.total_despesas_loja))}</span>
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-3.5">
                           <span className="font-bold num" style={{ color: saldo >= 0 ? '#4ade80' : '#f87171' }}>{fmtBRL(saldo)}</span>

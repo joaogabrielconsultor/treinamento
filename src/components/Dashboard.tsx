@@ -193,6 +193,17 @@ export function Dashboard({ user, onNavigate, isAdmin = false }: DashboardProps)
                   <Receipt className="w-4 h-4" style={{ color: '#fb923c' }} />
                 </div>
               </div>
+              {stats.saidas_mes.despesas_por_banco?.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-3 pt-3" style={{ borderTop: '1px solid rgba(251,146,60,0.15)' }}>
+                  {stats.saidas_mes.despesas_por_banco.map((ub: { id: string; nome: string; total: number; count: number }) => (
+                    <span key={ub.id} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px]"
+                      style={{ background: 'rgba(251,146,60,0.1)', border: '1px solid rgba(251,146,60,0.2)' }}>
+                      <span style={{ color: 'var(--text-3)' }}>{ub.nome}</span>
+                      <span className="font-bold num" style={{ color: '#fb923c' }}>{fmtR(ub.total)}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
