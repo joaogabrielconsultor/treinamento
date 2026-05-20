@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Building2, TrendingUp, TrendingDown, DollarSign, Clock, ChevronLeft, ArrowUpRight, ArrowDownLeft, Store, Trash2, UserCog } from 'lucide-react';
 
 const API = (p: string, opts?: RequestInit) =>
@@ -333,7 +333,8 @@ export function AdminContaEmpresa() {
                   {lojas.map(l => {
                     const saldo = Number(l.total_creditos) - Number(l.total_debitos);
                     return (
-                      <tr key={l.loja_id} className="table-row-cyber">
+                      <React.Fragment key={l.loja_id}>
+                      <tr className="table-row-cyber">
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-2.5">
                             <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -382,6 +383,7 @@ export function AdminContaEmpresa() {
                           </td>
                         </tr>
                       )}
+                      </React.Fragment>
                     );
                   })}
                 </tbody>
