@@ -189,7 +189,7 @@ export function ContaCorrente() {
   }
 
   async function requestSaque() {
-    const amt = parseFloat(saqueAmount.replace(',', '.'));
+    const amt = parseFloat(saqueAmount.replace(/\./g, '').replace(',', '.'));
     if (!amt || amt <= 0) { setSaqueError('Informe um valor válido'); return; }
     if (Math.round(amt * 100) > Math.round(summary.available_balance * 100)) {
       setSaqueError(`Valor excede o disponível (${fmtBRL(summary.available_balance)})`); return;
@@ -542,8 +542,9 @@ export function ContaCorrente() {
                   Usar tudo
                 </button>
               </div>
-              <input value={saqueAmount} onChange={e => setSaqueAmount(e.target.value)} placeholder="0,00"
-                type="number" step="0.01" min="0.01" max={summary.available_balance}
+              <input value={saqueAmount} onChange={e => setSaqueAmount(e.target.value)}
+                onPaste={e => { const t = e.clipboardData.getData('text'); if (/[,.]/.test(t)) { e.preventDefault(); setSaqueAmount(t.replace(/\./g, '').replace(',', '.')); } }}
+                placeholder="0,00" type="number" step="0.01" min="0.01" max={summary.available_balance}
                 className="input-cyber w-full px-3 py-2.5 text-sm rounded-xl" />
               {saqueError && <p className="text-xs mt-1.5 flex items-center gap-1" style={{ color: '#f87171' }}><AlertCircle className="w-3 h-3" />{saqueError}</p>}
             </div>

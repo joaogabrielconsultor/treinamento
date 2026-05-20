@@ -155,7 +155,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
       body: JSON.stringify({
         loja_id: despesaForm.loja_id || null,
         descricao: despesaForm.descricao,
-        valor: parseFloat(despesaForm.valor.replace(',', '.')),
+        valor: parseFloat(despesaForm.valor.replace(/\./g, '').replace(',', '.')),
         data: despesaForm.data,
         usuario_banco_id: despesaForm.usuario_banco_id || null,
       }),
@@ -249,7 +249,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
 
   async function saveEdit(id: string) {
     setSavingEdit(true);
-    const parseVal = (v: string) => v.trim() === '' ? null : parseFloat(v.replace(',', '.')) || 0;
+    const parseVal = (v: string) => v.trim() === '' ? null : parseFloat(v.replace(/\./g, '').replace(',', '.')) || 0;
     await API(`/api/proposals/${id}`, {
       method: 'PUT',
       body: JSON.stringify({
