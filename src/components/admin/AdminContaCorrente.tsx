@@ -562,7 +562,7 @@ export function AdminContaCorrente() {
                       {despesasFiltradas.map(d => (
                         <tr key={d.id} className="table-row-cyber">
                           <td className="px-4 py-3 text-xs num" style={{ color: 'var(--text-3)' }}>
-                            {new Date(d.data + 'T00:00:00').toLocaleDateString('pt-BR')}
+                            {new Date(d.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
                           </td>
                           <td className="px-4 py-3">
                             {d.loja_name ? (
