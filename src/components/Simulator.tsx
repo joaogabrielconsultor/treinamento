@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Calculator, ChevronDown, ArrowRight, TrendingUp, Zap, SlidersHorizontal } from 'lucide-react';
+import { Calculator, ChevronDown, ArrowRight, TrendingUp, Zap, SlidersHorizontal, RefreshCw } from 'lucide-react';
 import { FinancialTable, Bank, Convenio } from '../types';
 
 const API = (p: string) =>
@@ -22,6 +22,7 @@ interface SimResult {
   coef: number;
   valor_liberado: number;
   parcela: number;
+  troco_liquido?: number;
   comissao_empresa_pct: number;
   comissao_corretor_pct: number;
   comissao_empresa_val: number;
@@ -43,8 +44,9 @@ interface SimulatorProps {
 }
 
 export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
-  const [mode, setMode] = useState<'parcela' | 'credito'>('parcela');
+  const [mode, setMode] = useState<'parcela' | 'credito' | 'compra-divida'>('parcela');
   const [inputVal, setInputVal] = useState('');
+  const [dividaVal, setDividaVal] = useState('');
 
   // Required filters
   const [filterConvenio, setFilterConvenio] = useState('');
@@ -119,6 +121,13 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
     const val = parseFloat(raw);
     if (!val || val <= 0) return;
 
+    let divida = 0;
+    if (mode === 'compra-divida') {
+      const rawD = dividaVal.replace(/\./g, '').replace(',', '.');
+      divida = parseFloat(rawD);
+      if (!divida || divida <= 0) return;
+    }
+
     const res: SimResult[] = [];
 
     for (const t of allTables) {
@@ -133,8 +142,15 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
       if (filterBanco && t.bank_id !== filterBanco) continue;
       if (filterParceiro && t.parceiro !== filterParceiro) continue;
 
-      const valor_liberado = mode === 'parcela' ? val / coef : val;
-      const parcela       = mode === 'parcela' ? val       : val * coef;
+      // Compra de dívida: somente tabelas RFN / PORTABILIDADE
+      if (mode === 'compra-divida') {
+        const tipo = (t.tipo_proposta || '').toUpperCase();
+        if (!tipo.includes('PORTABILIDADE') && !tipo.includes('RFN')) continue;
+      }
+
+      const valor_liberado = mode === 'credito' ? val : val / coef;
+      const parcela        = mode === 'credito' ? val * coef : val;
+      const troco_liquido  = mode === 'compra-divida' ? valor_liberado - divida : undefined;
 
       const empPct = Number(t.comissao_empresa) || 0;
       const corPct = Number(t.comissao_corretor) || 0;
@@ -152,6 +168,7 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
         coef,
         valor_liberado,
         parcela,
+        troco_liquido,
         comissao_empresa_pct: empPct,
         comissao_corretor_pct: corPct,
         comissao_empresa_val: valor_liberado * empPct / 100,
@@ -160,13 +177,19 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
       });
     }
 
-    res.sort((a, b) => b.comissao_corretor_val - a.comissao_corretor_val);
+    if (mode === 'compra-divida') {
+      res.sort((a, b) => (b.troco_liquido ?? -Infinity) - (a.troco_liquido ?? -Infinity));
+    } else {
+      res.sort((a, b) => b.comissao_corretor_val - a.comissao_corretor_val);
+    }
     setResults(res);
     setSimulated(true);
   }
 
   const inpCls = 'input-cyber w-full px-3 py-2.5 text-sm rounded-xl appearance-none';
-  const canSimulate = !!inputVal.trim() && !!filterConvenio && !!filterTipoProposta && !dataLoading;
+  const canSimulate = !!inputVal.trim() && !!filterConvenio && !dataLoading
+    && (mode === 'compra-divida' || !!filterTipoProposta)
+    && (mode !== 'compra-divida' || !!dividaVal.trim());
 
   const optionalActiveCount = [filterConvenioDesc, filterBanco, filterParceiro, filterUsuarioBanco].filter(Boolean).length;
 
@@ -185,16 +208,26 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
 
         {/* Mode toggle */}
         <div className="inline-flex items-center gap-1 p-1 rounded-xl mb-5" style={{ background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.06)' }}>
-          {(['parcela', 'credito'] as const).map(m => (
+          {([
+            { key: 'parcela',       label: 'Por Parcela',      icon: <Zap className="w-3.5 h-3.5" /> },
+            { key: 'credito',       label: 'Por Crédito',      icon: <TrendingUp className="w-3.5 h-3.5" /> },
+            { key: 'compra-divida', label: 'Compra de Dívida', icon: <RefreshCw className="w-3.5 h-3.5" /> },
+          ] as const).map(m => (
             <button
-              key={m}
-              onClick={() => { setMode(m); resetResults(); }}
+              key={m.key}
+              onClick={() => { setMode(m.key); setDividaVal(''); resetResults(); }}
               className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-all"
-              style={mode === m
-                ? { background: 'linear-gradient(135deg,#14B8A6,#06B6D4)', color: '#fff', boxShadow: '0 2px 10px rgba(20,184,166,0.35)' }
+              style={mode === m.key
+                ? { background: m.key === 'compra-divida'
+                    ? 'linear-gradient(135deg,#8b5cf6,#6366f1)'
+                    : 'linear-gradient(135deg,#14B8A6,#06B6D4)',
+                    color: '#fff',
+                    boxShadow: m.key === 'compra-divida'
+                      ? '0 2px 10px rgba(139,92,246,0.35)'
+                      : '0 2px 10px rgba(20,184,166,0.35)' }
                 : { color: 'var(--text-3)' }}
             >
-              {m === 'parcela' ? <><Zap className="w-3.5 h-3.5" /> Por Parcela</> : <><TrendingUp className="w-3.5 h-3.5" /> Por Crédito</>}
+              {m.icon} {m.label}
             </button>
           ))}
         </div>
@@ -205,11 +238,11 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
         </p>
 
         {/* Required row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-          {/* Valor */}
+        <div className={`grid grid-cols-1 gap-3 mb-4 ${mode === 'compra-divida' ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
+          {/* Valor da Parcela */}
           <div>
             <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-2)' }}>
-              {mode === 'parcela' ? 'Valor da Parcela / Margem (R$)' : 'Valor de Crédito (R$)'}
+              {mode === 'credito' ? 'Valor de Crédito (R$)' : 'Valor da Parcela (R$)'}
               <span className="ml-1 text-[10px]" style={{ color: '#f87171' }}>*</span>
             </label>
             <input
@@ -217,10 +250,29 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
               onChange={e => { setInputVal(e.target.value); resetResults(); }}
               onKeyDown={e => e.key === 'Enter' && canSimulate && simulate()}
               className="input-cyber w-full px-3 py-3 text-base font-bold rounded-xl"
-              placeholder={mode === 'parcela' ? 'Ex: 200,00' : 'Ex: 10.000,00'}
+              placeholder={mode === 'credito' ? 'Ex: 10.000,00' : 'Ex: 400,00'}
               inputMode="decimal"
             />
           </div>
+
+          {/* Valor da Dívida — apenas no modo compra-divida */}
+          {mode === 'compra-divida' && (
+            <div>
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: '#a78bfa' }}>
+                Valor da Dívida do Cliente (R$)
+                <span className="ml-1 text-[10px]" style={{ color: '#f87171' }}>*</span>
+              </label>
+              <input
+                value={dividaVal}
+                onChange={e => { setDividaVal(e.target.value); resetResults(); }}
+                onKeyDown={e => e.key === 'Enter' && canSimulate && simulate()}
+                className="input-cyber w-full px-3 py-3 text-base font-bold rounded-xl"
+                placeholder="Ex: 10.000,00"
+                inputMode="decimal"
+                style={{ borderColor: 'rgba(139,92,246,0.4)' }}
+              />
+            </div>
+          )}
 
           {/* Convênio */}
           <div>
@@ -241,11 +293,12 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
             </div>
           </div>
 
-          {/* Tipo de Proposta */}
+          {/* Tipo de Proposta — opcional no modo compra-divida */}
           <div>
             <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-2)' }}>
               Tipo de Proposta
-              <span className="ml-1 text-[10px]" style={{ color: '#f87171' }}>*</span>
+              {mode !== 'compra-divida' && <span className="ml-1 text-[10px]" style={{ color: '#f87171' }}>*</span>}
+              {mode === 'compra-divida' && <span className="ml-1 text-[10px]" style={{ color: 'var(--text-3)' }}>(opcional)</span>}
             </label>
             <div className="relative">
               <ChevronDown className="absolute right-2 top-3 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
@@ -255,7 +308,7 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
                 className={`${inpCls} py-3 pr-7`}
                 disabled={!filterConvenio}
               >
-                <option value="">{filterConvenio ? 'Selecione o tipo' : 'Selecione o convênio primeiro'}</option>
+                <option value="">{filterConvenio ? (mode === 'compra-divida' ? 'Todos (RFN/Portabilidade)' : 'Selecione o tipo') : 'Selecione o convênio primeiro'}</option>
                 {availableTipos.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
@@ -359,13 +412,16 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
           {!filterConvenio && (
             <p className="text-xs" style={{ color: 'var(--text-3)' }}>Selecione o convênio para continuar</p>
           )}
-          {filterConvenio && !filterTipoProposta && (
+          {filterConvenio && !filterTipoProposta && mode !== 'compra-divida' && (
             <p className="text-xs" style={{ color: 'var(--text-3)' }}>Selecione o tipo de proposta para continuar</p>
           )}
-          {filterConvenio && filterTipoProposta && !inputVal.trim() && (
+          {filterConvenio && !inputVal.trim() && (
             <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-              Informe o {mode === 'parcela' ? 'valor da parcela' : 'valor de crédito'}
+              Informe o valor da {mode === 'credito' ? 'crédito' : 'parcela'}
             </p>
+          )}
+          {mode === 'compra-divida' && inputVal.trim() && !dividaVal.trim() && (
+            <p className="text-xs" style={{ color: '#a78bfa' }}>Informe o valor da dívida do cliente</p>
           )}
         </div>
 
@@ -373,7 +429,9 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
         <p className="mt-3 text-[11px]" style={{ color: 'var(--text-3)' }}>
           {mode === 'parcela'
             ? 'Informe quanto o cliente pode pagar por mês → o sistema calcula o valor liberado em cada tabela.'
-            : 'Informe quanto o cliente quer receber → o sistema calcula a parcela em cada tabela.'}
+            : mode === 'credito'
+            ? 'Informe quanto o cliente quer receber → o sistema calcula a parcela em cada tabela.'
+            : 'Informe a parcela e a dívida atual do cliente → o sistema mostra o troco líquido (quanto sobra após quitar a dívida) em cada tabela RFN / Portabilidade.'}
         </p>
       </div>
 
@@ -417,7 +475,9 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
                   <tr style={{ borderBottom: '1px solid var(--card-border)', background: 'rgba(0,0,0,0.12)' }}>
                     {[
                       'Banco','Convênio','Tabela','Tipo','Prazo','Coeficiente',
-                      'Valor Liberado','Parcela',
+                      'Valor Liberado',
+                      ...(mode === 'compra-divida' ? ['Troco Líquido'] : []),
+                      'Parcela',
                       ...(isAdmin ? ['Emp %'] : []),
                       'Cor %',
                       ...(isAdmin ? ['Com. Empresa'] : []),
@@ -434,9 +494,18 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
                     <tr
                       key={r.key}
                       className="transition-colors"
-                      style={{ borderBottom: '1px solid var(--card-border)', background: idx === 0 ? 'rgba(20,184,166,0.04)' : undefined }}
+                      style={{
+                        borderBottom: '1px solid var(--card-border)',
+                        background: mode === 'compra-divida' && (r.troco_liquido ?? 0) < 0
+                          ? 'rgba(248,113,113,0.04)'
+                          : idx === 0 ? 'rgba(20,184,166,0.04)' : undefined,
+                        opacity: mode === 'compra-divida' && (r.troco_liquido ?? 0) < 0 ? 0.75 : 1,
+                      }}
                       onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'}
-                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = idx === 0 ? 'rgba(20,184,166,0.04)' : 'transparent'}
+                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.background =
+                        mode === 'compra-divida' && (r.troco_liquido ?? 0) < 0
+                          ? 'rgba(248,113,113,0.04)'
+                          : idx === 0 ? 'rgba(20,184,166,0.04)' : 'transparent'}
                     >
                       <td className="px-3 py-3 text-xs font-semibold whitespace-nowrap" style={{ color: 'var(--text-1)' }}>
                         {idx === 0 && <span className="mr-1 text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: 'rgba(20,184,166,0.15)', color: '#14B8A6' }}>TOP</span>}
@@ -448,6 +517,13 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
                       <td className="px-3 py-3 text-xs num text-center font-semibold" style={{ color: 'var(--text-2)' }}>{r.prazo > 0 ? `${r.prazo}x` : '—'}</td>
                       <td className="px-3 py-3 text-[11px] num font-mono" style={{ color: '#a78bfa' }}>{r.coef.toFixed(7)}</td>
                       <td className="px-3 py-3 text-xs num font-bold" style={{ color: 'var(--text-1)' }}>{fmtBRL(r.valor_liberado)}</td>
+                      {mode === 'compra-divida' && (
+                        <td className="px-3 py-3 text-xs num font-black whitespace-nowrap"
+                          style={{ color: (r.troco_liquido ?? 0) >= 0 ? '#4ade80' : '#f87171',
+                                   background: (r.troco_liquido ?? 0) >= 0 ? 'rgba(74,222,128,0.06)' : 'rgba(248,113,113,0.06)' }}>
+                          {(r.troco_liquido ?? 0) >= 0 ? '+' : ''}{fmtBRL(r.troco_liquido ?? 0)}
+                        </td>
+                      )}
                       <td className="px-3 py-3 text-xs num font-semibold" style={{ color: '#fbbf24' }}>{fmtBRL(r.parcela)}</td>
                       {isAdmin && <td className="px-3 py-3 text-xs num" style={{ color: '#60a5fa' }}>{fmtPct(r.comissao_empresa_pct)}</td>}
                       <td className="px-3 py-3 text-xs num" style={{ color: '#4ade80' }}>{fmtPct(r.comissao_corretor_pct)}</td>
