@@ -133,14 +133,15 @@ export function ContaCorrente() {
 
   // Extrato filters
   const [filterStatus, setFilterStatus] = useState('');
-  const [filterMonth, setFilterMonth] = useState('');
+  const [filterMonth, setFilterMonth] = useState(currentMonthValue);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
 
-  async function load() {
+  async function load(month?: string) {
     setLoading(true);
+    const m = month ?? filterMonth;
     const [contaData, meData, saquesData] = await Promise.all([
-      API('/api/conta-corrente').then(r => r.json()),
+      API(`/api/conta-corrente${m ? `?month=${m}` : ''}`).then(r => r.json()),
       API('/api/auth/me').then(r => r.json()),
       API('/api/conta-corrente/saques').then(r => r.json()),
     ]);
@@ -173,7 +174,8 @@ export function ContaCorrente() {
   }
 
   useEffect(() => { load(); }, []);
-  useEffect(() => { setPage(1); }, [filterStatus, filterMonth]);
+  useEffect(() => { setPage(1); load(filterMonth); }, [filterMonth]);
+  useEffect(() => { setPage(1); }, [filterStatus]);
 
   // Meses disponíveis a partir das propostas
   const availableMonths = useMemo(() => {

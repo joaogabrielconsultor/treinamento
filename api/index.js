@@ -1930,17 +1930,24 @@ const contaCorrenteSelect = `
 
 // Visão do corretor
 app.get('/api/conta-corrente', auth, async (req, res) => {
-  // Todos os registros para o extrato
+  // Mês selecionado (padrão: mês atual)
+  const month = req.query.month && /^\d{4}-\d{2}$/.test(req.query.month)
+    ? req.query.month : null;
+  const monthFilter = month
+    ? `AND DATE_TRUNC('month', p.created_at) = $2`
+    : `AND DATE_TRUNC('month', p.created_at) = DATE_TRUNC('month', NOW())`;
+  const monthParam = month ? [req.user.id, `${month}-01`] : [req.user.id];
+
+  // Todos os registros para o extrato (sem filtro de mês — frontend filtra)
   const { rows } = await pool.query(
     `${contaCorrenteSelect} WHERE p.user_id = $1 AND p.status_comissao IS NOT NULL ORDER BY p.updated_at DESC`,
     [req.user.id]
   );
-  // Apenas mês atual para os KPIs
+  // KPIs filtrados pelo mês selecionado
   const { rows: monthRows } = await pool.query(
     `${contaCorrenteSelect} WHERE p.user_id = $1 AND p.status_comissao IS NOT NULL
-     AND DATE_TRUNC('month', p.created_at) = DATE_TRUNC('month', NOW())
-     ORDER BY p.updated_at DESC`,
-    [req.user.id]
+     ${monthFilter} ORDER BY p.updated_at DESC`,
+    monthParam
   );
   const pending = monthRows.filter(r => r.status_comissao === 'Ag. Comissão');
   const paid    = monthRows.filter(r => r.status_comissao === 'Comissão Paga');
@@ -1953,10 +1960,8 @@ app.get('/api/conta-corrente', auth, async (req, res) => {
     ),
     pool.query(
       `SELECT COALESCE(SUM(p.value),0) as total, COUNT(*)::int as count
-       FROM proposals p
-       WHERE p.user_id=$1 AND p.status='Paga'
-         AND DATE_TRUNC('month', p.created_at) = DATE_TRUNC('month', NOW())`,
-      [req.user.id]
+       FROM proposals p WHERE p.user_id=$1 AND p.status='Paga' ${monthFilter}`,
+      monthParam
     ),
   ]);
   const available_balance = Math.max(0, paid_value - parseFloat(req_total.total));
