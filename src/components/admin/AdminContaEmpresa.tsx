@@ -202,7 +202,7 @@ function ExtratoView({ loja, onBack }: { loja: LojaBalance; onBack: () => void }
                         ) : item.subtype === 'despesa' ? (
                           <p className="text-xs font-medium" style={{ color: '#fb923c' }}>{item.description_ref}</p>
                         ) : (
-                          <p className="text-xs" style={{ color: 'var(--text-2)' }}>Pagamento de comissão</p>
+                          <p className="text-xs" style={{ color: 'var(--text-2)' }}>{item.description_ref || 'Pagamento de comissão'}</p>
                         )}
                       </td>
                       <td className="px-4 py-3">

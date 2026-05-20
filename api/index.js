@@ -608,7 +608,7 @@ app.get('/api/admin/conta-empresa/:loja_id/extrato', auth, adminOnly, async (req
     SELECT 'debito' AS type,
            'comissao' AS subtype,
            cp.id AS reference_id,
-           NULL AS description_ref,
+           cp.notes AS description_ref,
            u.full_name AS broker_name,
            cp.total_value AS value,
            NULL AS client_name,
@@ -2058,6 +2058,14 @@ app.patch('/api/admin/saques/:id', auth, adminOnly, async (req, res) => {
     [status, notes || null, req.user.id, req.params.id]
   );
   if (!wr) return res.status(404).json({ error: 'Solicitação não encontrada' });
+  // Quando saque é pago, registra saída automática na conta empresa
+  if (status === 'Pago') {
+    await pool.query(
+      `INSERT INTO commission_payments (user_id, total_value, proposal_count, notes, paid_by)
+       VALUES ($1, $2, 0, $3, $4)`,
+      [wr.user_id, wr.amount, `Saque PIX #${wr.id.slice(0,8)}`, req.user.id]
+    );
+  }
   const msgs = { 'Aprovado': 'Sua solicitação de saque foi aprovada!', 'Pago': 'Seu saque foi pago! Verifique sua conta PIX.', 'Recusado': 'Sua solicitação de saque não foi aprovada.' };
   await pool.query(`INSERT INTO notifications (user_id, message) VALUES ($1,$2)`, [wr.user_id, msgs[status]]);
   res.json({ ok: true });
