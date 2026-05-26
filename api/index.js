@@ -1284,8 +1284,8 @@ app.get('/api/proposals', auth, async (req, res) => {
   if (product_id) { conditions.push(`p.product_id = $${i++}`);     values.push(product_id); }
   else if (product){ conditions.push(`p.product ILIKE $${i++}`);   values.push(`%${product}%`); }
   if (status)     { conditions.push(`p.status = $${i++}`);         values.push(status); }
-  if (start_date) { conditions.push(`p.created_at >= $${i++}`);    values.push(start_date); }
-  if (end_date)   { conditions.push(`p.created_at <= $${i++}`);    values.push(end_date + ' 23:59:59'); }
+  if (start_date) { conditions.push(`p.updated_at >= $${i++}`);    values.push(start_date); }
+  if (end_date)   { conditions.push(`p.updated_at <= $${i++}`);    values.push(end_date + ' 23:59:59'); }
   if (search)     { conditions.push(`(p.client_name ILIKE $${i} OR p.proposal_number ILIKE $${i} OR u.full_name ILIKE $${i} OR u.email ILIKE $${i})`); values.push(`%${search}%`); i++; }
   if (min_value)  { conditions.push(`p.value >= $${i++}`);         values.push(parseFloat(min_value)); }
   if (max_value)  { conditions.push(`p.value <= $${i++}`);         values.push(parseFloat(max_value)); }
@@ -1819,8 +1819,8 @@ app.delete('/api/admin/proposal-statuses/:id', auth, adminOnly, async (req, res)
 app.get('/api/ranking', auth, async (req, res) => {
   const { period } = req.query; // 'weekly' | 'monthly' | all (default)
   let dateFilter = '';
-  if (period === 'weekly')  dateFilter = "AND p.created_at >= now() - interval '7 days'";
-  if (period === 'monthly') dateFilter = "AND date_trunc('month', p.created_at) = date_trunc('month', now())";
+  if (period === 'weekly')  dateFilter = "AND p.updated_at >= now() - interval '7 days'";
+  if (period === 'monthly') dateFilter = "AND date_trunc('month', p.updated_at) = date_trunc('month', now())";
 
   let query;
   if (period === 'weekly' || period === 'monthly') {
@@ -1893,11 +1893,11 @@ app.get('/api/production/dashboard', auth, async (req, res) => {
 
   let periodFilter = '';
   if (period === 'today') {
-    periodFilter = `AND date_trunc('day', p.created_at) = date_trunc('day', now())`;
+    periodFilter = `AND date_trunc('day', p.updated_at) = date_trunc('day', now())`;
   } else if (period === 'week') {
-    periodFilter = `AND p.created_at >= date_trunc('week', now())`;
+    periodFilter = `AND p.updated_at >= date_trunc('week', now())`;
   } else if (period === 'month' || !period) {
-    periodFilter = `AND date_trunc('month', p.created_at) = date_trunc('month', now())`;
+    periodFilter = `AND date_trunc('month', p.updated_at) = date_trunc('month', now())`;
   }
 
   const todayParams = [...params];
@@ -1905,13 +1905,13 @@ app.get('/api/production/dashboard', auth, async (req, res) => {
   const { rows: [today] } = await pool.query(
     `SELECT COALESCE(SUM(value),0)::numeric as value, COUNT(*)::int as count
      FROM proposals p WHERE status='Paga'
-     AND date_trunc('day', p.created_at) = date_trunc('day', now()) ${baseWhere}`,
+     AND date_trunc('day', p.updated_at) = date_trunc('day', now()) ${baseWhere}`,
     params
   );
   const { rows: [month] } = await pool.query(
     `SELECT COALESCE(SUM(value),0)::numeric as value, COUNT(*)::int as count
      FROM proposals p WHERE status='Paga'
-     AND date_trunc('month', p.created_at) = date_trunc('month', now()) ${baseWhere}`,
+     AND date_trunc('month', p.updated_at) = date_trunc('month', now()) ${baseWhere}`,
     params
   );
   const { rows: [periodData] } = await pool.query(
