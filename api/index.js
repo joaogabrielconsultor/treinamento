@@ -1600,7 +1600,7 @@ app.post('/api/admin/proposals/import', auth, adminOnly, async (req, res) => {
   for (const row of rows) {
     try {
       const rowId      = (row.id || '').trim();
-      const clientCpf  = (row.cpf || '').trim();
+      const clientCpf  = (row.cpf || '').trim().replace(/\D/g, '').padStart(11, '0').slice(-11);
 
       // Generate proposal number if empty (dedup key = IMP-{cpf}-{date})
       let proposalNumber = (row.proposta || '').trim();

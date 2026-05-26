@@ -115,7 +115,9 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
       const headers = lines[0].split(sep).map(normalizeHeader);
       const rows = lines.slice(1).map(line => {
         const vals = line.split(sep).map(v => v.trim());
-        return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? '']));
+        const row = Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? '']));
+        if (row.cpf) row.cpf = row.cpf.replace(/\D/g, '').padStart(11, '0');
+        return row;
       }).filter(r => (r.proposta || r.cpf || r.nome_cliente) && r.proposta !== '');
 
       setImportPreview(rows);
