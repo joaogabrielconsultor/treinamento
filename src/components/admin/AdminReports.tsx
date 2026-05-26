@@ -65,6 +65,35 @@ export function AdminReports() {
     a.click();
   }
 
+  const [sortCol, setSortCol] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc' | null>(null);
+  function handleSort(col: string) {
+    if (sortCol !== col) { setSortCol(col); setSortDir('asc'); return; }
+    if (sortDir === 'asc') { setSortDir('desc'); return; }
+    setSortCol(null); setSortDir(null);
+  }
+  const SORT_FIELDS: Record<string, (p: Proposal) => string | number> = {
+    'Data':     p => p.created_at || '',
+    'Proposta': p => p.proposal_number || '',
+    'Corretor': p => (p.user_name || '').toLowerCase(),
+    'Cliente':  p => p.client_name.toLowerCase(),
+    'Banco':    p => (p.bank || '').toLowerCase(),
+    'Tabela':   p => (p.table_name || '').toLowerCase(),
+    'Produto':  p => (p.product || '').toLowerCase(),
+    'Convênio': p => (p.convenio || '').toLowerCase(),
+    'Valor':    p => Number(p.value),
+    'Status':   p => p.status.toLowerCase(),
+    'Pts':      p => p.points_earned || 0,
+  };
+  const sortedProposals = sortCol && sortDir && SORT_FIELDS[sortCol]
+    ? [...proposals].sort((a, b) => {
+        const va = SORT_FIELDS[sortCol!](a), vb = SORT_FIELDS[sortCol!](b);
+        if (va < vb) return sortDir === 'asc' ? -1 : 1;
+        if (va > vb) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+      })
+    : proposals;
+
   const totalValue = proposals.filter(p => p.status === 'Paga').reduce((a, b) => a + Number(b.value), 0);
 
   const F = filters;
@@ -170,15 +199,22 @@ export function AdminReports() {
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                {['Data', 'Proposta', 'Corretor', 'Cliente', 'Banco', 'Tabela', 'Produto', 'Convênio', 'Valor', 'Status', 'Pts'].map(h => (
-                  <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
-                ))}
+                {['Data', 'Proposta', 'Corretor', 'Cliente', 'Banco', 'Tabela', 'Produto', 'Convênio', 'Valor', 'Status', 'Pts'].map(h => {
+                  const active = sortCol === h;
+                  return (
+                    <th key={h} onClick={() => handleSort(h)}
+                      className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
+                      style={{ color: active ? '#14B8A6' : 'var(--text-3)', cursor: 'pointer', userSelect: 'none' }}>
+                      {h} <span className="opacity-60">{active ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
             <tbody>
               {proposals.length === 0 ? (
                 <tr><td colSpan={11} className="text-center py-12 text-gray-400">Nenhum resultado</td></tr>
-              ) : proposals.map(p => (
+              ) : sortedProposals.map(p => (
                 <tr key={p.id} className="table-row-cyber">
                   <td className="px-3 py-2.5 text-gray-500 text-xs">{fmtDate(p.created_at)}</td>
                   <td className="px-3 py-2.5 font-mono text-gray-700 dark:text-gray-300">{p.proposal_number || '—'}</td>

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Wallet, Clock, CheckCircle, DollarSign, Users, ChevronDown, Search, AlertCircle, Key, Send, XCircle, Inbox, Edit2, X, Check, TrendingDown, Plus, Store } from 'lucide-react';
+import { Wallet, Clock, CheckCircle, DollarSign, Users, ChevronDown, Search, AlertCircle, Key, Send, XCircle, Inbox, Edit2, X, Check, TrendingDown, Plus, Store, Calendar } from 'lucide-react';
+
+const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 import { Proposal, WithdrawalRequest } from '../../types';
 import { Pagination } from '../ui/Pagination';
 
@@ -86,6 +88,10 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
   const [filterCorretor, setFilterCorretor] = useState('');
   const [filterLoja, setFilterLoja] = useState('');
   const [filterUsuarioBanco, setFilterUsuarioBanco] = useState('');
+  const now = new Date();
+  const [filterMonth, setFilterMonth] = useState(String(now.getMonth() + 1));
+  const [filterYear, setFilterYear] = useState(String(now.getFullYear()));
+  const [allTime, setAllTime] = useState(false);
   const [usuariosBanco, setUsuariosBanco] = useState<UsuarioBanco[]>([]);
   const [usuariosBancoSummary, setUsuariosBancoSummary] = useState<UsuarioBancoSummary[]>([]);
   const [search, setSearch] = useState('');
@@ -117,6 +123,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
     if (filterStatus) params.set('status_comissao', filterStatus);
     if (filterLoja) params.set('loja_id', filterLoja);
     if (filterUsuarioBanco) params.set('usuario_banco_id', filterUsuarioBanco);
+    if (!allTime && filterMonth && filterYear) { params.set('month', filterMonth); params.set('year', filterYear); }
     const data = await API(`/api/admin/conta-corrente?${params}`).then(r => r.json());
     setProposals(Array.isArray(data.proposals) ? data.proposals : []);
     setBrokers(Array.isArray(data.brokers) ? data.brokers : []);
@@ -129,6 +136,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
     setLoadingSaques(true);
     const params = new URLSearchParams();
     if (filterLoja) params.set('loja_id', filterLoja);
+    if (!allTime && filterMonth && filterYear) { params.set('month', filterMonth); params.set('year', filterYear); }
     const data = await API(`/api/admin/saques?${params}`).then(r => r.json());
     setSaques(Array.isArray(data) ? data : []);
     setLoadingSaques(false);
@@ -136,8 +144,9 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
 
   async function loadDespesas() {
     setLoadingDespesas(true);
+    const periodParams = (!allTime && filterMonth && filterYear) ? `?month=${filterMonth}&year=${filterYear}` : '';
     const [despData, saldoData, lojasData] = await Promise.all([
-      API('/api/admin/despesas').then(r => r.json()),
+      API(`/api/admin/despesas${periodParams}`).then(r => r.json()),
       API('/api/admin/despesas/saldo-lojas').then(r => r.json()),
       API('/api/admin/lojas/all').then(r => r.json()),
     ]);
@@ -183,18 +192,80 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
     API('/api/admin/lojas/all').then(r => r.json()).then(d => setLojas(Array.isArray(d) ? d : []));
     API('/api/usuarios-banco').then(r => r.json()).then(d => setUsuariosBanco(Array.isArray(d) ? d : []));
   }, []);
-  useEffect(() => { load(); }, [filterCorretor, filterStatus, filterLoja, filterUsuarioBanco]);
-  useEffect(() => { if (tab === 'saques') loadSaques(); }, [tab, filterLoja]);
-  useEffect(() => { if (tab === 'despesas') loadDespesas(); }, [tab]);
+  useEffect(() => { load(); }, [filterCorretor, filterStatus, filterLoja, filterUsuarioBanco, filterMonth, filterYear, allTime]);
+  useEffect(() => { if (tab === 'saques') loadSaques(); }, [tab, filterLoja, filterMonth, filterYear, allTime]);
+  useEffect(() => { if (tab === 'despesas') loadDespesas(); }, [tab, filterMonth, filterYear, allTime]);
 
   const filtered = proposals.filter(p => {
     const q = search.toLowerCase();
     return !q || p.client_name.toLowerCase().includes(q) || p.client_cpf?.includes(q) || p.proposal_number.includes(q);
   });
 
-  useEffect(() => { setPage(1); }, [search, filterStatus, filterCorretor]);
+  // Sort state for each tab
+  const [commSortCol, setCommSortCol] = useState<string | null>(null);
+  const [commSortDir, setCommSortDir] = useState<'asc' | 'desc' | null>(null);
+  function handleCommSort(col: string) {
+    if (commSortCol !== col) { setCommSortCol(col); setCommSortDir('asc'); return; }
+    if (commSortDir === 'asc') { setCommSortDir('desc'); return; }
+    setCommSortCol(null); setCommSortDir(null);
+  }
+  const [saqueSortCol, setSaqueSortCol] = useState<string | null>(null);
+  const [saqueSortDir, setSaqueSortDir] = useState<'asc' | 'desc' | null>(null);
+  function handleSaqueSort(col: string) {
+    if (saqueSortCol !== col) { setSaqueSortCol(col); setSaqueSortDir('asc'); return; }
+    if (saqueSortDir === 'asc') { setSaqueSortDir('desc'); return; }
+    setSaqueSortCol(null); setSaqueSortDir(null);
+  }
+  const [despSortCol, setDespSortCol] = useState<string | null>(null);
+  const [despSortDir, setDespSortDir] = useState<'asc' | 'desc' | null>(null);
+  function handleDespSort(col: string) {
+    if (despSortCol !== col) { setDespSortCol(col); setDespSortDir('asc'); return; }
+    if (despSortDir === 'asc') { setDespSortDir('desc'); return; }
+    setDespSortCol(null); setDespSortDir(null);
+  }
 
-  const paginated = filtered.slice((page - 1) * perPage, page * perPage);
+  const COMM_SORT: Record<string, (p: Proposal) => string | number> = {
+    'Proposta':           p => p.proposal_number || '',
+    'Corretor':           p => ((p as any).user_name || '').toLowerCase(),
+    'Nome do Cliente':    p => p.client_name.toLowerCase(),
+    'Banco / Tabela':     p => ((p as any).bank_name || p.bank || '').toLowerCase(),
+    'Valor':              p => Number(p.value),
+    'Comissão Corretor':  p => Number(p.comissao_valor || 0),
+    'Comissão Empresa':   p => Number(p.comissao_empresa_valor || 0),
+    'Status':             p => p.status_comissao || '',
+  };
+  const SAQUE_SORT_FIELDS: Record<string, (s: WithdrawalRequest) => string | number> = {
+    'Corretor': s => (s.user_name || s.user_email || '').toLowerCase(),
+    'Valor':    s => Number(s.amount),
+    'Status':   s => s.status,
+    'Data':     s => s.created_at || '',
+  };
+  const DESP_SORT_FIELDS: Record<string, (d: Despesa) => string | number> = {
+    'Data':   d => d.data || '',
+    'Loja':   d => (d.loja_name || '').toLowerCase(),
+    'Valor':  d => Number(d.valor),
+  };
+
+  const commSorted = commSortCol && commSortDir && COMM_SORT[commSortCol]
+    ? [...filtered].sort((a, b) => {
+        const va = COMM_SORT[commSortCol!](a), vb = COMM_SORT[commSortCol!](b);
+        if (va < vb) return commSortDir === 'asc' ? -1 : 1;
+        if (va > vb) return commSortDir === 'asc' ? 1 : -1;
+        return 0;
+      })
+    : filtered;
+  const saqueSorted = saqueSortCol && saqueSortDir && SAQUE_SORT_FIELDS[saqueSortCol]
+    ? [...saques].sort((a, b) => {
+        const va = SAQUE_SORT_FIELDS[saqueSortCol!](a), vb = SAQUE_SORT_FIELDS[saqueSortCol!](b);
+        if (va < vb) return saqueSortDir === 'asc' ? -1 : 1;
+        if (va > vb) return saqueSortDir === 'asc' ? 1 : -1;
+        return 0;
+      })
+    : saques;
+
+  useEffect(() => { setPage(1); }, [search, filterStatus, filterCorretor, commSortCol, commSortDir]);
+
+  const paginated = commSorted.slice((page - 1) * perPage, page * perPage);
 
   const toggleSelect = (id: string) => {
     setSelected(prev => {
@@ -316,6 +387,36 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
             </select>
           </div>
         )}
+
+        {/* Filtro mês/ano */}
+        <div className="flex items-center gap-2">
+          <Calendar className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--text-3)' }} />
+          {!allTime && (
+            <>
+              <div className="relative">
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+                <select value={filterMonth} onChange={e => setFilterMonth(e.target.value)}
+                  className="input-cyber appearance-none pl-3 pr-7 py-2 text-xs rounded-xl" style={{ minWidth: '110px' }}>
+                  {MONTHS.map((name, i) => <option key={i + 1} value={String(i + 1)}>{name}</option>)}
+                </select>
+              </div>
+              <div className="relative">
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+                <select value={filterYear} onChange={e => setFilterYear(e.target.value)}
+                  className="input-cyber appearance-none pl-3 pr-7 py-2 text-xs rounded-xl" style={{ minWidth: '80px' }}>
+                  {[2024, 2025, 2026, 2027].map(y => <option key={y} value={String(y)}>{y}</option>)}
+                </select>
+              </div>
+            </>
+          )}
+          <button onClick={() => setAllTime(v => !v)}
+            className="px-3 py-2 text-xs rounded-xl font-medium transition-all"
+            style={allTime
+              ? { background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.4)' }
+              : { background: 'var(--surface-subtle)', color: 'var(--text-3)', border: '1px solid var(--card-border)' }}>
+            Todo período
+          </button>
+        </div>
       </div>
 
       {successMsg && tab === 'comissoes' && (
@@ -340,13 +441,20 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                    {['Corretor','Chave PIX','Valor','Status','Data','Ações'].map(h => (
-                      <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
-                    ))}
+                    {['Corretor','Chave PIX','Valor','Status','Data','Ações'].map(h => {
+                      const sortable = !!SAQUE_SORT_FIELDS[h]; const active = saqueSortCol === h;
+                      return (
+                        <th key={h} onClick={sortable ? () => handleSaqueSort(h) : undefined}
+                          className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest"
+                          style={{ color: active ? '#14B8A6' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
+                          {h}{sortable && <span className="ml-1 opacity-60">{active ? (saqueSortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
+                        </th>
+                      );
+                    })}
                   </tr>
                 </thead>
                 <tbody>
-                  {saques.map(s => {
+                  {saqueSorted.map(s => {
                     const sc = SAQUE_STATUS_COLOR[s.status] || SAQUE_STATUS_COLOR['Pendente'];
                     const isPending = s.status === 'Pendente';
                     const isApproved = s.status === 'Aprovado';
@@ -548,7 +656,15 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
 
               {/* Lista de despesas */}
               {(() => {
-                const despesasFiltradas = filterLoja ? despesas.filter(d => d.loja_id === filterLoja) : despesas;
+                const despBrut = filterLoja ? despesas.filter(d => d.loja_id === filterLoja) : despesas;
+                const despesasFiltradas = despSortCol && despSortDir && DESP_SORT_FIELDS[despSortCol]
+                  ? [...despBrut].sort((a, b) => {
+                      const va = DESP_SORT_FIELDS[despSortCol!](a), vb = DESP_SORT_FIELDS[despSortCol!](b);
+                      if (va < vb) return despSortDir === 'asc' ? -1 : 1;
+                      if (va > vb) return despSortDir === 'asc' ? 1 : -1;
+                      return 0;
+                    })
+                  : despBrut;
                 return despesasFiltradas.length === 0 ? (
                 <div className="text-center py-20">
                   <TrendingDown className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--text-3)' }} />
@@ -559,9 +675,16 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                   <table className="w-full text-sm">
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                        {['Data', 'Loja', 'Pago de', 'Descrição', 'Valor', 'Lançado por', ...(isMaster ? [''] : [])].map(h => (
-                          <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
-                        ))}
+                        {['Data', 'Loja', 'Pago de', 'Descrição', 'Valor', 'Lançado por', ...(isMaster ? [''] : [])].map(h => {
+                          const sortable = !!DESP_SORT_FIELDS[h]; const active = despSortCol === h;
+                          return (
+                            <th key={h} onClick={sortable ? () => handleDespSort(h) : undefined}
+                              className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest"
+                              style={{ color: active ? '#14B8A6' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
+                              {h}{sortable && <span className="ml-1 opacity-60">{active ? (despSortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
+                            </th>
+                          );
+                        })}
                       </tr>
                     </thead>
                     <tbody>
@@ -860,9 +983,16 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                     <input type="checkbox" checked={allPageSelected} onChange={toggleSelectAll}
                       className="w-3.5 h-3.5 rounded cursor-pointer accent-teal-500" />
                   </th>
-                  {['Proposta', 'Corretor', 'Nome do Cliente', 'CPF', 'Banco / Tabela', 'Valor', 'Comissão Corretor', 'Comissão Empresa', 'Status', ''].map(h => (
-                    <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
-                  ))}
+                  {['Proposta', 'Corretor', 'Nome do Cliente', 'CPF', 'Banco / Tabela', 'Valor', 'Comissão Corretor', 'Comissão Empresa', 'Status', ''].map(h => {
+                    const sortable = !!COMM_SORT[h]; const active = commSortCol === h;
+                    return (
+                      <th key={h} onClick={sortable ? () => handleCommSort(h) : undefined}
+                        className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest"
+                        style={{ color: active ? '#14B8A6' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
+                        {h}{sortable && <span className="ml-1 opacity-60">{active ? (commSortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>

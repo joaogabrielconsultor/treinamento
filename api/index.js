@@ -2107,10 +2107,14 @@ app.post('/api/conta-corrente/saque', auth, async (req, res) => {
 
 // Admin: listar todas as solicitações de saque
 app.get('/api/admin/saques', auth, adminOnly, async (req, res) => {
-  const { loja_id } = req.query;
+  const { loja_id, month, year } = req.query;
+  const m = parseInt(month, 10);
+  const y = parseInt(year, 10);
+  const hasPeriod = month && year && !isNaN(m) && !isNaN(y);
   const conditions = [];
   const values = [];
   if (loja_id) { conditions.push(`u.loja_id = $${values.length + 1}`); values.push(loja_id); }
+  if (hasPeriod) { conditions.push(`EXTRACT(MONTH FROM wr.created_at) = ${m} AND EXTRACT(YEAR FROM wr.created_at) = ${y}`); }
   const where = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
   const { rows } = await pool.query(`
     SELECT wr.*, u.full_name as user_name, u.email as user_email,
@@ -2142,6 +2146,11 @@ app.patch('/api/admin/saques/:id', auth, adminOnly, async (req, res) => {
 
 // Admin: listar despesas
 app.get('/api/admin/despesas', auth, adminOnly, async (req, res) => {
+  const { month, year } = req.query;
+  const m = parseInt(month, 10);
+  const y = parseInt(year, 10);
+  const hasPeriod = month && year && !isNaN(m) && !isNaN(y);
+  const periodFilter = hasPeriod ? `WHERE EXTRACT(MONTH FROM d.data::date) = ${m} AND EXTRACT(YEAR FROM d.data::date) = ${y}` : '';
   const { rows } = await pool.query(`
     SELECT d.*, l.name as loja_name, u.full_name as created_by_name,
            ub.nome as usuario_banco_nome
@@ -2149,6 +2158,7 @@ app.get('/api/admin/despesas', auth, adminOnly, async (req, res) => {
     LEFT JOIN lojas l ON l.id = d.loja_id
     LEFT JOIN users u ON u.id = d.created_by
     LEFT JOIN usuarios_banco ub ON ub.id = d.usuario_banco_id
+    ${periodFilter}
     ORDER BY d.data DESC, d.created_at DESC
   `);
   res.json(rows);
@@ -2205,7 +2215,10 @@ app.get('/api/admin/despesas/saldo-lojas', auth, adminOnly, async (req, res) => 
 
 // Visão do admin — resumo por corretor + lista completa
 app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
-  const { user_id, status_comissao, loja_id, usuario_banco_id } = req.query;
+  const { user_id, status_comissao, loja_id, usuario_banco_id, month, year } = req.query;
+  const m = month ? parseInt(month) : null;
+  const y = year  ? parseInt(year)  : null;
+  const hasPeriod = m && y && !isNaN(m) && !isNaN(y);
 
   const conditions = ['p.status_comissao IS NOT NULL'];
   const values = [];
@@ -2214,6 +2227,7 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
   if (status_comissao) { conditions.push(`p.status_comissao = $${i++}`); values.push(status_comissao); }
   if (loja_id) { conditions.push(`u.loja_id = $${i++}`); values.push(loja_id); }
   if (usuario_banco_id) { conditions.push(`p.usuario_banco_id = $${i++}`); values.push(usuario_banco_id); }
+  if (hasPeriod) { conditions.push(`EXTRACT(MONTH FROM p.created_at) = ${m} AND EXTRACT(YEAR FROM p.created_at) = ${y}`); }
   const where = 'WHERE ' + conditions.join(' AND ');
 
   const { rows: proposals } = await pool.query(
@@ -2226,6 +2240,7 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
   let bi = 1;
   if (loja_id) { brokerConditions.push(`u.loja_id = $${bi++}`); brokerValues.push(loja_id); }
   if (usuario_banco_id) { brokerConditions.push(`p.usuario_banco_id = $${bi++}`); brokerValues.push(usuario_banco_id); }
+  if (hasPeriod) { brokerConditions.push(`EXTRACT(MONTH FROM p.created_at) = ${m} AND EXTRACT(YEAR FROM p.created_at) = ${y}`); }
   const brokerWhere = 'WHERE ' + brokerConditions.join(' AND ');
 
   const { rows: brokerSummary } = await pool.query(`
@@ -2270,6 +2285,7 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
   let ui = 1;
   if (loja_id) { ubConditions.push(`u.loja_id = $${ui++}`); ubValues.push(loja_id); }
   if (usuario_banco_id) { ubConditions.push(`p.usuario_banco_id = $${ui++}`); ubValues.push(usuario_banco_id); }
+  if (hasPeriod) { ubConditions.push(`EXTRACT(MONTH FROM p.created_at) = ${m} AND EXTRACT(YEAR FROM p.created_at) = ${y}`); }
   const ubWhere = 'WHERE ' + ubConditions.join(' AND ');
 
   const { rows: ubSummary } = await pool.query(`
@@ -2362,6 +2378,59 @@ app.get('/api/admin/conta-corrente/payments', auth, adminOnly, async (req, res) 
     LIMIT 100
   `);
   res.json(rows);
+});
+
+// ─── ROTEIROS OPERACIONAIS ────────────────────────────────────────────────────
+app.get('/api/roteiros', auth, async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT r.*, b.name AS bank_name
+    FROM roteiros r
+    LEFT JOIN banks b ON r.bank_id = b.id
+    ORDER BY b.name NULLS LAST, r.created_at DESC
+  `);
+  res.json(rows);
+});
+
+app.post('/api/roteiros/upload', auth, adminOnly, async (req, res) => {
+  try {
+    if (!req.files || !req.files.pdf) {
+      return res.status(400).json({ error: 'Arquivo PDF não recebido.' });
+    }
+    const file = req.files.pdf;
+    const ext = path.extname(file.name) || '.pdf';
+    const filename = `roteiro_${Date.now()}${ext}`;
+    const filepath = path.join(UPLOADS_DIR, filename);
+    await file.mv(filepath);
+    const { bank_id, title, description } = req.body;
+    const { rows } = await pool.query(
+      `INSERT INTO roteiros (bank_id, title, description, file_url, original_name, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [bank_id || null, title, description || '', `/uploads/${filename}`, file.name, req.user.id]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Erro ao fazer upload' });
+  }
+});
+
+app.put('/api/roteiros/:id', auth, adminOnly, async (req, res) => {
+  const { title, description, bank_id } = req.body;
+  const { rows } = await pool.query(
+    `UPDATE roteiros SET title = COALESCE($1, title), description = COALESCE($2, description), bank_id = $3 WHERE id = $4 RETURNING *`,
+    [title, description, bank_id || null, req.params.id]
+  );
+  if (!rows[0]) return res.status(404).json({ error: 'Roteiro não encontrado' });
+  res.json(rows[0]);
+});
+
+app.delete('/api/roteiros/:id', auth, adminOnly, async (req, res) => {
+  const { rows } = await pool.query('SELECT file_url FROM roteiros WHERE id = $1', [req.params.id]);
+  if (rows[0]) {
+    const filePath = path.join(__dirname, rows[0].file_url.replace('/uploads/', 'uploads/'));
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  }
+  await pool.query('DELETE FROM roteiros WHERE id = $1', [req.params.id]);
+  res.json({ ok: true });
 });
 
 // ─── FRONTEND (produção) ──────────────────────────────────────────────────────

@@ -399,6 +399,20 @@ async function initDb() {
 
     await client.query(`ALTER TABLE despesas ADD COLUMN IF NOT EXISTS usuario_banco_id uuid REFERENCES usuarios_banco(id) ON DELETE SET NULL`);
 
+    // ─── ROTEIROS OPERACIONAIS ────────────────────────────────────────────────
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS roteiros (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        bank_id uuid REFERENCES banks(id) ON DELETE SET NULL,
+        title text NOT NULL,
+        description text NOT NULL DEFAULT '',
+        file_url text NOT NULL,
+        original_name text NOT NULL DEFAULT '',
+        created_by uuid REFERENCES users(id) ON DELETE SET NULL,
+        created_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+
     // Seed badges padrão
     const { rows: badgeCheck } = await client.query('SELECT id FROM badges LIMIT 1');
     if (badgeCheck.length === 0) {

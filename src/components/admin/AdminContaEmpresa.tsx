@@ -281,8 +281,31 @@ export function AdminContaEmpresa() {
 
   useEffect(() => { load(filterMonth, filterYear, allTime); }, [filterMonth, filterYear, allTime]);
 
+  const [sortCol, setSortCol] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc' | null>(null);
+  function handleSort(col: string) {
+    if (sortCol !== col) { setSortCol(col); setSortDir('asc'); return; }
+    if (sortDir === 'asc') { setSortDir('desc'); return; }
+    setSortCol(null); setSortDir(null);
+  }
+  const SORT_FIELDS: Record<string, (l: LojaBalance) => string | number> = {
+    'Loja':             l => l.loja_name.toLowerCase(),
+    'Corretores':       l => l.broker_count,
+    'Recebido':         l => Number(l.total_creditos),
+    'Saídas':           l => Number(l.total_debitos),
+    'Saldo':            l => Number(l.total_creditos) - Number(l.total_debitos),
+    'Pend. Corretores': l => Number(l.comissao_pendente),
+  };
+  const sortedLojas = sortCol && sortDir && SORT_FIELDS[sortCol]
+    ? [...lojas].sort((a, b) => {
+        const va = SORT_FIELDS[sortCol!](a), vb = SORT_FIELDS[sortCol!](b);
+        if (va < vb) return sortDir === 'asc' ? -1 : 1;
+        if (va > vb) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+      })
+    : lojas;
+
   const totalCreditos = lojas.reduce((a, l) => a + Number(l.total_creditos), 0);
-  const totalAgComissao = lojas.reduce((a, l) => a + Number(l.empresa_ag_comissao), 0);
   const totalDebitos = lojas.reduce((a, l) => a + Number(l.total_debitos), 0);
   const totalPendente = lojas.reduce((a, l) => a + Number(l.comissao_pendente), 0);
 
@@ -318,10 +341,9 @@ export function AdminContaEmpresa() {
         <ExtratoView loja={selected} onBack={() => setSelected(null)} />
       ) : (
         <>
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-3 gap-4 mb-6">
             {[
               { label: 'Comissão Recebida', value: fmtBRL(totalCreditos), sub: 'já recebida do banco', color: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.2)', icon: TrendingUp },
-              { label: 'Ag. Comissão', value: fmtBRL(totalAgComissao), sub: 'proposta paga, comissão pendente', color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.2)', icon: Clock },
               { label: 'Total Saídas', value: fmtBRL(totalDebitos), sub: 'saques + despesas', color: '#f87171', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)', icon: TrendingDown },
               { label: 'Pend. Corretores', value: fmtBRL(totalPendente), sub: 'a pagar aos corretores', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)', icon: Clock },
             ].map((c, i) => (
@@ -355,13 +377,20 @@ export function AdminContaEmpresa() {
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                    {['Loja', 'Corretores', 'Recebido', 'Ag. Comissão', 'Saídas', 'Saldo', 'Pend. Corretores', ''].map(h => (
-                      <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
-                    ))}
+                    {['Loja', 'Corretores', 'Recebido', 'Saídas', 'Saldo', 'Pend. Corretores', ''].map(h => {
+                      const sortable = !!SORT_FIELDS[h]; const active = sortCol === h;
+                      return (
+                        <th key={h} onClick={sortable ? () => handleSort(h) : undefined}
+                          className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest"
+                          style={{ color: active ? '#14B8A6' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
+                          {h}{sortable && <span className="ml-1 opacity-60">{active ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
+                        </th>
+                      );
+                    })}
                   </tr>
                 </thead>
                 <tbody>
-                  {lojas.map(l => {
+                  {sortedLojas.map(l => {
                     const saldo = Number(l.total_creditos) - Number(l.total_debitos);
                     return (
                       <React.Fragment key={l.loja_id}>
@@ -380,9 +409,6 @@ export function AdminContaEmpresa() {
                         </td>
                         <td className="px-4 py-3.5">
                           <span className="font-semibold num" style={{ color: '#4ade80' }}>{fmtBRL(Number(l.total_creditos))}</span>
-                        </td>
-                        <td className="px-4 py-3.5">
-                          <span className="font-semibold num" style={{ color: Number(l.empresa_ag_comissao) > 0 ? '#a78bfa' : 'var(--text-3)' }}>{fmtBRL(Number(l.empresa_ag_comissao))}</span>
                         </td>
                         <td className="px-4 py-3.5">
                           <span className="font-semibold num" style={{ color: '#f87171' }}>{fmtBRL(Number(l.total_debitos))}</span>
@@ -414,7 +440,7 @@ export function AdminContaEmpresa() {
                       </tr>
                       {ubByLoja[l.loja_id]?.length > 0 && (
                         <tr key={`${l.loja_id}-ub`} style={{ borderBottom: '1px solid var(--card-border)' }}>
-                          <td colSpan={8} className="px-4 pb-3 pt-0">
+                          <td colSpan={7} className="px-4 pb-3 pt-0">
                             <div className="flex flex-wrap gap-2 pl-10">
                               {ubByLoja[l.loja_id].map(ub => {
                                 const saldoUb = Number(ub.total_empresa) - Number(ub.total_despesas);

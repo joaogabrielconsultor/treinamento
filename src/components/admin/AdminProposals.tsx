@@ -165,9 +165,36 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
     return matchSearch && matchStatus && matchCorretor && matchBank;
   });
 
-  useEffect(() => { setPage(1); }, [search, filterStatus, filterCorretor, filterBank]);
+  const [sortCol, setSortCol] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc' | null>(null);
+  function handleSort(col: string) {
+    if (sortCol !== col) { setSortCol(col); setSortDir('asc'); return; }
+    if (sortDir === 'asc') { setSortDir('desc'); return; }
+    setSortCol(null); setSortDir(null);
+  }
+  const SORT_FIELDS: Record<string, (p: Proposal) => string | number> = {
+    'Proposta':        p => p.proposal_number || '',
+    'Corretor':        p => (p.user_name || '').toLowerCase(),
+    'Nome do Cliente': p => p.client_name.toLowerCase(),
+    'Convênio':        p => (p.convenio_name || p.convenio || '').toLowerCase(),
+    'Banco':           p => (p.bank_name || p.bank || '').toLowerCase(),
+    'Tabela':          p => (p.table_name || '').toLowerCase(),
+    'Valor':           p => Number(p.value),
+    'Status':          p => p.status.toLowerCase(),
+    'Pontos':          p => p.points_earned || 0,
+  };
+  const sorted = sortCol && sortDir && SORT_FIELDS[sortCol]
+    ? [...filtered].sort((a, b) => {
+        const va = SORT_FIELDS[sortCol!](a), vb = SORT_FIELDS[sortCol!](b);
+        if (va < vb) return sortDir === 'asc' ? -1 : 1;
+        if (va > vb) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+      })
+    : filtered;
 
-  const paginated = filtered.slice((page - 1) * perPage, page * perPage);
+  useEffect(() => { setPage(1); }, [search, filterStatus, filterCorretor, filterBank, sortCol, sortDir]);
+
+  const paginated = sorted.slice((page - 1) * perPage, page * perPage);
   const totalPaid = proposals.filter(p => p.status === 'Paga').reduce((a, b) => a + Number(b.value), 0);
   const totalPoints = proposals.reduce((a, b) => a + (b.points_earned || 0), 0);
 
@@ -249,9 +276,16 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
             <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                  {['Proposta', 'Corretor', 'Nome do Cliente', 'CPF', 'Convênio', 'Banco', 'Tabela', 'Valor', 'Status', 'Pontos', 'Ações'].map(h => (
-                    <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
-                  ))}
+                  {['Proposta', 'Corretor', 'Nome do Cliente', 'CPF', 'Convênio', 'Banco', 'Tabela', 'Valor', 'Status', 'Pontos', 'Ações'].map(h => {
+                    const sortable = !!SORT_FIELDS[h]; const active = sortCol === h;
+                    return (
+                      <th key={h} onClick={sortable ? () => handleSort(h) : undefined}
+                        className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest"
+                        style={{ color: active ? '#14B8A6' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
+                        {h}{sortable && <span className="ml-1 opacity-60">{active ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>

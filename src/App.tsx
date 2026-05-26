@@ -27,6 +27,8 @@ import { AdminLojas } from './components/admin/AdminLojas';
 import { AdminContaEmpresa } from './components/admin/AdminContaEmpresa';
 import { AdminProposalStatuses } from './components/admin/AdminProposalStatuses';
 import { AdminUsuariosBanco } from './components/admin/AdminUsuariosBanco';
+import { Roteiros } from './components/Roteiros';
+import { AdminRoteiros } from './components/admin/AdminRoteiros';
 import { ProfileModal } from './components/ProfileModal';
 import { useAuth } from './hooks/useAuth';
 import { useIdleLogout } from './hooks/useIdleLogout';
@@ -47,6 +49,7 @@ function AppInner() {
     'admin-categories','admin-banks','admin-convenios','admin-products',
     'admin-reports','conta-corrente','admin-conta-corrente','admin-lojas',
     'admin-conta-empresa','admin-proposal-statuses','admin-usuarios-banco',
+    'roteiros','admin-roteiros',
   ]);
 
   function parseHash() {
@@ -251,6 +254,8 @@ function AppInner() {
         {currentView === 'admin-conta-empresa'   && isAdmin && <AdminContaEmpresa />}
         {currentView === 'admin-proposal-statuses' && isAdmin && <AdminProposalStatuses />}
         {currentView === 'admin-usuarios-banco'  && isAdmin && <AdminUsuariosBanco />}
+        {currentView === 'roteiros'              && <Roteiros />}
+        {currentView === 'admin-roteiros'        && isAdmin && <AdminRoteiros />}
       </main>
     </div>
   );

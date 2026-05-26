@@ -322,7 +322,9 @@ export type ViewType =
   | 'admin-lojas'
   | 'admin-conta-empresa'
   | 'admin-proposal-statuses'
-  | 'admin-usuarios-banco';
+  | 'admin-usuarios-banco'
+  | 'roteiros'
+  | 'admin-roteiros';
 
 export type AuthMode = 'login';
 

@@ -167,6 +167,20 @@ export function ContaCorrente() {
   const [filterMonth, setFilterMonth] = useState(currentMonthValue);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
+  const [sortCol, setSortCol] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc' | null>(null);
+  function handleSort(col: string) {
+    if (sortCol !== col) { setSortCol(col); setSortDir('asc'); return; }
+    if (sortDir === 'asc') { setSortDir('desc'); return; }
+    setSortCol(null); setSortDir(null);
+  }
+  const [saqueSort, setSaqueSort] = useState<string | null>(null);
+  const [saqueSortDir, setSaqueSortDir] = useState<'asc' | 'desc' | null>(null);
+  function handleSaqueSort(col: string) {
+    if (saqueSort !== col) { setSaqueSort(col); setSaqueSortDir('asc'); return; }
+    if (saqueSortDir === 'asc') { setSaqueSortDir('desc'); return; }
+    setSaqueSort(null); setSaqueSortDir(null);
+  }
 
   async function load(month?: string) {
     setLoading(true);
@@ -228,7 +242,37 @@ export function ContaCorrente() {
     return true;
   }), [proposals, filterStatus, filterMonth]);
 
-  const paginated = filtered.slice((page - 1) * perPage, page * perPage);
+  const EXTRATO_SORT: Record<string, (p: Proposal) => string | number> = {
+    'Proposta': p => p.proposal_number || '',
+    'Cliente':  p => p.client_name.toLowerCase(),
+    'CPF':      p => p.client_cpf || '',
+    'Banco / Tabela': p => (p.bank_name || p.bank || '').toLowerCase(),
+    'Valor':    p => Number(p.value),
+    'Comissão': p => Number(p.comissao_valor || 0),
+    'Status':   p => p.status_comissao || '',
+  };
+  const SAQUE_SORT: Record<string, (s: WithdrawalRequest) => string | number> = {
+    'Data':   s => s.created_at || '',
+    'Valor':  s => Number(s.amount),
+    'Status': s => s.status,
+  };
+  const sortedFiltered = sortCol && sortDir && EXTRATO_SORT[sortCol]
+    ? [...filtered].sort((a, b) => {
+        const va = EXTRATO_SORT[sortCol!](a), vb = EXTRATO_SORT[sortCol!](b);
+        if (va < vb) return sortDir === 'asc' ? -1 : 1;
+        if (va > vb) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+      })
+    : filtered;
+  const sortedSaques = saqueSort && saqueSortDir && SAQUE_SORT[saqueSort]
+    ? [...saques].sort((a, b) => {
+        const va = SAQUE_SORT[saqueSort!](a), vb = SAQUE_SORT[saqueSort!](b);
+        if (va < vb) return saqueSortDir === 'asc' ? -1 : 1;
+        if (va > vb) return saqueSortDir === 'asc' ? 1 : -1;
+        return 0;
+      })
+    : saques;
+  const paginated = sortedFiltered.slice((page - 1) * perPage, page * perPage);
 
   // Porcentagem sacada do total recebido (all-time)
   const pctSacado = summary.all_time_paid_value > 0
@@ -382,13 +426,20 @@ export function ContaCorrente() {
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                    {['Data', 'Valor', 'Status', 'Observação'].map(h => (
-                      <th key={h} className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
-                    ))}
+                    {['Data', 'Valor', 'Status', 'Observação'].map(h => {
+                      const sortable = !!SAQUE_SORT[h]; const active = saqueSort === h;
+                      return (
+                        <th key={h} onClick={sortable ? () => handleSaqueSort(h) : undefined}
+                          className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest"
+                          style={{ color: active ? '#14B8A6' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
+                          {h}{sortable && <span className="ml-1 opacity-60">{active ? (saqueSortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
+                        </th>
+                      );
+                    })}
                   </tr>
                 </thead>
                 <tbody>
-                  {saques.map(s => {
+                  {sortedSaques.map(s => {
                     const sc = SAQUE_STATUS_COLOR[s.status] || SAQUE_STATUS_COLOR['Pendente'];
                     return (
                       <tr key={s.id} className="table-row-cyber">
@@ -452,9 +503,16 @@ export function ContaCorrente() {
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                    {['Proposta', 'Cliente', 'CPF', 'Banco / Tabela', 'Valor', 'Comissão', 'Status'].map(h => (
-                      <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
-                    ))}
+                    {['Proposta', 'Cliente', 'CPF', 'Banco / Tabela', 'Valor', 'Comissão', 'Status'].map(h => {
+                      const active = sortCol === h;
+                      return (
+                        <th key={h} onClick={() => handleSort(h)}
+                          className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest"
+                          style={{ color: active ? '#14B8A6' : 'var(--text-3)', cursor: 'pointer', userSelect: 'none' }}>
+                          {h} <span className="opacity-60">{active ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>
+                        </th>
+                      );
+                    })}
                   </tr>
                 </thead>
                 <tbody>

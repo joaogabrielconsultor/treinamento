@@ -338,7 +338,30 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
   const [archiveTarget, setArchiveTarget] = useState<{ id: string; name: string; isUnarchive?: boolean } | null>(null);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
-  const paginated = users.slice((page - 1) * perPage, page * perPage);
+  const [sortCol, setSortCol] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc' | null>(null);
+  function handleSort(col: string) {
+    if (sortCol !== col) { setSortCol(col); setSortDir('asc'); return; }
+    if (sortDir === 'asc') { setSortDir('desc'); return; }
+    setSortCol(null); setSortDir(null);
+  }
+  type AdminUser = typeof users[0];
+  const SORT_FIELDS: Record<string, (u: AdminUser) => string | number> = {
+    'Usuário':    u => (u.full_name || u.email || '').toLowerCase(),
+    'Loja':       u => (u.loja_name || '').toLowerCase(),
+    'Função':     u => u.role,
+    'Matrículas': u => u.enrollment_count || 0,
+    'Cadastro':   u => u.created_at || '',
+  };
+  const sortedUsers = sortCol && sortDir && SORT_FIELDS[sortCol]
+    ? [...users].sort((a, b) => {
+        const va = SORT_FIELDS[sortCol!](a), vb = SORT_FIELDS[sortCol!](b);
+        if (va < vb) return sortDir === 'asc' ? -1 : 1;
+        if (va > vb) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+      })
+    : users;
+  const paginated = sortedUsers.slice((page - 1) * perPage, page * perPage);
 
   const isMasterAdmin = currentUserEmail === MASTER_ADMIN_EMAIL;
 
@@ -426,9 +449,16 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
         <table className="w-full">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-              {['Usuário', 'Loja', 'Função', 'Matrículas', 'Cadastro', ''].map(h => (
-                <th key={h} className="text-left px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
-              ))}
+              {['Usuário', 'Loja', 'Função', 'Matrículas', 'Cadastro', ''].map(h => {
+                const sortable = !!SORT_FIELDS[h]; const active = sortCol === h;
+                return (
+                  <th key={h} onClick={sortable ? () => handleSort(h) : undefined}
+                    className="text-left px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest"
+                    style={{ color: active ? '#14B8A6' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
+                    {h}{sortable && <span className="ml-1 opacity-60">{active ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>
