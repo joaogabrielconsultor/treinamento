@@ -541,7 +541,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
           'proposta': 'proposta', 'nr proposta': 'proposta', 'nr_proposta': 'proposta', 'nrproposta': 'proposta',
           'cpf': 'cpf', 'corretor': 'corretor',
           'banco': 'banco', 'tabela': 'tabela', 'tipo': 'tipo', 'produto': 'tipo',
-          'valor': 'valor', 'vl proposta': 'valor', 'vl_proposta': 'valor', 'vlproposta': 'valor', 'vl proposta': 'valor',
+          'valor': 'valor', 'vl proposta': 'valor', 'vl_proposta': 'valor', 'vlproposta': 'valor',
           'esteira': 'esteira', 'status': 'esteira',
           'emisso': 'data_digitacao', 'emissao': 'data_digitacao', 'emiss': 'data_digitacao', 'data emissao': 'data_digitacao', 'data_emissao': 'data_digitacao',
           'cliente': 'nome_cliente', 'nome': 'nome_cliente', 'nome cliente': 'nome_cliente', 'nome_cliente': 'nome_cliente',

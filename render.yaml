@@ -3,7 +3,7 @@ services:
     name: aprova-mais
     env: node
     plan: free
-    buildCommand: npm install --include=dev && npm run build
+    buildCommand: npm install --include=dev && cd api && npm install && cd .. && npm run build
     startCommand: node api/index.js
     envVars:
       - key: NODE_ENV
