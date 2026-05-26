@@ -1717,16 +1717,16 @@ app.post('/api/proposals/import/parse', auth, adminOnly, async (req, res) => {
   const lines = rawLines.filter(l => l.trim());
   if (lines.length < 2) return res.status(400).json({ error: 'Arquivo vazio ou sem dados' });
 
-  // Detect separator: semicolon or comma
-  const sep = lines[0].includes(';') ? ';' : ',';
+  // Detect separator: semicolon, tab, or comma
+  const sep = lines[0].includes(';') ? ';' : lines[0].includes('\t') ? '\t' : ',';
 
   // Parse header and map to internal field names
-  const headerCells = lines[0].split(sep).map(h => h.trim().replace(/^﻿/, ''));
+  const headerCells = lines[0].split(sep).map(h => h.trim().replace(/^﻿/, '').replace(/^﻿/, ''));
   function mapHeader(h) {
     const norm = h.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
     if (norm === 'id') return 'id';
     if (norm === 'proposta') return 'proposta';
-    if (norm === 'cliente' || norm === 'nome') return 'nome_cliente';
+    if (norm === 'cliente' || norm.startsWith('nome')) return 'nome_cliente';
     if (norm === 'cpf') return 'cpf';
     if (norm.startsWith('conv')) return 'convenio';
     if (norm === 'banco') return 'banco';
@@ -1734,12 +1734,14 @@ app.post('/api/proposals/import/parse', auth, adminOnly, async (req, res) => {
     if (norm === 'corretor') return 'corretor';
     if (norm.startsWith('vl') || norm === 'valor') return 'valor';
     if (norm === 'produto' || norm === 'tipo') return 'tipo';
+    // date columns BEFORE status to avoid "Dt. Status" being caught by esteira
+    if (norm.includes('digit') || (norm.includes('dt') && norm.includes('dig')) || (norm.includes('data') && norm.includes('dig'))) return 'data_digitacao';
+    if ((norm.includes('dt') || norm.includes('data')) && norm.includes('stat')) return 'data_status';
     if (norm === 'status' || norm.includes('esteira') || norm.includes('situa')) return 'esteira';
-    if (norm.includes('digit') || (norm.includes('dt') && norm.includes('dig'))) return 'data_digitacao';
-    if (norm.includes('dt') && norm.includes('stat')) return 'data_status';
     return norm;
   }
   const fieldMap = headerCells.map(mapHeader);
+  console.log('[import parse] sep:', JSON.stringify(sep), '| headers:', headerCells.map((h,i) => `${h}→${fieldMap[i]}`).join(', '));
 
   // Parse data rows
   const rows = [];
@@ -1776,7 +1778,8 @@ app.post('/api/proposals/import/parse', auth, adminOnly, async (req, res) => {
     statusSummary[s] = (statusSummary[s] || 0) + 1;
   });
 
-  res.json({ rows, unknownBrokers, statusSummary, total: rows.length });
+  const headerMap = Object.fromEntries(headerCells.map((h, i) => [h, fieldMap[i]]));
+  res.json({ rows, unknownBrokers, statusSummary, total: rows.length, _debug: { sep, headerMap } });
 });
 
 // ─── PROPOSAL STATUSES ────────────────────────────────────────────────────────
