@@ -89,6 +89,8 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
         const colMap: Record<string, string> = {
           'data digitao': 'data_digitacao', 'data digita': 'data_digitacao',
           'data_digitao': 'data_digitacao', 'data digitação': 'data_digitacao',
+          'dt digit': 'data_digitacao', 'dt_digit': 'data_digitacao',
+          'dt digitacao': 'data_digitacao', 'dt_digitacao': 'data_digitacao',
           'nome do cliente': 'nome_cliente', 'nome_do_cliente': 'nome_cliente',
           'situao': 'situacao', 'situação': 'situacao',
           'convnio': 'convenio', 'convênio': 'convenio',
@@ -97,7 +99,8 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
           'cliente': 'nome_cliente',
           'cpf': 'cpf', 'corretor': 'corretor',
           'banco': 'banco', 'tabela': 'tabela', 'tipo': 'tipo', 'produto': 'tipo',
-          'valor': 'valor', 'esteira': 'esteira', 'status': 'esteira',
+          'valor': 'valor', 'vlproposta': 'valor', 'vl proposta': 'valor',
+          'esteira': 'esteira', 'status': 'esteira',
           'dt status': 'data_status', 'dt. status': 'data_status',
           'data status': 'data_status', 'data_status': 'data_status',
           'dt_status': 'data_status', 'data alteracao': 'data_status',
@@ -108,9 +111,10 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
         return colMap[withSpaces] || colMap[clean] || clean;
       };
 
-      const headers = lines[0].split(';').map(normalizeHeader);
+      const sep = lines[0].includes(';') ? ';' : lines[0].includes('\t') ? '\t' : ',';
+      const headers = lines[0].split(sep).map(normalizeHeader);
       const rows = lines.slice(1).map(line => {
-        const vals = line.split(';').map(v => v.trim());
+        const vals = line.split(sep).map(v => v.trim());
         return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? '']));
       }).filter(r => (r.proposta || r.cpf || r.nome_cliente) && r.proposta !== '');
 
