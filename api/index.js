@@ -2383,7 +2383,7 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
   let bi = 1;
   if (loja_id) { brokerConditions.push(`u.loja_id = $${bi++}`); brokerValues.push(loja_id); }
   if (usuario_banco_id) { brokerConditions.push(`p.usuario_banco_id = $${bi++}`); brokerValues.push(usuario_banco_id); }
-  if (hasPeriod) { brokerConditions.push(`EXTRACT(MONTH FROM p.created_at) = ${m} AND EXTRACT(YEAR FROM p.created_at) = ${y}`); }
+  if (hasPeriod) { brokerConditions.push(`EXTRACT(MONTH FROM p.updated_at) = ${m} AND EXTRACT(YEAR FROM p.updated_at) = ${y}`); }
   const brokerWhere = 'WHERE ' + brokerConditions.join(' AND ');
 
   const { rows: brokerSummary } = await pool.query(`
@@ -2428,7 +2428,7 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
   let ui = 1;
   if (loja_id) { ubConditions.push(`u.loja_id = $${ui++}`); ubValues.push(loja_id); }
   if (usuario_banco_id) { ubConditions.push(`p.usuario_banco_id = $${ui++}`); ubValues.push(usuario_banco_id); }
-  if (hasPeriod) { ubConditions.push(`EXTRACT(MONTH FROM p.created_at) = ${m} AND EXTRACT(YEAR FROM p.created_at) = ${y}`); }
+  if (hasPeriod) { ubConditions.push(`EXTRACT(MONTH FROM p.updated_at) = ${m} AND EXTRACT(YEAR FROM p.updated_at) = ${y}`); }
   const ubWhere = 'WHERE ' + ubConditions.join(' AND ');
 
   const { rows: ubSummary } = await pool.query(`
