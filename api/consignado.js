@@ -3,30 +3,80 @@ const cheerio = require('cheerio');
 
 const BASE = 'https://www.portaldoconsignado.com.br';
 
+function getTextAfterLabel($, label) {
+  let value = null;
+  $('.dados').each((_, el) => {
+    if ($(el).text().includes(label)) {
+      value = $(el).find('span').first().text().trim() || null;
+      return false;
+    }
+  });
+  return value;
+}
+
+function parseResultado(xmlData) {
+  const cdataRegex = /<!\[CDATA\[([\s\S]*?)\]\]>/g;
+  let fullHtml = '';
+  let m;
+  while ((m = cdataRegex.exec(xmlData)) !== null) fullHtml += m[1];
+  if (!fullHtml) fullHtml = xmlData;
+
+  const $ = cheerio.load(fullHtml);
+
+  const servidor = {
+    cpf:          getTextAfterLabel($, 'CPF -'),
+    nome:         getTextAfterLabel($, 'Nome -'),
+    orgao:        getTextAfterLabel($, 'Órgão -'),
+    identificacao: getTextAfterLabel($, 'Identificação -'),
+    mesReferencia: getTextAfterLabel($, 'Mês de Referência'),
+    proximaFolha:  getTextAfterLabel($, 'Próxima Folha'),
+    lotacao:      $('input#inputLotacao').attr('value') || null,
+    cargo:        $('input#inputCargo').attr('value') || null,
+    dataAdmissao: $('input#inputDataAdmissao').attr('value') || null,
+    tipoVinculo:  $('input#inputTipoVinculo').attr('value') || null,
+  };
+
+  function extrairMargem(painelId) {
+    const resultado = [];
+    $(`#${painelId} table#tabelaMargem tbody tr`).each((_, tr) => {
+      const cells = $(tr).find('td');
+      if (cells.length >= 2) {
+        resultado.push({
+          produto: $(cells[0]).text().replace(/\s+/g, ' ').trim(),
+          valor:   $(cells[1]).text().replace(/\s+/g, ' ').trim(),
+        });
+      }
+    });
+    return resultado;
+  }
+
+  return {
+    servidor,
+    margemBruta:      extrairMargem('painelMargensBrutas'),
+    margemDisponivel: extrairMargem('painelMargensDisponiveis'),
+  };
+}
+
 async function consultarMargem(jsessionid, cpf, opcoes = {}) {
   const { matricula = '', orgao = '', produto = '', especie = '' } = opcoes;
+  const cpfDigits = cpf.replace(/\D/g, '');
 
-  const digits = cpf.replace(/\D/g, '');
-  const cpfFmt = digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-
-  const session = axios.create({
-    baseURL: BASE,
-    headers: {
-      Cookie: `JSESSIONID=${jsessionid}`,
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-    },
-  });
+  const baseHeaders = {
+    Cookie: `JSESSIONID=${jsessionid}`,
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36',
+    'Accept-Language': 'pt-BR,pt;q=0.9',
+    'Origin': BASE,
+  };
 
   // PASSO 1 — CSRF Token
-  const csrfResp = await session.get('/csrfTokenS');
+  const csrfResp = await axios.get(`${BASE}/csrfTokenS`, { headers: baseHeaders });
   const tokenMatch = csrfResp.data.match(/"SECURITYTOKEN",\s*"([^"]+)"/);
-  if (!tokenMatch) {
-    throw new Error('Sessão expirada — cole um novo JSESSIONID no painel');
-  }
+  if (!tokenMatch) throw new Error('Sessão expirada — cole um novo JSESSIONID no painel');
   const token = tokenMatch[1];
 
-  // PASSO 2 — Endpoint dinâmico do Wicket
-  const formResp = await session.get('/consignatario/pesquisarMargem', {
+  // PASSO 2 — Endpoint Wicket + ID do formulário
+  const formResp = await axios.get(`${BASE}/consignatario/pesquisarMargem`, {
+    headers: baseHeaders,
     maxRedirects: 10,
     validateStatus: s => s < 500,
   });
@@ -36,97 +86,68 @@ async function consultarMargem(jsessionid, cpf, opcoes = {}) {
   }
 
   const pageMatch = formResp.data.match(/pesquisarMargem\?(\d+)/);
-  if (!pageMatch) {
-    const snippet = formResp.data.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200);
-    throw new Error(`Página inesperada do portal: "${snippet}"`);
-  }
+  if (!pageMatch) throw new Error('Página do portal não reconhecida');
+  const N = pageMatch[1];
 
-  const pageId = pageMatch[1];
-  const endpoint = `/consignatario/pesquisarMargem?${pageId}-1.IBehaviorListener.0-form-botaoPesquisar`;
+  const $form = cheerio.load(formResp.data);
+  const formId = $form('form').first().attr('id') || 'id1d';
+  const hiddenField = `${formId}_hf_0`;
 
-  // PASSO 3 — Consulta
+  // PASSO 3 — POST de consulta com todos os headers exatos do browser
   const body = new URLSearchParams({
-    'id1bc_hf_0': '',
-    cpfServidor: cpfFmt,
+    [hiddenField]: '',
+    cpfServidor:       cpfDigits,
     matriculaServidor: matricula,
-    selectOrgao: orgao,
-    selectProduto: produto,
-    selectEspecie: especie,
-    SECURITYTOKEN: token,
-    botaoPesquisar: '1',
+    selectOrgao:       orgao,
+    selectProduto:     produto,
+    selectEspecie:     especie,
+    SECURITYTOKEN:     token,
+    botaoPesquisar:    '1',
   });
 
-  const resultado = await session.post(endpoint, body.toString(), {
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'X-Requested-With': 'CSRF Prevention',
-    },
-    validateStatus: s => s < 500,
-  });
+  const resultado = await axios.post(
+    `${BASE}/consignatario/pesquisarMargem?${N}-1.IBehaviorListener.0-form-botaoPesquisar`,
+    body.toString(),
+    {
+      headers: {
+        ...baseHeaders,
+        'Accept':             'application/xml, text/xml, */*; q=0.01',
+        'Content-Type':       'application/x-www-form-urlencoded; charset=UTF-8',
+        'SECURITYTOKEN':      token,
+        'X-Requested-With':   'XMLHttpRequest, CSRF Prevention',
+        'Wicket-Ajax':        'true',
+        'Wicket-Ajax-BaseURL': `consignatario/pesquisarMargem?${N}`,
+        'Referer':            `${BASE}/consignatario/pesquisarMargem?${N}`,
+      },
+      validateStatus: s => s < 500,
+    }
+  );
 
   return parseResultado(resultado.data);
 }
 
-// Mantém a sessão ativa fazendo uma requisição leve
+// Ping para manter sessão viva (usar /autenticado conforme o portal)
 async function pingSession(jsessionid) {
   try {
-    const resp = await axios.get(`${BASE}/csrfTokenS`, {
+    const resp = await axios.get(`${BASE}/consignatario/autenticado`, {
       headers: { Cookie: `JSESSIONID=${jsessionid}` },
+      maxRedirects: 0,
       validateStatus: s => s < 500,
     });
-    return resp.data.includes('SECURITYTOKEN');
+    return resp.status < 400;
   } catch {
     return false;
   }
 }
 
-function parseResultado(xmlData) {
-  const result = { servidor: null, cpf: null, orgaos: [] };
-
-  const cdataRegex = /<!\[CDATA\[([\s\S]*?)\]\]>/g;
-  let fullHtml = '';
-  let m;
-  while ((m = cdataRegex.exec(xmlData)) !== null) fullHtml += m[1];
-  if (!fullHtml) fullHtml = xmlData;
-
-  const $ = cheerio.load(fullHtml);
-
-  $('span, td, div').each((_, el) => {
-    const txt = $(el).text().replace(/\s+/g, ' ').trim();
-    if (!result.cpf && /\d{3}\.\d{3}\.\d{3}-\d{2}/.test(txt)) {
-      result.cpf = txt.match(/(\d{3}\.\d{3}\.\d{3}-\d{2})/)[1];
-    }
-    if (!result.servidor && /^[A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ\s]{10,60}$/.test(txt) && txt.split(' ').length >= 2) {
-      result.servidor = txt;
-    }
-  });
-
-  const processadas = new Set();
-  $('table[id*="Margem"], table[id*="margem"], table').each((_, table) => {
-    const tid = $(table).attr('id') || '';
-    if (processadas.has(tid)) return;
-    processadas.add(tid);
-
-    const rows = [];
-    $(table).find('tr').each((_, tr) => {
-      const cells = [];
-      $(tr).find('td, th').each((_, td) => cells.push($(td).text().replace(/\s+/g, ' ').trim()));
-      if (cells.some(c => c.length > 0)) rows.push(cells);
-    });
-
-    if (rows.length >= 2) {
-      const header = rows[0].join(' ').toLowerCase();
-      result.orgaos.push({
-        id: tid || `tabela_${result.orgaos.length}`,
-        tipo: (header.includes('margem') || header.includes('produto') || header.includes('valor'))
-          ? 'margem' : (header.includes('rgao') || header.includes('identifica'))
-          ? 'orgao' : 'dados',
-        linhas: rows,
-      });
-    }
-  });
-
-  return result;
+// Inicia ping a cada 20 min para manter sessão ativa
+function startPingInterval(getJsessionid) {
+  setInterval(async () => {
+    try {
+      const id = await getJsessionid();
+      if (id) await pingSession(id);
+    } catch {}
+  }, 20 * 60 * 1000);
 }
 
-module.exports = { consultarMargem, pingSession };
+module.exports = { consultarMargem, pingSession, startPingInterval };

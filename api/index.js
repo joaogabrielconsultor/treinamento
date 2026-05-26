@@ -8,7 +8,7 @@ const path = require('path');
 const fs = require('fs');
 const pool = require('./db');
 const initDb = require('./init-db');
-const { consultarMargem, pingSession } = require('./consignado');
+const { consultarMargem, pingSession, startPingInterval } = require('./consignado');
 
 const app = express();
 app.use(cors());
@@ -2597,4 +2597,8 @@ console.log('DATABASE_URL definida:', !!process.env.DATABASE_URL);
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor rodando na porta ${PORT}`);
   initDb().catch((err) => console.error('Erro ao inicializar banco:', err.message));
+  startPingInterval(async () => {
+    const { rows } = await pool.query("SELECT value FROM app_settings WHERE key = 'consignado_jsessionid'");
+    return rows[0]?.value || null;
+  });
 });
