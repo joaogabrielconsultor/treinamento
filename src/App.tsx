@@ -259,7 +259,7 @@ function AppInner() {
         {currentView === 'roteiros'              && <Roteiros />}
         {currentView === 'admin-roteiros'        && isAdmin && <AdminRoteiros />}
         {currentView === 'admin-importacao'     && isAdmin && <AdminImportacao />}
-        {currentView === 'consulta-margem'     && <ConsultaMargem />}
+        {currentView === 'consulta-margem'     && <ConsultaMargem isAdmin={isAdmin} />}
       </main>
     </div>
   );

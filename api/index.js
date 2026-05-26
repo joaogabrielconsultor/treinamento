@@ -8,7 +8,7 @@ const path = require('path');
 const fs = require('fs');
 const pool = require('./db');
 const initDb = require('./init-db');
-const { consultarMargem } = require('./consignado');
+const { consultarMargem, pingSession } = require('./consignado');
 
 const app = express();
 app.use(cors());
@@ -701,16 +701,38 @@ app.delete('/api/login-bancos/:id', auth, adminOnly, async (req, res) => {
 });
 
 // ─── CONSULTA MARGEM CONSIGNADO ───────────────────────────────────────────────
-app.post('/api/consignado/margem', auth, async (req, res) => {
-  const { login_banco_id, cpf, matricula, orgao, produto, especie } = req.body;
-  if (!login_banco_id || !cpf) return res.status(400).json({ error: 'login_banco_id e cpf são obrigatórios' });
 
-  const { rows } = await pool.query('SELECT * FROM login_bancos WHERE id = $1', [login_banco_id]);
-  if (!rows[0]) return res.status(404).json({ error: 'Credencial não encontrada' });
-  const { login: usuario, senha } = rows[0];
+// GET — retorna status da sessão atual
+app.get('/api/consignado/sessao', auth, async (req, res) => {
+  const { rows } = await pool.query("SELECT value, updated_at FROM app_settings WHERE key = 'consignado_jsessionid'");
+  if (!rows[0] || !rows[0].value) return res.json({ ativa: false, jsessionid: null, updated_at: null });
+  const ativa = await pingSession(rows[0].value);
+  res.json({ ativa, jsessionid: rows[0].value, updated_at: rows[0].updated_at });
+});
+
+// POST — salva o JSESSIONID (admin only)
+app.post('/api/consignado/sessao', auth, adminOnly, async (req, res) => {
+  const { jsessionid } = req.body;
+  if (!jsessionid?.trim()) return res.status(400).json({ error: 'JSESSIONID obrigatório' });
+  await pool.query(
+    `INSERT INTO app_settings (key, value, updated_at) VALUES ('consignado_jsessionid', $1, now())
+     ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = now()`,
+    [jsessionid.trim()]
+  );
+  const ativa = await pingSession(jsessionid.trim());
+  res.json({ ok: true, ativa });
+});
+
+// POST — consulta margem usando o JSESSIONID salvo
+app.post('/api/consignado/margem', auth, async (req, res) => {
+  const { cpf, matricula, orgao, produto, especie } = req.body;
+  if (!cpf) return res.status(400).json({ error: 'CPF obrigatório' });
+
+  const { rows } = await pool.query("SELECT value FROM app_settings WHERE key = 'consignado_jsessionid'");
+  if (!rows[0]?.value) return res.status(400).json({ error: 'Sessão não configurada — cole o JSESSIONID no painel' });
 
   try {
-    const resultado = await consultarMargem(usuario, senha, cpf, { matricula, orgao, produto, especie });
+    const resultado = await consultarMargem(rows[0].value, cpf, { matricula, orgao, produto, especie });
     res.json(resultado);
   } catch (err) {
     res.status(500).json({ error: err.message || 'Erro ao consultar margem' });
