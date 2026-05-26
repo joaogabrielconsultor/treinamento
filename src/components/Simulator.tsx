@@ -66,6 +66,37 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
   const [results, setResults] = useState<SimResult[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [simulated, setSimulated] = useState(false);
+  const [sortCol, setSortCol] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc' | null>(null);
+  function handleSort(col: string) {
+    if (sortCol !== col) { setSortCol(col); setSortDir('asc'); return; }
+    if (sortDir === 'asc') { setSortDir('desc'); return; }
+    setSortCol(null); setSortDir(null);
+  }
+  const SIM_SORT: Record<string, (r: SimResult) => string | number> = {
+    'Banco':          r => r.bank_name.toLowerCase(),
+    'Convênio':       r => r.convenio_name.toLowerCase(),
+    'Tabela':         r => r.table_name.toLowerCase(),
+    'Tipo':           r => r.tipo_proposta.toLowerCase(),
+    'Prazo':          r => r.prazo,
+    'Coeficiente':    r => r.coef,
+    'Valor Liberado': r => r.valor_liberado,
+    'Troco Líquido':  r => r.troco_liquido ?? 0,
+    'Parcela':        r => r.parcela,
+    'Emp %':          r => r.comissao_empresa_pct,
+    'Cor %':          r => r.comissao_corretor_pct,
+    'Com. Empresa':   r => r.comissao_empresa_val,
+    'Com. Corretor':  r => r.comissao_corretor_val,
+    'Rentab.':        r => r.rentabilidade,
+  };
+  const sortedResults = sortCol && sortDir && SIM_SORT[sortCol]
+    ? [...results].sort((a, b) => {
+        const va = SIM_SORT[sortCol!](a), vb = SIM_SORT[sortCol!](b);
+        if (va < vb) return sortDir === 'asc' ? -1 : 1;
+        if (va > vb) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+      })
+    : results;
 
   useEffect(() => {
     async function loadData() {
@@ -484,13 +515,20 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
                       'Com. Corretor',
                       ...(isAdmin ? ['Rentab.'] : []),
                       ''
-                    ].map(h => (
-                      <th key={h} className="text-left px-3 py-3 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
-                    ))}
+                    ].map(h => {
+                      const sortable = !!SIM_SORT[h]; const active = sortCol === h;
+                      return (
+                        <th key={h} onClick={sortable ? () => handleSort(h) : undefined}
+                          className="text-left px-3 py-3 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
+                          style={{ color: active ? '#14B8A6' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
+                          {h}{sortable && <span className="ml-1 opacity-60">{active ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
+                        </th>
+                      );
+                    })}
                   </tr>
                 </thead>
                 <tbody>
-                  {results.map((r, idx) => (
+                  {sortedResults.map((r, idx) => (
                     <tr
                       key={r.key}
                       className="transition-colors"
