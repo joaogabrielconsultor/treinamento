@@ -8,6 +8,7 @@ const path = require('path');
 const fs = require('fs');
 const pool = require('./db');
 const initDb = require('./init-db');
+const { consultarMargem } = require('./consignado');
 
 const app = express();
 app.use(cors());
@@ -525,7 +526,7 @@ app.get('/api/admin/conta-empresa', auth, adminOnly, async (req, res) => {
   const month = req.query.month ? parseInt(req.query.month) : null;
   const year  = req.query.year  ? parseInt(req.query.year)  : null;
   const hasPeriod = month && year && !isNaN(month) && !isNaN(year);
-  const pf  = hasPeriod ? `AND EXTRACT(MONTH FROM p.created_at) = ${month} AND EXTRACT(YEAR FROM p.created_at) = ${year}` : '';
+  const pf  = hasPeriod ? `AND EXTRACT(MONTH FROM p.updated_at) = ${month} AND EXTRACT(YEAR FROM p.updated_at) = ${year}` : '';
   const wrf = hasPeriod ? `AND EXTRACT(MONTH FROM wr.updated_at) = ${month} AND EXTRACT(YEAR FROM wr.updated_at) = ${year}` : '';
   const df  = hasPeriod ? `AND EXTRACT(MONTH FROM d.data) = ${month} AND EXTRACT(YEAR FROM d.data) = ${year}` : '';
 
@@ -697,6 +698,23 @@ app.put('/api/login-bancos/:id', auth, adminOnly, async (req, res) => {
 app.delete('/api/login-bancos/:id', auth, adminOnly, async (req, res) => {
   await pool.query('DELETE FROM login_bancos WHERE id = $1', [req.params.id]);
   res.json({ ok: true });
+});
+
+// ─── CONSULTA MARGEM CONSIGNADO ───────────────────────────────────────────────
+app.post('/api/consignado/margem', auth, async (req, res) => {
+  const { login_banco_id, cpf, matricula, orgao, produto, especie } = req.body;
+  if (!login_banco_id || !cpf) return res.status(400).json({ error: 'login_banco_id e cpf são obrigatórios' });
+
+  const { rows } = await pool.query('SELECT * FROM login_bancos WHERE id = $1', [login_banco_id]);
+  if (!rows[0]) return res.status(404).json({ error: 'Credencial não encontrada' });
+  const { login: usuario, senha } = rows[0];
+
+  try {
+    const resultado = await consultarMargem(usuario, senha, cpf, { matricula, orgao, produto, especie });
+    res.json(resultado);
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Erro ao consultar margem' });
+  }
 });
 
 // ─── PRODUTOS ────────────────────────────────────────────────────────────────
@@ -1488,9 +1506,14 @@ app.post('/api/admin/proposals/import', auth, adminOnly, async (req, res) => {
   }
 
   function mapStatus(esteira) {
-    // salva o valor bruto do CSV, removendo apenas o caractere de encoding no início (ex: °Proposta Paga)
-    const raw = (esteira || '').replace(/^[^\w\dÀ-ÿ]+/, '').trim();
-    return raw || 'Digitada';
+    const stripped = (esteira || '').replace(/^[^\wÀ-ÿ]+/, '').trim();
+    const lower = stripped.toLowerCase();
+    if (lower === 'paga' || lower.startsWith('proposta pag')) return 'Paga';
+    if (lower.startsWith('aprovad')) return 'Aprovada';
+    if (lower === 'cancelada' || lower.startsWith('cancel') || lower.startsWith('averb')) return 'Cancelada';
+    if (lower === 'digitada') return 'Digitada';
+    if (lower === 'em análise' || lower === 'em analise') return 'Em análise';
+    return stripped || 'Digitada';
   }
 
   // cache de lookups para evitar N+1
@@ -1554,12 +1577,22 @@ app.post('/api/admin/proposals/import', auth, adminOnly, async (req, res) => {
 
   for (const row of rows) {
     try {
-      const proposalNumber = (row.proposta || '').trim();
-      if (!proposalNumber) { errors.push({ row: row.proposta, error: 'Número de proposta vazio' }); continue; }
+      const rowId      = (row.id || '').trim();
+      const clientCpf  = (row.cpf || '').trim();
 
-      const rowId        = (row.id || '').trim();
+      // Generate proposal number if empty (dedup key = IMP-{cpf}-{date})
+      let proposalNumber = (row.proposta || '').trim();
+      if (!proposalNumber) {
+        if (clientCpf) {
+          const dateStr = (row.data_digitacao || '').replace(/\D/g, '');
+          proposalNumber = `IMP-${clientCpf}-${dateStr}`;
+        } else {
+          errors.push({ row: '(sem proposta)', error: 'Proposta e CPF ambos vazios' });
+          continue;
+        }
+      }
+
       const clientName   = (row.nome_cliente || '').trim();
-      const clientCpf    = (row.cpf || '').trim();
       const value        = parseValue(row.valor);
       const createdAt    = parseDate(row.data_digitacao);
       const updatedAt    = row.data_status?.trim() ? parseDate(row.data_status) : null;
@@ -1603,28 +1636,39 @@ app.post('/api/admin/proposals/import', auth, adminOnly, async (req, res) => {
            productText, productId, existingId, proposalNumber]
         );
         if (userId) await pool.query('UPDATE proposals SET user_id=$1 WHERE id=$2', [userId, existingId]);
+        if (status === 'Paga') {
+          await pool.query("UPDATE proposals SET status_comissao = 'Comissão Paga' WHERE id = $1", [existingId]);
+        }
         updated++;
       } else {
         const uid = userId || req.user.id;
         const insertId = (useIdMatch && rowId) ? rowId : undefined;
+        let newId;
         if (insertId) {
-          await pool.query(
+          const { rows: [ins] } = await pool.query(
             `INSERT INTO proposals
               (id, user_id, proposal_number, value, product, product_id, bank, convenio, table_id, bank_id, convenio_id,
                client_name, client_cpf, client_phone, status, created_at, updated_at, tipo_proposta)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'',$14,$15,COALESCE($17,now()),$16)`,
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'',$14,$15,COALESCE($17,now()),$16)
+             RETURNING id`,
             [insertId, uid, proposalNumber, value, productText, productId, bankText, convenioText, tableId,
              bankId, convenioId, clientName, clientCpf, status, createdAt, situacao, updatedAt]
           );
+          newId = ins?.id;
         } else {
-          await pool.query(
+          const { rows: [ins] } = await pool.query(
             `INSERT INTO proposals
               (user_id, proposal_number, value, product, product_id, bank, convenio, table_id, bank_id, convenio_id,
                client_name, client_cpf, client_phone, status, created_at, updated_at, tipo_proposta)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'',$13,$14,COALESCE($16,now()),$15)`,
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'',$13,$14,COALESCE($16,now()),$15)
+             RETURNING id`,
             [uid, proposalNumber, value, productText, productId, bankText, convenioText, tableId,
              bankId, convenioId, clientName, clientCpf, status, createdAt, situacao, updatedAt]
           );
+          newId = ins?.id;
+        }
+        if (status === 'Paga' && newId) {
+          await pool.query("UPDATE proposals SET status_comissao = 'Comissão Paga' WHERE id = $1", [newId]);
         }
         imported++;
       }
@@ -1634,6 +1678,83 @@ app.post('/api/admin/proposals/import', auth, adminOnly, async (req, res) => {
   }
 
   res.json({ imported, updated, errors });
+});
+
+// ─── PARSE CSV DE PROPOSTAS (preview sem salvar) ──────────────────────────────
+app.post('/api/proposals/import/parse', auth, adminOnly, async (req, res) => {
+  if (!req.files?.file) return res.status(400).json({ error: 'Arquivo não enviado' });
+  const file = req.files.file;
+
+  // Decode: try UTF-8 first, fall back to latin1 (Windows-1252) if invalid chars detected
+  let text = file.data.toString('utf8');
+  if (text.includes('�')) text = file.data.toString('latin1');
+  // Strip UTF-8 BOM if present
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+
+  const rawLines = text.split(/\r?\n/);
+  const lines = rawLines.filter(l => l.trim());
+  if (lines.length < 2) return res.status(400).json({ error: 'Arquivo vazio ou sem dados' });
+
+  // Detect separator: semicolon or comma
+  const sep = lines[0].includes(';') ? ';' : ',';
+
+  // Parse header and map to internal field names
+  const headerCells = lines[0].split(sep).map(h => h.trim().replace(/^﻿/, ''));
+  function mapHeader(h) {
+    const norm = h.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+    if (norm === 'id') return 'id';
+    if (norm === 'proposta') return 'proposta';
+    if (norm === 'cliente' || norm === 'nome') return 'nome_cliente';
+    if (norm === 'cpf') return 'cpf';
+    if (norm.startsWith('conv')) return 'convenio';
+    if (norm === 'banco') return 'banco';
+    if (norm === 'tabela') return 'tabela';
+    if (norm === 'corretor') return 'corretor';
+    if (norm.startsWith('vl') || norm === 'valor') return 'valor';
+    if (norm === 'produto' || norm === 'tipo') return 'tipo';
+    if (norm === 'status' || norm.includes('esteira') || norm.includes('situa')) return 'esteira';
+    if (norm.includes('digit') || (norm.includes('dt') && norm.includes('dig'))) return 'data_digitacao';
+    if (norm.includes('dt') && norm.includes('stat')) return 'data_status';
+    return norm;
+  }
+  const fieldMap = headerCells.map(mapHeader);
+
+  // Parse data rows
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cells = lines[i].split(sep);
+    if (cells.length < 3) continue;
+    const row = {};
+    fieldMap.forEach((field, idx) => {
+      row[field] = (cells[idx] || '').trim();
+    });
+    // Strip leading encoding artifact from status field (e.g. ° character)
+    if (row.esteira) row.esteira = row.esteira.replace(/^[^\wÀ-ÿ]+/, '').trim();
+    rows.push(row);
+  }
+
+  if (rows.length === 0) return res.status(400).json({ error: 'Nenhuma linha de dados encontrada' });
+
+  // Check which broker names exist in DB
+  const allBrokerNames = [...new Set(rows.map(r => r.corretor).filter(Boolean))];
+  const foundBrokers = new Set();
+  for (const name of allBrokerNames) {
+    const { rows: r } = await pool.query(
+      `SELECT id FROM users WHERE LOWER(TRIM(full_name)) = $1 LIMIT 1`,
+      [name.toLowerCase()]
+    );
+    if (r[0]) foundBrokers.add(name);
+  }
+  const unknownBrokers = allBrokerNames.filter(b => !foundBrokers.has(b));
+
+  // Status summary
+  const statusSummary = {};
+  rows.forEach(r => {
+    const s = r.esteira || '(vazio)';
+    statusSummary[s] = (statusSummary[s] || 0) + 1;
+  });
+
+  res.json({ rows, unknownBrokers, statusSummary, total: rows.length });
 });
 
 // ─── PROPOSAL STATUSES ────────────────────────────────────────────────────────
@@ -2227,7 +2348,7 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
   if (status_comissao) { conditions.push(`p.status_comissao = $${i++}`); values.push(status_comissao); }
   if (loja_id) { conditions.push(`u.loja_id = $${i++}`); values.push(loja_id); }
   if (usuario_banco_id) { conditions.push(`p.usuario_banco_id = $${i++}`); values.push(usuario_banco_id); }
-  if (hasPeriod) { conditions.push(`EXTRACT(MONTH FROM p.created_at) = ${m} AND EXTRACT(YEAR FROM p.created_at) = ${y}`); }
+  if (hasPeriod) { conditions.push(`EXTRACT(MONTH FROM p.updated_at) = ${m} AND EXTRACT(YEAR FROM p.updated_at) = ${y}`); }
   const where = 'WHERE ' + conditions.join(' AND ');
 
   const { rows: proposals } = await pool.query(

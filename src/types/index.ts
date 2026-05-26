@@ -324,7 +324,9 @@ export type ViewType =
   | 'admin-proposal-statuses'
   | 'admin-usuarios-banco'
   | 'roteiros'
-  | 'admin-roteiros';
+  | 'admin-roteiros'
+  | 'admin-importacao'
+  | 'consulta-margem';
 
 export type AuthMode = 'login';
 
