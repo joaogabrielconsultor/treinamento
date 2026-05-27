@@ -543,6 +543,11 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
           'banco': 'banco', 'tabela': 'tabela', 'tipo': 'tipo', 'produto': 'tipo',
           'valor': 'valor', 'vl proposta': 'valor', 'vl_proposta': 'valor', 'vlproposta': 'valor',
           'esteira': 'esteira', 'status': 'esteira',
+          'dt status': 'data_status', 'dt. status': 'data_status',
+          'data status': 'data_status', 'data_status': 'data_status',
+          'dt_status': 'data_status', 'data alteracao': 'data_status',
+          'data atualizao': 'data_status', 'data_atualizao': 'data_status',
+          'dt atualizao': 'data_status', 'dt_atualizao': 'data_status',
           'emisso': 'data_digitacao', 'emissao': 'data_digitacao', 'emiss': 'data_digitacao', 'data emissao': 'data_digitacao', 'data_emissao': 'data_digitacao',
           'cliente': 'nome_cliente', 'nome': 'nome_cliente', 'nome cliente': 'nome_cliente', 'nome_cliente': 'nome_cliente',
         };

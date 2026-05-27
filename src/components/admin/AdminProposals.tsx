@@ -104,7 +104,9 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
           'dt status': 'data_status', 'dt. status': 'data_status',
           'data status': 'data_status', 'data_status': 'data_status',
           'dt_status': 'data_status', 'data alteracao': 'data_status',
-          'data alteração': 'data_status',
+          'data alteração': 'data_status', 'data atualizao': 'data_status',
+          'data_atualizao': 'data_status', 'dt atualizao': 'data_status',
+          'dt_atualizao': 'data_status',
         };
         const clean = h.trim().replace(/^﻿/, '').replace(/[^\w\s]/g, '').trim().toLowerCase().replace(/\s+/g, '_');
         const withSpaces = h.trim().replace(/^﻿/, '').replace(/[^\w\s]/g, '').trim().toLowerCase();
