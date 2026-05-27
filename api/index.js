@@ -2495,6 +2495,21 @@ app.post('/api/admin/conta-corrente/pay', auth, adminOnly, async (req, res) => {
   res.json({ ok: true, updated: proposal_ids.length });
 });
 
+// Estornar propostas de Comissão Paga → Ag. Comissão — somente master
+app.post('/api/admin/conta-corrente/unpay', auth, masterOnly, async (req, res) => {
+  const { proposal_ids } = req.body;
+  if (!Array.isArray(proposal_ids) || proposal_ids.length === 0) {
+    return res.status(400).json({ error: 'Nenhuma proposta selecionada' });
+  }
+  const placeholders = proposal_ids.map((_, idx) => `$${idx + 1}`).join(',');
+  const { rowCount } = await pool.query(
+    `UPDATE proposals SET status_comissao = 'Ag. Comissão', updated_at = now()
+     WHERE id IN (${placeholders}) AND status_comissao = 'Comissão Paga'`,
+    proposal_ids
+  );
+  res.json({ ok: true, updated: rowCount });
+});
+
 // Excluir pagamento de comissão (saída) — somente master
 app.delete('/api/admin/commission-payments/:id', auth, masterOnly, async (req, res) => {
   const { rows: [cp] } = await pool.query('SELECT id FROM commission_payments WHERE id=$1', [req.params.id]);

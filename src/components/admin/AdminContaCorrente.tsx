@@ -107,6 +107,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
   const [editCorr, setEditCorr] = useState('');
   const [editEmp, setEditEmp] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
+  const [revertingId, setRevertingId] = useState<string | null>(null);
 
   const [despesas, setDespesas] = useState<Despesa[]>([]);
   const [saldoLojas, setSaldoLojas] = useState<SaldoLoja[]>([]);
@@ -330,6 +331,14 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
     });
     setSavingEdit(false);
     setEditId(null);
+    await load();
+  }
+
+  async function revertPaid(id: string) {
+    if (!confirm('Estornar esta comissão para "Ag. Comissão"?')) return;
+    setRevertingId(id);
+    await API('/api/admin/conta-corrente/unpay', { method: 'POST', body: JSON.stringify({ proposal_ids: [id] }) });
+    setRevertingId(null);
     await load();
   }
 
@@ -1094,13 +1103,25 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                             </button>
                           </div>
                         ) : (
-                          <button
-                            onClick={() => startEdit(p)}
-                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg transition-all"
-                            style={{ background: 'rgba(96,165,250,0.08)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.2)' }}
-                          >
-                            <Edit2 className="w-3 h-3" /> Editar
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => startEdit(p)}
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg transition-all"
+                              style={{ background: 'rgba(96,165,250,0.08)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.2)' }}
+                            >
+                              <Edit2 className="w-3 h-3" /> Editar
+                            </button>
+                            {isMaster && !isPending && (
+                              <button
+                                onClick={() => revertPaid(p.id)}
+                                disabled={revertingId === p.id}
+                                className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg transition-all disabled:opacity-50"
+                                style={{ background: 'rgba(251,191,36,0.08)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.25)' }}
+                              >
+                                <XCircle className="w-3 h-3" />{revertingId === p.id ? '...' : 'Estornar'}
+                              </button>
+                            )}
+                          </div>
                         )}
                       </td>
                     </tr>
