@@ -1736,7 +1736,7 @@ app.post('/api/proposals/import/parse', auth, adminOnly, async (req, res) => {
     if (norm === 'produto' || norm === 'tipo') return 'tipo';
     // date columns BEFORE status to avoid "Dt. Status" being caught by esteira
     if (norm.includes('digit') || (norm.includes('dt') && norm.includes('dig')) || (norm.includes('data') && norm.includes('dig'))) return 'data_digitacao';
-    if ((norm.includes('dt') || norm.includes('data')) && norm.includes('stat')) return 'data_status';
+    if ((norm.includes('dt') || norm.includes('data')) && (norm.includes('stat') || norm.includes('atuali'))) return 'data_status';
     if (norm === 'status' || norm.includes('esteira') || norm.includes('situa')) return 'esteira';
     return norm;
   }
