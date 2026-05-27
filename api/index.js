@@ -1508,6 +1508,34 @@ app.post('/api/proposals/bulk-delete', auth, masterOnly, async (req, res) => {
   res.json({ ok: true, deleted: ids.length });
 });
 
+// ─── PROPOSTAS DUPLICADAS ──────────────────────────────────────────────────────
+app.get('/api/admin/proposals/duplicates', auth, adminOnly, async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT
+      client_cpf, proposal_number, ROUND(value::numeric, 2) AS value,
+      COUNT(*) AS count,
+      json_agg(json_build_object(
+        'id', id,
+        'client_name', client_name,
+        'client_cpf', client_cpf,
+        'proposal_number', proposal_number,
+        'value', value,
+        'status', status,
+        'bank', bank,
+        'created_at', created_at,
+        'updated_at', updated_at,
+        'status_comissao', status_comissao
+      ) ORDER BY created_at) AS proposals
+    FROM proposals
+    WHERE COALESCE(client_cpf, '') != ''
+      AND COALESCE(proposal_number, '') != ''
+    GROUP BY client_cpf, proposal_number, ROUND(value::numeric, 2)
+    HAVING COUNT(*) > 1
+    ORDER BY count DESC, client_cpf
+  `);
+  res.json(rows);
+});
+
 // ─── IMPORTAÇÃO CSV DE PROPOSTAS ─────────────────────────────────────────────
 app.post('/api/admin/proposals/import', auth, adminOnly, async (req, res) => {
   const rows = req.body.rows;

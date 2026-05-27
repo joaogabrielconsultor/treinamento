@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useRef } from 'react';
-import { Search, ChevronDown, FileText, CheckCircle, Clock, DollarSign, XCircle, Edit2, Save, Trash2, Upload } from 'lucide-react';
+import { Search, ChevronDown, FileText, CheckCircle, Clock, DollarSign, XCircle, Edit2, Save, Trash2, Upload, Copy } from 'lucide-react';
 import { Proposal, ProposalStatus, FinancialTable } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
 import { Pagination } from '../ui/Pagination';
@@ -47,6 +47,9 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const [importResult, setImportResult] = useState<{ imported: number; updated: number; errors: { row: string; error: string }[] } | null>(null);
+  const [showDuplicates, setShowDuplicates] = useState(false);
+  const [duplicates, setDuplicates] = useState<any[]>([]);
+  const [loadingDups, setLoadingDups] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -206,6 +209,23 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
   const totalPaid = proposals.filter(p => p.status === 'Paga').reduce((a, b) => a + Number(b.value), 0);
   const totalPoints = proposals.reduce((a, b) => a + (b.points_earned || 0), 0);
 
+  async function checkDuplicates() {
+    setLoadingDups(true);
+    setShowDuplicates(true);
+    const res = await API('/api/admin/proposals/duplicates');
+    setDuplicates(await res.json());
+    setLoadingDups(false);
+  }
+
+  async function deleteDupProposal(id: string) {
+    await API(`/api/proposals/${id}`, { method: 'DELETE' });
+    setDuplicates(prev =>
+      prev.map(g => ({ ...g, proposals: g.proposals.filter((p: any) => p.id !== id), count: g.count - 1 }))
+          .filter(g => g.count > 1)
+    );
+    await load();
+  }
+
   return (
     <div className="p-6 max-w-7xl mx-auto" style={{ color: 'var(--text-1)' }}>
       <div className="flex items-center justify-between mb-6 animate-fade-up">
@@ -214,6 +234,12 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{proposals.length} propostas no sistema</p>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={checkDuplicates}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+            style={{ background: 'rgba(251,191,36,0.1)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.25)' }}>
+            <Copy className="w-4 h-4" />
+            Duplicatas
+          </button>
           <button onClick={() => { setShowImport(true); setImportPreview([]); setImportResult(null); }}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
             style={{ background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' }}>
@@ -491,6 +517,64 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
             </div>
           )}
         </div>
+      </Modal>
+
+      <Modal
+        open={showDuplicates}
+        onClose={() => setShowDuplicates(false)}
+        title="Propostas Duplicadas"
+        subtitle="Mesmo CPF + número de proposta + valor"
+        size="xl"
+      >
+        {loadingDups ? (
+          <p className="text-center py-10 text-sm" style={{ color: 'var(--text-3)' }}>Verificando...</p>
+        ) : duplicates.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-12">
+            <CheckCircle className="w-10 h-10" style={{ color: '#4ade80' }} />
+            <p className="text-sm font-semibold" style={{ color: '#4ade80' }}>Nenhuma duplicata encontrada</p>
+          </div>
+        ) : (
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+            <p className="text-xs mb-3" style={{ color: 'var(--text-3)' }}>{duplicates.length} grupo{duplicates.length > 1 ? 's' : ''} encontrado{duplicates.length > 1 ? 's' : ''}</p>
+            {duplicates.map((g: any, gi: number) => (
+              <div key={gi} className="rounded-xl p-4" style={{ background: 'var(--surface-subtle)', border: '1px solid rgba(251,191,36,0.2)' }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <Copy className="w-3.5 h-3.5" style={{ color: '#fbbf24' }} />
+                  <span className="text-xs font-bold" style={{ color: '#fbbf24' }}>
+                    Proposta {g.proposals[0].proposal_number} — CPF {g.proposals[0].client_cpf} — {fmtBRL(Number(g.value))}
+                  </span>
+                  <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24' }}>
+                    {g.count}x
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {g.proposals.map((p: any) => (
+                    <div key={p.id} className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg" style={{ background: 'var(--surface)', border: '1px solid var(--card-border)' }}>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-1)' }}>{p.client_name}</p>
+                        <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+                          {p.bank || '—'} · {p.status} {p.status_comissao ? `· ${p.status_comissao}` : ''}
+                        </p>
+                        <p className="text-xs font-mono" style={{ color: 'var(--text-3)' }}>
+                          Criada: {new Date(p.created_at).toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+                      {canDelete && (
+                        <button
+                          onClick={() => { if (confirm('Excluir esta proposta duplicada?')) deleteDupProposal(p.id); }}
+                          className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg flex-shrink-0 transition-all"
+                          style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171', border: '1px solid rgba(248,113,113,0.25)' }}
+                        >
+                          <Trash2 className="w-3 h-3" /> Excluir
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </Modal>
 
       <Modal
