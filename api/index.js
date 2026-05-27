@@ -1639,8 +1639,8 @@ app.post('/api/admin/proposals/import', auth, adminOnly, async (req, res) => {
         existingId = r[0]?.id || null;
       } else {
         const { rows: r } = await pool.query(
-          'SELECT id FROM proposals WHERE proposal_number = $1 AND client_cpf = $2',
-          [proposalNumber, clientCpf]
+          'SELECT id FROM proposals WHERE proposal_number = $1 AND LOWER(TRIM(client_name)) = LOWER(TRIM($2))',
+          [proposalNumber, clientName]
         );
         existingId = r[0]?.id || null;
       }
@@ -1650,7 +1650,7 @@ app.post('/api/admin/proposals/import', auth, adminOnly, async (req, res) => {
           `UPDATE proposals SET
             client_name=$1, client_cpf=$2, value=$3, bank=$4, convenio=$5, table_id=$6,
             bank_id=$7, convenio_id=$8, status=$9, created_at=$10,
-            updated_at=COALESCE($11, now()),
+            updated_at=COALESCE($11, updated_at),
             tipo_proposta=$12, product=$13, product_id=$14, proposal_number=$16
            WHERE id=$15`,
           [clientName, clientCpf, value, bankText, convenioText, tableId,
