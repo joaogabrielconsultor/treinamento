@@ -116,7 +116,7 @@ export function Roteiros() {
                           )}
                         </div>
                         <a
-                          href={r.file_url}
+                          href={`/api/roteiros/${r.id}/file`}
                           target="_blank"
                           rel="noreferrer"
                           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium flex-shrink-0 transition-opacity hover:opacity-80"

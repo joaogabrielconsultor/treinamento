@@ -2612,6 +2612,16 @@ app.put('/api/roteiros/:id', auth, adminOnly, async (req, res) => {
   res.json(rows[0]);
 });
 
+app.get('/api/roteiros/:id/file', async (req, res) => {
+  const { rows } = await pool.query('SELECT file_url, original_name FROM roteiros WHERE id = $1', [req.params.id]);
+  if (!rows[0]) return res.status(404).json({ error: 'Não encontrado' });
+  const filepath = path.join(__dirname, rows[0].file_url.replace('/uploads/', 'uploads/'));
+  if (!fs.existsSync(filepath)) return res.status(404).json({ error: 'Arquivo não encontrado' });
+  res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(rows[0].original_name)}"`);
+  res.setHeader('Content-Type', 'application/pdf');
+  res.sendFile(filepath);
+});
+
 app.delete('/api/roteiros/:id', auth, adminOnly, async (req, res) => {
   const { rows } = await pool.query('SELECT file_url FROM roteiros WHERE id = $1', [req.params.id]);
   if (rows[0]) {
