@@ -9,6 +9,19 @@ const fs = require('fs');
 const pool = require('./db');
 const initDb = require('./init-db');
 const { consultarMargem, pingSession, startPingInterval } = require('./consignado');
+const { createClient } = require('@supabase/supabase-js');
+
+const supabaseStorage = (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY)
+  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
+  : null;
+
+async function ensureStorageBucket() {
+  if (!supabaseStorage) return;
+  const { data: buckets } = await supabaseStorage.storage.listBuckets();
+  const exists = buckets?.some(b => b.name === 'roteiros');
+  if (!exists) await supabaseStorage.storage.createBucket('roteiros', { public: true });
+}
+ensureStorageBucket().catch(() => {});
 
 const app = express();
 app.use(cors());
@@ -2588,13 +2601,22 @@ app.post('/api/roteiros/upload', auth, adminOnly, async (req, res) => {
     const file = req.files.pdf;
     const ext = path.extname(file.name) || '.pdf';
     const filename = `roteiro_${Date.now()}${ext}`;
-    const filepath = path.join(UPLOADS_DIR, filename);
-    await file.mv(filepath);
+    let fileUrl;
+    if (supabaseStorage) {
+      const { error } = await supabaseStorage.storage.from('roteiros').upload(filename, file.data, { contentType: 'application/pdf', upsert: false });
+      if (error) throw error;
+      const { data: { publicUrl } } = supabaseStorage.storage.from('roteiros').getPublicUrl(filename);
+      fileUrl = publicUrl;
+    } else {
+      const filepath = path.join(UPLOADS_DIR, filename);
+      await file.mv(filepath);
+      fileUrl = `/uploads/${filename}`;
+    }
     const { bank_id, title, description } = req.body;
     const { rows } = await pool.query(
       `INSERT INTO roteiros (bank_id, title, description, file_url, original_name, created_by)
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [bank_id || null, title, description || '', `/uploads/${filename}`, file.name, req.user.id]
+      [bank_id || null, title, description || '', fileUrl, file.name, req.user.id]
     );
     res.json(rows[0]);
   } catch (err) {
@@ -2615,9 +2637,13 @@ app.put('/api/roteiros/:id', auth, adminOnly, async (req, res) => {
 app.get('/api/roteiros/:id/file', async (req, res) => {
   const { rows } = await pool.query('SELECT file_url, original_name FROM roteiros WHERE id = $1', [req.params.id]);
   if (!rows[0]) return res.status(404).json({ error: 'Não encontrado' });
-  const filepath = path.join(__dirname, rows[0].file_url.replace('/uploads/', 'uploads/'));
+  const { file_url, original_name } = rows[0];
+  // Supabase URL → redirect direto
+  if (file_url.startsWith('http')) return res.redirect(file_url);
+  // fallback local
+  const filepath = path.join(__dirname, file_url.replace('/uploads/', 'uploads/'));
   if (!fs.existsSync(filepath)) return res.status(404).json({ error: 'Arquivo não encontrado' });
-  res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(rows[0].original_name)}"`);
+  res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(original_name)}"`);
   res.setHeader('Content-Type', 'application/pdf');
   res.sendFile(filepath);
 });
@@ -2625,8 +2651,14 @@ app.get('/api/roteiros/:id/file', async (req, res) => {
 app.delete('/api/roteiros/:id', auth, adminOnly, async (req, res) => {
   const { rows } = await pool.query('SELECT file_url FROM roteiros WHERE id = $1', [req.params.id]);
   if (rows[0]) {
-    const filePath = path.join(__dirname, rows[0].file_url.replace('/uploads/', 'uploads/'));
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    const { file_url } = rows[0];
+    if (supabaseStorage && file_url.startsWith('http')) {
+      const filename = file_url.split('/').pop();
+      await supabaseStorage.storage.from('roteiros').remove([filename]);
+    } else {
+      const filePath = path.join(__dirname, file_url.replace('/uploads/', 'uploads/'));
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    }
   }
   await pool.query('DELETE FROM roteiros WHERE id = $1', [req.params.id]);
   res.json({ ok: true });
