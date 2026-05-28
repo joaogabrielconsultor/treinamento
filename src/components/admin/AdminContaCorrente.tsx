@@ -199,7 +199,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
 
   const filtered = proposals.filter(p => {
     const q = search.toLowerCase();
-    return !q || p.client_name.toLowerCase().includes(q) || p.client_cpf?.includes(q) || p.proposal_number.includes(q);
+    return !q || p.client_name.toLowerCase().includes(q) || p.client_cpf?.includes(q) || p.proposal_number.includes(q) || ((p as any).user_name || '').toLowerCase().includes(q);
   });
 
   // Sort state for each tab
@@ -290,11 +290,15 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
   const selectablePage = paginated.filter(p => p.status_comissao === 'Ag. Comissão');
   const allPageSelected = selectablePage.length > 0 && selectablePage.every(p => selected.has(p.id));
 
-  const totalPending   = brokers.reduce((a, b) => a + parseFloat(String(b.pending_value)), 0);
-  const totalPaid      = brokers.reduce((a, b) => a + parseFloat(String(b.paid_value)), 0);
-  const totalEmpresaPending = brokers.reduce((a, b) => a + parseFloat(String(b.empresa_pending_value || 0)), 0);
-  const totalEmpresaPaid    = brokers.reduce((a, b) => a + parseFloat(String(b.empresa_paid_value || 0)), 0);
-  const brokersWithPending = brokers.filter(b => b.pending_count > 0).length;
+  // KPIs calculados a partir de proposals (já filtrado por corretor/status/período)
+  const agProposals   = proposals.filter(p => p.status_comissao === 'Ag. Comissão');
+  const pagProposals  = proposals.filter(p => p.status_comissao === 'Comissão Paga');
+  const totalPending       = agProposals.reduce((a, p) => a + parseFloat(String((p as any).comissao_valor || 0)), 0);
+  const totalEmpresaPending = agProposals.reduce((a, p) => a + parseFloat(String((p as any).comissao_empresa_valor || 0)), 0);
+  const totalEmpresaPaid    = pagProposals.reduce((a, p) => a + parseFloat(String((p as any).comissao_empresa_valor || 0)), 0);
+  const filteredBrokers = filterCorretor ? brokers.filter(b => b.user_id === filterCorretor) : brokers;
+  const totalPaid      = filteredBrokers.reduce((a, b) => a + parseFloat(String(b.paid_value)), 0);
+  const brokersWithPending = [...new Set(agProposals.map(p => (p as any).user_id))].length;
 
   async function markAsPaid() {
     if (selected.size === 0) return;
@@ -750,7 +754,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {[
           { label: 'Corr. A Receber',    value: fmtBRL(totalPending),            sub: `disponível p/ saque`,                                          icon: Clock,        color: '#f59e0b', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.2)'  },
-          { label: 'Corr. Pago (Saque)', value: fmtBRL(totalPaid),               sub: `${brokers.reduce((a, b) => a + b.paid_count, 0)} saque(s)`,     icon: CheckCircle,  color: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.2)'  },
+          { label: 'Corr. Pago (Saque)', value: fmtBRL(totalPaid),               sub: `${filteredBrokers.reduce((a, b) => a + b.paid_count, 0)} saque(s)`,     icon: CheckCircle,  color: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.2)'  },
           { label: 'Empresa Pendente',   value: fmtBRL(totalEmpresaPending),      sub: 'comissão empresa a receber',                                    icon: Clock,        color: '#fb923c', bg: 'rgba(251,146,60,0.08)', border: 'rgba(251,146,60,0.2)'  },
           { label: 'Empresa Recebida',   value: fmtBRL(totalEmpresaPaid),         sub: 'comissão empresa recebida',                                     icon: DollarSign,   color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.2)' },
           { label: 'Corretores Pend.',   value: String(brokersWithPending),       sub: 'aguardando pagamento',                                          icon: Users,        color: '#60a5fa', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.2)'  },
