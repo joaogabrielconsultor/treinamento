@@ -443,7 +443,7 @@ export function ContaCorrente() {
                     const sc = SAQUE_STATUS_COLOR[s.status] || SAQUE_STATUS_COLOR['Pendente'];
                     return (
                       <tr key={s.id} className="table-row-cyber">
-                        <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-3)' }}>{new Date(s.created_at).toLocaleDateString('pt-BR')}</td>
+                        <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-3)' }}>{new Date(s.created_at).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
                         <td className="px-4 py-3 font-bold num" style={{ color: '#14B8A6' }}>{fmtBRL(Number(s.amount))}</td>
                         <td className="px-4 py-3">
                           <span className="text-xs font-semibold px-2 py-1 rounded-lg" style={{ background: sc.bg, color: sc.text, border: `1px solid ${sc.border}` }}>{s.status}</span>

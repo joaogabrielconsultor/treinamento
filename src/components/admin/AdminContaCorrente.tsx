@@ -515,7 +515,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                             </div>
                           ) : (
                             <div className="flex items-center gap-1.5 group">
-                              <span style={{ color: 'var(--text-3)' }}>{new Date(s.created_at).toLocaleDateString('pt-BR')}</span>
+                              <span style={{ color: 'var(--text-3)' }}>{new Date(s.created_at).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span>
                               {isMaster && (
                                 <button onClick={() => { setEditDateId(s.id); setEditDateVal(s.created_at.slice(0, 10)); }}
                                   className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded"

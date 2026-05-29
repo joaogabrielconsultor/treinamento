@@ -2320,7 +2320,8 @@ app.patch('/api/admin/saques/:id', auth, adminOnly, async (req, res) => {
   const { status, notes, created_at } = req.body;
   // Só data: master editando a data sem mudar status
   if (!status && created_at) {
-    const d = new Date(created_at);
+    // Use noon UTC to prevent timezone offset from shifting the date to the previous day
+    const d = new Date(created_at + 'T12:00:00.000Z');
     if (isNaN(d.getTime())) return res.status(400).json({ error: 'Data inválida' });
     const { rows: [wr] } = await pool.query(
       `UPDATE withdrawal_requests SET created_at=$1, updated_at=now() WHERE id=$2 RETURNING *`,
