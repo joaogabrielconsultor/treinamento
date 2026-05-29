@@ -1125,8 +1125,8 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                       )}
                       {visibleCols.has('Comissão') && (
                         <td className="px-2 py-2">
-                          {p.status === 'Paga' && Number(p.comissao_valor) > 0
-                            ? <span className="font-bold num whitespace-nowrap" style={{ color: '#4ade80', fontSize: '10px' }}>{formatCurrency(Number(p.comissao_valor))}</span>
+                          {Number(p.comissao_valor) > 0
+                            ? <span className="font-bold num whitespace-nowrap" style={{ color: p.status === 'Paga' ? '#4ade80' : '#facc15', fontSize: '10px' }}>{formatCurrency(Number(p.comissao_valor))}</span>
                             : <span style={{ color: 'var(--text-3)' }}>—</span>}
                         </td>
                       )}
