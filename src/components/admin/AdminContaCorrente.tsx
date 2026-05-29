@@ -210,6 +210,14 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
     if (commSortDir === 'asc') { setCommSortDir('desc'); return; }
     setCommSortCol(null); setCommSortDir(null);
   }
+  const [editDateId, setEditDateId] = useState<string | null>(null);
+  const [editDateVal, setEditDateVal] = useState('');
+  async function saveSaqueDate(id: string) {
+    await API(`/api/admin/saques/${id}`, { method: 'PATCH', body: JSON.stringify({ created_at: editDateVal }) });
+    setEditDateId(null);
+    loadSaques();
+  }
+
   const [saqueSortCol, setSaqueSortCol] = useState<string | null>(null);
   const [saqueSortDir, setSaqueSortDir] = useState<'asc' | 'desc' | null>(null);
   function handleSaqueSort(col: string) {
@@ -489,7 +497,35 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                         <td className="px-4 py-3">
                           <span className="text-xs font-semibold px-2 py-1 rounded-lg" style={{ background: sc.bg, color: sc.text, border: `1px solid ${sc.border}` }}>{s.status}</span>
                         </td>
-                        <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-3)' }}>{new Date(s.created_at).toLocaleDateString('pt-BR')}</td>
+                        <td className="px-4 py-3 text-xs">
+                          {isMaster && editDateId === s.id ? (
+                            <div className="flex items-center gap-1">
+                              <input type="date" value={editDateVal} onChange={e => setEditDateVal(e.target.value)}
+                                className="input-cyber px-2 py-0.5 text-xs rounded-lg" style={{ color: 'var(--text-1)' }} />
+                              <button onClick={() => saveSaqueDate(s.id)}
+                                className="px-2 py-1 text-xs rounded-lg font-semibold"
+                                style={{ background: 'rgba(74,222,128,0.12)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.3)' }}>
+                                <Check className="w-3 h-3" />
+                              </button>
+                              <button onClick={() => setEditDateId(null)}
+                                className="px-2 py-1 text-xs rounded-lg"
+                                style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171', border: '1px solid rgba(248,113,113,0.25)' }}>
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5 group">
+                              <span style={{ color: 'var(--text-3)' }}>{new Date(s.created_at).toLocaleDateString('pt-BR')}</span>
+                              {isMaster && (
+                                <button onClick={() => { setEditDateId(s.id); setEditDateVal(s.created_at.slice(0, 10)); }}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded"
+                                  style={{ color: '#60a5fa' }}>
+                                  <Edit2 className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1.5">
                             {isPending && (
