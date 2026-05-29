@@ -988,117 +988,152 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
       ) : (
         <div className="rounded-2xl overflow-hidden animate-fade-up"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)', animationDelay: '140ms' }}>
-          {/* cabeçalho com seleção global */}
-          <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
-            <input type="checkbox" checked={allPageSelected} onChange={toggleSelectAll}
-              className="w-3.5 h-3.5 rounded cursor-pointer accent-teal-500" />
-            <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>
-              Selecionar página ({paginated.filter(p => p.status_comissao === 'Ag. Comissão').length} pendentes)
-            </span>
-          </div>
-          {filtered.length === 0 ? (
-            <p className="text-center py-16 text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma comissão encontrada</p>
-          ) : (
-            <div className="divide-y" style={{ borderColor: 'var(--card-border)' }}>
-              {paginated.map(p => {
-                const isPending = p.status_comissao === 'Ag. Comissão';
-                const isChecked = selected.has(p.id);
-                const isEditing = editId === p.id;
-                return (
-                  <div key={p.id} className="px-4 py-3 transition-colors"
-                    style={isChecked ? { background: 'rgba(20,184,166,0.05)' } : undefined}>
-                    {/* linha 1: checkbox + proposta + status + ações */}
-                    <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <div className="flex items-center gap-2 min-w-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
+                  <th className="px-4 py-3.5 w-10">
+                    <input type="checkbox" checked={allPageSelected} onChange={toggleSelectAll}
+                      className="w-3.5 h-3.5 rounded cursor-pointer accent-teal-500" />
+                  </th>
+                  {['Proposta', 'Corretor', 'Nome do Cliente', 'CPF', 'Banco / Tabela', 'Valor', 'Comissão Corretor', 'Comissão Empresa', 'Status', ''].map(h => {
+                    const sortable = !!COMM_SORT[h]; const active = commSortCol === h;
+                    return (
+                      <th key={h} onClick={sortable ? () => handleCommSort(h) : undefined}
+                        className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest"
+                        style={{ color: active ? '#14B8A6' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
+                        {h}{sortable && <span className="ml-1 opacity-60">{active ? (commSortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={11} className="text-center py-16 text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma comissão encontrada</td>
+                  </tr>
+                ) : paginated.map(p => {
+                  const isPending = p.status_comissao === 'Ag. Comissão';
+                  const isChecked = selected.has(p.id);
+                  return (
+                    <tr key={p.id}
+                      className="table-row-cyber"
+                      style={isChecked ? { background: 'rgba(20,184,166,0.05)' } : undefined}
+                    >
+                      <td className="px-4 py-3">
                         {isPending && (
                           <input type="checkbox" checked={isChecked} onChange={() => toggleSelect(p.id)}
-                            className="w-3.5 h-3.5 flex-shrink-0 rounded cursor-pointer accent-teal-500" />
+                            className="w-3.5 h-3.5 rounded cursor-pointer accent-teal-500" />
                         )}
-                        <span className="font-mono text-xs num font-semibold truncate" style={{ color: 'var(--text-2)' }}>
-                          #{p.proposal_number || '—'}
-                        </span>
-                        <span className={`${isPending ? 'badge badge-amber' : 'badge badge-green'} inline-flex items-center gap-1 flex-shrink-0`}>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs num" style={{ color: 'var(--text-2)' }}>{p.proposal_number || '—'}</td>
+                      <td className="px-4 py-3">
+                        <p className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>{(p as any).user_name || '—'}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{p.client_name}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-xs font-mono" style={{ color: 'var(--text-3)' }}>{p.client_cpf || '—'}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-sm" style={{ color: 'var(--text-2)' }}>{(p as any).bank_name || p.bank || '—'}</p>
+                        <p className="text-xs" style={{ color: 'var(--text-3)' }}>{(p as any).table_name || '—'}</p>
+                      </td>
+                      <td className="px-4 py-3 font-bold num" style={{ color: 'var(--text-1)' }}>{fmtBRL(Number(p.value))}</td>
+                      <td className="px-4 py-3">
+                        {editId === p.id ? (
+                          <input
+                            type="text"
+                            value={editCorr}
+                            onChange={e => setEditCorr(e.target.value)}
+                            placeholder="0,00"
+                            className="input-cyber w-28 px-2 py-1 text-sm rounded-lg num"
+                            style={{ color: '#4ade80' }}
+                          />
+                        ) : Number(p.comissao_valor) > 0 ? (
+                          <div>
+                            <span className="font-bold text-sm num" style={{ color: '#4ade80' }}>{fmtBRL(Number(p.comissao_valor))}</span>
+                            {p.comissao_corretor_override != null && (
+                              <p className="text-[10px]" style={{ color: '#94a3b8' }}>override</p>
+                            )}
+                          </div>
+                        ) : <span style={{ color: 'var(--text-3)' }}>—</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        {editId === p.id ? (
+                          <input
+                            type="text"
+                            value={editEmp}
+                            onChange={e => setEditEmp(e.target.value)}
+                            placeholder="0,00"
+                            className="input-cyber w-28 px-2 py-1 text-sm rounded-lg num"
+                            style={{ color: '#a78bfa' }}
+                          />
+                        ) : Number(p.comissao_empresa_valor) > 0 ? (
+                          <div>
+                            <span className="font-bold text-sm num" style={{ color: '#a78bfa' }}>{fmtBRL(Number(p.comissao_empresa_valor))}</span>
+                            {p.comissao_empresa_override != null && (
+                              <p className="text-[10px]" style={{ color: '#94a3b8' }}>override</p>
+                            )}
+                          </div>
+                        ) : <span style={{ color: 'var(--text-3)' }}>—</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`${isPending ? 'badge badge-amber' : 'badge badge-green'} inline-flex items-center gap-1`}>
                           {isPending ? <Clock className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
                           {p.status_comissao}
                         </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
-                        {isEditing ? (
-                          <>
-                            <button onClick={() => saveEdit(p.id)} disabled={savingEdit}
+                      </td>
+                      <td className="px-4 py-3">
+                        {editId === p.id ? (
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => saveEdit(p.id)}
+                              disabled={savingEdit}
                               className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg font-semibold transition-all disabled:opacity-50"
-                              style={{ background: 'rgba(74,222,128,0.12)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.3)' }}>
+                              style={{ background: 'rgba(74,222,128,0.12)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.3)' }}
+                            >
                               <Check className="w-3 h-3" />{savingEdit ? '...' : 'Salvar'}
                             </button>
-                            <button onClick={cancelEdit} disabled={savingEdit}
+                            <button
+                              onClick={cancelEdit}
+                              disabled={savingEdit}
                               className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg transition-all disabled:opacity-50"
-                              style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171', border: '1px solid rgba(248,113,113,0.25)' }}>
+                              style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171', border: '1px solid rgba(248,113,113,0.25)' }}
+                            >
                               <X className="w-3 h-3" />
                             </button>
-                          </>
+                          </div>
                         ) : (
-                          <>
-                            <button onClick={() => startEdit(p)}
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => startEdit(p)}
                               className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg transition-all"
-                              style={{ background: 'rgba(96,165,250,0.08)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.2)' }}>
+                              style={{ background: 'rgba(96,165,250,0.08)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.2)' }}
+                            >
                               <Edit2 className="w-3 h-3" /> Editar
                             </button>
                             {isMaster && !isPending && (
-                              <button onClick={() => revertPaid(p.id)} disabled={revertingId === p.id}
+                              <button
+                                onClick={() => revertPaid(p.id)}
+                                disabled={revertingId === p.id}
                                 className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg transition-all disabled:opacity-50"
-                                style={{ background: 'rgba(251,191,36,0.08)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.25)' }}>
+                                style={{ background: 'rgba(251,191,36,0.08)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.25)' }}
+                              >
                                 <XCircle className="w-3 h-3" />{revertingId === p.id ? '...' : 'Estornar'}
                               </button>
                             )}
-                          </>
+                          </div>
                         )}
-                      </div>
-                    </div>
-                    {/* linha 2: corretor + cliente + CPF */}
-                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 mb-1.5">
-                      <span className="text-xs font-semibold" style={{ color: '#14B8A6' }}>{(p as any).user_name || '—'}</span>
-                      <span className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{p.client_name}</span>
-                      <span className="text-xs font-mono" style={{ color: 'var(--text-3)' }}>{p.client_cpf || '—'}</span>
-                    </div>
-                    {/* linha 3: banco/tabela + valores */}
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                      <div>
-                        <span className="text-xs" style={{ color: 'var(--text-2)' }}>{(p as any).bank_name || p.bank || '—'}</span>
-                        <span className="text-[10px] ml-1.5" style={{ color: 'var(--text-3)' }}>{(p as any).table_name || ''}</span>
-                      </div>
-                      <span className="font-bold num text-sm" style={{ color: 'var(--text-1)' }}>{fmtBRL(Number(p.value))}</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-3)' }}>Corretor:</span>
-                        {isEditing ? (
-                          <input type="text" value={editCorr} onChange={e => setEditCorr(e.target.value)}
-                            placeholder="0,00" className="input-cyber w-24 px-2 py-0.5 text-xs rounded-lg num"
-                            style={{ color: '#4ade80' }} />
-                        ) : Number(p.comissao_valor) > 0 ? (
-                          <span className="font-bold text-xs num" style={{ color: '#4ade80' }}>
-                            {fmtBRL(Number(p.comissao_valor))}
-                            {p.comissao_corretor_override != null && <span className="text-[9px] ml-1" style={{ color: '#94a3b8' }}>override</span>}
-                          </span>
-                        ) : <span className="text-xs" style={{ color: 'var(--text-3)' }}>—</span>}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-3)' }}>Empresa:</span>
-                        {isEditing ? (
-                          <input type="text" value={editEmp} onChange={e => setEditEmp(e.target.value)}
-                            placeholder="0,00" className="input-cyber w-24 px-2 py-0.5 text-xs rounded-lg num"
-                            style={{ color: '#a78bfa' }} />
-                        ) : Number(p.comissao_empresa_valor) > 0 ? (
-                          <span className="font-bold text-xs num" style={{ color: '#a78bfa' }}>
-                            {fmtBRL(Number(p.comissao_empresa_valor))}
-                            {p.comissao_empresa_override != null && <span className="text-[9px] ml-1" style={{ color: '#94a3b8' }}>override</span>}
-                          </span>
-                        ) : <span className="text-xs" style={{ color: 'var(--text-3)' }}>—</span>}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
           <Pagination total={filtered.length} page={page} perPage={perPage} onPage={setPage} onPerPage={setPerPage} />
         </div>
       )}
