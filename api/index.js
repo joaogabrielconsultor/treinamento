@@ -1448,7 +1448,7 @@ app.put('/api/proposals/:id', auth, async (req, res) => {
 
   // Controla status_comissao automaticamente
   if (isAdmin && req.body.status === 'Paga' && existing.status !== 'Paga') {
-    await pool.query("UPDATE proposals SET status_comissao = 'Ag. Comissão' WHERE id = $1", [updated.id]);
+    await pool.query("UPDATE proposals SET status_comissao = 'Ag. Comissão', updated_at = now() WHERE id = $1", [updated.id]);
     updated.status_comissao = 'Ag. Comissão';
   }
   if (isAdmin && existing.status === 'Paga' && req.body.status && req.body.status !== 'Paga') {
