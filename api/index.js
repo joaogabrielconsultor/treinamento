@@ -1431,7 +1431,7 @@ app.put('/api/proposals/:id', auth, async (req, res) => {
   if (req.body.comissao_corretor_override === '') req.body.comissao_corretor_override = null;
   if (req.body.comissao_empresa_override === '') req.body.comissao_empresa_override = null;
 
-  const updates = ['updated_at = now()'];
+  const updates = [];
   const values = [];
   let i = 1;
   for (const f of fields) {
@@ -1455,10 +1455,14 @@ app.put('/api/proposals/:id', auth, async (req, res) => {
   }
   values.push(req.params.id);
 
-  const { rows: [updated] } = await pool.query(
-    `UPDATE proposals SET ${updates.join(', ')} WHERE id = $${i} RETURNING *`,
-    values
-  );
+  let updated = existing;
+  if (updates.length > 0) {
+    const { rows: [u] } = await pool.query(
+      `UPDATE proposals SET ${updates.join(', ')} WHERE id = $${i} RETURNING *`,
+      values
+    );
+    if (u) updated = u;
+  }
 
   // Controla status_comissao automaticamente
   if (isAdmin && req.body.status === 'Paga' && existing.status !== 'Paga') {
