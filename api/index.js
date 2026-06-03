@@ -2426,6 +2426,94 @@ app.get('/api/admin/despesas/saldo-lojas', auth, adminOnly, async (req, res) => 
   res.json(rows);
 });
 
+// Admin: visão da conta corrente de um corretor específico (igual ao que ele vê)
+app.get('/api/admin/conta-corrente/user-view', auth, adminOnly, async (req, res) => {
+  const targetId = req.query.user_id;
+  if (!targetId) return res.status(400).json({ error: 'user_id obrigatório' });
+
+  const month = req.query.month && /^\d{4}-\d{2}$/.test(req.query.month) ? req.query.month : null;
+  const monthFilter = month
+    ? `AND DATE_TRUNC('month', p.updated_at) = $2`
+    : `AND DATE_TRUNC('month', p.updated_at) = DATE_TRUNC('month', NOW())`;
+  const monthParam = month ? [targetId, `${month}-01`] : [targetId];
+
+  const { rows } = await pool.query(
+    `${contaCorrenteSelect} WHERE p.user_id = $1 AND p.status_comissao IS NOT NULL AND p.updated_at >= '2026-05-01' ORDER BY p.updated_at DESC`,
+    [targetId]
+  );
+  const { rows: monthRows } = await pool.query(
+    `${contaCorrenteSelect} WHERE p.user_id = $1 AND p.status_comissao IS NOT NULL
+     ${monthFilter} ORDER BY p.updated_at DESC`,
+    monthParam
+  );
+  const pending = monthRows.filter(r => r.status_comissao === 'Ag. Comissão');
+  const paid    = monthRows.filter(r => r.status_comissao === 'Comissão Paga');
+  const paid_value = paid.reduce((a, b) => a + parseFloat(b.comissao_valor || 0), 0);
+
+  const [{ rows: [req_total] }, { rows: [req_paid] }, { rows: [prod_month] }] = await Promise.all([
+    pool.query(
+      `SELECT COALESCE(SUM(amount),0) as total, COUNT(*)::int as count
+       FROM withdrawal_requests WHERE user_id=$1 AND status != 'Recusado' AND created_at >= '2026-05-01'`,
+      [targetId]
+    ),
+    pool.query(
+      `SELECT COALESCE(SUM(amount),0) as total, COUNT(*)::int as count
+       FROM withdrawal_requests WHERE user_id=$1 AND status = 'Pago' AND created_at >= '2026-05-01'`,
+      [targetId]
+    ),
+    pool.query(
+      `SELECT COALESCE(SUM(p.value),0) as total, COUNT(*)::int as count
+       FROM proposals p WHERE p.user_id=$1 AND p.status='Paga'
+       AND DATE_TRUNC('month', p.updated_at) = ${month ? '$2' : 'DATE_TRUNC(\'month\', NOW())'}`,
+      monthParam
+    ),
+  ]);
+
+  const { rows: [allTimePaid] } = await pool.query(
+    `SELECT COALESCE(SUM(COALESCE(p.comissao_corretor_override,
+       ROUND(p.value * COALESCE(ft.comissao_corretor, 0) / 100, 2)
+     )), 0) as total
+     FROM proposals p
+     LEFT JOIN financial_tables ft ON ft.id = p.table_id
+     WHERE p.user_id = $1 AND p.status_comissao = 'Comissão Paga' AND p.updated_at >= '2026-05-01'`,
+    [targetId]
+  );
+
+  const { rows: saques } = await pool.query(
+    `SELECT wr.*, r.full_name as reviewed_by_name FROM withdrawal_requests wr
+     LEFT JOIN users r ON r.id = wr.reviewed_by
+     WHERE wr.user_id = $1 AND wr.created_at >= '2026-05-01' ORDER BY wr.created_at DESC`,
+    [targetId]
+  );
+
+  const { rows: [userInfo] } = await pool.query(
+    `SELECT full_name, pix_key, pix_key_type FROM users WHERE id = $1`, [targetId]
+  );
+
+  const all_time_paid_value = parseFloat(allTimePaid.total);
+  const available_balance = Math.max(0, all_time_paid_value - parseFloat(req_total.total));
+
+  res.json({
+    proposals: rows,
+    saques,
+    userInfo: userInfo || null,
+    summary: {
+      pending_count: pending.length,
+      pending_value: pending.reduce((a, b) => a + parseFloat(b.comissao_valor || 0), 0),
+      paid_count: paid.length,
+      paid_value,
+      all_time_paid_value,
+      available_balance,
+      total_withdrawn: parseFloat(req_total.total),
+      withdrawn_count: req_total.count,
+      withdrawn_paid: parseFloat(req_paid.total),
+      withdrawn_paid_count: req_paid.count,
+      production_month: parseFloat(prod_month.total),
+      production_month_count: prod_month.count,
+    }
+  });
+});
+
 // Visão do admin — resumo por corretor + lista completa
 app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
   const { user_id, status_comissao, loja_id, usuario_banco_id, month, year } = req.query;

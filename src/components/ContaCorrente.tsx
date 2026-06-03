@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Wallet, Clock, CheckCircle, DollarSign, FileText, ChevronDown, Key, Edit2, X, Save, Send, ArrowDownToLine, AlertCircle, TrendingUp, Info } from 'lucide-react';
+import { Wallet, Clock, CheckCircle, DollarSign, FileText, ChevronDown, Key, Edit2, X, Save, Send, ArrowDownToLine, AlertCircle, TrendingUp, Info, Eye } from 'lucide-react';
 import { Proposal, WithdrawalRequest } from '../types';
 import { Pagination } from './ui/Pagination';
 
@@ -143,7 +143,7 @@ function monthLabel(ym: string) {
   return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
 }
 
-export function ContaCorrente() {
+export function ContaCorrente({ adminMode }: { adminMode?: { userId: string; userName: string } } = {}) {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [summary, setSummary] = useState<Summary>({
     pending_count: 0, pending_value: 0, paid_count: 0, paid_value: 0,
@@ -185,15 +185,25 @@ export function ContaCorrente() {
   async function load(month?: string) {
     setLoading(true);
     const m = month ?? filterMonth;
-    const [contaData, meData, saquesData] = await Promise.all([
-      API(`/api/conta-corrente${m ? `?month=${m}` : ''}`).then(r => r.json()),
-      API('/api/auth/me').then(r => r.json()),
-      API('/api/conta-corrente/saques').then(r => r.json()),
-    ]);
-    setProposals(Array.isArray(contaData.proposals) ? contaData.proposals : []);
-    if (contaData.summary) setSummary(contaData.summary);
-    if (meData) setPixInfo({ pix_key: meData.pix_key || null, pix_key_type: meData.pix_key_type || null });
-    setSaques(Array.isArray(saquesData) ? saquesData : []);
+    if (adminMode) {
+      const params = new URLSearchParams({ user_id: adminMode.userId });
+      if (m) params.set('month', m);
+      const contaData = await API(`/api/admin/conta-corrente/user-view?${params}`).then(r => r.json());
+      setProposals(Array.isArray(contaData.proposals) ? contaData.proposals : []);
+      if (contaData.summary) setSummary(contaData.summary);
+      if (contaData.userInfo) setPixInfo({ pix_key: contaData.userInfo.pix_key || null, pix_key_type: contaData.userInfo.pix_key_type || null });
+      setSaques(Array.isArray(contaData.saques) ? contaData.saques : []);
+    } else {
+      const [contaData, meData, saquesData] = await Promise.all([
+        API(`/api/conta-corrente${m ? `?month=${m}` : ''}`).then(r => r.json()),
+        API('/api/auth/me').then(r => r.json()),
+        API('/api/conta-corrente/saques').then(r => r.json()),
+      ]);
+      setProposals(Array.isArray(contaData.proposals) ? contaData.proposals : []);
+      if (contaData.summary) setSummary(contaData.summary);
+      if (meData) setPixInfo({ pix_key: meData.pix_key || null, pix_key_type: meData.pix_key_type || null });
+      setSaques(Array.isArray(saquesData) ? saquesData : []);
+    }
     setLoading(false);
   }
 
@@ -283,6 +293,15 @@ export function ContaCorrente() {
     <div className="p-4 sm:p-6 max-w-6xl mx-auto" style={{ color: 'var(--text-1)' }}>
 
       {/* Header */}
+      {/* Banner modo admin */}
+      {adminMode && (
+        <div className="mb-4 rounded-xl px-4 py-3 flex items-center gap-2 animate-fade-up"
+          style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)', color: '#60a5fa' }}>
+          <Eye className="w-4 h-4 flex-shrink-0" />
+          <span className="text-xs font-semibold">Visualizando como corretor: <span className="font-bold">{adminMode.userName}</span></span>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-6 animate-fade-up">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -314,19 +333,21 @@ export function ContaCorrente() {
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {summary.available_balance > 0 && (
-            <button onClick={() => { setShowSaqueModal(true); setSaqueError(''); setSaqueAmount(''); }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold"
-              style={{ background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' }}>
-              <Send className="w-3.5 h-3.5" /> Solicitar Saque
+        {!adminMode && (
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {summary.available_balance > 0 && (
+              <button onClick={() => { setShowSaqueModal(true); setSaqueError(''); setSaqueAmount(''); }}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold"
+                style={{ background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' }}>
+                <Send className="w-3.5 h-3.5" /> Solicitar Saque
+              </button>
+            )}
+            <button onClick={() => setShowPixModal(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold btn-cyber">
+              <Edit2 className="w-3.5 h-3.5" />
+              {pixInfo.pix_key ? 'Editar PIX' : 'Cadastrar PIX'}
             </button>
-          )}
-          <button onClick={() => setShowPixModal(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold btn-cyber">
-            <Edit2 className="w-3.5 h-3.5" />
-            {pixInfo.pix_key ? 'Editar PIX' : 'Cadastrar PIX'}
-          </button>
-        </div>
+          </div>
+        )}
       </div>
 
       {saqueSuccess && (
@@ -564,9 +585,9 @@ export function ContaCorrente() {
         )}
       </div>
 
-      {showPixModal && <PixModal current={pixInfo} onClose={() => setShowPixModal(false)} onSave={savePix} />}
+      {!adminMode && showPixModal && <PixModal current={pixInfo} onClose={() => setShowPixModal(false)} onSave={savePix} />}
 
-      {showSaqueModal && (
+      {!adminMode && showSaqueModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)' }}>
           <div className="rounded-2xl w-full max-w-sm p-6 animate-fade-up" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
             <div className="flex items-center justify-between mb-5">

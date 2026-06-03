@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Wallet, Clock, CheckCircle, DollarSign, Users, ChevronDown, Search, AlertCircle, Key, Send, XCircle, Inbox, Edit2, X, Check, TrendingDown, Plus, Store, Calendar } from 'lucide-react';
+import { Wallet, Clock, CheckCircle, DollarSign, Users, ChevronDown, Search, AlertCircle, Key, Send, XCircle, Inbox, Edit2, X, Check, TrendingDown, Plus, Store, Calendar, Eye } from 'lucide-react';
 
 const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 import { Proposal, WithdrawalRequest } from '../../types';
 import { Pagination } from '../ui/Pagination';
+import { ContaCorrente } from '../ContaCorrente';
 
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
@@ -116,6 +117,8 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
   const [showDespesaModal, setShowDespesaModal] = useState(false);
   const [savingDespesa, setSavingDespesa] = useState(false);
   const [despesaForm, setDespesaForm] = useState({ loja_id: '', descricao: '', valor: '', data: new Date().toISOString().split('T')[0], usuario_banco_id: '' });
+
+  const [viewCorretor, setViewCorretor] = useState<{ userId: string; userName: string } | null>(null);
 
   async function load() {
     setLoading(true);
@@ -892,6 +895,14 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                       {fmtBRL(parseFloat(String(b.pending_value)) + parseFloat(String(b.paid_value)))}
                     </p>
                   </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => setViewCorretor({ userId: b.user_id, userName: b.user_name || b.user_email })}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
+                      style={{ background: 'rgba(96,165,250,0.1)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.25)' }}>
+                      <Eye className="w-3.5 h-3.5" /> Ver conta
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -1174,6 +1185,28 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
         </div>
       )}
       </>}
+
+      {/* Modal: visão da conta corrente do corretor */}
+      {viewCorretor && (
+        <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}>
+          <div className="flex items-center justify-between px-5 py-3 flex-shrink-0"
+            style={{ background: 'var(--card-bg)', borderBottom: '1px solid var(--card-border)' }}>
+            <div className="flex items-center gap-2">
+              <Eye className="w-4 h-4" style={{ color: '#60a5fa' }} />
+              <span className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>
+                Conta Corrente — {viewCorretor.userName}
+              </span>
+            </div>
+            <button onClick={() => setViewCorretor(null)}
+              className="p-1.5 rounded-lg" style={{ color: 'var(--text-3)' }}>
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <ContaCorrente adminMode={viewCorretor} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
