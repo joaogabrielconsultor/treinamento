@@ -1383,6 +1383,20 @@ app.post('/api/proposals', auth, async (req, res) => {
   res.json(rows[0]);
 });
 
+app.patch('/api/admin/proposals/:id/status-date', auth, adminOnly, async (req, res) => {
+  if (req.user.role !== 'master') return res.status(403).json({ error: 'Apenas master pode editar esta data' });
+  const { updated_at } = req.body;
+  if (!updated_at) return res.status(400).json({ error: 'Data obrigatória' });
+  const d = new Date(updated_at + 'T12:00:00.000Z');
+  if (isNaN(d.getTime())) return res.status(400).json({ error: 'Data inválida' });
+  const { rows: [p] } = await pool.query(
+    'UPDATE proposals SET updated_at=$1 WHERE id=$2 RETURNING id',
+    [d.toISOString(), req.params.id]
+  );
+  if (!p) return res.status(404).json({ error: 'Proposta não encontrada' });
+  res.json({ ok: true });
+});
+
 app.patch('/api/admin/proposals/:id/toggle-edit', auth, adminOnly, async (req, res) => {
   const { rows: [p] } = await pool.query(
     'UPDATE proposals SET allow_broker_edit = NOT allow_broker_edit WHERE id=$1 RETURNING id, allow_broker_edit',

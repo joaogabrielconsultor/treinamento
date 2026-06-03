@@ -3,7 +3,7 @@ import { SimPrefill } from './Simulator';
 import {
   Plus, Search, FileText, ChevronDown, CheckCircle, Clock, DollarSign, XCircle,
   Edit2, User, CreditCard, ChevronRight, AlertTriangle, Lock, Unlock, Trash2,
-  Upload, Filter, Download, Calendar, TrendingUp, X, Eye, EyeOff,
+  Upload, Filter, Download, Calendar, TrendingUp, X, Eye, EyeOff, Check,
 } from 'lucide-react';
 import { Proposal, ProposalStatusDef, FinancialTable, Bank, Convenio, Product } from '../types';
 import { Modal } from './ui/Modal';
@@ -220,6 +220,10 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
   // ── Usuários banco ──
   const [usuariosBanco, setUsuariosBanco] = useState<{ id: string; nome: string }[]>([]);
 
+  // ── Edição data de status (master only) ──
+  const [editStatusDateId, setEditStatusDateId] = useState<string | null>(null);
+  const [editStatusDateVal, setEditStatusDateVal] = useState('');
+
   // ── Duplicatas (master only) ──
   const [showDuplicates, setShowDuplicates] = useState(false);
   const [duplicates, setDuplicates] = useState<any[]>([]);
@@ -231,6 +235,15 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const [importResult, setImportResult] = useState<{ imported: number; updated: number; errors: { row: string; error: string }[] } | null>(null);
+
+  async function saveProposalStatusDate(id: string) {
+    await API(`/api/admin/proposals/${id}/status-date`, {
+      method: 'PATCH',
+      body: JSON.stringify({ updated_at: editStatusDateVal }),
+    });
+    setEditStatusDateId(null);
+    load();
+  }
 
   // ── Load ──
   async function load(from?: string, to?: string) {
@@ -1120,7 +1133,33 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                       )}
                       {visibleCols.has('Dt. Status') && (
                         <td className="px-2 py-2 num whitespace-nowrap" style={{ color: 'var(--text-3)', fontSize: '10px' }}>
-                          {p.updated_at ? new Date(p.updated_at).toLocaleDateString('pt-BR') : '—'}
+                          {isMaster && editStatusDateId === p.id ? (
+                            <div className="flex items-center gap-1">
+                              <input type="date" value={editStatusDateVal} onChange={e => setEditStatusDateVal(e.target.value)}
+                                className="input-cyber px-2 py-0.5 text-xs rounded-lg" style={{ color: 'var(--text-1)' }} />
+                              <button onClick={() => saveProposalStatusDate(p.id)}
+                                className="px-2 py-1 text-xs rounded-lg font-semibold"
+                                style={{ background: 'rgba(74,222,128,0.12)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.3)' }}>
+                                <Check className="w-3 h-3" />
+                              </button>
+                              <button onClick={() => setEditStatusDateId(null)}
+                                className="px-2 py-1 text-xs rounded-lg"
+                                style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171', border: '1px solid rgba(248,113,113,0.25)' }}>
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5 group">
+                              <span>{p.updated_at ? new Date(p.updated_at).toLocaleDateString('pt-BR') : '—'}</span>
+                              {isMaster && (
+                                <button onClick={() => { setEditStatusDateId(p.id); setEditStatusDateVal(p.updated_at?.slice(0, 10) || ''); }}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded"
+                                  style={{ color: '#60a5fa' }}>
+                                  <Edit2 className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
+                          )}
                         </td>
                       )}
                       {visibleCols.has('Comissão') && (
