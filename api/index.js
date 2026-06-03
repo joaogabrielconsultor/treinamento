@@ -2208,12 +2208,12 @@ app.get('/api/conta-corrente', auth, async (req, res) => {
   const [{ rows: [req_total] }, { rows: [req_paid] }, { rows: [prod_month] }] = await Promise.all([
     pool.query(
       `SELECT COALESCE(SUM(amount),0) as total, COUNT(*)::int as count
-       FROM withdrawal_requests WHERE user_id=$1 AND status != 'Recusado'`,
+       FROM withdrawal_requests WHERE user_id=$1 AND status != 'Recusado' AND created_at >= '2026-05-01'`,
       [req.user.id]
     ),
     pool.query(
       `SELECT COALESCE(SUM(amount),0) as total, COUNT(*)::int as count
-       FROM withdrawal_requests WHERE user_id=$1 AND status = 'Pago'`,
+       FROM withdrawal_requests WHERE user_id=$1 AND status = 'Pago' AND created_at >= '2026-05-01'`,
       [req.user.id]
     ),
     pool.query(
@@ -2224,7 +2224,7 @@ app.get('/api/conta-corrente', auth, async (req, res) => {
     ),
   ]);
 
-  // Comissão recebida total (all-time) para calcular saldo real
+  // Comissão recebida a partir de maio/2026
   const { rows: [allTimePaid] } = await pool.query(
     `${contaCorrenteSelect} WHERE p.user_id = $1 AND p.status_comissao = 'Comissão Paga'`,
     [req.user.id]
@@ -2235,7 +2235,7 @@ app.get('/api/conta-corrente', auth, async (req, res) => {
        )), 0) as total
        FROM proposals p
        LEFT JOIN financial_tables ft ON ft.id = p.table_id
-       WHERE p.user_id = $1 AND p.status_comissao = 'Comissão Paga'`,
+       WHERE p.user_id = $1 AND p.status_comissao = 'Comissão Paga' AND p.updated_at >= '2026-05-01'`,
       [req.user.id]
     );
     return r;
