@@ -7,13 +7,16 @@ import { Pagination } from '../ui/Pagination';
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
 
-const STATUS_CONFIG: Record<ProposalStatus, { color: string; icon: React.ReactNode }> = {
+const STATUS_CONFIG: Record<ProposalStatus, { color: string; icon: React.ReactNode; style?: React.CSSProperties }> = {
   Digitada:    { color: 'badge badge-blue',   icon: <FileText className="w-3 h-3" /> },
   'Em análise':{ color: 'badge badge-amber',  icon: <Clock className="w-3 h-3" /> },
   Aprovada:    { color: 'badge badge-purple', icon: <CheckCircle className="w-3 h-3" /> },
   Paga:        { color: 'badge badge-green',  icon: <DollarSign className="w-3 h-3" /> },
+  'C PAGA':    { color: 'badge', icon: <CheckCircle className="w-3 h-3" />, style: { background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' } },
   Cancelada:   { color: 'badge badge-red',    icon: <XCircle className="w-3 h-3" /> },
 };
+
+const EDITABLE_STATUSES: ProposalStatus[] = ['Digitada', 'Em análise', 'Aprovada', 'Paga', 'Cancelada'];
 
 const fmtBRL = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 const inp = 'input-cyber w-full px-3 py-2.5 rounded-xl text-sm';
@@ -206,7 +209,7 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
   useEffect(() => { setPage(1); }, [search, filterStatus, filterCorretor, filterBank, sortCol, sortDir]);
 
   const paginated = sorted.slice((page - 1) * perPage, page * perPage);
-  const totalPaid = proposals.filter(p => p.status === 'Paga').reduce((a, b) => a + Number(b.value), 0);
+  const totalPaid = proposals.filter(p => p.status === 'Paga' || p.status === 'C PAGA').reduce((a, b) => a + Number(b.value), 0);
   const totalPoints = proposals.reduce((a, b) => a + (b.points_earned || 0), 0);
 
   async function checkDuplicates() {
@@ -253,7 +256,7 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
           { label: 'Total',               value: proposals.length,                                  color: '#60a5fa' },
-          { label: 'Pagas',               value: proposals.filter(p => p.status === 'Paga').length, color: '#4ade80' },
+          { label: 'Pagas',               value: proposals.filter(p => p.status === 'Paga' || p.status === 'C PAGA').length, color: '#4ade80' },
           { label: 'Volume pago',          value: fmtBRL(totalPaid),                                 color: '#14B8A6' },
           { label: 'Pontos distribuídos',  value: `${totalPoints} pts`,                              color: '#fbbf24' },
         ].map((c, i) => (
@@ -350,7 +353,7 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
                     </td>
                     <td className="px-4 py-3 font-bold num" style={{ color: 'var(--text-1)' }}>{fmtBRL(Number(p.value))}</td>
                     <td className="px-4 py-3">
-                      <span className={`${STATUS_CONFIG[p.status]?.color} inline-flex items-center gap-1`}>
+                      <span className={`${STATUS_CONFIG[p.status]?.color} inline-flex items-center gap-1`} style={STATUS_CONFIG[p.status]?.style}>
                         {STATUS_CONFIG[p.status]?.icon} {p.status}
                       </span>
                     </td>
@@ -603,7 +606,7 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
             <div className="relative">
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
               <select value={editStatus} onChange={e => setEditStatus(e.target.value as ProposalStatus)} className={`${inp} appearance-none pr-8`}>
-                {(Object.keys(STATUS_CONFIG) as ProposalStatus[]).map(s => <option key={s} value={s}>{s}</option>)}
+                {EDITABLE_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
           </div>

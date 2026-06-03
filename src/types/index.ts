@@ -173,7 +173,7 @@ export interface ScoringRule {
   created_at: string;
 }
 
-export type ProposalStatus = 'Digitada' | 'Em análise' | 'Aprovada' | 'Paga' | 'Cancelada';
+export type ProposalStatus = 'Digitada' | 'Em análise' | 'Aprovada' | 'Paga' | 'C PAGA' | 'Cancelada';
 
 export interface Proposal {
   id: string;

@@ -1465,17 +1465,19 @@ app.put('/api/proposals/:id', auth, async (req, res) => {
   }
 
   // Controla status_comissao automaticamente
-  if (isAdmin && req.body.status === 'Paga' && existing.status !== 'Paga') {
+  const wasInPaidFlow = existing.status === 'Paga' || existing.status === 'C PAGA';
+  const isGoingToPaidFlow = req.body.status === 'Paga' || req.body.status === 'C PAGA';
+  if (isAdmin && req.body.status === 'Paga' && !wasInPaidFlow) {
     await pool.query("UPDATE proposals SET status_comissao = 'Ag. Comissão', updated_at = now() WHERE id = $1", [updated.id]);
     updated.status_comissao = 'Ag. Comissão';
   }
-  if (isAdmin && existing.status === 'Paga' && req.body.status && req.body.status !== 'Paga') {
+  if (isAdmin && wasInPaidFlow && req.body.status && !isGoingToPaidFlow) {
     await pool.query('UPDATE proposals SET status_comissao = NULL WHERE id = $1', [updated.id]);
     updated.status_comissao = null;
   }
 
   // Se mudou para Paga, calcular e adicionar pontos
-  if (isAdmin && req.body.status === 'Paga' && existing.status !== 'Paga') {
+  if (isAdmin && req.body.status === 'Paga' && !wasInPaidFlow) {
     const pts = await calcPoints(updated.table_id, parseFloat(updated.value));
     await pool.query('UPDATE proposals SET points_earned=$1 WHERE id=$2', [pts, updated.id]);
     updated.points_earned = pts;
@@ -1509,8 +1511,8 @@ app.put('/api/proposals/:id', auth, async (req, res) => {
     }
   }
 
-  // Se removido de Paga, subtrair pontos
-  if (isAdmin && existing.status === 'Paga' && req.body.status && req.body.status !== 'Paga') {
+  // Se removido de Paga/C PAGA, subtrair pontos
+  if (isAdmin && wasInPaidFlow && req.body.status && !isGoingToPaidFlow) {
     const pts = existing.points_earned || 0;
     if (pts > 0) {
       await pool.query('UPDATE proposals SET points_earned=0 WHERE id=$1', [existing.id]);
@@ -2629,7 +2631,7 @@ app.post('/api/admin/conta-corrente/pay', auth, adminOnly, async (req, res) => {
   }
   const placeholders = proposal_ids.map((_, idx) => `$${idx + 1}`).join(',');
   await pool.query(
-    `UPDATE proposals SET status_comissao = 'Comissão Paga', updated_at = now() WHERE id IN (${placeholders})`,
+    `UPDATE proposals SET status_comissao = 'Comissão Paga', status = 'C PAGA', updated_at = now() WHERE id IN (${placeholders})`,
     proposal_ids
   );
   // Registra pagamento por corretor
@@ -2662,7 +2664,7 @@ app.post('/api/admin/conta-corrente/unpay', auth, masterOnly, async (req, res) =
   }
   const placeholders = proposal_ids.map((_, idx) => `$${idx + 1}`).join(',');
   const { rowCount } = await pool.query(
-    `UPDATE proposals SET status_comissao = 'Ag. Comissão', updated_at = now()
+    `UPDATE proposals SET status_comissao = 'Ag. Comissão', status = 'Paga', updated_at = now()
      WHERE id IN (${placeholders}) AND status_comissao = 'Comissão Paga'`,
     proposal_ids
   );

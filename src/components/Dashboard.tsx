@@ -20,6 +20,7 @@ const STATUS_COLORS: Record<string, string> = {
   'Em análise': '#f59e0b',
   'Aprovada':   '#a78bfa',
   'Paga':       '#22c55e',
+  'C PAGA':     '#14B8A6',
   'Cancelada':  '#f87171',
 };
 
