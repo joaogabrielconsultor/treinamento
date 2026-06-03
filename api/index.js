@@ -2191,9 +2191,9 @@ app.get('/api/conta-corrente', auth, async (req, res) => {
     : `AND DATE_TRUNC('month', p.updated_at) = DATE_TRUNC('month', NOW())`;
   const monthParam = month ? [req.user.id, `${month}-01`] : [req.user.id];
 
-  // Todos os registros para o extrato (sem filtro de mês — frontend filtra)
+  // Todos os registros para o extrato — apenas a partir de maio/2026
   const { rows } = await pool.query(
-    `${contaCorrenteSelect} WHERE p.user_id = $1 AND p.status_comissao IS NOT NULL ORDER BY p.updated_at DESC`,
+    `${contaCorrenteSelect} WHERE p.user_id = $1 AND p.status_comissao IS NOT NULL AND p.updated_at >= '2026-05-01' ORDER BY p.updated_at DESC`,
     [req.user.id]
   );
   // KPIs filtrados pelo mês selecionado
@@ -2268,7 +2268,7 @@ app.get('/api/conta-corrente/saques', auth, async (req, res) => {
   const { rows } = await pool.query(
     `SELECT wr.*, r.full_name as reviewed_by_name FROM withdrawal_requests wr
      LEFT JOIN users r ON r.id = wr.reviewed_by
-     WHERE wr.user_id = $1 ORDER BY wr.created_at DESC`,
+     WHERE wr.user_id = $1 AND wr.created_at >= '2026-05-01' ORDER BY wr.created_at DESC`,
     [req.user.id]
   );
   res.json(rows);
