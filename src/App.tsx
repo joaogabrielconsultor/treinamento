@@ -250,7 +250,7 @@ function AppInner() {
         </div>
         {currentView === 'ranking'              && <Ranking userId={user.id} />}
         {currentView === 'production'           && <Production isAdmin={isAdmin} />}
-        {currentView === 'conta-corrente'       && <ContaCorrente />}
+        {currentView === 'conta-corrente'       && <ContaCorrente isAdmin={isAdmin || isMaster} />}
         {currentView === 'admin-conta-corrente' && isAdmin && <AdminContaCorrente isMaster={isMaster} />}
         {currentView === 'admin-lojas'           && isAdmin && <AdminLojas />}
         {currentView === 'admin-conta-empresa'   && isAdmin && <AdminContaEmpresa />}

@@ -143,7 +143,23 @@ function monthLabel(ym: string) {
   return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
 }
 
-export function ContaCorrente({ adminMode }: { adminMode?: { userId: string; userName: string } } = {}) {
+interface User { id: string; full_name: string; email: string; }
+
+export function ContaCorrente({ adminMode, isAdmin }: { adminMode?: { userId: string; userName: string }; isAdmin?: boolean } = {}) {
+  // Seletor de corretor para admin (quando não em adminMode externo)
+  const [users, setUsers] = useState<User[]>([]);
+  const [selectedUser, setSelectedUser] = useState<{ userId: string; userName: string } | null>(null);
+
+  useEffect(() => {
+    if (isAdmin && !adminMode) {
+      fetch('/api/admin/users', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
+        .then(r => r.json())
+        .then(d => setUsers(Array.isArray(d) ? d.filter((u: any) => !u.archived) : []));
+    }
+  }, [isAdmin, adminMode]);
+
+  const effectiveAdminMode = adminMode ?? selectedUser ?? undefined;
+
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [summary, setSummary] = useState<Summary>({
     pending_count: 0, pending_value: 0, paid_count: 0, paid_value: 0,
@@ -185,8 +201,8 @@ export function ContaCorrente({ adminMode }: { adminMode?: { userId: string; use
   async function load(month?: string) {
     setLoading(true);
     const m = month ?? filterMonth;
-    if (adminMode) {
-      const params = new URLSearchParams({ user_id: adminMode.userId });
+    if (effectiveAdminMode) {
+      const params = new URLSearchParams({ user_id: effectiveAdminMode.userId });
       if (m) params.set('month', m);
       const contaData = await API(`/api/admin/conta-corrente/user-view?${params}`).then(r => r.json());
       setProposals(Array.isArray(contaData.proposals) ? contaData.proposals : []);
@@ -229,7 +245,7 @@ export function ContaCorrente({ adminMode }: { adminMode?: { userId: string; use
     load();
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [selectedUser]);
   useEffect(() => { setPage(1); load(filterMonth); }, [filterMonth]);
   useEffect(() => { setPage(1); }, [filterStatus]);
 
@@ -293,7 +309,45 @@ export function ContaCorrente({ adminMode }: { adminMode?: { userId: string; use
     <div className="p-4 sm:p-6 max-w-6xl mx-auto" style={{ color: 'var(--text-1)' }}>
 
       {/* Header */}
-      {/* Banner modo admin */}
+      {/* Seletor de corretor para admin (sem adminMode externo) */}
+      {isAdmin && !adminMode && (
+        <div className="mb-5 animate-fade-up rounded-2xl p-4"
+          style={{ background: 'rgba(96,165,250,0.06)', border: '1px solid rgba(96,165,250,0.2)' }}>
+          <div className="flex items-center gap-2 mb-3">
+            <Eye className="w-4 h-4" style={{ color: '#60a5fa' }} />
+            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#60a5fa' }}>Ver conta de um corretor</span>
+          </div>
+          <div className="flex flex-wrap gap-2 items-center">
+            <div className="relative flex-1" style={{ minWidth: '220px' }}>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+              <select
+                value={selectedUser?.userId || ''}
+                onChange={e => {
+                  const u = users.find(u => u.id === e.target.value);
+                  setSelectedUser(u ? { userId: u.id, userName: u.full_name || u.email } : null);
+                }}
+                className="input-cyber appearance-none w-full pl-3 pr-9 py-2.5 text-sm rounded-xl">
+                <option value="">Minha conta</option>
+                {users.map(u => <option key={u.id} value={u.id}>{u.full_name || u.email}</option>)}
+              </select>
+            </div>
+            {selectedUser && (
+              <button onClick={() => setSelectedUser(null)}
+                className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-semibold"
+                style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171', border: '1px solid rgba(248,113,113,0.2)' }}>
+                <X className="w-3.5 h-3.5" /> Minha conta
+              </button>
+            )}
+          </div>
+          {selectedUser && (
+            <p className="text-xs mt-2" style={{ color: '#60a5fa' }}>
+              Visualizando como: <strong>{selectedUser.userName}</strong>
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Banner modo admin externo */}
       {adminMode && (
         <div className="mb-4 rounded-xl px-4 py-3 flex items-center gap-2 animate-fade-up"
           style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)', color: '#60a5fa' }}>
@@ -333,7 +387,7 @@ export function ContaCorrente({ adminMode }: { adminMode?: { userId: string; use
             )}
           </div>
         </div>
-        {!adminMode && (
+        {!effectiveAdminMode && (
           <div className="flex items-center gap-2 flex-shrink-0">
             {summary.available_balance > 0 && (
               <button onClick={() => { setShowSaqueModal(true); setSaqueError(''); setSaqueAmount(''); }}
@@ -585,9 +639,9 @@ export function ContaCorrente({ adminMode }: { adminMode?: { userId: string; use
         )}
       </div>
 
-      {!adminMode && showPixModal && <PixModal current={pixInfo} onClose={() => setShowPixModal(false)} onSave={savePix} />}
+      {!effectiveAdminMode && showPixModal && <PixModal current={pixInfo} onClose={() => setShowPixModal(false)} onSave={savePix} />}
 
-      {!adminMode && showSaqueModal && (
+      {!effectiveAdminMode && showSaqueModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)' }}>
           <div className="rounded-2xl w-full max-w-sm p-6 animate-fade-up" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
             <div className="flex items-center justify-between mb-5">
