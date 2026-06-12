@@ -1438,6 +1438,11 @@ app.put('/api/proposals/:id', auth, async (req, res) => {
     if (req.body[f] !== undefined) { updates.push(`${f} = $${i++}`); values.push(req.body[f]); }
   }
 
+  // Atualiza updated_at apenas quando o status muda
+  if (req.body.status !== undefined && req.body.status !== existing.status) {
+    updates.push(`updated_at = now()`);
+  }
+
   // Coeficiente: admin pode enviar valor manual; caso contrário auto-calcula da tabela
   if (isAdmin && req.body.coeficiente !== undefined && req.body.coeficiente !== '') {
     updates.push(`coeficiente = $${i++}`);
