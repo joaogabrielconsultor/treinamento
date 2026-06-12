@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Wallet, Clock, CheckCircle, DollarSign, Users, ChevronDown, Search, AlertCircle, Key, Send, XCircle, Inbox, Edit2, X, Check, TrendingDown, Plus, Store, Calendar, Eye } from 'lucide-react';
+import { Wallet, Clock, CheckCircle, DollarSign, Users, ChevronDown, Search, AlertCircle, Key, Send, XCircle, Inbox, Edit2, X, Check, TrendingDown, Plus, Store, Calendar, Eye, RefreshCw } from 'lucide-react';
 
 const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 import { Proposal, WithdrawalRequest } from '../../types';
@@ -370,6 +370,9 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
           </div>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Gerencie comissões e solicitações de saque</p>
         </div>
+        <button onClick={() => { load(); loadSaques(); loadDespesas(); }} className="flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl btn-ghost">
+          <RefreshCw className="w-3.5 h-3.5" /> Atualizar
+        </button>
       </div>
 
       {/* Tabs + filtro loja global */}

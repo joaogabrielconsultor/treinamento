@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Save, Package } from 'lucide-react';
+import { Plus, Trash2, Edit2, Save, Package, RefreshCw } from 'lucide-react';
 import { Product } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
 import { Pagination } from '../ui/Pagination';
@@ -57,10 +57,15 @@ export function AdminProducts() {
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{items.length} produtos cadastrados</p>
           </div>
         </div>
-        <button onClick={() => { setName(''); setEditId(null); setShowForm(true); }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm btn-cyber font-semibold">
-          <Plus className="w-4 h-4" /> Novo Produto
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={load} className="flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl btn-ghost">
+            <RefreshCw className="w-3.5 h-3.5" /> Atualizar
+          </button>
+          <button onClick={() => { setName(''); setEditId(null); setShowForm(true); }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm btn-cyber font-semibold">
+            <Plus className="w-4 h-4" /> Novo Produto
+          </button>
+        </div>
       </div>
 
       <div className="bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-800/30 rounded-xl p-4 mb-6 text-sm text-purple-700 dark:text-purple-300">

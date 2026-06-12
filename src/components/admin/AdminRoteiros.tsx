@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Plus, Trash2, Edit2, Save, BookOpen, FileText, Building2, ExternalLink, Upload } from 'lucide-react';
+import { Plus, Trash2, Edit2, Save, BookOpen, FileText, Building2, ExternalLink, Upload, RefreshCw } from 'lucide-react';
 import { Bank } from '../../types';
 import { Modal, btnCancel, btnPrimary } from '../ui/Modal';
 
@@ -80,11 +80,16 @@ export function AdminRoteiros() {
         fd.append('title', title);
         fd.append('description', desc);
         if (bankId) fd.append('bank_id', bankId);
-        await fetch('/api/roteiros/upload', {
+        const res = await fetch('/api/roteiros/upload', {
           method: 'POST',
           headers: { Authorization: `Bearer ${token()}` },
           body: fd,
         });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          alert(err.error || 'Erro ao fazer upload do PDF.');
+          return;
+        }
       }
       setShowForm(false);
       await load();
@@ -111,9 +116,14 @@ export function AdminRoteiros() {
             <p className="text-xs text-slate-500 mt-0.5">{items.length} roteiro{items.length !== 1 ? 's' : ''} cadastrado{items.length !== 1 ? 's' : ''}</p>
           </div>
         </div>
-        <button onClick={openNew} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm btn-cyber font-semibold">
-          <Plus className="w-4 h-4" /> Novo Roteiro
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={load} className="flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl btn-ghost">
+            <RefreshCw className="w-3.5 h-3.5" /> Atualizar
+          </button>
+          <button onClick={openNew} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm btn-cyber font-semibold">
+            <Plus className="w-4 h-4" /> Novo Roteiro
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -152,7 +162,7 @@ export function AdminRoteiros() {
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   <a
-                    href={r.file_url}
+                    href={`/api/roteiros/${r.id}/file`}
                     target="_blank"
                     rel="noreferrer"
                     className="p-1.5 rounded-lg transition-colors"

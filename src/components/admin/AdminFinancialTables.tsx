@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useRef } from 'react';
-import { Plus, Trash2, Edit2, ChevronDown, Save, Settings, Upload, Download } from 'lucide-react';
+import { Plus, Trash2, Edit2, ChevronDown, Save, Settings, Upload, Download, RefreshCw } from 'lucide-react';
 import { FinancialTable, TableCategory, ScoringRule, Bank, Convenio } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
 import { Pagination } from '../ui/Pagination';
@@ -201,6 +201,9 @@ export function AdminFinancialTables() {
           <p className="text-xs text-slate-500 mt-0.5">{tables.length} tabelas cadastradas</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <button onClick={load} className="flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl btn-ghost">
+            <RefreshCw className="w-3.5 h-3.5" /> Atualizar
+          </button>
           <button onClick={() => setShowImport(true)}
             className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border transition-colors hover:opacity-80"
             style={{ borderColor: 'var(--card-border)', color: 'var(--text-2)', background: 'var(--card-bg)' }}>

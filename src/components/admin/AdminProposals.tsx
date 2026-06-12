@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useRef } from 'react';
-import { Search, ChevronDown, FileText, CheckCircle, Clock, DollarSign, XCircle, Edit2, Save, Trash2, Upload, Copy } from 'lucide-react';
+import { Search, ChevronDown, FileText, CheckCircle, Clock, DollarSign, XCircle, Edit2, Save, Trash2, Upload, Copy, RefreshCw } from 'lucide-react';
 import { Proposal, ProposalStatus, FinancialTable } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
 import { Pagination } from '../ui/Pagination';
@@ -237,6 +237,9 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{proposals.length} propostas no sistema</p>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={load} className="flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl btn-ghost">
+            <RefreshCw className="w-3.5 h-3.5" /> Atualizar
+          </button>
           <button onClick={checkDuplicates}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
             style={{ background: 'rgba(251,191,36,0.1)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.25)' }}>

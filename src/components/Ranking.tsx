@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { Trophy, TrendingUp, Users, Star, Crown } from 'lucide-react';
+import { Trophy, TrendingUp, Users, Star, Crown, RefreshCw } from 'lucide-react';
 import { RankingEntry } from '../types';
 import { Pagination } from './ui/Pagination';
 
@@ -67,7 +67,8 @@ export function Ranking({ userId }: { userId: string }) {
           </div>
         </div>
 
-        {/* Period selector */}
+        {/* Period selector + refresh */}
+        <div className="flex items-center gap-2">
         <div
           className="flex p-1 rounded-xl gap-1"
           style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
@@ -90,6 +91,10 @@ export function Ranking({ userId }: { userId: string }) {
               {lbl}
             </button>
           ))}
+        </div>
+        <button onClick={load} className="flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl btn-ghost">
+          <RefreshCw className="w-3.5 h-3.5" /> Atualizar
+        </button>
         </div>
       </div>
 

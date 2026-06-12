@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Save, Handshake } from 'lucide-react';
+import { Plus, Trash2, Edit2, Save, Handshake, RefreshCw } from 'lucide-react';
 import { Convenio } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
 import { Pagination } from '../ui/Pagination';
@@ -57,10 +57,15 @@ export function AdminConvenios() {
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{items.length} convênios cadastrados</p>
           </div>
         </div>
-        <button onClick={() => { setName(''); setEditId(null); setShowForm(true); }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm btn-cyber font-semibold">
-          <Plus className="w-4 h-4" /> Novo Convênio
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={load} className="flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl btn-ghost">
+            <RefreshCw className="w-3.5 h-3.5" /> Atualizar
+          </button>
+          <button onClick={() => { setName(''); setEditId(null); setShowForm(true); }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm btn-cyber font-semibold">
+            <Plus className="w-4 h-4" /> Novo Convênio
+          </button>
+        </div>
       </div>
 
       <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800/30 rounded-xl p-4 mb-6 text-sm text-green-700 dark:text-green-300">

@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Save } from 'lucide-react';
+import { Plus, Trash2, Edit2, Save, RefreshCw } from 'lucide-react';
 import { TableCategory } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
 import { Pagination } from '../ui/Pagination';
@@ -49,10 +49,15 @@ export function AdminCategories() {
           <h1 className="text-xl font-bold text-gray-100">Categorias de Tabelas</h1>
           <p className="text-xs text-slate-500 mt-0.5">Configure os multiplicadores de pontuação</p>
         </div>
-        <button onClick={() => { setForm({ name: '', multiplier: '1' }); setEditId(null); setShowForm(true); }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm btn-cyber font-semibold">
-          <Plus className="w-4 h-4" /> Nova Categoria
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={load} className="flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl btn-ghost">
+            <RefreshCw className="w-3.5 h-3.5" /> Atualizar
+          </button>
+          <button onClick={() => { setForm({ name: '', multiplier: '1' }); setEditId(null); setShowForm(true); }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm btn-cyber font-semibold">
+            <Plus className="w-4 h-4" /> Nova Categoria
+          </button>
+        </div>
       </div>
 
       <div className="rounded-xl p-4 mb-6 text-sm" style={{ background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24' }}>

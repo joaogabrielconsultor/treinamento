@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Store, Plus, Edit2, Trash2, X, Save, Users } from 'lucide-react';
+import { Store, Plus, Edit2, Trash2, X, Save, Users, RefreshCw } from 'lucide-react';
 import { Loja } from '../../types';
 
 const API = (p: string, opts?: RequestInit) =>
@@ -136,9 +136,14 @@ export function AdminLojas() {
           </div>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{lojas.length} loja{lojas.length !== 1 ? 's' : ''} cadastrada{lojas.length !== 1 ? 's' : ''}</p>
         </div>
-        <button onClick={() => setModal('new')} className="flex items-center gap-2 px-4 py-2 text-sm rounded-xl btn-cyber font-semibold">
-          <Plus className="w-4 h-4" /> Nova Loja
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={load} className="flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl btn-ghost">
+            <RefreshCw className="w-3.5 h-3.5" /> Atualizar
+          </button>
+          <button onClick={() => setModal('new')} className="flex items-center gap-2 px-4 py-2 text-sm rounded-xl btn-cyber font-semibold">
+            <Plus className="w-4 h-4" /> Nova Loja
+          </button>
+        </div>
       </div>
 
       {loading ? (

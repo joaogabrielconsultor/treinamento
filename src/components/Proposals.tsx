@@ -3,7 +3,7 @@ import { SimPrefill } from './Simulator';
 import {
   Plus, Search, FileText, ChevronDown, CheckCircle, Clock, DollarSign, XCircle,
   Edit2, User, CreditCard, ChevronRight, AlertTriangle, Lock, Unlock, Trash2,
-  Upload, Filter, Download, Calendar, TrendingUp, X, Eye, EyeOff, Check,
+  Upload, Filter, Download, Calendar, TrendingUp, X, Eye, EyeOff, Check, RefreshCw,
 } from 'lucide-react';
 import { Proposal, ProposalStatusDef, FinancialTable, Bank, Convenio, Product } from '../types';
 import { Modal } from './ui/Modal';
@@ -734,6 +734,9 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{filtered.length} de {proposals.length} propostas</p>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={() => load()} className="flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl btn-ghost">
+            <RefreshCw className="w-3.5 h-3.5" /> Atualizar
+          </button>
           <button onClick={() => setShowColPicker(v => !v)}
             className="p-2 rounded-xl transition-all" title="Colunas visíveis"
             style={{ background: showColPicker ? 'rgba(20,184,166,0.15)' : 'var(--card-bg)', border: '1px solid var(--card-border)', color: showColPicker ? '#14B8A6' : 'var(--text-3)' }}>

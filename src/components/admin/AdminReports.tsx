@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { Search, Download, Filter } from 'lucide-react';
+import { Search, Download, Filter, RefreshCw } from 'lucide-react';
 import { Proposal, FinancialTable, Bank, Convenio, Product } from '../../types';
 
 const API = (p: string) =>
@@ -107,9 +107,14 @@ export function AdminReports() {
           <h1 className="text-xl font-bold text-gray-100">Relatórios</h1>
           <p className="text-xs text-slate-500 mt-0.5">Filtre e exporte dados de produção</p>
         </div>
-        <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm btn-cyber font-semibold">
-          <Download className="w-4 h-4" /> Exportar CSV
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={load} className="flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl btn-ghost">
+            <RefreshCw className="w-3.5 h-3.5" /> Atualizar
+          </button>
+          <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm btn-cyber font-semibold">
+            <Download className="w-4 h-4" /> Exportar CSV
+          </button>
+        </div>
       </div>
 
       {/* Filters */}

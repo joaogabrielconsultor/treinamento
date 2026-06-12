@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Wallet, Clock, CheckCircle, DollarSign, FileText, ChevronDown, Key, Edit2, X, Save, Send, ArrowDownToLine, AlertCircle, TrendingUp, Info, Eye } from 'lucide-react';
+import { Wallet, Clock, CheckCircle, DollarSign, FileText, ChevronDown, Key, Edit2, X, Save, Send, ArrowDownToLine, AlertCircle, TrendingUp, Info, Eye, RefreshCw } from 'lucide-react';
 import { Proposal, WithdrawalRequest } from '../types';
 import { Pagination } from './ui/Pagination';
 
@@ -364,6 +364,9 @@ export function ContaCorrente({ adminMode, isAdmin }: { adminMode?: { userId: st
           </div>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Acompanhe suas comissões, saques e produção</p>
         </div>
+        <button onClick={() => load()} className="flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl btn-ghost">
+          <RefreshCw className="w-3.5 h-3.5" /> Atualizar
+        </button>
       </div>
 
       {/* Chave PIX + botão saque */}
