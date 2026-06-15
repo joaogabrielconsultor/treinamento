@@ -172,27 +172,27 @@ app.post('/api/proposta/gerar', auth, async (req, res) => {
     drawRight(corretorEmail, 748, height - 170, 11, regFont,  WHITE);
     if (corretorPhone) drawRight(corretorPhone, 746, height - 186, 11, regFont, WHITE);
 
-    // ── Box 1: Valor líquido liberado ──
-    page.drawText(`R$ ${fmtNum(valorLiquido)}`, {
-      x: 68, y: height - 287, size: 28, font: boldFont, color: GREEN,
+    // ── Box 1: Valor líquido liberado (template já tem "R$", só o número) ──
+    page.drawText(fmtNum(valorLiquido), {
+      x: 160, y: height - 287, size: 28, font: boldFont, color: GREEN,
     });
 
     // ── Box 2: Parcela utilizada ──
-    page.drawText(`R$ ${fmtNum(parcela)}`, {
-      x: 432, y: height - 321, size: 30, font: boldFont, color: GREEN,
+    page.drawText(fmtNum(parcela), {
+      x: 505, y: height - 321, size: 30, font: boldFont, color: GREEN,
     });
 
     // ── Box 3: Dívida quitada – BANCO ──
     page.drawText(bancoNomeDivida.toUpperCase(), {
       x: 277, y: height - 452, size: 11, font: boldFont, color: GREEN,
     });
-    page.drawText(`R$ ${fmtNum(valorDivida)}`, {
-      x: 68, y: height - 499, size: 26, font: boldFont, color: GREEN,
+    page.drawText(fmtNum(valorDivida), {
+      x: 160, y: height - 499, size: 26, font: boldFont, color: GREEN,
     });
 
-    // ── Box 4: Banco responsável ──
+    // ── Box 4: Banco responsável (coluna direita) ──
     page.drawText(bancoResponsavel, {
-      x: 68, y: height - 521, size: 22, font: boldFont, color: GREEN,
+      x: 479, y: height - 521, size: 22, font: boldFont, color: GREEN,
     });
 
     const pdfBytes = await pdfDoc.save();
