@@ -179,7 +179,7 @@ app.post('/api/proposta/gerar', auth, async (req, res) => {
 
     // ── Box 2: Parcela utilizada ──
     page.drawText(fmtNum(parcela), {
-      x: 535, y: height - 321, size: 30, font: boldFont, color: GREEN,
+      x: 552, y: height - 321, size: 30, font: boldFont, color: GREEN,
     });
 
     // ── Box 3: Dívida quitada – BANCO ──
