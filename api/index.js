@@ -154,10 +154,10 @@ app.post('/api/proposta/gerar', auth, async (req, res) => {
 
     // ── Banner: dados do cliente (esquerda) ──
     page.drawText(nomeCliente || 'Cliente', {
-      x: 97, y: height - 148, size: 19, font: boldFont, color: WHITE,
+      x: 99, y: height - 159, size: 19, font: boldFont, color: WHITE,
     });
     page.drawText(maskCPF(cpfCliente || ''), {
-      x: 97, y: height - 168, size: 12, font: regFont, color: WHITE,
+      x: 97, y: height - 180, size: 12, font: regFont, color: WHITE,
     });
 
     // ── Banner: dados do corretor (direita) ──
@@ -166,31 +166,31 @@ app.post('/api/proposta/gerar', auth, async (req, res) => {
     const corretorName  = req.user.full_name || req.user.email;
     const corretorEmail = req.user.email;
 
-    drawRight(corretorName,  width - 38, height - 143, 18, boldFont, WHITE);
-    drawRight(corretorEmail, width - 38, height - 165, 11, regFont,  WHITE);
-    if (corretorPhone) drawRight(corretorPhone, width - 38, height - 180, 11, regFont, WHITE);
+    drawRight(corretorName,  747, height - 152, 18, boldFont, WHITE);
+    drawRight(corretorEmail, 748, height - 174, 11, regFont,  WHITE);
+    if (corretorPhone) drawRight(corretorPhone, 746, height - 190, 11, regFont, WHITE);
 
     // ── Box 1: Valor líquido liberado ──
     page.drawText(`R$ ${fmtNum(valorLiquido)}`, {
-      x: 68, y: height - 344, size: 28, font: boldFont, color: GREEN,
+      x: 68, y: height - 310, size: 28, font: boldFont, color: GREEN,
     });
 
     // ── Box 2: Parcela utilizada ──
     page.drawText(`R$ ${fmtNum(parcela)}`, {
-      x: 432, y: height - 349, size: 30, font: boldFont, color: GREEN,
+      x: 432, y: height - 346, size: 30, font: boldFont, color: GREEN,
     });
 
     // ── Box 3: Dívida quitada – BANCO ──
     page.drawText(bancoNomeDivida.toUpperCase(), {
-      x: 198, y: height - 452, size: 11, font: boldFont, color: GREEN,
+      x: 277, y: height - 456, size: 11, font: boldFont, color: GREEN,
     });
     page.drawText(`R$ ${fmtNum(valorDivida)}`, {
-      x: 68, y: height - 554, size: 26, font: boldFont, color: GREEN,
+      x: 68, y: height - 526, size: 26, font: boldFont, color: GREEN,
     });
 
     // ── Box 4: Banco responsável ──
     page.drawText(bancoResponsavel, {
-      x: 448, y: height - 515, size: 22, font: boldFont, color: GREEN,
+      x: 479, y: height - 515, size: 22, font: boldFont, color: GREEN,
     });
 
     const pdfBytes = await pdfDoc.save();
