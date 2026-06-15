@@ -147,17 +147,18 @@ app.post('/api/proposta/gerar', auth, async (req, res) => {
       if (!fs.existsSync(p)) continue;
       const imgBytes = fs.readFileSync(p);
       const img = ext === '.png' ? await pdfDoc.embedPng(imgBytes) : await pdfDoc.embedJpg(imgBytes);
-      const photoW = 188, photoH = 255;
-      page.drawImage(img, { x: (width - photoW) / 2, y: height - photoH - 18, width: photoW, height: photoH });
+      const photoW = 190, photoH = 272;
+      page.drawImage(img, { x: (width - photoW) / 2, y: height - photoH - 10, width: photoW, height: photoH });
       break;
     }
 
     // ── Banner: dados do cliente (esquerda) ──
+    // Banner bottom ≈ height-220=567; text must be above → use height-178 e height-200
     page.drawText(nomeCliente || 'Cliente', {
-      x: 97, y: height - 220, size: 19, font: boldFont, color: WHITE,
+      x: 97, y: height - 178, size: 19, font: boldFont, color: WHITE,
     });
     page.drawText(maskCPF(cpfCliente || ''), {
-      x: 97, y: height - 246, size: 12, font: regFont, color: WHITE,
+      x: 97, y: height - 200, size: 12, font: regFont, color: WHITE,
     });
 
     // ── Banner: dados do corretor (direita) ──
@@ -166,35 +167,36 @@ app.post('/api/proposta/gerar', auth, async (req, res) => {
     const corretorName  = req.user.full_name || req.user.email;
     const corretorEmail = req.user.email;
 
-    drawRight(corretorName,  width - 38, height - 214, 18, boldFont, WHITE);
-    drawRight(corretorEmail, width - 38, height - 236, 11, regFont,  WHITE);
-    if (corretorPhone) drawRight(corretorPhone, width - 38, height - 252, 11, regFont, WHITE);
+    drawRight(corretorName,  width - 38, height - 173, 18, boldFont, WHITE);
+    drawRight(corretorEmail, width - 38, height - 194, 11, regFont,  WHITE);
+    if (corretorPhone) drawRight(corretorPhone, width - 38, height - 209, 11, regFont, WHITE);
 
     // ── Box 1: Valor líquido liberado ──
-    page.drawRectangle({ x: 66, y: height - 350, width: 320, height: 54, color: WBG });
+    page.drawRectangle({ x: 66, y: height - 352, width: 320, height: 52, color: WBG });
     page.drawText(`R$ ${fmtNum(valorLiquido)}`, {
-      x: 68, y: height - 342, size: 28, font: boldFont, color: GREEN,
+      x: 68, y: height - 344, size: 28, font: boldFont, color: GREEN,
     });
 
     // ── Box 2: Parcela utilizada ──
-    page.drawRectangle({ x: 428, y: height - 355, width: 338, height: 58, color: WBG });
+    page.drawRectangle({ x: 428, y: height - 357, width: 338, height: 56, color: WBG });
     page.drawText(`R$ ${fmtNum(parcela)}`, {
-      x: 432, y: height - 347, size: 30, font: boldFont, color: GREEN,
+      x: 432, y: height - 349, size: 30, font: boldFont, color: GREEN,
     });
 
     // ── Box 3: Dívida quitada – BANCO ──
-    // Inserir nome do banco após "Dívida quitada – "
+    // Label "Dívida quitada – " termina perto de x=195; banco vai após, na mesma linha do label
     page.drawText(bancoNomeDivida.toUpperCase(), {
-      x: 198, y: height - 492, size: 11, font: boldFont, color: GREEN,
+      x: 198, y: height - 467, size: 11, font: boldFont, color: GREEN,
     });
-    page.drawRectangle({ x: 66, y: height - 560, width: 320, height: 50, color: WBG });
+    // Valor da dívida (abaixo do label, cobre o "R$" placeholder)
+    page.drawRectangle({ x: 66, y: height - 562, width: 320, height: 50, color: WBG });
     page.drawText(`R$ ${fmtNum(valorDivida)}`, {
-      x: 68, y: height - 553, size: 26, font: boldFont, color: GREEN,
+      x: 68, y: height - 554, size: 26, font: boldFont, color: GREEN,
     });
 
     // ── Box 4: Banco responsável ──
     page.drawText(bancoResponsavel, {
-      x: 448, y: height - 522, size: 22, font: boldFont, color: GREEN,
+      x: 448, y: height - 515, size: 22, font: boldFont, color: GREEN,
     });
 
     const pdfBytes = await pdfDoc.save();
