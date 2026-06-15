@@ -174,7 +174,7 @@ app.post('/api/proposta/gerar', auth, async (req, res) => {
 
     // ── Box 1: Valor líquido liberado (template já tem "R$", só o número) ──
     page.drawText(fmtNum(valorLiquido), {
-      x: 190, y: height - 305, size: 46, font: boldFont, color: GREEN,
+      x: 190, y: height - 305, size: 40, font: boldFont, color: GREEN,
     });
 
     // ── Box 2: Parcela utilizada ──
