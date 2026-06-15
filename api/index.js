@@ -168,7 +168,7 @@ app.post('/api/proposta/gerar', auth, async (req, res) => {
 
     // Calcula x pelo nome (drawRight) e usa o mesmo x para email e telefone
     const nameW  = boldFont.widthOfTextAtSize(corretorName, 18);
-    const rightX = 772 - nameW;
+    const rightX = 722 - nameW;
     page.drawText(corretorName,  { x: rightX, y: height - 141, size: 18, font: boldFont, color: WHITE });
     page.drawText(corretorEmail, { x: rightX, y: height - 160, size: 11, font: regFont,  color: WHITE });
     if (corretorPhone) page.drawText(corretorPhone, { x: rightX, y: height - 178, size: 11, font: regFont, color: WHITE });
