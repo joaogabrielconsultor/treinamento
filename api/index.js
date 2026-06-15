@@ -152,25 +152,26 @@ app.post('/api/proposta/gerar', auth, async (req, res) => {
       break;
     }
 
-    // ── Banner: dados do cliente (esquerda) ──
-    // Coordenadas extraídas do PDF real (y medido do topo → height-y para pdf-lib)
+    // ── Banner: dados do cliente (esquerda) — centralizados verticalmente ──
     page.drawText(nomeCliente || 'Cliente', {
-      x: 99, y: height - 146, size: 19, font: boldFont, color: WHITE,
+      x: 99, y: height - 148, size: 19, font: boldFont, color: WHITE,
     });
     page.drawText(maskCPF(cpfCliente || ''), {
-      x: 97, y: height - 174, size: 12, font: regFont, color: WHITE,
+      x: 97, y: height - 167, size: 12, font: regFont, color: WHITE,
     });
 
-    // ── Banner: dados do corretor (direita) ──
+    // ── Banner: dados do corretor (direita) — alinhados à esquerda pelo nome ──
     const { rows: uRows } = await pool.query('SELECT phone FROM users WHERE id=$1', [req.user.id]);
     const corretorPhone = uRows[0]?.phone || '';
     const corretorName  = req.user.full_name || req.user.email;
     const corretorEmail = req.user.email;
 
-    // Cargo(name) inicia em x=561 → drawRight calcula automaticamente pela largura do texto
-    drawRight(corretorName,  747, height - 140, 18, boldFont, WHITE);
-    drawRight(corretorEmail, 748, height - 170, 11, regFont,  WHITE);
-    if (corretorPhone) drawRight(corretorPhone, 746, height - 186, 11, regFont, WHITE);
+    // Calcula x pelo nome (drawRight) e usa o mesmo x para email e telefone
+    const nameW  = boldFont.widthOfTextAtSize(corretorName, 18);
+    const rightX = 747 - nameW;
+    page.drawText(corretorName,  { x: rightX, y: height - 141, size: 18, font: boldFont, color: WHITE });
+    page.drawText(corretorEmail, { x: rightX, y: height - 160, size: 11, font: regFont,  color: WHITE });
+    if (corretorPhone) page.drawText(corretorPhone, { x: rightX, y: height - 178, size: 11, font: regFont, color: WHITE });
 
     // ── Box 1: Valor líquido liberado (template já tem "R$", só o número) ──
     page.drawText(fmtNum(valorLiquido), {
