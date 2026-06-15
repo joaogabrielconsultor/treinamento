@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -116,7 +117,6 @@ app.post('/api/profile/photo', auth, async (req, res) => {
 // ─── GERAR PROPOSTA PDF ────────────────────────────────────────────────────────
 app.post('/api/proposta/gerar', auth, async (req, res) => {
   try {
-    const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
     const { nomeCliente, cpfCliente, bancoNomeDivida, valorLiquido, parcela, valorDivida, bancoResponsavel } = req.body;
 
     const fmtNum = (v) => Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
