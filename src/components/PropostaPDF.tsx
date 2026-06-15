@@ -1,4 +1,7 @@
-import { X, Printer } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { X, Download, Loader } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface PropostaData {
   nomeCliente: string;
@@ -24,260 +27,264 @@ interface Props {
 }
 
 function maskCPF(cpf: string): string {
-  const digits = cpf.replace(/\D/g, '');
-  if (digits.length !== 11) return cpf;
-  return `${digits.slice(0, 3)}.***.****-${digits.slice(9, 11)}`;
+  const d = cpf.replace(/\D/g, '');
+  if (d.length !== 11) return cpf;
+  return `${d.slice(0, 3)}.***.****-${d.slice(9, 11)}`;
 }
 
 function fmtBRL(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
+const GREEN = '#1b5e20';
+const GREEN_MID = '#2e7d32';
+
 export function PropostaPDF({ proposta, corretor, onClose }: Props) {
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const [generating, setGenerating] = useState(false);
+
   const cpfMasked = maskCPF(proposta.cpfCliente);
-  const apiBase = window.location.origin.includes('localhost')
-    ? 'http://localhost:3001'
-    : window.location.origin;
+  const apiBase = window.location.hostname === 'localhost' ? 'http://localhost:3001' : window.location.origin;
+  const photoUrl = corretor.photo_url ? `${apiBase}${corretor.photo_url}` : null;
   const logoUrl = `${window.location.origin}/logo.png`;
-  const photoUrl = corretor.photo_url
-    ? `${apiBase}${corretor.photo_url}?t=${Date.now()}`
-    : null;
 
-  function imprimir() {
-    const html = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8"/>
-<title>Proposta – ${proposta.nomeCliente}</title>
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: Arial, Helvetica, sans-serif; background:#fff; color:#1a1a1a; }
-  .page { width:794px; min-height:1123px; margin:0 auto; background:#fff; padding:0; position:relative; }
-
-  /* ── HEADER ── */
-  .header { display:flex; align-items:center; justify-content:space-between; padding:24px 32px 0; position:relative; }
-  .logo { height:54px; }
-  .title-block { text-align:right; }
-  .title-block .sub { font-size:11px; font-weight:700; color:#2e7d32; letter-spacing:3px; text-transform:uppercase; }
-  .title-block .main { font-size:48px; font-weight:900; color:#2e7d32; font-style:italic; line-height:1; }
-
-  /* ── BANNER ── */
-  .banner { margin:0 32px; margin-top:-10px; border-radius:14px; background:#2e7d32; display:flex; align-items:center; justify-content:space-between; overflow:hidden; position:relative; min-height:90px; }
-  .banner-left { padding:16px 20px; display:flex; align-items:center; gap:14px; flex:1; }
-  .banner-icon { color:rgba(255,255,255,0.7); font-size:28px; }
-  .client-info .client-name { font-size:22px; font-style:italic; font-weight:700; color:#fff; }
-  .client-info .client-cpf { font-size:15px; color:rgba(255,255,255,0.85); margin-top:2px; }
-  .banner-right { padding:16px 20px 16px 0; text-align:right; }
-  .corretor-name { font-size:22px; font-weight:700; color:#fff; }
-  .corretor-email { font-size:12px; color:rgba(255,255,255,0.85); margin-top:4px; }
-  .corretor-phone { font-size:12px; color:rgba(255,255,255,0.85); margin-top:2px; }
-  .corretor-photo { position:absolute; left:50%; transform:translateX(-50%); bottom:0; height:130px; object-fit:contain; }
-
-  /* ── BOXES GRID ── */
-  .boxes { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin:28px 32px 0; }
-  .box { border:2px solid #2e7d32; border-radius:16px; padding:20px 20px 18px; display:flex; gap:14px; align-items:flex-start; }
-  .box-icon { font-size:32px; flex-shrink:0; line-height:1; }
-  .box-content { flex:1; }
-  .box-label { font-size:13px; font-weight:700; color:#2e7d32; }
-  .box-value { font-size:36px; font-weight:700; color:#2e7d32; line-height:1.1; margin-top:4px; }
-  .box-value.large { font-size:42px; }
-  .box-notes { margin-top:10px; }
-  .box-notes p { font-size:10px; color:#444; margin-top:3px; }
-  .box-notes p::before { content:"✓ "; }
-
-  /* ── FOOTER ── */
-  .footer { margin:32px 32px 0; border-top:1.5px solid #ccc; padding-top:12px; }
-  .footer-title { font-size:15px; font-weight:700; font-style:italic; text-decoration:underline; color:#1a1a1a; text-align:center; }
-  .footer-legal { font-size:11px; color:#444; text-align:center; margin-top:8px; line-height:1.7; }
-  .footer-page { text-align:right; margin-top:16px; }
-  .footer-page .pg { font-size:13px; font-weight:700; font-style:italic; }
-  .footer-page .doc { font-size:13px; color:#333; }
-
-  @media print {
-    body { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    .page { width:100%; }
-  }
-</style>
-</head>
-<body>
-<div class="page">
-  <!-- HEADER -->
-  <div class="header">
-    <img src="${logoUrl}" class="logo" alt="AprovaMais" onerror="this.style.display='none'"/>
-    <div class="title-block">
-      <div class="sub">Formalização de</div>
-      <div class="main">PROPOSTA</div>
-    </div>
-  </div>
-
-  <!-- BANNER -->
-  <div class="banner">
-    <div class="banner-left">
-      <div class="banner-icon">👤</div>
-      <div class="client-info">
-        <div class="client-name">${proposta.nomeCliente}</div>
-        <div class="client-cpf">${cpfMasked}</div>
-      </div>
-    </div>
-    ${photoUrl ? `<img src="${photoUrl}" class="corretor-photo" alt="Corretor" onerror="this.style.display='none'"/>` : ''}
-    <div class="banner-right">
-      <div class="corretor-name">${corretor.nome}</div>
-      ${corretor.email ? `<div class="corretor-email">✉ ${corretor.email}</div>` : ''}
-      ${corretor.phone ? `<div class="corretor-phone">📱 ${corretor.phone}</div>` : ''}
-    </div>
-  </div>
-
-  <!-- BOXES -->
-  <div class="boxes">
-    <!-- Valor líquido liberado -->
-    <div class="box">
-      <div class="box-icon">💰</div>
-      <div class="box-content">
-        <div class="box-label">Valor líquido liberado:</div>
-        <div class="box-value large">${fmtBRL(proposta.valorLiquido)}</div>
-        <div class="box-notes">
-          <p>Valor líquido liberado diretamente em sua conta.</p>
-          <p>Valor disponível após averbação da parcela no contracheque.</p>
-          <p>Margem de 5% atualmente utilizada, liberada após a quitação do contrato.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Parcela utilizada -->
-    <div class="box">
-      <div class="box-icon">📊</div>
-      <div class="box-content">
-        <div class="box-label">Parcela utilizada:</div>
-        <div class="box-value large">${fmtBRL(proposta.parcela)}</div>
-      </div>
-    </div>
-
-    <!-- Dívida quitada -->
-    <div class="box">
-      <div class="box-icon">📋</div>
-      <div class="box-content">
-        <div class="box-label">Dívida quitada – ${proposta.bancoNomeDivida.toUpperCase()}:</div>
-        <div class="box-value">${fmtBRL(proposta.valorDivida)}</div>
-      </div>
-    </div>
-
-    <!-- Banco responsável -->
-    <div class="box">
-      <div class="box-icon">🏦</div>
-      <div class="box-content">
-        <div class="box-label">Banco responsável:</div>
-        <div class="box-value" style="font-size:28px">${proposta.bancoResponsavel}</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- FOOTER -->
-  <div class="footer">
-    <div class="footer-title">AprovaMais Soluções Financeiras - CNPJ 55.886.747/0001-80</div>
-    <div class="footer-legal">
-      Proposta sujeita à análise de crédito e averbação do órgão pagador.<br/>
-      O saldo devedor considera a fatura encaminhada pelo cliente e pode sofrer alterações em decorrência de juros e encargos.<br/>
-      Condições válidas por 48 horas após o envio desta proposta.
-    </div>
-    <div class="footer-page">
-      <div class="pg">Página 1 de 1</div>
-      <div class="doc">Documento gerado por AprovaMais Soluções Financeiras.</div>
-    </div>
-  </div>
-</div>
-<script>window.onload=function(){window.print();}</script>
-</body>
-</html>`;
-
-    const win = window.open('', '_blank', 'width=900,height=700');
-    if (!win) { alert('Permita pop-ups para gerar o PDF.'); return; }
-    win.document.write(html);
-    win.document.close();
+  async function downloadPDF() {
+    if (!sheetRef.current) return;
+    setGenerating(true);
+    try {
+      const canvas = await html2canvas(sheetRef.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 10000,
+      });
+      const imgData = canvas.toDataURL('image/jpeg', 0.97);
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = (canvas.height * pdfW) / canvas.width;
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+      const nomeArq = `Proposta_${proposta.nomeCliente.replace(/\s+/g, '_') || 'Cliente'}.pdf`;
+      pdf.save(nomeArq);
+    } finally {
+      setGenerating(false);
+    }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
-      <div className="modal-panel rounded-2xl w-full max-w-2xl animate-fade-up overflow-hidden">
-        {/* Header do modal */}
-        <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid var(--card-border)' }}>
-          <h2 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>Pré-visualização da Proposta</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg" style={{ color: 'var(--text-3)' }}><X className="w-4 h-4" /></button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}>
+      <div className="modal-panel rounded-2xl w-full max-w-3xl animate-fade-up flex flex-col"
+        style={{ maxHeight: '92vh' }}>
+
+        {/* Modal header */}
+        <div className="flex items-center justify-between px-6 py-4 flex-shrink-0"
+          style={{ borderBottom: '1px solid var(--card-border)' }}>
+          <h2 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>
+            Pré-visualização da Proposta
+          </h2>
+          <button onClick={onClose} className="p-1.5 rounded-lg" style={{ color: 'var(--text-3)' }}>
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* Preview simplificado */}
-        <div className="p-6 overflow-y-auto max-h-[70vh]">
-          {/* Simulação visual da proposta */}
-          <div className="rounded-xl overflow-hidden text-sm" style={{ border: '2px solid #2e7d32', background: '#fff', color: '#1a1a1a' }}>
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4" style={{ background: '#f9f9f9' }}>
-              <img src={logoUrl} alt="Logo" className="h-10" onError={e => (e.currentTarget.style.display = 'none')} />
-              <div className="text-right">
-                <div className="text-[10px] font-bold tracking-widest uppercase" style={{ color: '#2e7d32' }}>Formalização de</div>
-                <div className="text-2xl font-black italic" style={{ color: '#2e7d32' }}>PROPOSTA</div>
-              </div>
-            </div>
+        {/* Scrollable preview */}
+        <div className="overflow-y-auto flex-1 p-4 flex justify-center" style={{ background: '#e5e7eb' }}>
+          {/* ── A4 SHEET ── */}
+          <div
+            ref={sheetRef}
+            style={{
+              width: 794,
+              minHeight: 1000,
+              background: '#fff',
+              fontFamily: 'Arial, Helvetica, sans-serif',
+              flexShrink: 0,
+            }}
+          >
+            {/* ═══ HEADER ═══ */}
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', padding: '28px 36px 0', position: 'relative' }}>
+              {/* Logo */}
+              <img src={logoUrl} alt="AprovaMais" style={{ height: 56, objectFit: 'contain' }}
+                onError={e => (e.currentTarget.style.display = 'none')} />
 
-            {/* Banner */}
-            <div className="flex items-center justify-between px-5 py-4 relative" style={{ background: '#2e7d32', minHeight: 72 }}>
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">👤</span>
-                <div>
-                  <div className="font-bold italic text-white">{proposta.nomeCliente || '—'}</div>
-                  <div className="text-xs" style={{ color: 'rgba(255,255,255,0.8)' }}>{cpfMasked}</div>
+              {/* Corretor photo — centered */}
+              {photoUrl && (
+                <img
+                  src={photoUrl}
+                  alt="Corretor"
+                  crossOrigin="anonymous"
+                  style={{
+                    position: 'absolute',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    bottom: -10,
+                    height: 160,
+                    objectFit: 'contain',
+                    zIndex: 10,
+                  }}
+                  onError={e => (e.currentTarget.style.display = 'none')}
+                />
+              )}
+
+              {/* Title block */}
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: GREEN_MID, letterSpacing: 4, textTransform: 'uppercase' }}>
+                  Formalização de
+                </div>
+                <div style={{ fontSize: 52, fontWeight: 900, color: GREEN_MID, fontStyle: 'italic', lineHeight: 1, marginTop: 2 }}>
+                  PROPOSTA
                 </div>
               </div>
-              {photoUrl && (
-                <img src={photoUrl} alt="Corretor" className="absolute left-1/2 -translate-x-1/2 bottom-0 h-20 object-contain"
-                  onError={e => (e.currentTarget.style.display = 'none')} />
-              )}
-              <div className="text-right">
-                <div className="font-bold text-white">{corretor.nome}</div>
-                {corretor.email && <div className="text-xs" style={{ color: 'rgba(255,255,255,0.8)' }}>✉ {corretor.email}</div>}
-                {corretor.phone && <div className="text-xs" style={{ color: 'rgba(255,255,255,0.8)' }}>📱 {corretor.phone}</div>}
-              </div>
             </div>
 
-            {/* Boxes */}
-            <div className="grid grid-cols-2 gap-3 p-4">
-              {[
-                { icon: '💰', label: 'Valor líquido liberado:', value: fmtBRL(proposta.valorLiquido), big: true },
-                { icon: '📊', label: 'Parcela utilizada:', value: fmtBRL(proposta.parcela), big: true },
-                { icon: '📋', label: `Dívida quitada – ${proposta.bancoNomeDivida.toUpperCase()}:`, value: fmtBRL(proposta.valorDivida), big: false },
-                { icon: '🏦', label: 'Banco responsável:', value: proposta.bancoResponsavel, big: false },
-              ].map(b => (
-                <div key={b.label} className="rounded-xl p-3" style={{ border: '2px solid #2e7d32' }}>
-                  <div className="flex gap-2 items-start">
-                    <span className="text-xl">{b.icon}</span>
-                    <div>
-                      <div className="text-xs font-bold" style={{ color: '#2e7d32' }}>{b.label}</div>
-                      <div className={`font-bold mt-1 ${b.big ? 'text-xl' : 'text-lg'}`} style={{ color: '#2e7d32' }}>{b.value}</div>
-                    </div>
+            {/* ═══ BANNER ═══ */}
+            <div style={{
+              margin: '14px 36px 0',
+              borderRadius: 14,
+              background: GREEN_MID,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              minHeight: 88,
+              overflow: 'hidden',
+              position: 'relative',
+            }}>
+              {/* Left: client */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '18px 20px' }}>
+                <div style={{ fontSize: 30, color: 'rgba(255,255,255,0.7)', lineHeight: 1 }}>👤</div>
+                <div>
+                  <div style={{ fontSize: 22, fontStyle: 'italic', fontWeight: 700, color: '#fff' }}>
+                    {proposta.nomeCliente || 'Cliente'}
+                  </div>
+                  <div style={{ fontSize: 15, color: 'rgba(255,255,255,0.85)', marginTop: 3 }}>
+                    {cpfMasked}
                   </div>
                 </div>
-              ))}
+              </div>
+
+              {/* Center spacer for photo */}
+              <div style={{ flex: 1 }} />
+
+              {/* Right: corretor */}
+              <div style={{ textAlign: 'right', padding: '18px 20px' }}>
+                <div style={{ fontSize: 22, fontWeight: 700, color: '#fff' }}>{corretor.nome}</div>
+                {corretor.email && (
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 4 }}>
+                    ✉ {corretor.email}
+                  </div>
+                )}
+                {corretor.phone && (
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>
+                    📱 {corretor.phone}
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Footer */}
-            <div className="px-4 pb-4 pt-2 border-t" style={{ borderColor: '#ccc' }}>
-              <div className="text-center text-xs font-bold italic underline" style={{ color: '#1a1a1a' }}>
+            {/* ═══ BOXES GRID ═══ */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, margin: '24px 36px 0' }}>
+
+              {/* Box 1 — Valor líquido liberado */}
+              <div style={{ border: `2.5px solid ${GREEN_MID}`, borderRadius: 16, padding: '20px 18px 18px', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                <div style={{ fontSize: 36, lineHeight: 1, flexShrink: 0 }}>💰</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: GREEN, marginBottom: 4 }}>
+                    Valor líquido liberado:
+                  </div>
+                  <div style={{ fontSize: 38, fontWeight: 900, color: GREEN, lineHeight: 1.05 }}>
+                    {fmtBRL(proposta.valorLiquido)}
+                  </div>
+                  <div style={{ marginTop: 12 }}>
+                    {[
+                      'Valor líquido liberado diretamente em sua conta.',
+                      'Valor disponível após averbação da parcela no contracheque.',
+                      'Margem de 5% atualmente utilizada, liberada após a quitação do contrato.',
+                    ].map(t => (
+                      <div key={t} style={{ display: 'flex', alignItems: 'flex-start', gap: 4, marginTop: 3 }}>
+                        <span style={{ color: GREEN, fontWeight: 700, fontSize: 10, flexShrink: 0 }}>✓</span>
+                        <span style={{ fontSize: 10, color: '#444', lineHeight: 1.4 }}>{t}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Box 2 — Parcela utilizada */}
+              <div style={{ border: `2.5px solid ${GREEN_MID}`, borderRadius: 16, padding: '20px 18px 18px', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                <div style={{ fontSize: 36, lineHeight: 1, flexShrink: 0 }}>📊</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: GREEN, marginBottom: 4 }}>
+                    Parcela utilizada:
+                  </div>
+                  <div style={{ fontSize: 42, fontWeight: 700, color: GREEN, lineHeight: 1.05 }}>
+                    {fmtBRL(proposta.parcela)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Box 3 — Dívida quitada */}
+              <div style={{ border: `2.5px solid ${GREEN_MID}`, borderRadius: 16, padding: '20px 18px 18px', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                <div style={{ fontSize: 36, lineHeight: 1, flexShrink: 0 }}>📋</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: GREEN, marginBottom: 4 }}>
+                    Dívida quitada – {proposta.bancoNomeDivida.toUpperCase() || '—'}:
+                  </div>
+                  <div style={{ fontSize: 38, fontWeight: 700, color: GREEN, lineHeight: 1.05 }}>
+                    {fmtBRL(proposta.valorDivida)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Box 4 — Banco responsável */}
+              <div style={{ border: `2.5px solid ${GREEN_MID}`, borderRadius: 16, padding: '20px 18px 18px', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                <div style={{ fontSize: 36, lineHeight: 1, flexShrink: 0 }}>🏦</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: GREEN, marginBottom: 4 }}>
+                    Banco responsável:
+                  </div>
+                  <div style={{ fontSize: 32, fontWeight: 700, color: GREEN, lineHeight: 1.1 }}>
+                    {proposta.bancoResponsavel || '—'}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* ═══ FOOTER ═══ */}
+            <div style={{ margin: '32px 36px 0', borderTop: '1.5px solid #bbb', paddingTop: 14 }}>
+              <div style={{ textAlign: 'center', fontSize: 15, fontWeight: 700, fontStyle: 'italic', textDecoration: 'underline', color: '#111' }}>
                 AprovaMais Soluções Financeiras - CNPJ 55.886.747/0001-80
               </div>
-              <div className="text-center text-[10px] mt-1" style={{ color: '#555', lineHeight: 1.7 }}>
-                Proposta sujeita à análise de crédito e averbação do órgão pagador.<br/>
+              <div style={{ textAlign: 'center', fontSize: 11, color: '#444', marginTop: 10, lineHeight: 1.8 }}>
+                Proposta sujeita à análise de crédito e averbação do órgão pagador.<br />
+                O saldo devedor considera a fatura encaminhada pelo cliente e pode sofrer alterações em decorrência de juros e encargos.<br />
                 Condições válidas por 48 horas após o envio desta proposta.
               </div>
+              <div style={{ textAlign: 'right', marginTop: 20, paddingBottom: 28 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, fontStyle: 'italic', color: '#111' }}>Página 1 de 1</div>
+                <div style={{ fontSize: 13, color: '#333', marginTop: 2 }}>Documento gerado por AprovaMais Soluções Financeiras.</div>
+              </div>
             </div>
-          </div>
+
+          </div>{/* end sheet */}
         </div>
 
-        {/* Ações */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4" style={{ borderTop: '1px solid var(--card-border)' }}>
-          <button onClick={onClose} className="px-4 py-2 rounded-xl text-sm font-semibold btn-ghost">Fechar</button>
+        {/* Modal actions */}
+        <div className="flex items-center justify-end gap-3 px-6 py-4 flex-shrink-0"
+          style={{ borderTop: '1px solid var(--card-border)' }}>
+          <button onClick={onClose} className="px-4 py-2 rounded-xl text-sm font-semibold btn-ghost">
+            Fechar
+          </button>
           <button
-            onClick={imprimir}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold btn-cyber"
+            onClick={downloadPDF}
+            disabled={generating}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold btn-cyber disabled:opacity-60"
           >
-            <Printer className="w-4 h-4" /> Imprimir / Salvar PDF
+            {generating
+              ? <><Loader className="w-4 h-4 animate-spin" /> Gerando PDF...</>
+              : <><Download className="w-4 h-4" /> Baixar PDF</>
+            }
           </button>
         </div>
       </div>
