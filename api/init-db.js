@@ -22,6 +22,8 @@ async function initDb() {
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS archived_at timestamptz`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS pix_key text`);
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS pix_key_type text CHECK (pix_key_type IN ('cpf','cnpj','email','telefone','aleatoria'))`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone text`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_url text`);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS courses (

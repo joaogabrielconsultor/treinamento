@@ -77,24 +77,40 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 app.get('/api/auth/me', auth, async (req, res) => {
-  const { rows } = await pool.query('SELECT id, email, full_name, role, pix_key, pix_key_type, created_at FROM users WHERE id = $1', [req.user.id]);
+  const { rows } = await pool.query('SELECT id, email, full_name, role, pix_key, pix_key_type, phone, photo_url, created_at FROM users WHERE id = $1', [req.user.id]);
   res.json(rows[0] || null);
 });
 
 app.put('/api/profile', auth, async (req, res) => {
-  const { full_name, email } = req.body;
+  const { full_name, email, phone } = req.body;
   if (!full_name?.trim()) return res.status(400).json({ error: 'Nome obrigatório' });
   if (!email?.trim()) return res.status(400).json({ error: 'Email obrigatório' });
   try {
     const { rows } = await pool.query(
-      'UPDATE users SET full_name=$1, email=$2 WHERE id=$3 RETURNING id, full_name, email, role, pix_key, pix_key_type',
-      [full_name.trim(), email.trim().toLowerCase(), req.user.id]
+      'UPDATE users SET full_name=$1, email=$2, phone=$3 WHERE id=$4 RETURNING id, full_name, email, role, pix_key, pix_key_type, phone, photo_url',
+      [full_name.trim(), email.trim().toLowerCase(), phone?.trim() || null, req.user.id]
     );
     res.json(rows[0]);
   } catch (e) {
     if (e.code === '23505') return res.status(400).json({ error: 'Este email já está em uso' });
     res.status(500).json({ error: 'Erro ao atualizar perfil' });
   }
+});
+
+app.post('/api/profile/photo', auth, async (req, res) => {
+  if (!req.files?.photo) return res.status(400).json({ error: 'Nenhuma foto enviada' });
+  const file = req.files.photo;
+  const ext = path.extname(file.name).toLowerCase() || '.jpg';
+  const allowed = ['.jpg', '.jpeg', '.png', '.webp'];
+  if (!allowed.includes(ext)) return res.status(400).json({ error: 'Formato inválido. Use JPG, PNG ou WEBP' });
+  const avatarsDir = path.join(UPLOADS_DIR, 'avatars');
+  if (!fs.existsSync(avatarsDir)) fs.mkdirSync(avatarsDir, { recursive: true });
+  const filename = `${req.user.id}${ext}`;
+  const filepath = path.join(avatarsDir, filename);
+  await file.mv(filepath);
+  const photo_url = `/uploads/avatars/${filename}`;
+  await pool.query('UPDATE users SET photo_url=$1 WHERE id=$2', [photo_url, req.user.id]);
+  res.json({ photo_url });
 });
 
 app.put('/api/profile/password', auth, async (req, res) => {

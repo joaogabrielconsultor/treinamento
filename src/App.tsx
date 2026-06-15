@@ -173,11 +173,13 @@ function AppInner() {
       />
       {showProfile && (
         <ProfileModal
-          user={{ full_name: user.full_name, email: user.email }}
+          user={{ full_name: user.full_name, email: user.email, phone: user.phone, photo_url: user.photo_url }}
           onClose={() => setShowProfile(false)}
-          onUpdated={(name, email) => {
+          onUpdated={(name, email, phone, photo_url) => {
             user.full_name = name;
             user.email = email;
+            if (phone !== undefined) user.phone = phone;
+            if (photo_url !== undefined) user.photo_url = photo_url;
             setShowProfile(false);
           }}
         />
@@ -246,7 +248,7 @@ function AppInner() {
         {currentView === 'proposals'  && <Proposals prefill={simPrefill} onClearPrefill={() => setSimPrefill(null)} onFormClosed={() => { if (simPrefillFromSim.current) { simPrefillFromSim.current = false; navigate('simulator'); } }} isAdmin={isAdmin} isMaster={isMaster} />}
         {/* Simulator permanece montado para preservar estado dos filtros */}
         <div style={{ display: currentView === 'simulator' ? '' : 'none' }}>
-          <Simulator onSendProposal={data => { setSimPrefill(data); simPrefillFromSim.current = true; navigate('proposals'); }} isAdmin={isAdmin} />
+          <Simulator onSendProposal={data => { setSimPrefill(data); simPrefillFromSim.current = true; navigate('proposals'); }} isAdmin={isAdmin} corretor={user} />
         </div>
         {currentView === 'ranking'              && <Ranking userId={user.id} />}
         {currentView === 'production'           && <Production isAdmin={isAdmin} />}

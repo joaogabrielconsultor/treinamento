@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Calculator, ChevronDown, ArrowRight, TrendingUp, Zap, SlidersHorizontal, RefreshCw } from 'lucide-react';
+import { Calculator, ChevronDown, ArrowRight, TrendingUp, Zap, SlidersHorizontal, RefreshCw, FileText } from 'lucide-react';
 import { FinancialTable, Bank, Convenio } from '../types';
+import { PropostaPDF } from './PropostaPDF';
+import type { AuthUser } from '../hooks/useAuth';
 
 const API = (p: string) =>
   fetch(p, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
@@ -41,12 +43,19 @@ export interface SimPrefill {
 interface SimulatorProps {
   onSendProposal: (data: SimPrefill) => void;
   isAdmin?: boolean;
+  corretor?: AuthUser | null;
 }
 
-export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
+export function Simulator({ onSendProposal, isAdmin = false, corretor }: SimulatorProps) {
   const [mode, setMode] = useState<'parcela' | 'credito' | 'compra-divida'>('parcela');
   const [inputVal, setInputVal] = useState('');
   const [dividaVal, setDividaVal] = useState('');
+
+  // Dados do cliente para gerar proposta (compra-divida)
+  const [nomeCliente, setNomeCliente] = useState('');
+  const [cpfCliente, setCpfCliente] = useState('');
+  const [bancoNomeDivida, setBancoNomeDivida] = useState('');
+  const [propostaModal, setPropostaModal] = useState<{ result: SimResult } | null>(null);
 
   // Required filters
   const [filterConvenio, setFilterConvenio] = useState('');
@@ -346,6 +355,46 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
           </div>
         </div>
 
+        {/* Campos do cliente — apenas no modo compra-divida */}
+        {mode === 'compra-divida' && (
+          <div className="mb-4 p-4 rounded-xl" style={{ background: 'rgba(139,92,246,0.07)', border: '1px solid rgba(139,92,246,0.25)' }}>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: '#a78bfa' }}>
+              Dados para Gerar Proposta
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-2)' }}>Nome do Cliente</label>
+                <input
+                  value={nomeCliente}
+                  onChange={e => setNomeCliente(e.target.value)}
+                  className={inpCls}
+                  placeholder="Nome completo"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-2)' }}>CPF do Cliente</label>
+                <input
+                  value={cpfCliente}
+                  onChange={e => setCpfCliente(e.target.value)}
+                  className={inpCls}
+                  placeholder="000.000.000-00"
+                  inputMode="numeric"
+                  maxLength={14}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-2)' }}>Banco da Dívida</label>
+                <input
+                  value={bancoNomeDivida}
+                  onChange={e => setBancoNomeDivida(e.target.value)}
+                  className={inpCls}
+                  placeholder="Ex: BMG, MASTER, Bradesco..."
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Optional filters toggle */}
         <button
           onClick={() => setShowOptional(v => !v)}
@@ -569,20 +618,32 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
                       <td className="px-3 py-3 text-xs num font-bold" style={{ color: '#4ade80' }}>{fmtBRL(r.comissao_corretor_val)}</td>
                       {isAdmin && <td className="px-3 py-3 text-xs num" style={{ color: r.rentabilidade > 0 ? '#f59e0b' : 'var(--text-3)' }}>{fmtPct(r.rentabilidade)}</td>}
                       <td className="px-3 py-3">
-                        <button
-                          onClick={() => onSendProposal({
-                            convenio_id: r.convenio_id,
-                            bank_id: r.bank_id,
-                            table_id: r.table_id,
-                            value: r.valor_liberado.toFixed(2),
-                            usuario_banco_id: filterUsuarioBanco || undefined,
-                          })}
-                          disabled={mode === 'compra-divida' && (r.troco_liquido ?? 0) < 0}
-                          title={mode === 'compra-divida' && (r.troco_liquido ?? 0) < 0 ? 'Valor liberado não cobre a dívida do cliente' : undefined}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold btn-cyber whitespace-nowrap disabled:opacity-30 disabled:cursor-not-allowed"
-                        >
-                          <ArrowRight className="w-3 h-3" /> Enviar Proposta
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => onSendProposal({
+                              convenio_id: r.convenio_id,
+                              bank_id: r.bank_id,
+                              table_id: r.table_id,
+                              value: r.valor_liberado.toFixed(2),
+                              usuario_banco_id: filterUsuarioBanco || undefined,
+                            })}
+                            disabled={mode === 'compra-divida' && (r.troco_liquido ?? 0) < 0}
+                            title={mode === 'compra-divida' && (r.troco_liquido ?? 0) < 0 ? 'Valor liberado não cobre a dívida do cliente' : undefined}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold btn-cyber whitespace-nowrap disabled:opacity-30 disabled:cursor-not-allowed"
+                          >
+                            <ArrowRight className="w-3 h-3" /> Enviar Proposta
+                          </button>
+                          {mode === 'compra-divida' && (r.troco_liquido ?? 0) >= 0 && (
+                            <button
+                              onClick={() => setPropostaModal({ result: r })}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap"
+                              style={{ background: 'rgba(139,92,246,0.15)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.3)' }}
+                              title="Gerar proposta PDF para o cliente"
+                            >
+                              <FileText className="w-3 h-3" /> Gerar Proposta
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -591,6 +652,28 @@ export function Simulator({ onSendProposal, isAdmin = false }: SimulatorProps) {
             </div>
           </div>
         </>
+      )}
+
+      {/* Modal de proposta PDF */}
+      {propostaModal && corretor && (
+        <PropostaPDF
+          proposta={{
+            nomeCliente: nomeCliente || 'Cliente',
+            cpfCliente,
+            bancoNomeDivida: bancoNomeDivida || '—',
+            valorLiquido: propostaModal.result.troco_liquido ?? 0,
+            parcela: propostaModal.result.parcela,
+            valorDivida: parseFloat(dividaVal.replace(/\./g, '').replace(',', '.')) || 0,
+            bancoResponsavel: propostaModal.result.bank_name,
+          }}
+          corretor={{
+            nome: corretor.full_name || corretor.email,
+            email: corretor.email,
+            phone: corretor.phone,
+            photo_url: corretor.photo_url,
+          }}
+          onClose={() => setPropostaModal(null)}
+        />
       )}
     </div>
   );

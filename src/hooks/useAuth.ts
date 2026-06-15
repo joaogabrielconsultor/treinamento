@@ -6,6 +6,8 @@ export interface AuthUser {
   email: string;
   full_name: string | null;
   role: 'user' | 'admin' | 'master';
+  phone?: string | null;
+  photo_url?: string | null;
 }
 
 export function useAuth() {
