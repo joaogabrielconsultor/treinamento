@@ -174,12 +174,12 @@ app.post('/api/proposta/gerar', auth, async (req, res) => {
 
     // ── Box 1: Valor líquido liberado (template já tem "R$", só o número) ──
     page.drawText(fmtNum(valorLiquido), {
-      x: 190, y: height - 287, size: 28, font: boldFont, color: GREEN,
+      x: 190, y: height - 287, size: 46, font: boldFont, color: GREEN,
     });
 
     // ── Box 2: Parcela utilizada ──
     page.drawText(fmtNum(parcela), {
-      x: 552, y: height - 321, size: 30, font: boldFont, color: GREEN,
+      x: 552, y: height - 321, size: 46, font: boldFont, color: GREEN,
     });
 
     // ── Box 3: Dívida quitada – BANCO ──
@@ -187,12 +187,12 @@ app.post('/api/proposta/gerar', auth, async (req, res) => {
       x: 277, y: height - 452, size: 11, font: boldFont, color: GREEN,
     });
     page.drawText(fmtNum(valorDivida), {
-      x: 190, y: height - 499, size: 26, font: boldFont, color: GREEN,
+      x: 190, y: height - 499, size: 46, font: boldFont, color: GREEN,
     });
 
     // ── Box 4: Banco responsável (coluna direita) ──
     page.drawText(bancoResponsavel, {
-      x: 479, y: height - 521, size: 22, font: boldFont, color: GREEN,
+      x: 479, y: height - 521, size: 46, font: boldFont, color: GREEN,
     });
 
     const pdfBytes = await pdfDoc.save();
