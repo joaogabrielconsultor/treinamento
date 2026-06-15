@@ -153,11 +153,12 @@ app.post('/api/proposta/gerar', auth, async (req, res) => {
     }
 
     // ── Banner: dados do cliente (esquerda) ──
+    // Coordenadas extraídas do PDF real (y medido do topo → height-y para pdf-lib)
     page.drawText(nomeCliente || 'Cliente', {
-      x: 99, y: height - 159, size: 19, font: boldFont, color: WHITE,
+      x: 99, y: height - 146, size: 19, font: boldFont, color: WHITE,
     });
     page.drawText(maskCPF(cpfCliente || ''), {
-      x: 97, y: height - 180, size: 12, font: regFont, color: WHITE,
+      x: 97, y: height - 174, size: 12, font: regFont, color: WHITE,
     });
 
     // ── Banner: dados do corretor (direita) ──
@@ -166,31 +167,32 @@ app.post('/api/proposta/gerar', auth, async (req, res) => {
     const corretorName  = req.user.full_name || req.user.email;
     const corretorEmail = req.user.email;
 
-    drawRight(corretorName,  747, height - 152, 18, boldFont, WHITE);
-    drawRight(corretorEmail, 748, height - 174, 11, regFont,  WHITE);
-    if (corretorPhone) drawRight(corretorPhone, 746, height - 190, 11, regFont, WHITE);
+    // Cargo(name) inicia em x=561 → drawRight calcula automaticamente pela largura do texto
+    drawRight(corretorName,  747, height - 140, 18, boldFont, WHITE);
+    drawRight(corretorEmail, 748, height - 170, 11, regFont,  WHITE);
+    if (corretorPhone) drawRight(corretorPhone, 746, height - 186, 11, regFont, WHITE);
 
     // ── Box 1: Valor líquido liberado ──
     page.drawText(`R$ ${fmtNum(valorLiquido)}`, {
-      x: 68, y: height - 310, size: 28, font: boldFont, color: GREEN,
+      x: 68, y: height - 287, size: 28, font: boldFont, color: GREEN,
     });
 
     // ── Box 2: Parcela utilizada ──
     page.drawText(`R$ ${fmtNum(parcela)}`, {
-      x: 432, y: height - 346, size: 30, font: boldFont, color: GREEN,
+      x: 432, y: height - 321, size: 30, font: boldFont, color: GREEN,
     });
 
     // ── Box 3: Dívida quitada – BANCO ──
     page.drawText(bancoNomeDivida.toUpperCase(), {
-      x: 277, y: height - 456, size: 11, font: boldFont, color: GREEN,
+      x: 277, y: height - 452, size: 11, font: boldFont, color: GREEN,
     });
     page.drawText(`R$ ${fmtNum(valorDivida)}`, {
-      x: 68, y: height - 526, size: 26, font: boldFont, color: GREEN,
+      x: 68, y: height - 499, size: 26, font: boldFont, color: GREEN,
     });
 
     // ── Box 4: Banco responsável ──
     page.drawText(bancoResponsavel, {
-      x: 479, y: height - 515, size: 22, font: boldFont, color: GREEN,
+      x: 68, y: height - 521, size: 22, font: boldFont, color: GREEN,
     });
 
     const pdfBytes = await pdfDoc.save();
