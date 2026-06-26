@@ -20,7 +20,7 @@ interface Roteiro {
 
 const inp = 'input-cyber w-full px-3 py-2.5 text-sm rounded-xl';
 
-export function AdminRoteiros() {
+export function AdminRoteiros({ isMaster = false }: { isMaster?: boolean }) {
   const [items, setItems] = useState<Roteiro[]>([]);
   const [banks, setBanks] = useState<Bank[]>([]);
   const [loading, setLoading] = useState(true);
@@ -178,13 +178,15 @@ export function AdminRoteiros() {
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
-                  <button
-                    onClick={() => del(r.id)}
-                    className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors"
-                    title="Excluir"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  {isMaster && (
+                    <button
+                      onClick={() => del(r.id)}
+                      className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors"
+                      title="Excluir"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

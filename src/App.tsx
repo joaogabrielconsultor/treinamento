@@ -233,16 +233,16 @@ function AppInner() {
         )}
 
         {currentView === 'admin-users'          && isAdmin && <AdminUsers currentUserEmail={user.email} />}
-        {currentView === 'admin-courses'         && isAdmin && <AdminCourses onNavigate={navigate} />}
+        {currentView === 'admin-courses'         && isAdmin && <AdminCourses onNavigate={navigate} isMaster={isMaster} />}
         {currentView === 'admin-personalizacao'  && isAdmin && <AdminPersonalizacao />}
         {currentView === 'admin-course-edit'     && isAdmin && adminEditCourseId && (
           <AdminCourseEdit courseId={adminEditCourseId} onNavigate={navigate} />
         )}
-        {currentView === 'admin-financial-tables' && isAdmin && <AdminTables />}
-        {currentView === 'admin-categories'       && isAdmin && <AdminCategories />}
-        {currentView === 'admin-banks'            && isAdmin && <AdminBanks />}
-        {currentView === 'admin-convenios'        && isAdmin && <AdminConvenios />}
-        {currentView === 'admin-products'         && isAdmin && <AdminProducts />}
+        {currentView === 'admin-financial-tables' && isAdmin && <AdminTables isMaster={isMaster} />}
+        {currentView === 'admin-categories'       && isAdmin && <AdminCategories isMaster={isMaster} />}
+        {currentView === 'admin-banks'            && isAdmin && <AdminBanks isMaster={isMaster} />}
+        {currentView === 'admin-convenios'        && isAdmin && <AdminConvenios isMaster={isMaster} />}
+        {currentView === 'admin-products'         && isAdmin && <AdminProducts isMaster={isMaster} />}
         {currentView === 'admin-reports'           && isAdmin && <AdminReports />}
         {currentView === 'login-bancos' && <LoginBancos isAdmin={isAdmin} />}
         {currentView === 'proposals'  && <Proposals prefill={simPrefill} onClearPrefill={() => setSimPrefill(null)} onFormClosed={() => { if (simPrefillFromSim.current) { simPrefillFromSim.current = false; navigate('simulator'); } }} isAdmin={isAdmin} isMaster={isMaster} />}
@@ -254,12 +254,12 @@ function AppInner() {
         {currentView === 'production'           && <Production isAdmin={isAdmin} />}
         {currentView === 'conta-corrente'       && <ContaCorrente isAdmin={isAdmin || isMaster} />}
         {currentView === 'admin-conta-corrente' && isAdmin && <AdminContaCorrente isMaster={isMaster} />}
-        {currentView === 'admin-lojas'           && isAdmin && <AdminLojas />}
-        {currentView === 'admin-conta-empresa'   && isAdmin && <AdminContaEmpresa />}
-        {currentView === 'admin-proposal-statuses' && isAdmin && <AdminProposalStatuses />}
-        {currentView === 'admin-usuarios-banco'  && isAdmin && <AdminUsuariosBanco />}
+        {currentView === 'admin-lojas'           && isAdmin && <AdminLojas isMaster={isMaster} />}
+        {currentView === 'admin-conta-empresa'   && isAdmin && <AdminContaEmpresa isMaster={isMaster} />}
+        {currentView === 'admin-proposal-statuses' && isAdmin && <AdminProposalStatuses isMaster={isMaster} />}
+        {currentView === 'admin-usuarios-banco'  && isAdmin && <AdminUsuariosBanco isMaster={isMaster} />}
         {currentView === 'roteiros'              && <Roteiros />}
-        {currentView === 'admin-roteiros'        && isAdmin && <AdminRoteiros />}
+        {currentView === 'admin-roteiros'        && isAdmin && <AdminRoteiros isMaster={isMaster} />}
         {currentView === 'admin-importacao'     && isAdmin && <AdminImportacao />}
         {currentView === 'consulta-margem'     && <ConsultaMargem isAdmin={isAdmin} />}
       </main>

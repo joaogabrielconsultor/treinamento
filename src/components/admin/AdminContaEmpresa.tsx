@@ -40,7 +40,7 @@ interface ExtratoItem {
   date: string;
 }
 
-function ExtratoView({ loja, onBack }: { loja: LojaBalance; onBack: () => void }) {
+function ExtratoView({ loja, onBack, isMaster = false }: { loja: LojaBalance; onBack: () => void; isMaster?: boolean }) {
   const [items, setItems] = useState<ExtratoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -121,7 +121,7 @@ function ExtratoView({ loja, onBack }: { loja: LojaBalance; onBack: () => void }
           style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
           <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--card-border)' }}>
             <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Extrato</h3>
-            {selected.size > 0 && (
+            {selected.size > 0 && isMaster && (
               <button
                 onClick={() => setConfirmDel(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
@@ -250,7 +250,7 @@ function ExtratoView({ loja, onBack }: { loja: LojaBalance; onBack: () => void }
 
 const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-export function AdminContaEmpresa() {
+export function AdminContaEmpresa({ isMaster = false }: { isMaster?: boolean }) {
   const [lojas, setLojas] = useState<LojaBalance[]>([]);
   const [ubByLoja, setUbByLoja] = useState<Record<string, UsuarioBancoBalance[]>>({});
   const [loading, setLoading] = useState(true);
@@ -338,7 +338,7 @@ export function AdminContaEmpresa() {
       </div>
 
       {selected ? (
-        <ExtratoView loja={selected} onBack={() => setSelected(null)} />
+        <ExtratoView loja={selected} onBack={() => setSelected(null)} isMaster={isMaster} />
       ) : (
         <>
           <div className="grid grid-cols-3 gap-4 mb-6">

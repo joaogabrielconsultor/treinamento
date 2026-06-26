@@ -70,7 +70,7 @@ function StatusModal({ status, onClose, onSave }: {
   );
 }
 
-export function AdminProposalStatuses() {
+export function AdminProposalStatuses({ isMaster = false }: { isMaster?: boolean }) {
   const [statuses, setStatuses] = useState<ProposalStatusDef[]>([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<ProposalStatusDef | null | 'new'>(null);
@@ -177,7 +177,7 @@ export function AdminProposalStatuses() {
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium badge badge-blue">
                           <Edit2 className="w-3.5 h-3.5" /> Editar
                         </button>
-                        {!s.is_system && (
+                        {!s.is_system && isMaster && (
                           <button onClick={() => handleDelete(s)}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
                             style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>

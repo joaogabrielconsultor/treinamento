@@ -268,7 +268,7 @@ app.put('/api/courses/:id', auth, adminOnly, async (req, res) => {
   res.json(rows[0]);
 });
 
-app.delete('/api/courses/:id', auth, adminOnly, async (req, res) => {
+app.delete('/api/courses/:id', auth, masterOnly, async (req, res) => {
   await pool.query('DELETE FROM courses WHERE id = $1', [req.params.id]);
   res.json({ ok: true });
 });
@@ -306,7 +306,7 @@ app.put('/api/modules/:id', auth, adminOnly, async (req, res) => {
   res.json(rows[0]);
 });
 
-app.delete('/api/modules/:id', auth, adminOnly, async (req, res) => {
+app.delete('/api/modules/:id', auth, masterOnly, async (req, res) => {
   await pool.query('DELETE FROM modules WHERE id = $1', [req.params.id]);
   res.json({ ok: true });
 });
@@ -335,7 +335,7 @@ app.put('/api/lessons/:id', auth, adminOnly, async (req, res) => {
   res.json(rows[0]);
 });
 
-app.delete('/api/lessons/:id', auth, adminOnly, async (req, res) => {
+app.delete('/api/lessons/:id', auth, masterOnly, async (req, res) => {
   await pool.query('DELETE FROM lessons WHERE id = $1', [req.params.id]);
   res.json({ ok: true });
 });
@@ -600,7 +600,7 @@ app.put('/api/admin/lojas/:id', auth, adminOnly, async (req, res) => {
   res.json(rows[0]);
 });
 
-app.delete('/api/admin/lojas/:id', auth, adminOnly, async (req, res) => {
+app.delete('/api/admin/lojas/:id', auth, masterOnly, async (req, res) => {
   const { rows: check } = await pool.query('SELECT id FROM users WHERE loja_id = $1 AND archived_at IS NULL LIMIT 1', [req.params.id]);
   if (check.length > 0) return res.status(400).json({ error: 'Loja possui usuários ativos. Remova-os antes de excluir.' });
   await pool.query('DELETE FROM lojas WHERE id = $1', [req.params.id]);
@@ -638,7 +638,7 @@ app.put('/api/admin/usuarios-banco/:id', auth, adminOnly, async (req, res) => {
   res.json(rows[0]);
 });
 
-app.delete('/api/admin/usuarios-banco/:id', auth, adminOnly, async (req, res) => {
+app.delete('/api/admin/usuarios-banco/:id', auth, masterOnly, async (req, res) => {
   await pool.query('UPDATE proposals SET usuario_banco_id = NULL WHERE usuario_banco_id = $1', [req.params.id]);
   await pool.query('DELETE FROM usuarios_banco WHERE id = $1', [req.params.id]);
   res.json({ ok: true });
@@ -818,7 +818,7 @@ app.put('/api/login-bancos/:id', auth, adminOnly, async (req, res) => {
   res.json(rows[0]);
 });
 
-app.delete('/api/login-bancos/:id', auth, adminOnly, async (req, res) => {
+app.delete('/api/login-bancos/:id', auth, masterOnly, async (req, res) => {
   await pool.query('DELETE FROM login_bancos WHERE id = $1', [req.params.id]);
   res.json({ ok: true });
 });
@@ -881,7 +881,7 @@ app.put('/api/products/:id', auth, adminOnly, async (req, res) => {
   res.json(rows[0]);
 });
 
-app.delete('/api/products/:id', auth, adminOnly, async (req, res) => {
+app.delete('/api/products/:id', auth, masterOnly, async (req, res) => {
   await pool.query('DELETE FROM products WHERE id=$1', [req.params.id]);
   res.json({ ok: true });
 });
@@ -917,7 +917,7 @@ app.put('/api/banks/:id', auth, adminOnly, async (req, res) => {
   res.json(rows[0]);
 });
 
-app.delete('/api/banks/:id', auth, adminOnly, async (req, res) => {
+app.delete('/api/banks/:id', auth, masterOnly, async (req, res) => {
   await pool.query('DELETE FROM banks WHERE id=$1', [req.params.id]);
   res.json({ ok: true });
 });
@@ -941,7 +941,7 @@ app.put('/api/convenios/:id', auth, adminOnly, async (req, res) => {
   res.json(rows[0]);
 });
 
-app.delete('/api/convenios/:id', auth, adminOnly, async (req, res) => {
+app.delete('/api/convenios/:id', auth, masterOnly, async (req, res) => {
   await pool.query('DELETE FROM convenios WHERE id=$1', [req.params.id]);
   res.json({ ok: true });
 });
@@ -971,7 +971,7 @@ app.put('/api/categories/:id', auth, adminOnly, async (req, res) => {
   res.json(rows[0]);
 });
 
-app.delete('/api/categories/:id', auth, adminOnly, async (req, res) => {
+app.delete('/api/categories/:id', auth, masterOnly, async (req, res) => {
   await pool.query('DELETE FROM table_categories WHERE id=$1', [req.params.id]);
   res.json({ ok: true });
 });
@@ -1138,7 +1138,7 @@ app.put('/api/financial-tables/:id', auth, adminOnly, async (req, res) => {
   res.json(rows[0]);
 });
 
-app.delete('/api/financial-tables/:id', auth, adminOnly, async (req, res) => {
+app.delete('/api/financial-tables/:id', auth, masterOnly, async (req, res) => {
   await pool.query('DELETE FROM financial_tables WHERE id=$1', [req.params.id]);
   res.json({ ok: true });
 });
@@ -1171,7 +1171,7 @@ app.put('/api/scoring-rules/:id', auth, adminOnly, async (req, res) => {
   res.json(rows[0]);
 });
 
-app.delete('/api/scoring-rules/:id', auth, adminOnly, async (req, res) => {
+app.delete('/api/scoring-rules/:id', auth, masterOnly, async (req, res) => {
   await pool.query('DELETE FROM scoring_rules WHERE id=$1', [req.params.id]);
   res.json({ ok: true });
 });
@@ -1287,7 +1287,7 @@ app.put('/api/commission-ranges/:id', auth, adminOnly, async (req, res) => {
   res.json(rows[0]);
 });
 
-app.delete('/api/commission-ranges/:id', auth, adminOnly, async (req, res) => {
+app.delete('/api/commission-ranges/:id', auth, masterOnly, async (req, res) => {
   await pool.query('DELETE FROM commission_ranges WHERE id=$1', [req.params.id]);
   res.json({ ok: true });
 });
@@ -1984,7 +1984,7 @@ app.put('/api/admin/proposal-statuses/:id', auth, adminOnly, async (req, res) =>
   res.json(s);
 });
 
-app.delete('/api/admin/proposal-statuses/:id', auth, adminOnly, async (req, res) => {
+app.delete('/api/admin/proposal-statuses/:id', auth, masterOnly, async (req, res) => {
   const { rows: [s] } = await pool.query('SELECT * FROM proposal_statuses WHERE id=$1', [req.params.id]);
   if (!s) return res.status(404).json({ error: 'Status não encontrado' });
   if (s.is_system) return res.status(400).json({ error: 'Status do sistema não pode ser excluído' });
@@ -2883,7 +2883,7 @@ app.get('/api/roteiros/:id/file', async (req, res) => {
   res.sendFile(filepath);
 });
 
-app.delete('/api/roteiros/:id', auth, adminOnly, async (req, res) => {
+app.delete('/api/roteiros/:id', auth, masterOnly, async (req, res) => {
   const { rows } = await pool.query('SELECT file_url FROM roteiros WHERE id = $1', [req.params.id]);
   if (rows[0]) {
     const { file_url } = rows[0];

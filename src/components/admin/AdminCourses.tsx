@@ -12,7 +12,7 @@ const levelColors: Record<string, string> = {
   Avançado: 'bg-red-100 text-red-700',
 };
 
-export function AdminCourses({ onNavigate }: AdminCoursesProps) {
+export function AdminCourses({ onNavigate, isMaster = false }: AdminCoursesProps & { isMaster?: boolean }) {
   const { courses, loading, createCourse, deleteCourse, togglePublished } = useAdminCourses();
 
   const handleCreate = async () => {
@@ -119,16 +119,18 @@ export function AdminCourses({ onNavigate }: AdminCoursesProps) {
               >
                 <Pencil className="w-4 h-4" />
               </button>
-              <button
-                onClick={() => handleDelete(course.id, course.title)}
-                title="Excluir"
-                className="p-1.5 rounded-lg transition-all"
-                style={{ color: 'var(--text-3)' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              {isMaster && (
+                <button
+                  onClick={() => handleDelete(course.id, course.title)}
+                  title="Excluir"
+                  className="p-1.5 rounded-lg transition-all"
+                  style={{ color: 'var(--text-3)' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
         ))}

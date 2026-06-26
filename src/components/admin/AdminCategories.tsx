@@ -9,7 +9,7 @@ const API = (p: string, opts?: RequestInit) =>
 
 const inp = 'input-cyber w-full px-3 py-2.5 text-sm rounded-xl';
 
-export function AdminCategories() {
+export function AdminCategories({ isMaster = false }: { isMaster?: boolean }) {
   const [categories, setCategories] = useState<TableCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -85,12 +85,14 @@ export function AdminCategories() {
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#475569'; }}>
                   <Edit2 className="w-3.5 h-3.5" />
                 </button>
-                <button onClick={() => del(c.id)}
-                  className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-3)' }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#475569'; }}>
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                {isMaster && (
+                  <button onClick={() => del(c.id)}
+                    className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-3)' }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#475569'; }}>
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             </div>
           ))}

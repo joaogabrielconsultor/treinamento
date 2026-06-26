@@ -77,7 +77,7 @@ function DeleteConfirm({ name, onClose, onConfirm }: { name: string; onClose: ()
   );
 }
 
-export function AdminLojas() {
+export function AdminLojas({ isMaster = false }: { isMaster?: boolean }) {
   const [lojas, setLojas] = useState<Loja[]>([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<Loja | null | 'new'>(null);
@@ -195,11 +195,13 @@ export function AdminLojas() {
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium badge badge-blue">
                           <Edit2 className="w-3.5 h-3.5" /> Editar
                         </button>
-                        <button onClick={() => setDeleteTarget(l)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-                          style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>
-                          <Trash2 className="w-3.5 h-3.5" /> Excluir
-                        </button>
+                        {isMaster && (
+                          <button onClick={() => setDeleteTarget(l)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+                            style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>
+                            <Trash2 className="w-3.5 h-3.5" /> Excluir
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

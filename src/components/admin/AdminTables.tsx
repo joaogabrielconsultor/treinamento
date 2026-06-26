@@ -101,7 +101,7 @@ function FormField({ label, children, required, className }: { label: string; ch
   return <div className={className}><Label text={label} required={required} />{children}</div>;
 }
 
-export function AdminTables() {
+export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
   const [tables, setTables] = useState<FinancialTable[]>([]);
   const [banks, setBanks] = useState<Bank[]>([]);
   const [convenios, setConvenios] = useState<Convenio[]>([]);
@@ -501,11 +501,13 @@ export function AdminTables() {
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
-                      <button onClick={() => deleteTable(t.id)} className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--text-3)' }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      {isMaster && (
+                        <button onClick={() => deleteTable(t.id)} className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--text-3)' }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -573,11 +575,13 @@ export function AdminTables() {
                                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
                                         <Edit2 className="w-3 h-3" />
                                       </button>
-                                      <button onClick={() => deleteRange(r.id, t.id)} className="p-1 rounded-lg transition-colors" style={{ color: 'var(--text-3)' }}
-                                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
-                                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
-                                        <Trash2 className="w-3 h-3" />
-                                      </button>
+                                      {isMaster && (
+                                        <button onClick={() => deleteRange(r.id, t.id)} className="p-1 rounded-lg transition-colors" style={{ color: 'var(--text-3)' }}
+                                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
+                                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
+                                          <Trash2 className="w-3 h-3" />
+                                        </button>
+                                      )}
                                     </div>
                                   </div>
                                 </div>
@@ -688,7 +692,7 @@ export function AdminTables() {
           {rules.length > 0 && <div className="space-y-2">{rules.map(r => (
             <div key={r.id} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-1)' }}>
               <div className="flex-1 text-sm" style={{ color: 'var(--text-2)' }}>{fmtBRL(Number(r.min_value))} {r.max_value ? `→ ${fmtBRL(Number(r.max_value))}` : 'ou mais'} = <span className="font-bold text-brand">{r.points} pontos</span>{rulesTable?.category_multiplier && rulesTable.category_multiplier !== 1 && <span className="text-xs ml-2" style={{ color: 'var(--text-3)' }}>(×{rulesTable.category_multiplier} = {Math.round(r.points * Number(rulesTable.category_multiplier))} pts)</span>}</div>
-              <button onClick={() => deleteRule(r.id)} className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+              {isMaster && <button onClick={() => deleteRule(r.id)} className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>}
             </div>
           ))}</div>}
           <form onSubmit={addRule} className="border border-dashed rounded-xl p-4" style={{ borderColor: 'var(--card-border)' }}>

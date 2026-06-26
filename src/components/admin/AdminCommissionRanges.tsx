@@ -102,7 +102,7 @@ function Chip({ label, value, color = 'gray' }: { label: string; value: string; 
   );
 }
 
-export function AdminCommissionRanges() {
+export function AdminCommissionRanges({ isMaster = false }: { isMaster?: boolean }) {
   const [ranges, setRanges] = useState<CommissionRange[]>([]);
   const [tables, setTables] = useState<FinancialTable[]>([]);
   const [categories, setCategories] = useState<TableCategory[]>([]);
@@ -412,12 +412,14 @@ export function AdminCommissionRanges() {
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
-                      <button onClick={() => del(r.id)}
-                        className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-3)' }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      {isMaster && (
+                        <button onClick={() => del(r.id)}
+                          className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-3)' }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
                   </div>
                   {/* Data grid */}

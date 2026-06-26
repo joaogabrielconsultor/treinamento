@@ -88,7 +88,7 @@ function DeleteConfirm({ item, onClose, onConfirm }: { item: UsuarioBanco; onClo
   );
 }
 
-export function AdminUsuariosBanco() {
+export function AdminUsuariosBanco({ isMaster = false }: { isMaster?: boolean }) {
   const [items, setItems] = useState<UsuarioBanco[]>([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<UsuarioBanco | null | 'new'>(null);
@@ -199,11 +199,13 @@ export function AdminUsuariosBanco() {
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium badge badge-blue">
                           <Edit2 className="w-3.5 h-3.5" /> Editar
                         </button>
-                        <button onClick={() => setDeleteTarget(item)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-                          style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>
-                          <Trash2 className="w-3.5 h-3.5" /> Excluir
-                        </button>
+                        {isMaster && (
+                          <button onClick={() => setDeleteTarget(item)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+                            style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>
+                            <Trash2 className="w-3.5 h-3.5" /> Excluir
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
