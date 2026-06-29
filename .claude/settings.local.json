@@ -60,7 +60,40 @@
       "Bash(git stash *)",
       "Bash(Get-ChildItem -Path \"C:\\\\PROJETOS\\\\treinamento-main\" -Recurse -Filter \"*.css\" -ErrorAction SilentlyContinue)",
       "Bash(Select-Object -ExpandProperty FullName)",
-      "Bash(git reset *)"
+      "Bash(git reset *)",
+      "Bash(Get-ChildItem -Force -Directory)",
+      "Bash(Select-Object -ExpandProperty Name)",
+      "Bash(grep -E \"\\\\.js$\")",
+      "Bash(xargs grep -l \"Router\\\\|Route\\\\|navigate\")",
+      "Bash(node -e \"const { createServer } = require\\('http'\\); const app = require\\('./api/index.js'\\);\")",
+      "Bash(Get-Content \"C:\\\\Users\\\\rozes\\\\OneDrive\\\\Documentos\\\\PROPOSTASLIVE.CSV\" -TotalCount 1)",
+      "Bash(Measure-Object -Character)",
+      "PowerShell(\\(Get-Content \"C:\\\\Users\\\\rozes\\\\OneDrive\\\\Documentos\\\\PROPOSTASLIVE.CSV\" | Measure-Object -Line\\).Lines)",
+      "Bash(powershell *)",
+      "Bash(python3 *)",
+      "Bash(node clear-proposals-data.js)",
+      "Bash(node -e \"require\\('dotenv'\\).config\\(\\); console.log\\('DATABASE_URL:', process.env.DATABASE_URL ? process.env.DATABASE_URL.replace\\(/:\\\\/\\\\/.*@/, '://***@'\\) : 'NÃO DEFINIDA'\\)\")",
+      "PowerShell($env:DATABASE_URL; [System.Environment]::GetEnvironmentVariable\\('DATABASE_URL', 'Machine'\\); [System.Environment]::GetEnvironmentVariable\\('DATABASE_URL', 'User'\\))",
+      "Bash(node init-db.js)",
+      "Bash(Get-ChildItem -Path \"C:\\\\PROJETOS\\\\treinamento-main\" -Recurse -Include \"*proposta*\", \"*simulador*\", \"*formulario*\" -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object FullName)",
+      "Bash(python *)",
+      "Bash(git -C \"C:\\\\PROJETOS\\\\treinamento-main\" status)",
+      "Bash(git -C \"C:\\\\PROJETOS\\\\treinamento-main\" log --oneline -3)",
+      "Bash(git -C \"C:\\\\PROJETOS\\\\treinamento-main\" add src/components/ContaCorrente.tsx)",
+      "Bash(git -C 'C:\\\\PROJETOS\\\\treinamento-main' commit -m ' *)",
+      "Bash(git *)",
+      "Bash(node -e \"require\\('./consignado'\\)\")",
+      "Bash(xargs grep -l \"import.*parse\\\\|CSV\\\\|parse.*file\")",
+      "Bash(xargs grep -l \"conta.corrente\\\\|ContaCorrente\\\\|comissao\\\\|withdrawal\\\\|saque\\\\|pix\")",
+      "Bash(Get-ChildItem C:\\\\PROJETOS\\\\treinamento-main\\\\api -Exclude node_modules)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(node -e \"require\\('html2canvas'\\); require\\('jspdf'\\); console.log\\('ok'\\)\")",
+      "Bash(cp \"C:/Users/rozes/Downloads/FORMALIZAÇÃO DE PROPOSTA - FERNANDO ZIMMERMANN \\(1\\).pdf\" \"c:/PROJETOS/treinamento-main/api/uploads/proposta_template.pdf\" && echo \"ok\")",
+      "Bash(git commit -m ' *)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\rozes\\Downloads"
     ]
   }
 }

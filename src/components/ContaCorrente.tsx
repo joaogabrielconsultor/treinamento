@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Wallet, Clock, CheckCircle, DollarSign, FileText, ChevronDown, Key, Edit2, X, Save, Send, ArrowDownToLine, AlertCircle, TrendingUp, Info, Eye, RefreshCw } from 'lucide-react';
+import { Wallet, Clock, CheckCircle, ChevronDown, Key, Edit2, X, Save, Send, ArrowDownToLine, AlertCircle, TrendingUp, Info, Eye, RefreshCw } from 'lucide-react';
 import { Proposal, WithdrawalRequest } from '../types';
 import { Pagination } from './ui/Pagination';
 
@@ -300,9 +300,22 @@ export function ContaCorrente({ adminMode, isAdmin }: { adminMode?: { userId: st
     : saques;
   const paginated = sortedFiltered.slice((page - 1) * perPage, page * perPage);
 
-  // Porcentagem sacada do total recebido (all-time)
-  const pctSacado = summary.all_time_paid_value > 0
-    ? Math.min(100, (summary.total_withdrawn / summary.all_time_paid_value) * 100)
+  // Saques pagos filtrados pelo mês selecionado (calculado no frontend)
+  const sacadoMes = useMemo(() => {
+    if (!filterMonth) return null;
+    const mes = saques.filter(s => s.status === 'Pago' && (s.created_at || '').startsWith(filterMonth));
+    return { total: mes.reduce((a, b) => a + parseFloat(String(b.amount)), 0), count: mes.length };
+  }, [saques, filterMonth]);
+
+  // Valores dos cards de suporte: mês selecionado OU acumulado total
+  const recebidoVal   = filterMonth ? summary.paid_value     : summary.all_time_paid_value;
+  const recebidoCount = filterMonth ? summary.paid_count     : undefined;
+  const sacadoVal     = filterMonth ? (sacadoMes?.total ?? 0) : summary.withdrawn_paid;
+  const sacadoCount   = filterMonth ? (sacadoMes?.count ?? 0) : summary.withdrawn_paid_count;
+
+  // Porcentagem sacada do total recebido
+  const pctSacado = recebidoVal > 0
+    ? Math.min(100, (sacadoVal / recebidoVal) * 100)
     : 0;
 
   return (
@@ -392,13 +405,6 @@ export function ContaCorrente({ adminMode, isAdmin }: { adminMode?: { userId: st
         </div>
         {!effectiveAdminMode && (
           <div className="flex items-center gap-2 flex-shrink-0">
-            {summary.available_balance > 0 && (
-              <button onClick={() => { setShowSaqueModal(true); setSaqueError(''); setSaqueAmount(''); }}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold"
-                style={{ background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' }}>
-                <Send className="w-3.5 h-3.5" /> Solicitar Saque
-              </button>
-            )}
             <button onClick={() => setShowPixModal(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold btn-cyber">
               <Edit2 className="w-3.5 h-3.5" />
               {pixInfo.pix_key ? 'Editar PIX' : 'Cadastrar PIX'}
@@ -414,72 +420,95 @@ export function ContaCorrente({ adminMode, isAdmin }: { adminMode?: { userId: st
         </div>
       )}
 
-      {/* KPI cards — linha do mês */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        {[
-          {
-            label: 'Aguardando Comissão',
-            value: fmtBRL(summary.pending_value),
-            sub: `${summary.pending_count} proposta${summary.pending_count !== 1 ? 's' : ''} no mês`,
-            icon: Clock, color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)',
-            info: 'Comissão das suas propostas pagas que a empresa ainda não liberou. Aguarda confirmação.',
-          },
-          {
-            label: 'Total Comissão Mês',
-            value: fmtBRL(summary.pending_value + summary.paid_value),
-            sub: `${summary.pending_count + summary.paid_count} proposta${(summary.pending_count + summary.paid_count) !== 1 ? 's' : ''} no mês`,
-            icon: TrendingUp, color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.2)',
-            info: 'Soma de toda a sua comissão do mês: aguardando + confirmada.',
-          },
-        ].map((c, i) => (
-          <div key={c.label} className="rounded-2xl p-4 animate-fade-up stat-card"
-            style={{ background: c.bg, border: `1px solid ${c.border}`, animationDelay: `${i * 50}ms` }}>
+      {/* Cards do mês selecionado */}
+      <div className="mb-4 animate-fade-up">
+        <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-3)' }}>
+          {monthLabel(filterMonth || currentMonthValue())}
+        </p>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="rounded-2xl p-4 stat-card" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}>
             <div className="flex items-start justify-between mb-2">
-              <p className="text-[10px] font-bold uppercase tracking-wider leading-tight flex-1 mr-1" style={{ color: 'var(--text-3)' }}>{c.label}</p>
-              <InfoCard text={c.info} />
+              <p className="text-[10px] font-bold uppercase tracking-wider leading-tight flex-1 mr-1" style={{ color: 'var(--text-3)' }}>Aguardando Liberação</p>
+              <InfoCard text="Comissão das propostas pagas que a empresa ainda não liberou. Aguarda confirmação." />
             </div>
-            <p className="text-lg font-black num" style={{ color: c.color }}>{c.value}</p>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{c.sub}</p>
+            <p className="text-lg font-black num" style={{ color: '#f59e0b' }}>{fmtBRL(summary.pending_value)}</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{summary.pending_count} proposta{summary.pending_count !== 1 ? 's' : ''}</p>
           </div>
-        ))}
+          <div className="rounded-2xl p-4 stat-card" style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)' }}>
+            <div className="flex items-start justify-between mb-2">
+              <p className="text-[10px] font-bold uppercase tracking-wider leading-tight flex-1 mr-1" style={{ color: 'var(--text-3)' }}>Recebido no Mês</p>
+              <InfoCard text="Comissão confirmada pela empresa neste mês." />
+            </div>
+            <p className="text-lg font-black num" style={{ color: '#4ade80' }}>{fmtBRL(summary.paid_value)}</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{summary.paid_count} proposta{summary.paid_count !== 1 ? 's' : ''}</p>
+          </div>
+          <div className="rounded-2xl p-4 stat-card" style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)' }}>
+            <div className="flex items-start justify-between mb-2">
+              <p className="text-[10px] font-bold uppercase tracking-wider leading-tight flex-1 mr-1" style={{ color: 'var(--text-3)' }}>Total do Mês</p>
+              <InfoCard text="Soma de toda a sua comissão do mês: aguardando + confirmada." />
+            </div>
+            <p className="text-lg font-black num" style={{ color: '#a78bfa' }}>{fmtBRL(summary.pending_value + summary.paid_value)}</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{summary.pending_count + summary.paid_count} proposta{(summary.pending_count + summary.paid_count) !== 1 ? 's' : ''}</p>
+          </div>
+        </div>
       </div>
 
-      {/* Card de fluxo financeiro */}
+      {/* Saldo acumulado — disponível em destaque */}
       <div className="rounded-2xl p-5 mb-4 animate-fade-up"
         style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)', animationDelay: '60ms' }}>
-        <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-3)' }}>Seu saldo — acumulado</p>
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          {/* Reservado */}
+        <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-3)' }}>Seu saldo acumulado</p>
+
+        {/* Hero: disponível para saque */}
+        <div className="rounded-xl p-4 mb-3 flex items-center justify-between gap-4"
+          style={{ background: 'rgba(20,184,166,0.10)', border: '1px solid rgba(20,184,166,0.3)' }}>
+          <div>
+            <div className="flex items-center gap-1.5 mb-1">
+              <ArrowDownToLine className="w-4 h-4 flex-shrink-0" style={{ color: '#14B8A6' }} />
+              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Disponível para Saque</span>
+              <InfoCard text="Comissão recebida menos saques já solicitados (pagos + pendentes). É o que você pode sacar agora." />
+            </div>
+            <p className="text-2xl font-black num" style={{ color: '#14B8A6' }}>{fmtBRL(summary.available_balance)}</p>
+            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>pronto para solicitar</p>
+          </div>
+          {!effectiveAdminMode && summary.available_balance > 0 && (
+            <button onClick={() => { setShowSaqueModal(true); setSaqueError(''); setSaqueAmount(''); }}
+              className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold"
+              style={{ background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' }}>
+              <Send className="w-3.5 h-3.5" /> Solicitar Saque
+            </button>
+          )}
+        </div>
+
+        {/* Recebido + sacado — dinâmico conforme filtro de mês */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="rounded-xl p-3" style={{ background: 'rgba(74,222,128,0.07)', border: '1px solid rgba(74,222,128,0.18)' }}>
             <div className="flex items-center gap-1.5 mb-1.5">
               <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#4ade80' }} />
-              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Comissão Recebida</span>
-              <InfoCard text="Total que a empresa confirmou e reservou pra você. Esse valor ainda está na empresa, mas é seu." />
+              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>
+                {filterMonth ? 'Recebido no Mês' : 'Total Recebido'}
+              </span>
+              <InfoCard text={filterMonth ? 'Comissão confirmada pela empresa neste mês.' : 'Total que a empresa confirmou e reservou pra você desde mai/2026.'} />
             </div>
-            <p className="text-base font-black num" style={{ color: '#4ade80' }}>{fmtBRL(summary.all_time_paid_value)}</p>
-            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>reservado pela empresa</p>
+            <p className="text-base font-black num" style={{ color: '#4ade80' }}>{fmtBRL(recebidoVal)}</p>
+            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>
+              {filterMonth && recebidoCount !== undefined
+                ? `${recebidoCount} proposta${recebidoCount !== 1 ? 's' : ''}`
+                : 'acumulado desde mai/2026'}
+            </p>
           </div>
-          {/* Sacado */}
           <div className="rounded-xl p-3" style={{ background: 'rgba(248,113,113,0.07)', border: '1px solid rgba(248,113,113,0.18)' }}>
             <div className="flex items-center gap-1.5 mb-1.5">
               <Send className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#f87171' }} />
-              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Já Sacado (Pago)</span>
-              <InfoCard text="Saques com status Pago — esse dinheiro já saiu da empresa e foi para o seu PIX." />
+              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>
+                {filterMonth ? 'Sacado no Mês' : 'Já Sacado'}
+              </span>
+              <InfoCard text={filterMonth ? 'Saques pagos com data neste mês.' : 'Total de saques pagos — dinheiro já enviado ao seu PIX.'} />
             </div>
-            <p className="text-base font-black num" style={{ color: '#f87171' }}>{fmtBRL(summary.withdrawn_paid)}</p>
-            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>{summary.withdrawn_paid_count} saque{summary.withdrawn_paid_count !== 1 ? 's' : ''} pago{summary.withdrawn_paid_count !== 1 ? 's' : ''}</p>
-          </div>
-          {/* Disponível */}
-          <div className="rounded-xl p-3" style={{ background: 'rgba(20,184,166,0.07)', border: '1px solid rgba(20,184,166,0.18)' }}>
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <ArrowDownToLine className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#14B8A6' }} />
-              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Disponível p/ Saque</span>
-              <InfoCard text="Comissão recebida menos saques já solicitados (pagos + pendentes). É o que você pode sacar agora." />
-            </div>
-            <p className="text-base font-black num" style={{ color: '#14B8A6' }}>{fmtBRL(summary.available_balance)}</p>
-            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>pronto para solicitar</p>
+            <p className="text-base font-black num" style={{ color: '#f87171' }}>{fmtBRL(sacadoVal)}</p>
+            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>{sacadoCount} saque{sacadoCount !== 1 ? 's' : ''} pago{sacadoCount !== 1 ? 's' : ''}</p>
           </div>
         </div>
+
         {/* Barra de progresso: sacado vs disponível */}
         {summary.all_time_paid_value > 0 && (
           <div>
