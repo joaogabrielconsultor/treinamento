@@ -3,7 +3,7 @@ import { SimPrefill } from './Simulator';
 import {
   Plus, Search, FileText, ChevronDown, CheckCircle, Clock, DollarSign, XCircle,
   Edit2, User, CreditCard, ChevronRight, AlertTriangle, Lock, Unlock, Trash2,
-  Upload, Filter, Download, Calendar, TrendingUp, X, Eye, EyeOff, Check, RefreshCw,
+  Upload, Filter, Calendar, TrendingUp, X, Eye, EyeOff, Check, RefreshCw,
 } from 'lucide-react';
 import { Proposal, ProposalStatusDef, FinancialTable, Bank, Convenio, Product } from '../types';
 import { Modal } from './ui/Modal';
@@ -742,11 +742,6 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
             style={{ background: showColPicker ? 'rgba(20,184,166,0.15)' : 'var(--card-bg)', border: '1px solid var(--card-border)', color: showColPicker ? '#14B8A6' : 'var(--text-3)' }}>
             <Eye className="w-4 h-4" />
           </button>
-          <button onClick={exportCSV}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
-            style={{ background: 'rgba(96,165,250,0.1)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.2)' }}>
-            <Download className="w-3.5 h-3.5" /> Exportar
-          </button>
           {isMaster && (
             <button onClick={() => { setShowDuplicates(true); loadDuplicates(); }}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
@@ -1007,11 +1002,6 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
             className="px-4 py-1.5 text-xs font-semibold rounded-lg transition-all disabled:opacity-50"
             style={{ background: '#14B8A6', color: '#000' }}>
             {applyingBatch ? 'Aplicando...' : 'Aplicar'}
-          </button>
-          <button onClick={exportCSV}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg font-semibold"
-            style={{ background: 'rgba(96,165,250,0.1)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.2)' }}>
-            <Download className="w-3 h-3" /> Exportar seleção
           </button>
           {isMaster && (
             <button onClick={() => setConfirmBulkDelete(true)}
