@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Calculator, ChevronDown, ArrowRight, TrendingUp, Zap, SlidersHorizontal, RefreshCw, FileText } from 'lucide-react';
+import { Calculator, ChevronDown, ArrowRight, TrendingUp, Zap, SlidersHorizontal, RefreshCw } from 'lucide-react';
 import { FinancialTable, Bank, Convenio } from '../types';
-import { PropostaPDF } from './PropostaPDF';
 import type { AuthUser } from '../hooks/useAuth';
 
 const API = (p: string) =>
@@ -55,7 +54,6 @@ export function Simulator({ onSendProposal, isAdmin = false, corretor }: Simulat
   const [nomeCliente, setNomeCliente] = useState('');
   const [cpfCliente, setCpfCliente] = useState('');
   const [bancoNomeDivida, setBancoNomeDivida] = useState('');
-  const [propostaModal, setPropostaModal] = useState<{ result: SimResult } | null>(null);
 
   // Required filters
   const [filterConvenio, setFilterConvenio] = useState('');
@@ -633,16 +631,6 @@ export function Simulator({ onSendProposal, isAdmin = false, corretor }: Simulat
                           >
                             <ArrowRight className="w-3 h-3" /> Enviar Proposta
                           </button>
-                          {mode === 'compra-divida' && (r.troco_liquido ?? 0) >= 0 && (
-                            <button
-                              onClick={() => setPropostaModal({ result: r })}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap"
-                              style={{ background: 'rgba(139,92,246,0.15)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.3)' }}
-                              title="Gerar proposta PDF para o cliente"
-                            >
-                              <FileText className="w-3 h-3" /> Gerar Proposta
-                            </button>
-                          )}
                         </div>
                       </td>
                     </tr>
@@ -654,27 +642,6 @@ export function Simulator({ onSendProposal, isAdmin = false, corretor }: Simulat
         </>
       )}
 
-      {/* Modal de proposta PDF */}
-      {propostaModal && corretor && (
-        <PropostaPDF
-          proposta={{
-            nomeCliente: nomeCliente || 'Cliente',
-            cpfCliente,
-            bancoNomeDivida: bancoNomeDivida || '—',
-            valorLiquido: propostaModal.result.troco_liquido ?? 0,
-            parcela: propostaModal.result.parcela,
-            valorDivida: parseFloat(dividaVal.replace(/\./g, '').replace(',', '.')) || 0,
-            bancoResponsavel: propostaModal.result.bank_name,
-          }}
-          corretor={{
-            nome: corretor.full_name || corretor.email,
-            email: corretor.email,
-            phone: corretor.phone,
-            photo_url: corretor.photo_url,
-          }}
-          onClose={() => setPropostaModal(null)}
-        />
-      )}
     </div>
   );
 }
