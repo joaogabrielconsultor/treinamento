@@ -16,6 +16,7 @@ import { AdminConvenios } from './components/admin/AdminConvenios';
 import { AdminProducts } from './components/admin/AdminProducts';
 import { AdminProposals } from './components/admin/AdminProposals';
 import { AdminReports } from './components/admin/AdminReports';
+import { AdminCommissionReport } from './components/admin/AdminCommissionReport';
 import { LoginBancos } from './components/LoginBancos';
 import { Proposals } from './components/Proposals';
 import { Simulator, SimPrefill } from './components/Simulator';
@@ -49,7 +50,7 @@ function AppInner() {
     'admin-course-edit','login-bancos','admin-personalizacao','proposals',
     'simulator','ranking','production','admin-proposals','admin-financial-tables',
     'admin-categories','admin-banks','admin-convenios','admin-products',
-    'admin-reports','conta-corrente','admin-conta-corrente','admin-lojas',
+    'admin-reports','admin-commission-report','conta-corrente','admin-conta-corrente','admin-lojas',
     'admin-conta-empresa','admin-proposal-statuses','admin-usuarios-banco',
     'roteiros','admin-roteiros','admin-importacao','consulta-margem',
   ]);
@@ -244,6 +245,7 @@ function AppInner() {
         {currentView === 'admin-convenios'        && isAdmin && <AdminConvenios isMaster={isMaster} />}
         {currentView === 'admin-products'         && isAdmin && <AdminProducts isMaster={isMaster} />}
         {currentView === 'admin-reports'           && isAdmin && <AdminReports />}
+        {currentView === 'admin-commission-report' && isAdmin && <AdminCommissionReport />}
         {currentView === 'login-bancos' && <LoginBancos isAdmin={isAdmin} />}
         {currentView === 'proposals'  && <Proposals prefill={simPrefill} onClearPrefill={() => setSimPrefill(null)} onFormClosed={() => { if (simPrefillFromSim.current) { simPrefillFromSim.current = false; navigate('simulator'); } }} isAdmin={isAdmin} isMaster={isMaster} />}
         {/* Simulator permanece montado para preservar estado dos filtros */}

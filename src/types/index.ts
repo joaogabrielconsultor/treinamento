@@ -317,6 +317,7 @@ export type ViewType =
   | 'admin-convenios'
   | 'admin-products'
   | 'admin-reports'
+  | 'admin-commission-report'
   | 'conta-corrente'
   | 'admin-conta-corrente'
   | 'admin-lojas'

@@ -2738,6 +2738,67 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
   res.json({ proposals, brokers: brokerSummary, usuariosBanco: ubSummary });
 });
 
+// Relatório de comissões em aberto, por corretor x mês
+app.get('/api/admin/commission-report', auth, adminOnly, async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT u.id as user_id, u.full_name as user_name, u.email as user_email,
+           to_char(p.updated_at, 'YYYY-MM') as month,
+           COALESCE(SUM(COALESCE(p.comissao_corretor_override,
+             ROUND(p.value * COALESCE(
+               (SELECT cr.comissao_corretor FROM commission_ranges cr
+                WHERE cr.financial_table_id = p.table_id
+                  AND cr.min_value <= p.value
+                  AND (cr.max_value IS NULL OR cr.max_value >= p.value)
+                ORDER BY cr.min_value DESC LIMIT 1),
+               ft.comissao_corretor, 0
+             ) / 100, 2)
+           )), 0)::numeric as corretor_pendente,
+           COALESCE(SUM(COALESCE(p.comissao_empresa_override,
+             ROUND(p.value * COALESCE(ft.comissao_empresa, 0) / 100, 2)
+           )), 0)::numeric as empresa_pendente
+    FROM proposals p
+    JOIN users u ON u.id = p.user_id
+    LEFT JOIN financial_tables ft ON ft.id = p.table_id
+    WHERE p.status_comissao = 'Ag. Comissão'
+    GROUP BY u.id, u.full_name, u.email, to_char(p.updated_at, 'YYYY-MM')
+    ORDER BY u.full_name ASC, month ASC
+  `);
+
+  const monthsSet = new Set();
+  const brokersMap = new Map();
+  for (const r of rows) {
+    monthsSet.add(r.month);
+    if (!brokersMap.has(r.user_id)) {
+      brokersMap.set(r.user_id, {
+        user_id: r.user_id, user_name: r.user_name, user_email: r.user_email,
+        by_month: {}, total_corretor: 0, total_empresa: 0,
+      });
+    }
+    const b = brokersMap.get(r.user_id);
+    const corretor = parseFloat(r.corretor_pendente);
+    const empresa = parseFloat(r.empresa_pendente);
+    b.by_month[r.month] = { corretor, empresa };
+    b.total_corretor += corretor;
+    b.total_empresa += empresa;
+  }
+
+  const months = [...monthsSet].sort();
+  const brokers = [...brokersMap.values()].sort((a, b) => (b.total_corretor + b.total_empresa) - (a.total_corretor + a.total_empresa));
+
+  const totals = { by_month: {}, total_corretor: 0, total_empresa: 0 };
+  for (const m of months) totals.by_month[m] = { corretor: 0, empresa: 0 };
+  for (const b of brokers) {
+    totals.total_corretor += b.total_corretor;
+    totals.total_empresa += b.total_empresa;
+    for (const m of months) {
+      const cell = b.by_month[m];
+      if (cell) { totals.by_month[m].corretor += cell.corretor; totals.by_month[m].empresa += cell.empresa; }
+    }
+  }
+
+  res.json({ months, brokers, totals });
+});
+
 // Marcar propostas como comissão paga
 app.post('/api/admin/conta-corrente/pay', auth, adminOnly, async (req, res) => {
   const { proposal_ids, notes } = req.body;
