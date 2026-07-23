@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, Save, Handshake, RefreshCw } from 'lucide-react';
 import { Convenio } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
+import { confirmDialog } from '../ui/ConfirmDialog';
 import { Pagination } from '../ui/Pagination';
 
 const API = (p: string, opts?: RequestInit) =>
@@ -40,7 +41,7 @@ export function AdminConvenios({ isMaster = false }: { isMaster?: boolean }) {
   }
 
   async function del(id: string) {
-    if (!confirm('Excluir este convênio? As tabelas vinculadas perderão a referência.')) return;
+    if (!(await confirmDialog({ title: 'Excluir convênio?', message: 'As tabelas vinculadas perderão a referência.', variant: 'danger', confirmText: 'Excluir' }))) return;
     await API(`/api/convenios/${id}`, { method: 'DELETE' });
     await load();
   }

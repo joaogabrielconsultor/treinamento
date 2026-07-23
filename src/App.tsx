@@ -33,6 +33,9 @@ import { AdminRoteiros } from './components/admin/AdminRoteiros';
 import { AdminImportacao } from './components/admin/AdminImportacao';
 import { ConsultaMargem } from './components/ConsultaMargem';
 import { ProfileModal } from './components/ProfileModal';
+import { SupportButton } from './components/SupportButton';
+import { ToastProvider } from './components/ui/Toast';
+import { ConfirmProvider } from './components/ui/ConfirmDialog';
 import { useAuth } from './hooks/useAuth';
 import { useIdleLogout } from './hooks/useIdleLogout';
 import { useCourses, useCourseDetail } from './hooks/useCourses';
@@ -272,7 +275,12 @@ function AppInner() {
 export default function App() {
   return (
     <AppProvider>
-      <AppInner />
+      <ToastProvider>
+        <ConfirmProvider>
+          <AppInner />
+          <SupportButton />
+        </ConfirmProvider>
+      </ToastProvider>
     </AppProvider>
   );
 }

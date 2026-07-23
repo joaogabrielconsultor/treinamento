@@ -2,6 +2,7 @@
 import { Plus, Trash2, Edit2, Save, Building2, RefreshCw } from 'lucide-react';
 import { Bank } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
+import { confirmDialog } from '../ui/ConfirmDialog';
 import { Pagination } from '../ui/Pagination';
 
 const API = (p: string, opts?: RequestInit) =>
@@ -40,7 +41,7 @@ export function AdminBanks({ isMaster = false }: { isMaster?: boolean }) {
   }
 
   async function del(id: string) {
-    if (!confirm('Excluir este banco? As tabelas vinculadas perderão a referência.')) return;
+    if (!(await confirmDialog({ title: 'Excluir banco?', message: 'As tabelas vinculadas perderão a referência.', variant: 'danger', confirmText: 'Excluir' }))) return;
     await API(`/api/banks/${id}`, { method: 'DELETE' });
     await load();
   }

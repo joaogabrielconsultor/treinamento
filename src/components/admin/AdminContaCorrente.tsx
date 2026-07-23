@@ -4,6 +4,7 @@ import { Wallet, Clock, CheckCircle, DollarSign, Users, ChevronDown, Search, Ale
 const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 import { Proposal, WithdrawalRequest } from '../../types';
 import { Pagination } from '../ui/Pagination';
+import { confirmDialog } from '../ui/ConfirmDialog';
 import { ContaCorrente } from '../ContaCorrente';
 
 const API = (p: string, opts?: RequestInit) =>
@@ -180,7 +181,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
   }
 
   async function deleteDespesa(id: string) {
-    if (!window.confirm('Excluir esta despesa? Esta ação é irreversível.')) return;
+    if (!(await confirmDialog({ title: 'Excluir despesa?', message: 'Esta ação é irreversível.', variant: 'danger', confirmText: 'Excluir' }))) return;
     await API(`/api/admin/despesas/${id}`, { method: 'DELETE' });
     loadDespesas();
   }
@@ -350,7 +351,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
   }
 
   async function revertPaid(id: string) {
-    if (!confirm('Estornar esta comissão para "Ag. Comissão"?')) return;
+    if (!(await confirmDialog({ title: 'Estornar comissão?', message: 'A comissão voltará para "Ag. Comissão".', confirmText: 'Estornar' }))) return;
     setRevertingId(id);
     await API('/api/admin/conta-corrente/unpay', { method: 'POST', body: JSON.stringify({ proposal_ids: [id] }) });
     setRevertingId(null);

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, FileText, Calculator, Trophy, Library, Wallet, TrendingUp, BarChart2, ArrowRight, Activity, Percent, TrendingDown, Receipt } from 'lucide-react';
+import { DollarSign, FileText, Calculator, Trophy, Library, Wallet, TrendingUp, BarChart2, ArrowRight, Activity, Percent, TrendingDown, Receipt, Calendar, Sparkles } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { ViewType } from '../types';
 import { useCountUp } from '../hooks/useCountUp';
@@ -73,6 +73,12 @@ export function Dashboard({ user, onNavigate, isAdmin = false }: DashboardProps)
   const displayName = user.user_metadata?.full_name || (user as any).full_name || user.email?.split('@')[0] || 'Usuário';
   const firstName = displayName.split(' ')[0];
 
+  const now = new Date();
+  const hour = now.getHours();
+  const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+  const rawDate = now.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+  const todayLabel = rawDate.charAt(0).toUpperCase() + rawDate.slice(1);
+
   useEffect(() => {
     API('/api/production/dashboard?period=month')
       .then(r => r.json())
@@ -103,17 +109,26 @@ export function Dashboard({ user, onNavigate, isAdmin = false }: DashboardProps)
     <div className="min-h-screen p-4 sm:p-8 max-w-6xl mx-auto" style={{ color: 'var(--text-1)' }}>
 
       {/* Header */}
-      <div className="mb-8 animate-fade-up">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="live-dot" />
-          <span className="text-xs font-medium" style={{ color: '#14B8A6' }}>Sistema ativo</span>
+      <div className="mb-8 animate-fade-up flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <div className="flex items-center gap-2 mb-1.5">
+            <div className="live-dot" />
+            <span className="text-xs font-medium" style={{ color: '#14B8A6' }}>Sistema ativo</span>
+          </div>
+          <h1 className="text-2xl sm:text-[28px] font-bold leading-tight" style={{ color: 'var(--text-1)' }}>
+            {greeting}, <span className="text-gradient-teal">{firstName}</span> 👋
+          </h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
+            Aqui está o resumo da sua produção este mês.
+          </p>
         </div>
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-1)' }}>
-          Olá, {firstName}
-        </h1>
-        <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>
-          Aqui está o resumo da sua produção este mês.
-        </p>
+        <div
+          className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl self-center"
+          style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-1)' }}
+        >
+          <Calendar className="w-4 h-4" style={{ color: '#14B8A6' }} />
+          <span className="text-xs font-medium num" style={{ color: 'var(--text-2)' }}>{todayLabel}</span>
+        </div>
       </div>
 
       {/* KPIs */}
@@ -243,6 +258,49 @@ export function Dashboard({ user, onNavigate, isAdmin = false }: DashboardProps)
             <div className="mt-4 pt-4 flex justify-between text-xs" style={{ borderTop: '1px solid var(--card-border)' }}>
               <span style={{ color: 'var(--text-3)' }}>Total de propostas</span>
               <span className="font-bold num" style={{ color: 'var(--text-1)' }}>{totalFunnel}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Estado vazio — nenhuma proposta ainda */}
+      {!loading && totalFunnel === 0 && (
+        <div className="animate-fade-up" style={{ animationDelay: '360ms' }}>
+          <div
+            className="rounded-2xl p-8 sm:p-10 text-center relative overflow-hidden"
+            style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}
+          >
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: 'radial-gradient(circle at 50% 0%, rgba(20,184,166,0.08), transparent 60%)' }}
+            />
+            <div className="relative">
+              <div
+                className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 animate-float"
+                style={{ background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.22)', boxShadow: 'var(--glow-md)' }}
+              >
+                <Sparkles className="w-7 h-7" style={{ color: '#2DD4BF' }} />
+              </div>
+              <h3 className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>
+                Tudo pronto para começar!
+              </h3>
+              <p className="text-sm mt-1.5 max-w-md mx-auto leading-relaxed" style={{ color: 'var(--text-3)' }}>
+                Você ainda não tem produção registrada este mês. Assim que suas propostas forem cadastradas, seus indicadores e o funil de status aparecem aqui automaticamente.
+              </p>
+              <div className="flex items-center justify-center gap-2.5 mt-5 flex-wrap">
+                <button
+                  onClick={() => onNavigate('proposals')}
+                  className="btn-cyber px-5 py-2.5 rounded-xl text-sm flex items-center gap-2"
+                >
+                  <FileText className="w-4 h-4" /> Criar primeira proposta
+                </button>
+                <button
+                  onClick={() => onNavigate('simulator')}
+                  className="btn-ghost px-5 py-2.5 rounded-xl text-sm flex items-center gap-2"
+                >
+                  <Calculator className="w-4 h-4" /> Abrir simulador
+                </button>
+              </div>
             </div>
           </div>
         </div>

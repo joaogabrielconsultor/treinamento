@@ -3,6 +3,8 @@ import { Plus, Trash2, Edit2, Save, ChevronDown, Percent, Star, AlertTriangle, U
 import { CommissionRange, FinancialTable, TableCategory, Bank, Convenio } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
 import { Pagination } from '../ui/Pagination';
+import { confirmDialog } from '../ui/ConfirmDialog';
+import { useToast } from '../ui/Toast';
 
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
@@ -103,6 +105,7 @@ function Chip({ label, value, color = 'gray' }: { label: string; value: string; 
 }
 
 export function AdminCommissionRanges({ isMaster = false }: { isMaster?: boolean }) {
+  const toast = useToast();
   const [ranges, setRanges] = useState<CommissionRange[]>([]);
   const [tables, setTables] = useState<FinancialTable[]>([]);
   const [categories, setCategories] = useState<TableCategory[]>([]);
@@ -192,7 +195,7 @@ export function AdminCommissionRanges({ isMaster = false }: { isMaster?: boolean
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.financial_table_id) { alert('Selecione a tabela financeira'); return; }
+    if (!form.financial_table_id) { toast.warning('Selecione a tabela financeira'); return; }
     setSaving(true);
     const url = editId ? `/api/commission-ranges/${editId}` : '/api/commission-ranges';
     await API(url, { method: editId ? 'PUT' : 'POST', body: JSON.stringify(form) });
@@ -203,7 +206,7 @@ export function AdminCommissionRanges({ isMaster = false }: { isMaster?: boolean
   }
 
   async function del(id: string) {
-    if (!confirm('Excluir esta faixa?')) return;
+    if (!(await confirmDialog({ title: 'Excluir faixa?', message: 'Deseja realmente excluir esta faixa?', variant: 'danger', confirmText: 'Excluir' }))) return;
     await API(`/api/commission-ranges/${id}`, { method: 'DELETE' });
     setRanges(prev => prev.filter(x => x.id !== id));
   }
@@ -239,7 +242,7 @@ export function AdminCommissionRanges({ isMaster = false }: { isMaster?: boolean
       setImportRows([]);
       if (fileRef.current) fileRef.current.value = '';
       await load();
-      alert(`${result.imported} faixa(s) importada(s) com sucesso!`);
+      toast.success(`${result.imported} faixa(s) importada(s) com sucesso!`);
     }
     setImporting(false);
   }

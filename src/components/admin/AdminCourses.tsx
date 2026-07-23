@@ -1,6 +1,7 @@
 ﻿import { Plus, Eye, EyeOff, Pencil, Trash2, BookOpen } from 'lucide-react';
 import { useAdminCourses } from '../../hooks/useAdmin';
 import { ViewType } from '../../types';
+import { confirmDialog } from '../ui/ConfirmDialog';
 
 interface AdminCoursesProps {
   onNavigate: (view: ViewType, courseId?: string) => void;
@@ -21,7 +22,7 @@ export function AdminCourses({ onNavigate, isMaster = false }: AdminCoursesProps
   };
 
   const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`Excluir o curso "${title}"? Esta ação não pode ser desfeita.`)) return;
+    if (!(await confirmDialog({ title: 'Excluir curso?', message: `Excluir o curso "${title}"? Esta ação não pode ser desfeita.`, variant: 'danger', confirmText: 'Excluir' }))) return;
     await deleteCourse(id);
   };
 

@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Plus, Trash2, Edit2, Save, BookOpen, FileText, Building2, ExternalLink, Upload, RefreshCw } from 'lucide-react';
 import { Bank } from '../../types';
 import { Modal, btnCancel, btnPrimary } from '../ui/Modal';
+import { confirmDialog } from '../ui/ConfirmDialog';
+import { useToast } from '../ui/Toast';
 
 const token = () => localStorage.getItem('token') ?? '';
 const API = (p: string, opts?: RequestInit) =>
@@ -21,6 +23,7 @@ interface Roteiro {
 const inp = 'input-cyber w-full px-3 py-2.5 text-sm rounded-xl';
 
 export function AdminRoteiros({ isMaster = false }: { isMaster?: boolean }) {
+  const toast = useToast();
   const [items, setItems] = useState<Roteiro[]>([]);
   const [banks, setBanks] = useState<Bank[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,7 +90,7 @@ export function AdminRoteiros({ isMaster = false }: { isMaster?: boolean }) {
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          alert(err.error || 'Erro ao fazer upload do PDF.');
+          toast.error(err.error || 'Erro ao fazer upload do PDF.');
           return;
         }
       }
@@ -99,7 +102,7 @@ export function AdminRoteiros({ isMaster = false }: { isMaster?: boolean }) {
   }
 
   async function del(id: string) {
-    if (!confirm('Excluir este roteiro? O arquivo PDF será removido permanentemente.')) return;
+    if (!(await confirmDialog({ title: 'Excluir roteiro?', message: 'O arquivo PDF será removido permanentemente.', variant: 'danger', confirmText: 'Excluir' }))) return;
     await API(`/api/roteiros/${id}`, { method: 'DELETE' });
     await load();
   }

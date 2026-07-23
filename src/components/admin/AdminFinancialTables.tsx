@@ -3,6 +3,8 @@ import { Plus, Trash2, Edit2, ChevronDown, Save, Settings, Upload, Download, Ref
 import { FinancialTable, TableCategory, ScoringRule, Bank, Convenio } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
 import { Pagination } from '../ui/Pagination';
+import { confirmDialog } from '../ui/ConfirmDialog';
+import { useToast } from '../ui/Toast';
 
 const CSV_HEADERS_FT = ['nome', 'banco', 'convenio', 'categoria', 'comissao_empresa', 'comissao_corretor', 'coeficiente', 'ativo'];
 
@@ -36,6 +38,7 @@ const inp = 'input-cyber w-full px-3 py-2.5 text-sm rounded-xl';
 const EMPTY_TABLE = { name: '', bank_id: '', convenio_id: '', category_id: '', active: true, comissao_empresa: '', comissao_corretor: '', coeficiente: '' };
 
 export function AdminFinancialTables() {
+  const toast = useToast();
   const [tables, setTables] = useState<FinancialTable[]>([]);
   const [categories, setCategories] = useState<TableCategory[]>([]);
   const [banks, setBanks] = useState<Bank[]>([]);
@@ -81,9 +84,9 @@ export function AdminFinancialTables() {
 
   async function saveTable(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.convenio_id) { alert('Selecione o convênio'); return; }
-    if (!form.bank_id)     { alert('Selecione o banco'); return; }
-    if (!form.category_id) { alert('Selecione a categoria'); return; }
+    if (!form.convenio_id) { toast.warning('Selecione o convênio'); return; }
+    if (!form.bank_id)     { toast.warning('Selecione o banco'); return; }
+    if (!form.category_id) { toast.warning('Selecione a categoria'); return; }
     const body = {
       name: form.name,
       bank_id: form.bank_id,
@@ -102,7 +105,7 @@ export function AdminFinancialTables() {
   }
 
   async function deleteTable(id: string) {
-    if (!confirm('Excluir esta tabela? As regras de pontuação serão removidas.')) return;
+    if (!(await confirmDialog({ title: 'Excluir tabela?', message: 'As regras de pontuação serão removidas.', variant: 'danger', confirmText: 'Excluir' }))) return;
     await API(`/api/financial-tables/${id}`, { method: 'DELETE' });
     await load();
   }
@@ -172,7 +175,7 @@ export function AdminFinancialTables() {
       setImportRows([]);
       if (fileRef.current) fileRef.current.value = '';
       await load();
-      alert(`${result.imported} tabela(s) importada(s) com sucesso!`);
+      toast.success(`${result.imported} tabela(s) importada(s) com sucesso!`);
     }
     setImporting(false);
   }

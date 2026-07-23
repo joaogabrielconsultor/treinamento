@@ -478,6 +478,34 @@ body {
 .num { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; }
 
 /* ═══════════════════════════════════════════════════════════════
+   TOAST / FEEDBACK
+═══════════════════════════════════════════════════════════════ */
+@keyframes toast-in {
+  0%   { opacity: 0; transform: translateX(24px) scale(0.96); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes toast-out {
+  0%   { opacity: 1; transform: translateX(0) scale(1); }
+  100% { opacity: 0; transform: translateX(24px) scale(0.96); }
+}
+@keyframes toast-progress {
+  0%   { width: 100%; }
+  100% { width: 0%; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BOTÃO DE SUPORTE FLUTUANTE (WhatsApp)
+═══════════════════════════════════════════════════════════════ */
+@keyframes support-pop {
+  0%   { opacity: 0; transform: translateY(12px) scale(0.9); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes support-ping {
+  0%        { transform: scale(1);   opacity: 0.55; }
+  75%, 100% { transform: scale(1.9); opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
    SCROLLBAR HORIZONTAL VISÍVEL
 ═══════════════════════════════════════════════════════════════ */
 .overflow-x-auto {

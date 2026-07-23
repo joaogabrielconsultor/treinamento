@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAdminCourseEdit } from '../../hooks/useAdmin';
 import { Course, Module, Lesson, ViewType, QuizQuestion } from '../../types';
+import { confirmDialog } from '../ui/ConfirmDialog';
 
 interface AdminCourseEditProps {
   courseId: string;
@@ -239,9 +240,9 @@ function LessonRow({
           {lessonTypeLabel[local.lesson_type]}
         </span>
         <button
-          onClick={(e) => {
+          onClick={async (e) => {
             e.stopPropagation();
-            if (confirm('Excluir esta aula?')) onDelete(moduleId, lesson.id);
+            if (await confirmDialog({ title: 'Excluir aula?', message: 'Deseja realmente excluir esta aula?', variant: 'danger', confirmText: 'Excluir' })) onDelete(moduleId, lesson.id);
           }}
           className="p-1 rounded text-gray-300 hover:text-red-500 transition-colors"
         >
@@ -375,7 +376,7 @@ function ModuleSection({
         />
         <span className="text-xs text-gray-400">{module.lessons?.length || 0} aula{(module.lessons?.length || 0) !== 1 ? 's' : ''}</span>
         <button
-          onClick={() => { if (confirm('Excluir este módulo e todas as suas aulas?')) onDeleteModule(module.id); }}
+          onClick={async () => { if (await confirmDialog({ title: 'Excluir módulo?', message: 'O módulo e todas as suas aulas serão excluídos.', variant: 'danger', confirmText: 'Excluir' })) onDeleteModule(module.id); }}
           className="p-1 text-gray-300 hover:text-red-500 transition-colors"
         >
           <Trash2 className="w-4 h-4" />

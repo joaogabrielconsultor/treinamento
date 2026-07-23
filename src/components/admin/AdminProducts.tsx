@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, Save, Package, RefreshCw } from 'lucide-react';
 import { Product } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
+import { confirmDialog } from '../ui/ConfirmDialog';
 import { Pagination } from '../ui/Pagination';
 
 const API = (p: string, opts?: RequestInit) =>
@@ -40,7 +41,7 @@ export function AdminProducts({ isMaster = false }: { isMaster?: boolean }) {
   }
 
   async function del(id: string) {
-    if (!confirm('Excluir este produto?')) return;
+    if (!(await confirmDialog({ title: 'Excluir produto?', message: 'Deseja realmente excluir este produto?', variant: 'danger', confirmText: 'Excluir' }))) return;
     await API(`/api/products/${id}`, { method: 'DELETE' });
     await load();
   }

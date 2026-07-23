@@ -8,6 +8,8 @@ import {
 import { Proposal, ProposalStatusDef, FinancialTable, Bank, Convenio, Product } from '../types';
 import { Modal } from './ui/Modal';
 import { Pagination } from './ui/Pagination';
+import { confirmDialog } from './ui/ConfirmDialog';
+import { useToast } from './ui/Toast';
 
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
@@ -149,6 +151,7 @@ interface ProposalsProps {
 }
 
 export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = false, isMaster = false }: ProposalsProps = {}) {
+  const toast = useToast();
   // ── Core data ──
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -563,7 +566,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
     reader.onload = (ev) => {
       const text = ev.target?.result as string;
       const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
-      if (lines.length < 2) { alert('Arquivo vazio ou sem dados.'); return; }
+      if (lines.length < 2) { toast.warning('Arquivo vazio ou sem dados.'); return; }
       const normalizeHeader = (h: string) => {
         const colMap: Record<string, string> = {
           'data digitao': 'data_digitacao', 'data digita': 'data_digitacao',
@@ -1312,7 +1315,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                             <p className="text-xs font-mono" style={{ color: 'var(--text-3)' }}>Criada: {new Date(p.created_at).toLocaleDateString('pt-BR')}</p>
                           </div>
                           <button
-                            onClick={() => { if (confirm('Excluir esta proposta duplicada?')) deleteDupProposal(p.id); }}
+                            onClick={async () => { if (await confirmDialog({ title: 'Excluir proposta?', message: 'Excluir esta proposta duplicada?', variant: 'danger', confirmText: 'Excluir' })) deleteDupProposal(p.id); }}
                             className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg flex-shrink-0 transition-all"
                             style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171', border: '1px solid rgba(248,113,113,0.25)' }}
                           >

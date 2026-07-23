@@ -3,6 +3,8 @@ import { Plus, Trash2, Edit2, ChevronDown, ChevronRight, Save, Settings, Upload,
 import { FinancialTable, TableCategory, CommissionRange, ScoringRule, Bank, Convenio, Product } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
 import { Pagination } from '../ui/Pagination';
+import { confirmDialog } from '../ui/ConfirmDialog';
+import { useToast } from '../ui/Toast';
 
 const API = (p: string, opts?: RequestInit) =>
   fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}`, ...(opts?.headers || {}) } });
@@ -102,6 +104,7 @@ function FormField({ label, children, required, className }: { label: string; ch
 }
 
 export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
+  const toast = useToast();
   const [tables, setTables] = useState<FinancialTable[]>([]);
   const [banks, setBanks] = useState<Bank[]>([]);
   const [convenios, setConvenios] = useState<Convenio[]>([]);
@@ -188,10 +191,10 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
   }
 
   async function doSaveTable() {
-    if (!tableForm.name.trim()) { alert('Informe o nome da tabela'); return; }
-    if (!tableForm.convenio_id) { alert('Selecione o convênio'); return; }
-    if (!tableForm.bank_id) { alert('Selecione o banco'); return; }
-    if (!tableForm.category_id) { alert('Selecione a categoria'); return; }
+    if (!tableForm.name.trim()) { toast.warning('Informe o nome da tabela'); return; }
+    if (!tableForm.convenio_id) { toast.warning('Selecione o convênio'); return; }
+    if (!tableForm.bank_id) { toast.warning('Selecione o banco'); return; }
+    if (!tableForm.category_id) { toast.warning('Selecione a categoria'); return; }
     try {
       const body = {
         name: tableForm.name,
@@ -216,18 +219,18 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
       };
       const url = editTableId ? `/api/financial-tables/${editTableId}` : '/api/financial-tables';
       const res = await API(url, { method: editTableId ? 'PUT' : 'POST', body: JSON.stringify(body) });
-      if (!res.ok) { const err = await res.text(); alert(`Erro ao salvar tabela: ${err}`); return; }
+      if (!res.ok) { const err = await res.text(); toast.error(`Erro ao salvar tabela: ${err}`); return; }
       await res.json();
       setShowTableForm(false); setEditTableId(null); await load();
     } catch (err) {
-      alert(`Erro inesperado: ${err instanceof Error ? err.message : String(err)}`);
+      toast.error(`Erro inesperado: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 
   function saveTable(e: React.FormEvent) { e.preventDefault(); doSaveTable(); }
 
   async function deleteTable(id: string) {
-    if (!confirm('Excluir esta tabela? As faixas e regras serão removidas.')) return;
+    if (!(await confirmDialog({ title: 'Excluir tabela?', message: 'As faixas e regras serão removidas.', variant: 'danger', confirmText: 'Excluir' }))) return;
     await API(`/api/financial-tables/${id}`, { method: 'DELETE' });
     setRangesCache(prev => { const n = { ...prev }; delete n[id]; return n; });
     if (expandedId === id) setExpandedId(null);
@@ -245,7 +248,7 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
 
   async function saveRange(e: React.FormEvent) {
     e.preventDefault();
-    if (!rangeForm.financial_table_id) { alert('Tabela não definida'); return; }
+    if (!rangeForm.financial_table_id) { toast.warning('Tabela não definida'); return; }
     setSavingRange(true);
     const url = editRangeId ? `/api/commission-ranges/${editRangeId}` : '/api/commission-ranges';
     await API(url, { method: editRangeId ? 'PUT' : 'POST', body: JSON.stringify(rangeForm) });
@@ -255,7 +258,7 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
   }
 
   async function deleteRange(id: string, tableId: string) {
-    if (!confirm('Excluir esta faixa?')) return;
+    if (!(await confirmDialog({ title: 'Excluir faixa?', message: 'Deseja realmente excluir esta faixa?', variant: 'danger', confirmText: 'Excluir' }))) return;
     await API(`/api/commission-ranges/${id}`, { method: 'DELETE' });
     setRangesCache(prev => ({ ...prev, [tableId]: (prev[tableId] || []).filter(r => r.id !== id) }));
   }
@@ -332,7 +335,7 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
       const parts = [];
       if (totalImported > 0) parts.push(`${totalImported} nova(s) adicionada(s)`);
       if (totalUpdated > 0) parts.push(`${totalUpdated} atualizada(s)`);
-      alert(parts.join(', ') + '!');
+      toast.success(parts.join(', ') + '!');
     }
     setImportingTables(false);
     setImportProgress(0);
@@ -350,7 +353,7 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
     const items = importRangeRows.map(row => ({ ...row, financial_table_id: importRangesForTableId }));
     const result = await API('/api/commission-ranges/import', { method: 'POST', body: JSON.stringify({ rows: items }) }).then(r => r.json());
     if (result.errors?.length) setImportRangeErrors(result.errors.map((e: { row: string; error: string }) => `${e.row}: ${e.error}`));
-    if (result.imported > 0) { setShowImportRanges(false); setImportRangeRows([]); await loadRanges(importRangesForTableId); alert(`${result.imported} faixa(s) importada(s)!`); }
+    if (result.imported > 0) { setShowImportRanges(false); setImportRangeRows([]); await loadRanges(importRangesForTableId); toast.success(`${result.imported} faixa(s) importada(s)!`); }
     setImportingRanges(false);
   }
 

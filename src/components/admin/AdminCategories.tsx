@@ -2,6 +2,7 @@
 import { Plus, Trash2, Edit2, Save, RefreshCw } from 'lucide-react';
 import { TableCategory } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
+import { confirmDialog } from '../ui/ConfirmDialog';
 import { Pagination } from '../ui/Pagination';
 
 const API = (p: string, opts?: RequestInit) =>
@@ -37,7 +38,7 @@ export function AdminCategories({ isMaster = false }: { isMaster?: boolean }) {
   }
 
   async function del(id: string) {
-    if (!confirm('Excluir esta categoria?')) return;
+    if (!(await confirmDialog({ title: 'Excluir categoria?', message: 'Deseja realmente excluir esta categoria?', variant: 'danger', confirmText: 'Excluir' }))) return;
     await API(`/api/categories/${id}`, { method: 'DELETE' });
     await load();
   }
