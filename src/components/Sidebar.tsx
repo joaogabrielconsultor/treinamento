@@ -27,24 +27,44 @@ const navItems = [
   { view: 'consulta-margem' as ViewType, icon: ScanSearch, label: 'Consulta Margem' },
 ];
 
-const adminItems = [
-  { view: 'admin-users'             as ViewType, icon: Users,         label: 'Usuários' },
-  { view: 'admin-convenios'         as ViewType, icon: Handshake,     label: 'Convênios' },
-  { view: 'admin-banks'             as ViewType, icon: Building2,     label: 'Bancos' },
-  { view: 'admin-products'          as ViewType, icon: Package,       label: 'Produtos' },
-  { view: 'admin-financial-tables'  as ViewType, icon: Table2,        label: 'Tabelas' },
-  { view: 'admin-categories'        as ViewType, icon: Tag,           label: 'Categorias' },
-  { view: 'admin-reports'           as ViewType, icon: FileBarChart,  label: 'Relatórios' },
-  { view: 'admin-conta-corrente'    as ViewType, icon: Wallet,        label: 'Conta Corrente' },
-  { view: 'admin-commission-report' as ViewType, icon: Receipt,       label: 'Relatório Comissões' },
-  { view: 'admin-lojas'             as ViewType, icon: Store,         label: 'Lojas' },
-  { view: 'admin-usuarios-banco'    as ViewType, icon: UserCog,       label: 'Usuários Banco' },
-  { view: 'admin-proposal-statuses' as ViewType, icon: Tag,          label: 'Status Propostas' },
-  { view: 'admin-conta-empresa'     as ViewType, icon: Building2,     label: 'Conta Empresa' },
-  { view: 'admin-courses'           as ViewType, icon: GraduationCap, label: 'Treinamentos' },
-  { view: 'admin-roteiros'          as ViewType, icon: BookOpen,        label: 'Roteiros' },
-  { view: 'admin-importacao'        as ViewType, icon: FileSpreadsheet, label: 'Importação CRM' },
-  { view: 'admin-personalizacao'    as ViewType, icon: Palette,         label: 'Personalização' },
+const adminGroups: { label: string; items: { view: ViewType; icon: typeof Users; label: string }[] }[] = [
+  {
+    label: 'Cadastros',
+    items: [
+      { view: 'admin-users'            as ViewType, icon: Users,     label: 'Usuários' },
+      { view: 'admin-convenios'        as ViewType, icon: Handshake, label: 'Convênios' },
+      { view: 'admin-banks'            as ViewType, icon: Building2, label: 'Bancos' },
+      { view: 'admin-products'         as ViewType, icon: Package,   label: 'Produtos' },
+      { view: 'admin-financial-tables' as ViewType, icon: Table2,    label: 'Tabelas' },
+      { view: 'admin-categories'       as ViewType, icon: Tag,       label: 'Categorias' },
+    ],
+  },
+  {
+    label: 'Financeiro',
+    items: [
+      { view: 'admin-conta-corrente'    as ViewType, icon: Wallet,       label: 'Conta Corrente' },
+      { view: 'admin-reports'           as ViewType, icon: FileBarChart, label: 'Relatórios' },
+      { view: 'admin-commission-report' as ViewType, icon: Receipt,      label: 'Relatório Comissões' },
+      { view: 'admin-proposal-statuses' as ViewType, icon: Tag,          label: 'Status Propostas' },
+      { view: 'admin-conta-empresa'     as ViewType, icon: Building2,    label: 'Conta Empresa' },
+    ],
+  },
+  {
+    label: 'Operação',
+    items: [
+      { view: 'admin-lojas'          as ViewType, icon: Store,           label: 'Lojas' },
+      { view: 'admin-usuarios-banco' as ViewType, icon: UserCog,         label: 'Usuários Banco' },
+      { view: 'admin-importacao'     as ViewType, icon: FileSpreadsheet, label: 'Importação CRM' },
+    ],
+  },
+  {
+    label: 'Conteúdo & Sistema',
+    items: [
+      { view: 'admin-courses'        as ViewType, icon: GraduationCap, label: 'Treinamentos' },
+      { view: 'admin-roteiros'       as ViewType, icon: BookOpen,      label: 'Roteiros' },
+      { view: 'admin-personalizacao' as ViewType, icon: Palette,       label: 'Personalização' },
+    ],
+  },
 ];
 
 export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin, onOpenProfile }: SidebarProps) {
@@ -85,7 +105,7 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin, onO
                 backgroundClip: 'text',
               }}
             >
-              Aprova Mais
+              GS CRED
             </span>
             <span className="text-[11px] mt-0.5 block truncate" style={{ color: '#64748B' }}>
               Plataforma Financeira
@@ -139,33 +159,43 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin, onO
                 Admin
               </span>
             </div>
-            {adminItems.map(({ view, icon: Icon, label }) => {
-              const active = isAdminActive(view);
-              return (
-                <button
-                  key={view}
-                  onClick={() => onNavigate(view)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[12px] font-medium transition-all duration-200 ${active ? 'nav-active' : ''}`}
-                  style={active ? { color: '#2DD4BF' } : { color: '#64748B' }}
-                  onMouseEnter={(e) => {
-                    if (!active) {
-                      (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
-                      (e.currentTarget as HTMLElement).style.color = '#94A3B8';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!active) {
-                      (e.currentTarget as HTMLElement).style.background = 'transparent';
-                      (e.currentTarget as HTMLElement).style.color = '#64748B';
-                    }
-                  }}
+            {adminGroups.map((group, gi) => (
+              <div key={group.label} className={gi > 0 ? 'mt-3' : ''}>
+                <span
+                  className="block px-3 mb-1 text-[9px] font-bold uppercase tracking-widest"
+                  style={{ color: '#475569' }}
                 >
-                  <Icon className="w-[15px] h-[15px] flex-shrink-0" />
-                  <span className="flex-1 min-w-0 text-left truncate">{label}</span>
-                  {active && <ChevronRight className="w-3 h-3 opacity-60 flex-shrink-0" />}
-                </button>
-              );
-            })}
+                  {group.label}
+                </span>
+                {group.items.map(({ view, icon: Icon, label }) => {
+                  const active = isAdminActive(view);
+                  return (
+                    <button
+                      key={view}
+                      onClick={() => onNavigate(view)}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[12px] font-medium transition-all duration-200 ${active ? 'nav-active' : ''}`}
+                      style={active ? { color: '#2DD4BF' } : { color: '#64748B' }}
+                      onMouseEnter={(e) => {
+                        if (!active) {
+                          (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
+                          (e.currentTarget as HTMLElement).style.color = '#94A3B8';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!active) {
+                          (e.currentTarget as HTMLElement).style.background = 'transparent';
+                          (e.currentTarget as HTMLElement).style.color = '#64748B';
+                        }
+                      }}
+                    >
+                      <Icon className="w-[15px] h-[15px] flex-shrink-0" />
+                      <span className="flex-1 min-w-0 text-left truncate">{label}</span>
+                      {active && <ChevronRight className="w-3 h-3 opacity-60 flex-shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         )}
       </nav>

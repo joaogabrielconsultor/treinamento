@@ -95,7 +95,7 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
                 className="text-lg font-bold"
                 style={{ background: 'linear-gradient(135deg, #2DD4BF 0%, #06B6D4 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
               >
-                Aprova Mais
+                GS CRED
               </span>
             </div>
 
@@ -156,7 +156,7 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
               className="text-2xl font-bold"
               style={{ background: 'linear-gradient(135deg, #E2E8F0 0%, #94A3B8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
             >
-              Aprova Mais
+              GS CRED
             </h1>
             <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
               Plataforma para crédito consignado

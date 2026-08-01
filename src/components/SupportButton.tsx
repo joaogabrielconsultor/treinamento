@@ -37,7 +37,7 @@ export function SupportButton({ userName }: SupportButtonProps) {
   }, [open]);
 
   const greeting = userName
-    ? `Olá! Sou ${userName} e preciso de ajuda com a plataforma Aprova Mais.`
+    ? `Olá! Sou ${userName} e preciso de ajuda com a plataforma GS CRED.`
     : undefined;
 
   return (

@@ -34,6 +34,7 @@ import { AdminImportacao } from './components/admin/AdminImportacao';
 import { ConsultaMargem } from './components/ConsultaMargem';
 import { ProfileModal } from './components/ProfileModal';
 import { SupportButton } from './components/SupportButton';
+import { PlanosPage } from './components/PlanosPage';
 import { ToastProvider } from './components/ui/Toast';
 import { ConfirmProvider } from './components/ui/ConfirmDialog';
 import { useAuth } from './hooks/useAuth';
@@ -64,12 +65,22 @@ function AppInner() {
     return { view, id };
   }
 
-  const [currentView, setCurrentView] = useState<ViewType>(() => {
+  // URL amigável /admin → administração de usuários
+  function isAdminPath() {
+    return /\/admin\/?$/.test(window.location.pathname);
+  }
+
+  function computeInitialView(): ViewType {
+    if (isAdminPath()) return 'admin-users';
     const { view } = parseHash();
     // lesson sem estado completo → volta ao course na próxima etapa
     if (view === 'lesson') return 'course';
     return VALID_VIEWS.has(view as ViewType) ? (view as ViewType) : 'dashboard';
-  });
+  }
+
+  // View de destino ao carregar/logar (preserva a intenção de /admin)
+  const landingView = useRef<ViewType>(computeInitialView());
+  const [currentView, setCurrentView] = useState<ViewType>(landingView.current);
 
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(() => {
     const { view, id } = parseHash();
@@ -83,6 +94,12 @@ function AppInner() {
     const { view, id } = parseHash();
     return view === 'admin-course-edit' && id ? id : null;
   });
+
+  // Normaliza /admin para o roteamento por hash (evita /admin#dashboard depois)
+  useEffect(() => {
+    if (isAdminPath()) window.history.replaceState(null, '', '/');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Mantém o hash da URL sincronizado com a view atual
   useEffect(() => {
@@ -100,6 +117,14 @@ function AppInner() {
   const currentEnrollment = enrollments.find((e) => e.course_id === selectedCourseId) ?? null;
   const { progress: lessonProgress, completeLesson } = useLessonProgress(user?.id ?? null, selectedCourseId);
   const { isAdmin, isMaster } = useIsAdmin(user);
+
+  // Se um não-admin cair numa view admin (ex.: via /admin), volta ao dashboard
+  useEffect(() => {
+    if (user && !isAdmin && String(currentView).startsWith('admin-')) {
+      setCurrentView('dashboard');
+    }
+  }, [user, isAdmin, currentView]);
+
   const [simPrefill, setSimPrefill] = useState<SimPrefill | null>(null);
   const simPrefillFromSim = useRef(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -117,7 +142,7 @@ function AppInner() {
   }
 
   if (!user) {
-    return <AuthPage signIn={signIn} onSuccess={() => setCurrentView('dashboard')} />;
+    return <AuthPage signIn={signIn} onSuccess={() => setCurrentView(landingView.current)} />;
   }
 
   const navigate = (view: ViewType, courseId?: string) => {
@@ -273,6 +298,10 @@ function AppInner() {
 }
 
 export default function App() {
+  // Rota pública de vendas — não exige login
+  if (/\/planos\/?$/.test(window.location.pathname)) {
+    return <PlanosPage />;
+  }
   return (
     <AppProvider>
       <ToastProvider>

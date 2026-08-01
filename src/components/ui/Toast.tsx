@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect, useRef } f
 import { CheckCircle2, XCircle, AlertTriangle, Info, X } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════
-   SISTEMA DE FEEDBACK (TOASTS) — Aprova Mais
+   SISTEMA DE FEEDBACK (TOASTS) — GS CRED
    Substitui os alert() nativos do navegador por notificações
    elegantes no estilo do design system (glass + accent teal).
 

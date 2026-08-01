@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Trash2, HelpCircle } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════
-   MODAL DE CONFIRMAÇÃO — Aprova Mais
+   MODAL DE CONFIRMAÇÃO — GS CRED
    Substitui o confirm() nativo por um diálogo elegante.
 
    Uso (em qualquer lugar, sem hook):
