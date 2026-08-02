@@ -15,12 +15,9 @@ const AppContext = createContext<AppContextType>({
 });
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const DEFAULT_LOGO = '/gs-logo.svg';
+  const DEFAULT_LOGO = '/logo.png';
   // localStorage é apenas cache local para evitar flash no carregamento
-  const [logoUrl, setLogoUrlState] = useState(() => {
-    const cached = localStorage.getItem('logoUrl');
-    return !cached || cached === '/logo.png' ? DEFAULT_LOGO : cached;
-  });
+  const [logoUrl, setLogoUrlState] = useState(() => localStorage.getItem('logoUrl') || DEFAULT_LOGO);
   // Tema dark-only — a identidade GS CRED é preto + volt
   const darkMode = true;
 
@@ -29,7 +26,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     fetch('/api/settings')
       .then((r) => r.json())
       .then((data) => {
-        const url: string = data.logo_url && data.logo_url !== '/logo.png' ? data.logo_url : DEFAULT_LOGO;
+        const url: string = data.logo_url || DEFAULT_LOGO;
         setLogoUrlState(url);
         localStorage.setItem('logoUrl', url);
       })
