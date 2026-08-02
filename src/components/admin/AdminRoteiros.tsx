@@ -152,7 +152,7 @@ export function AdminRoteiros({ isMaster = false }: { isMaster?: boolean }) {
                 className="flex items-center gap-3 p-4 rounded-xl"
                 style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-1)' }}
               >
-                <FileText className="w-5 h-5 flex-shrink-0" style={{ color: '#2DD4BF' }} />
+                <FileText className="w-5 h-5 flex-shrink-0" style={{ color: '#C6FF00' }} />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm" style={{ color: 'var(--text-1)' }}>{r.title}</p>
                   {r.description && (
@@ -169,7 +169,7 @@ export function AdminRoteiros({ isMaster = false }: { isMaster?: boolean }) {
                     target="_blank"
                     rel="noreferrer"
                     className="p-1.5 rounded-lg transition-colors"
-                    style={{ color: '#2DD4BF' }}
+                    style={{ color: '#C6FF00' }}
                     title="Abrir PDF"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />

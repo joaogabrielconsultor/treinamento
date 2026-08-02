@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 96" fill="none">
+  <!-- G -->
+  <path d="M54 26 L20 26 L20 70 L54 70 L54 51 L40 51"
+        stroke="#FFFFFF" stroke-width="11" stroke-linejoin="miter" stroke-linecap="butt"/>
+  <!-- corte angular na perna do G -->
+  <path d="M20 62 L34 70" stroke="#FFFFFF" stroke-width="11" stroke-linecap="butt"/>
+  <!-- S -->
+  <path d="M108 31 L76 31 L76 48 L108 48 L108 70 L76 70"
+        stroke="#FFFFFF" stroke-width="11" stroke-linejoin="miter" stroke-linecap="butt"/>
+  <!-- ponto -->
+  <rect x="110" y="60" width="11" height="11" fill="#FFFFFF"/>
+</svg>

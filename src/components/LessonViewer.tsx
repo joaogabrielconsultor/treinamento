@@ -1,4 +1,4 @@
-﻿import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { ArrowLeft, ArrowRight, CheckCircle2, Clock, Video, FileText, HelpCircle, Play, Pause, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 import { Lesson, Module, LessonProgress, QuizQuestion } from '../types';
 
@@ -117,7 +117,7 @@ function DirectVideoPlayer({ src }: { src: string }) {
             title="Voltar 15 segundos"
             className="flex items-center gap-1 transition-colors"
             style={{ color: 'rgba(255,255,255,0.7)' }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#C6FF00'; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)'; }}
           >
             <RotateCcw className="w-4 h-4" />
@@ -127,8 +127,8 @@ function DirectVideoPlayer({ src }: { src: string }) {
           <button
             onClick={togglePlay}
             className="w-8 h-8 rounded-full flex items-center justify-center transition-all"
-            style={{ background: 'linear-gradient(135deg, #14B8A6, #06B6D4)' }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 12px rgba(20,184,166,0.5)'; }}
+            style={{ background: 'linear-gradient(135deg, #C6FF00, #A9E000)' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 12px rgba(198,255,0,0.5)'; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}
           >
             {playing
@@ -142,7 +142,7 @@ function DirectVideoPlayer({ src }: { src: string }) {
               onClick={toggleMute}
               className="transition-colors"
               style={{ color: 'rgba(255,255,255,0.7)' }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#C6FF00'; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)'; }}
             >
               {muted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
@@ -155,7 +155,7 @@ function DirectVideoPlayer({ src }: { src: string }) {
               value={muted ? 0 : volume}
               onChange={changeVolume}
               className="w-16 h-1 cursor-pointer"
-              style={{ accentColor: '#14B8A6' }}
+              style={{ accentColor: '#C6FF00' }}
             />
           </div>
 
@@ -229,7 +229,7 @@ function QuizViewer({ content }: { content: string }) {
 
               if (isCorrect) { bg = 'rgba(34,197,94,0.1)'; border = 'rgba(34,197,94,0.35)'; color = '#4ade80'; }
               else if (isWrong) { bg = 'rgba(239,68,68,0.1)'; border = 'rgba(239,68,68,0.35)'; color = '#f87171'; }
-              else if (selected) { bg = 'rgba(20,184,166,0.1)'; border = 'rgba(20,184,166,0.4)'; color = '#2DD4BF'; }
+              else if (selected) { bg = 'rgba(198,255,0,0.1)'; border = 'rgba(198,255,0,0.4)'; color = '#C6FF00'; }
 
               return (
                 <button
@@ -238,7 +238,7 @@ function QuizViewer({ content }: { content: string }) {
                   onClick={() => setAnswers((prev) => ({ ...prev, [qi]: oi }))}
                   className="w-full text-left px-4 py-2.5 rounded-xl text-sm transition-all"
                   style={{ background: bg, border: `1px solid ${border}`, color }}
-                  onMouseEnter={(e) => { if (!submitted && !selected) (e.currentTarget as HTMLElement).style.borderColor = 'rgba(20,184,166,0.3)'; }}
+                  onMouseEnter={(e) => { if (!submitted && !selected) (e.currentTarget as HTMLElement).style.borderColor = 'rgba(198,255,0,0.3)'; }}
                   onMouseLeave={(e) => { if (!submitted && !selected) (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)'; }}
                 >
                   {opt}
@@ -264,10 +264,10 @@ function QuizViewer({ content }: { content: string }) {
             background: pct === 1
               ? 'rgba(34,197,94,0.08)'
               : pct >= 0.7
-              ? 'rgba(20,184,166,0.08)'
+              ? 'rgba(198,255,0,0.08)'
               : 'rgba(239,68,68,0.08)',
-            border: `1px solid ${pct === 1 ? 'rgba(34,197,94,0.25)' : pct >= 0.7 ? 'rgba(20,184,166,0.25)' : 'rgba(239,68,68,0.25)'}`,
-            color: pct === 1 ? '#4ade80' : pct >= 0.7 ? '#2DD4BF' : '#f87171',
+            border: `1px solid ${pct === 1 ? 'rgba(34,197,94,0.25)' : pct >= 0.7 ? 'rgba(198,255,0,0.25)' : 'rgba(239,68,68,0.25)'}`,
+            color: pct === 1 ? '#4ade80' : pct >= 0.7 ? '#C6FF00' : '#f87171',
           }}
         >
           Resultado: {score}/{questions.length} acertos
@@ -353,7 +353,7 @@ export function LessonViewer({
                     <div key={i} className="flex items-start gap-2.5">
                       <div
                         className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
-                        style={{ background: '#14B8A6' }}
+                        style={{ background: '#C6FF00' }}
                       />
                       <p className="text-sm leading-relaxed" style={{ color: 'var(--text-3)' }}>{para.slice(2)}</p>
                     </div>
@@ -446,9 +446,9 @@ export function LessonViewer({
                           onClick={() => onNavigateLesson(l)}
                           className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-left text-xs transition-all"
                           style={{
-                            background: isActive ? 'rgba(20,184,166,0.12)' : 'transparent',
-                            border: isActive ? '1px solid rgba(20,184,166,0.25)' : '1px solid transparent',
-                            color: isActive ? '#2DD4BF' : isDone ? '#475569' : '#94A3B8',
+                            background: isActive ? 'rgba(198,255,0,0.12)' : 'transparent',
+                            border: isActive ? '1px solid rgba(198,255,0,0.25)' : '1px solid transparent',
+                            color: isActive ? '#C6FF00' : isDone ? '#475569' : '#94A3B8',
                           }}
                           onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
                           onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
@@ -456,12 +456,12 @@ export function LessonViewer({
                           {isDone ? (
                             <CheckCircle2
                               className="w-3.5 h-3.5 flex-shrink-0"
-                              style={{ color: isActive ? '#2DD4BF' : '#22c55e' }}
+                              style={{ color: isActive ? '#C6FF00' : '#22c55e' }}
                             />
                           ) : (
                             <div
                               className="w-3.5 h-3.5 rounded-full border-2 flex-shrink-0"
-                              style={{ borderColor: isActive ? '#14B8A6' : '#334155' }}
+                              style={{ borderColor: isActive ? '#C6FF00' : '#334155' }}
                             />
                           )}
                           <span className="truncate">{l.title}</span>

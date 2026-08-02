@@ -411,7 +411,7 @@ export function AdminCommissionRanges({ isMaster = false }: { isMaster?: boolean
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <button onClick={() => openEdit(r)}
                         className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-3)' }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(198,255,0,0.1)'; (e.currentTarget as HTMLElement).style.color = '#C6FF00'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
@@ -646,8 +646,8 @@ export function AdminCommissionRanges({ isMaster = false }: { isMaster?: boolean
         }
       >
         <div className="space-y-4">
-          <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)' }}>
-            <Download className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#14B8A6' }} />
+          <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: 'rgba(198,255,0,0.08)', border: '1px solid rgba(198,255,0,0.2)' }}>
+            <Download className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#C6FF00' }} />
             <div>
               <p className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>Baixe o modelo antes de importar</p>
               <p className="text-xs mt-0.5 mb-2" style={{ color: 'var(--text-3)' }}>
@@ -655,7 +655,7 @@ export function AdminCommissionRanges({ isMaster = false }: { isMaster?: boolean
               </p>
               <button onClick={downloadTemplate}
                 className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors"
-                style={{ background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' }}>
+                style={{ background: 'rgba(198,255,0,0.15)', color: '#C6FF00', border: '1px solid rgba(198,255,0,0.3)' }}>
                 <Download className="w-3.5 h-3.5" /> Baixar Modelo CSV
               </button>
             </div>

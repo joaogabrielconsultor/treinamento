@@ -74,8 +74,8 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
 
   const danger = opts.variant === 'danger';
   const Icon = danger ? Trash2 : HelpCircle;
-  const accent = danger ? '#f87171' : '#2DD4BF';
-  const accentBg = danger ? 'rgba(248,113,113,0.12)' : 'rgba(20,184,166,0.12)';
+  const accent = danger ? '#f87171' : '#C6FF00';
+  const accentBg = danger ? 'rgba(248,113,113,0.12)' : 'rgba(198,255,0,0.12)';
 
   return (
     <>
@@ -97,7 +97,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             border: '1px solid var(--border-1)',
-            boxShadow: `var(--shadow-lifted), 0 0 0 1px ${danger ? 'rgba(248,113,113,0.10)' : 'rgba(20,184,166,0.08)'}`,
+            boxShadow: `var(--shadow-lifted), 0 0 0 1px ${danger ? 'rgba(248,113,113,0.10)' : 'rgba(198,255,0,0.08)'}`,
             animation: leaving ? 'modal-in 0.16s ease-in reverse both' : 'modal-in 0.24s cubic-bezier(0.16,1,0.3,1) both',
           }}
           role="alertdialog"

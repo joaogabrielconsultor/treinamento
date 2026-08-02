@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Users, Shield, ShieldOff, BookOpen, RefreshCw, Plus, X, Eye, EyeOff, Crown, Archive, ArchiveRestore, KeyRound, Store, Edit2, Save } from 'lucide-react';
 import { useAdminUsers } from '../../hooks/useAdmin';
 import { Pagination } from '../ui/Pagination';
@@ -454,7 +454,7 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
                 return (
                   <th key={h} onClick={sortable ? () => handleSort(h) : undefined}
                     className="text-left px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest"
-                    style={{ color: active ? '#14B8A6' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
+                    style={{ color: active ? '#C6FF00' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
                     {h}{sortable && <span className="ml-1 opacity-60">{active ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
                   </th>
                 );
@@ -476,12 +476,12 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
                         className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                         style={isThisMaster
                           ? { background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.2)' }
-                          : { background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.18)' }
+                          : { background: 'rgba(198,255,0,0.1)', border: '1px solid rgba(198,255,0,0.18)' }
                         }
                       >
                         {isThisMaster
                           ? <Crown className="w-4 h-4" style={{ color: '#fbbf24' }} />
-                          : <span className="text-sm font-bold" style={{ color: '#14B8A6' }}>{initials}</span>
+                          : <span className="text-sm font-bold" style={{ color: '#C6FF00' }}>{initials}</span>
                         }
                       </div>
                       <div>
@@ -508,7 +508,7 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
                       <div className="flex items-center gap-1.5">
                         {user.loja_name ? (
                           <>
-                            <Store className="w-3.5 h-3.5" style={{ color: '#14B8A6' }} />
+                            <Store className="w-3.5 h-3.5" style={{ color: '#C6FF00' }} />
                             <span className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>{user.loja_name}</span>
                           </>
                         ) : (
@@ -566,7 +566,7 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
                           onClick={() => setArchiveTarget({ id: user.id, name, isUnarchive: showArchived })}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
                           style={showArchived
-                            ? { background: 'rgba(20,184,166,0.1)', color: '#14B8A6' }
+                            ? { background: 'rgba(198,255,0,0.1)', color: '#C6FF00' }
                             : { background: 'rgba(245,158,11,0.1)', color: '#f59e0b' }
                           }
                         >

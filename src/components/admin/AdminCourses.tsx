@@ -1,4 +1,4 @@
-﻿import { Plus, Eye, EyeOff, Pencil, Trash2, BookOpen } from 'lucide-react';
+import { Plus, Eye, EyeOff, Pencil, Trash2, BookOpen } from 'lucide-react';
 import { useAdminCourses } from '../../hooks/useAdmin';
 import { ViewType } from '../../types';
 import { confirmDialog } from '../ui/ConfirmDialog';
@@ -105,7 +105,7 @@ export function AdminCourses({ onNavigate, isMaster = false }: AdminCoursesProps
                 title={course.published ? 'Despublicar' : 'Publicar'}
                 className="p-1.5 rounded-lg transition-all"
                 style={{ color: 'var(--text-3)' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(198,255,0,0.1)'; (e.currentTarget as HTMLElement).style.color = '#C6FF00'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
               >
                 {course.published ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -115,7 +115,7 @@ export function AdminCourses({ onNavigate, isMaster = false }: AdminCoursesProps
                 title="Editar"
                 className="p-1.5 rounded-lg transition-all"
                 style={{ color: 'var(--text-3)' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(198,255,0,0.1)'; (e.currentTarget as HTMLElement).style.color = '#C6FF00'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
               >
                 <Pencil className="w-4 h-4" />

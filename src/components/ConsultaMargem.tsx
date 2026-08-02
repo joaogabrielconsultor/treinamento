@@ -90,18 +90,18 @@ function ResultadoCard({ resultado }: { resultado: MargemResultado }) {
   const [showFuncional, setShowFuncional] = useState(false);
   const { servidor, margemBruta, margemDisponivel } = resultado;
 
-  const corBruta = { accent: '#06B6D4', bg: 'rgba(6,182,212,0.04)', border: 'rgba(6,182,212,0.15)' };
-  const corDisp  = { accent: '#14B8A6', bg: 'rgba(20,184,166,0.04)', border: 'rgba(20,184,166,0.15)' };
+  const corBruta = { accent: '#A9E000', bg: 'rgba(169,224,0,0.04)', border: 'rgba(169,224,0,0.15)' };
+  const corDisp  = { accent: '#C6FF00', bg: 'rgba(198,255,0,0.04)', border: 'rgba(198,255,0,0.15)' };
 
   return (
     <div className="rounded-2xl overflow-hidden animate-fade-up" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
-      <div style={{ height: '2px', background: 'linear-gradient(90deg, #14B8A6, #06B6D4)' }} />
+      <div style={{ height: '2px', background: 'linear-gradient(90deg, #C6FF00, #A9E000)' }} />
 
       {/* Cabeçalho do servidor */}
       <div className="p-5 pb-4" style={{ borderBottom: '1px solid var(--card-border)' }}>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.2)' }}>
-            <User className="w-5 h-5" style={{ color: '#14B8A6' }} />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(198,255,0,0.1)', border: '1px solid rgba(198,255,0,0.2)' }}>
+            <User className="w-5 h-5" style={{ color: '#C6FF00' }} />
           </div>
           <div>
             <h3 className="font-bold text-base" style={{ color: 'var(--text-1)' }}>{servidor.nome || 'Servidor não identificado'}</h3>
@@ -209,13 +209,13 @@ function PainelSessao({ onSessaoAtualizada }: { onSessaoAtualizada: (ativa: bool
   const ativa = sessao?.ativa ?? false;
 
   return (
-    <div className="rounded-2xl p-5 mb-6 animate-fade-up relative overflow-hidden" style={{ background: 'var(--card-bg)', border: `1px solid ${ativa ? 'rgba(20,184,166,0.3)' : 'rgba(239,68,68,0.25)'}`, boxShadow: 'var(--shadow-card)' }}>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: ativa ? 'linear-gradient(90deg, #14B8A6, #06B6D4)' : 'linear-gradient(90deg, #ef4444, #f87171)' }} />
+    <div className="rounded-2xl p-5 mb-6 animate-fade-up relative overflow-hidden" style={{ background: 'var(--card-bg)', border: `1px solid ${ativa ? 'rgba(198,255,0,0.3)' : 'rgba(239,68,68,0.25)'}`, boxShadow: 'var(--shadow-card)' }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: ativa ? 'linear-gradient(90deg, #C6FF00, #A9E000)' : 'linear-gradient(90deg, #ef4444, #f87171)' }} />
 
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          {ativa ? <Wifi className="w-4 h-4" style={{ color: '#14B8A6' }} /> : <WifiOff className="w-4 h-4" style={{ color: '#f87171' }} />}
-          <span className="text-sm font-semibold" style={{ color: ativa ? '#14B8A6' : '#f87171' }}>
+          {ativa ? <Wifi className="w-4 h-4" style={{ color: '#C6FF00' }} /> : <WifiOff className="w-4 h-4" style={{ color: '#f87171' }} />}
+          <span className="text-sm font-semibold" style={{ color: ativa ? '#C6FF00' : '#f87171' }}>
             {ativa ? 'Sessão ativa' : sessao?.jsessionid ? 'Sessão expirada' : 'Sem sessão configurada'}
           </span>
           {sessao?.updated_at && <span className="text-xs" style={{ color: 'var(--text-3)' }}>— {timeAgo(sessao.updated_at)}</span>}
@@ -248,7 +248,7 @@ function PainelSessao({ onSessaoAtualizada }: { onSessaoAtualizada: (ativa: bool
         </div>
       )}
       {sucesso && (
-        <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 mt-3 text-xs" style={{ background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)', color: '#14B8A6' }}>
+        <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 mt-3 text-xs" style={{ background: 'rgba(198,255,0,0.08)', border: '1px solid rgba(198,255,0,0.2)', color: '#C6FF00' }}>
           <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />Sessão configurada com sucesso!
         </div>
       )}
@@ -296,8 +296,8 @@ export function ConsultaMargem({ isAdmin }: { isAdmin: boolean }) {
   return (
     <div className="p-8 max-w-3xl mx-auto" style={{ color: 'var(--text-1)' }}>
       <div className="flex items-center gap-3 mb-8 animate-fade-up">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.2)' }}>
-          <Search className="w-4 h-4" style={{ color: '#14B8A6' }} />
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(198,255,0,0.1)', border: '1px solid rgba(198,255,0,0.2)' }}>
+          <Search className="w-4 h-4" style={{ color: '#C6FF00' }} />
         </div>
         <div>
           <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Consulta de Margem</h1>

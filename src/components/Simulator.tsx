@@ -258,11 +258,11 @@ export function Simulator({ onSendProposal, isAdmin = false, corretor }: Simulat
               style={mode === m.key
                 ? { background: m.key === 'compra-divida'
                     ? 'linear-gradient(135deg,#8b5cf6,#6366f1)'
-                    : 'linear-gradient(135deg,#14B8A6,#06B6D4)',
+                    : 'linear-gradient(135deg,#C6FF00,#A9E000)',
                     color: '#fff',
                     boxShadow: m.key === 'compra-divida'
                       ? '0 2px 10px rgba(139,92,246,0.35)'
-                      : '0 2px 10px rgba(20,184,166,0.35)' }
+                      : '0 2px 10px rgba(198,255,0,0.35)' }
                 : { color: 'var(--text-3)' }}
             >
               {m.icon} {m.label}
@@ -397,12 +397,12 @@ export function Simulator({ onSendProposal, isAdmin = false, corretor }: Simulat
         <button
           onClick={() => setShowOptional(v => !v)}
           className="flex items-center gap-2 text-xs font-semibold mb-3 transition-all"
-          style={{ color: optionalActiveCount > 0 ? '#14B8A6' : 'var(--text-3)' }}
+          style={{ color: optionalActiveCount > 0 ? '#C6FF00' : 'var(--text-3)' }}
         >
           <SlidersHorizontal className="w-3.5 h-3.5" />
           Filtros opcionais
           {optionalActiveCount > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'rgba(20,184,166,0.15)', color: '#14B8A6' }}>
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'rgba(198,255,0,0.15)', color: '#C6FF00' }}>
               {optionalActiveCount}
             </span>
           )}
@@ -567,7 +567,7 @@ export function Simulator({ onSendProposal, isAdmin = false, corretor }: Simulat
                       return (
                         <th key={h} onClick={sortable ? () => handleSort(h) : undefined}
                           className="text-left px-3 py-3 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
-                          style={{ color: active ? '#14B8A6' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
+                          style={{ color: active ? '#C6FF00' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
                           {h}{sortable && <span className="ml-1 opacity-60">{active ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
                         </th>
                       );
@@ -583,17 +583,17 @@ export function Simulator({ onSendProposal, isAdmin = false, corretor }: Simulat
                         borderBottom: '1px solid var(--card-border)',
                         background: mode === 'compra-divida' && (r.troco_liquido ?? 0) < 0
                           ? 'rgba(248,113,113,0.04)'
-                          : idx === 0 ? 'rgba(20,184,166,0.04)' : undefined,
+                          : idx === 0 ? 'rgba(198,255,0,0.04)' : undefined,
                         opacity: mode === 'compra-divida' && (r.troco_liquido ?? 0) < 0 ? 0.75 : 1,
                       }}
                       onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'}
                       onMouseLeave={e => (e.currentTarget as HTMLElement).style.background =
                         mode === 'compra-divida' && (r.troco_liquido ?? 0) < 0
                           ? 'rgba(248,113,113,0.04)'
-                          : idx === 0 ? 'rgba(20,184,166,0.04)' : 'transparent'}
+                          : idx === 0 ? 'rgba(198,255,0,0.04)' : 'transparent'}
                     >
                       <td className="px-3 py-3 text-xs font-semibold whitespace-nowrap" style={{ color: 'var(--text-1)' }}>
-                        {idx === 0 && <span className="mr-1 text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: 'rgba(20,184,166,0.15)', color: '#14B8A6' }}>TOP</span>}
+                        {idx === 0 && <span className="mr-1 text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: 'rgba(198,255,0,0.15)', color: '#C6FF00' }}>TOP</span>}
                         {r.bank_name || '—'}
                       </td>
                       <td className="px-3 py-3 text-xs" style={{ color: 'var(--text-3)' }}>{r.convenio_name || '—'}</td>

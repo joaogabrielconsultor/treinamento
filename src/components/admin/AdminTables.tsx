@@ -450,9 +450,9 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
                   {/* Table row */}
                   <div className="p-4 flex items-start gap-3">
                     <button onClick={() => toggleExpand(t.id)} className="mt-0.5 flex-shrink-0 p-1 rounded-lg transition-colors" style={{ color: 'var(--text-3)' }}
-                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'}
+                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(198,255,0,0.1)'}
                       onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-                      {isExpanded ? <ChevronDown className="w-4 h-4" style={{ color: '#14B8A6' }} /> : <ChevronRight className="w-4 h-4" />}
+                      {isExpanded ? <ChevronDown className="w-4 h-4" style={{ color: '#C6FF00' }} /> : <ChevronRight className="w-4 h-4" />}
                     </button>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -472,7 +472,7 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <button onClick={() => openRules(t)} title="Regras de pontuação" className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--text-3)' }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(198,255,0,0.1)'; (e.currentTarget as HTMLElement).style.color = '#C6FF00'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
                         <Settings className="w-3.5 h-3.5" />
                       </button>
@@ -500,7 +500,7 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
                         setEditTableId(t.id); setShowTableForm(true);
                       }}
                         className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--text-3)' }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(198,255,0,0.1)'; (e.currentTarget as HTMLElement).style.color = '#C6FF00'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
@@ -574,7 +574,7 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
                                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300">{r.disponivel_para === 'corretor' ? 'Só Cor.' : 'Só Emp.'}</span>
                                       )}
                                       <button onClick={() => openEditRange(r)} className="p-1 rounded-lg transition-colors" style={{ color: 'var(--text-3)' }}
-                                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
+                                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(198,255,0,0.1)'; (e.currentTarget as HTMLElement).style.color = '#C6FF00'; }}
                                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
                                         <Edit2 className="w-3 h-3" />
                                       </button>
@@ -715,24 +715,24 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
         footer={<div className="flex gap-3"><button type="button" onClick={() => { setShowImportTables(false); setImportTableRows([]); setImportTableErrors([]); }} disabled={importingTables} className={btnCancel}>Cancelar</button><button onClick={doImportTables} disabled={!importTableRows.length || importingTables} className={btnPrimary} style={primaryBg}><Upload className="w-4 h-4 inline mr-1" />{importingTables ? `Importando ${importDone}/${importTableRows.length}...` : `Importar ${importTableRows.length} tabela(s)`}</button></div>}>
         <div className="space-y-4">
           {importingTables && (
-            <div className="rounded-xl p-4 space-y-2" style={{ background: 'rgba(20,184,166,0.06)', border: '1px solid rgba(20,184,166,0.2)' }}>
+            <div className="rounded-xl p-4 space-y-2" style={{ background: 'rgba(198,255,0,0.06)', border: '1px solid rgba(198,255,0,0.2)' }}>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-semibold" style={{ color: '#14B8A6' }}>Importando tabelas...</span>
-                <span className="text-xs font-bold" style={{ color: '#14B8A6' }}>{importProgress}%</span>
+                <span className="text-xs font-semibold" style={{ color: '#C6FF00' }}>Importando tabelas...</span>
+                <span className="text-xs font-bold" style={{ color: '#C6FF00' }}>{importProgress}%</span>
               </div>
-              <div className="w-full rounded-full overflow-hidden" style={{ height: 10, background: 'rgba(20,184,166,0.15)' }}>
-                <div className="h-full rounded-full transition-all duration-300" style={{ width: `${importProgress}%`, background: 'linear-gradient(90deg, #14B8A6, #0EA5E9)' }} />
+              <div className="w-full rounded-full overflow-hidden" style={{ height: 10, background: 'rgba(198,255,0,0.15)' }}>
+                <div className="h-full rounded-full transition-all duration-300" style={{ width: `${importProgress}%`, background: 'linear-gradient(90deg, #C6FF00, #0EA5E9)' }} />
               </div>
               <p className="text-xs text-center" style={{ color: 'var(--text-3)' }}>{importDone} de {importTableRows.length} tabela(s) processada(s)</p>
             </div>
           )}
           {!importingTables && (
-            <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)' }}>
-              <Download className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#14B8A6' }} />
+            <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: 'rgba(198,255,0,0.08)', border: '1px solid rgba(198,255,0,0.2)' }}>
+              <Download className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#C6FF00' }} />
               <div>
                 <p className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>Baixe o modelo antes de importar</p>
                 <p className="text-xs mt-0.5 mb-2" style={{ color: 'var(--text-3)' }}>Banco, convênio e categoria devem corresponder exatamente aos nomes já cadastrados.</p>
-                <button onClick={downloadTemplateTabelas} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium" style={{ background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' }}><Download className="w-3.5 h-3.5" /> Baixar Modelo CSV</button>
+                <button onClick={downloadTemplateTabelas} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium" style={{ background: 'rgba(198,255,0,0.15)', color: '#C6FF00', border: '1px solid rgba(198,255,0,0.3)' }}><Download className="w-3.5 h-3.5" /> Baixar Modelo CSV</button>
               </div>
             </div>
           )}
@@ -758,12 +758,12 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
       <Modal open={showImportRanges} onClose={() => { setShowImportRanges(false); setImportRangeRows([]); setImportRangeErrors([]); }} title="Importar Faixas de Comissão" subtitle={importRangesTable?.name} size="lg"
         footer={<div className="flex gap-3"><button type="button" onClick={() => { setShowImportRanges(false); setImportRangeRows([]); setImportRangeErrors([]); }} className={btnCancel}>Cancelar</button><button onClick={doImportRanges} disabled={!importRangeRows.length || importingRanges} className={btnPrimary} style={primaryBg}><Upload className="w-4 h-4 inline mr-1" />{importingRanges ? 'Importando...' : `Importar ${importRangeRows.length} faixa(s)`}</button></div>}>
         <div className="space-y-4">
-          <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)' }}>
-            <Download className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#14B8A6' }} />
+          <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: 'rgba(198,255,0,0.08)', border: '1px solid rgba(198,255,0,0.2)' }}>
+            <Download className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#C6FF00' }} />
             <div>
               <p className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>As faixas serão vinculadas a <strong>{importRangesTable?.name}</strong></p>
               <p className="text-xs mt-0.5 mb-2" style={{ color: 'var(--text-3)' }}>Baixe o modelo para ver os campos disponíveis.</p>
-              <button onClick={() => downloadTemplateFaixas(importRangesTable?.name)} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium" style={{ background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' }}><Download className="w-3.5 h-3.5" /> Baixar Modelo CSV</button>
+              <button onClick={() => downloadTemplateFaixas(importRangesTable?.name)} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium" style={{ background: 'rgba(198,255,0,0.15)', color: '#C6FF00', border: '1px solid rgba(198,255,0,0.3)' }}><Download className="w-3.5 h-3.5" /> Baixar Modelo CSV</button>
             </div>
           </div>
           <div><label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>Selecione o arquivo CSV</label>

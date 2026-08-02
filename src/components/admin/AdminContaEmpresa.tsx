@@ -85,8 +85,8 @@ function ExtratoView({ loja, onBack, isMaster = false }: { loja: LojaBalance; on
 
       <div className="flex items-center gap-3 mb-5">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: 'rgba(20,184,166,0.12)', border: '1px solid rgba(20,184,166,0.2)' }}>
-          <Store className="w-5 h-5" style={{ color: '#14B8A6' }} />
+          style={{ background: 'rgba(198,255,0,0.12)', border: '1px solid rgba(198,255,0,0.2)' }}>
+          <Store className="w-5 h-5" style={{ color: '#C6FF00' }} />
         </div>
         <div>
           <h2 className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{loja.loja_name}</h2>
@@ -316,7 +316,7 @@ export function AdminContaEmpresa({ isMaster = false }: { isMaster?: boolean }) 
     <div className="p-6 max-w-6xl mx-auto" style={{ color: 'var(--text-1)' }}>
       <div className="flex items-center justify-between mb-6 animate-fade-up">
         <div className="flex items-center gap-2">
-          <Building2 className="w-5 h-5" style={{ color: '#14B8A6' }} />
+          <Building2 className="w-5 h-5" style={{ color: '#C6FF00' }} />
           <div>
             <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Conta Empresa</h1>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Saldo e extrato financeiro por loja</p>
@@ -331,7 +331,7 @@ export function AdminContaEmpresa({ isMaster = false }: { isMaster?: boolean }) 
           </select>
           <button onClick={() => setAllTime(v => !v)}
             className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-            style={{ background: allTime ? 'rgba(20,184,166,0.15)' : 'var(--card-bg)', border: `1px solid ${allTime ? 'rgba(20,184,166,0.4)' : 'var(--card-border)'}`, color: allTime ? '#14B8A6' : 'var(--text-3)' }}>
+            style={{ background: allTime ? 'rgba(198,255,0,0.15)' : 'var(--card-bg)', border: `1px solid ${allTime ? 'rgba(198,255,0,0.4)' : 'var(--card-border)'}`, color: allTime ? '#C6FF00' : 'var(--text-3)' }}>
             Todo período
           </button>
         </div>
@@ -382,7 +382,7 @@ export function AdminContaEmpresa({ isMaster = false }: { isMaster?: boolean }) 
                       return (
                         <th key={h} onClick={sortable ? () => handleSort(h) : undefined}
                           className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest"
-                          style={{ color: active ? '#14B8A6' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
+                          style={{ color: active ? '#C6FF00' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
                           {h}{sortable && <span className="ml-1 opacity-60">{active ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
                         </th>
                       );
@@ -398,8 +398,8 @@ export function AdminContaEmpresa({ isMaster = false }: { isMaster?: boolean }) 
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-2.5">
                             <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                              style={{ background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.18)' }}>
-                              <Store className="w-4 h-4" style={{ color: '#14B8A6' }} />
+                              style={{ background: 'rgba(198,255,0,0.1)', border: '1px solid rgba(198,255,0,0.18)' }}>
+                              <Store className="w-4 h-4" style={{ color: '#C6FF00' }} />
                             </div>
                             <p className="font-semibold" style={{ color: 'var(--text-1)' }}>{l.loja_name}</p>
                           </div>

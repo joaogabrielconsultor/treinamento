@@ -62,7 +62,7 @@ export function SupportButton({ userName }: SupportButtonProps) {
           {/* Cabeçalho */}
           <div
             className="px-4 py-3.5 flex items-center gap-3"
-            style={{ background: 'linear-gradient(135deg, rgba(37,211,102,0.14), rgba(20,184,166,0.10))', borderBottom: '1px solid var(--border-1)' }}
+            style={{ background: 'linear-gradient(135deg, rgba(37,211,102,0.14), rgba(198,255,0,0.10))', borderBottom: '1px solid var(--border-1)' }}
           >
             <span
               className="flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0"

@@ -1,4 +1,4 @@
-﻿import { ArrowLeft, Clock, Users, Play, CheckCircle2, ChevronDown, ChevronUp, BookOpen, Award } from 'lucide-react';
+import { ArrowLeft, Clock, Users, Play, CheckCircle2, ChevronDown, ChevronUp, BookOpen, Award } from 'lucide-react';
 import { Course, Module, Enrollment, LessonProgress, Lesson, ViewType } from '../types';
 
 interface CourseDetailProps {
@@ -126,7 +126,7 @@ export function CourseDetail({
                               opacity: enrollment ? 1 : 0.5,
                               cursor: enrollment ? 'pointer' : 'default',
                             }}
-                            onMouseEnter={(e) => { if (enrollment) (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.04)'; }}
+                            onMouseEnter={(e) => { if (enrollment) (e.currentTarget as HTMLElement).style.background = 'rgba(198,255,0,0.04)'; }}
                             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(11,16,32,0.85)'; }}
                           >
                             {isDone

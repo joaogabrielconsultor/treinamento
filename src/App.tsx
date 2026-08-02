@@ -34,6 +34,7 @@ import { AdminImportacao } from './components/admin/AdminImportacao';
 import { ConsultaMargem } from './components/ConsultaMargem';
 import { ProfileModal } from './components/ProfileModal';
 import { SupportButton } from './components/SupportButton';
+import { TopBar } from './components/TopBar';
 import { PlanosPage } from './components/PlanosPage';
 import { ToastProvider } from './components/ui/Toast';
 import { ConfirmProvider } from './components/ui/ConfirmDialog';
@@ -214,6 +215,8 @@ function AppInner() {
         />
       )}
 
+      <div className="flex-1 flex flex-col min-w-0">
+      <TopBar currentView={currentView} user={adaptedUser} onOpenProfile={() => setShowProfile(true)} />
       <main className="flex-1 overflow-y-auto" style={{ background: 'var(--bg-base)' }}>
         {currentView === 'dashboard' && (
           <Dashboard user={adaptedUser} onNavigate={navigate} isAdmin={isAdmin} />
@@ -293,6 +296,7 @@ function AppInner() {
         {currentView === 'admin-importacao'     && isAdmin && <AdminImportacao />}
         {currentView === 'consulta-margem'     && <ConsultaMargem isAdmin={isAdmin} />}
       </main>
+      </div>
     </div>
   );
 }

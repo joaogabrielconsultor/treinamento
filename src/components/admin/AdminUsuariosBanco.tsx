@@ -138,7 +138,7 @@ export function AdminUsuariosBanco({ isMaster = false }: { isMaster?: boolean })
       <div className="flex items-center justify-between mb-6 animate-fade-up">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <UserCog className="w-5 h-5" style={{ color: '#14B8A6' }} />
+            <UserCog className="w-5 h-5" style={{ color: '#C6FF00' }} />
             <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Usuários Banco</h1>
           </div>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Contas bancárias onde as comissões são recebidas</p>
@@ -173,8 +173,8 @@ export function AdminUsuariosBanco({ isMaster = false }: { isMaster?: boolean })
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                          style={{ background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.18)' }}>
-                          <UserCog className="w-4 h-4" style={{ color: '#14B8A6' }} />
+                          style={{ background: 'rgba(198,255,0,0.1)', border: '1px solid rgba(198,255,0,0.18)' }}>
+                          <UserCog className="w-4 h-4" style={{ color: '#C6FF00' }} />
                         </div>
                         <div>
                           <p className="font-semibold" style={{ color: 'var(--text-1)' }}>{item.nome}</p>

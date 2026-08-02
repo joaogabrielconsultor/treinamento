@@ -1,4 +1,4 @@
-﻿import { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import {
   Building2, Copy, Check, Eye, EyeOff, Plus, Pencil, Trash2,
   X, Search, RefreshCw, Link, User, Lock, ExternalLink,
@@ -7,9 +7,9 @@ import { useLoginBancos } from '../hooks/useLoginBancos';
 import { LoginBanco } from '../types';
 
 const ACCENT_COLORS = [
-  '#14B8A6', '#06B6D4', '#8b5cf6', '#f59e0b',
+  '#C6FF00', '#A9E000', '#8b5cf6', '#f59e0b',
   '#ec4899', '#3b82f6', '#22c55e', '#f43f5e',
-  '#a78bfa', '#fb923c', '#2DD4BF', '#60a5fa',
+  '#a78bfa', '#fb923c', '#C6FF00', '#60a5fa',
 ];
 function getBankAccent(nome: string): string {
   let h = 0;
@@ -46,9 +46,9 @@ function CopyButton({ value }: { value: string }) {
       }
       onMouseEnter={(e) => {
         if (!copied) {
-          (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)';
-          (e.currentTarget as HTMLElement).style.borderColor = 'rgba(20,184,166,0.25)';
-          (e.currentTarget as HTMLElement).style.color = '#14B8A6';
+          (e.currentTarget as HTMLElement).style.background = 'rgba(198,255,0,0.1)';
+          (e.currentTarget as HTMLElement).style.borderColor = 'rgba(198,255,0,0.25)';
+          (e.currentTarget as HTMLElement).style.color = '#C6FF00';
         }
       }}
       onMouseLeave={(e) => {
@@ -110,7 +110,7 @@ function BancoModal({ banco, onClose, onSave }: {
         <div
           style={{
             position: 'absolute', top: 0, left: 0, right: 0, height: '1px',
-            background: 'linear-gradient(90deg, transparent, rgba(20,184,166,0.4), transparent)',
+            background: 'linear-gradient(90deg, transparent, rgba(198,255,0,0.4), transparent)',
             borderRadius: '16px 16px 0 0',
           }}
         />
@@ -461,7 +461,7 @@ export function LoginBancos({ isAdmin }: { isAdmin: boolean }) {
       <div className="flex items-center justify-between mb-8 animate-fade-up">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Building2 className="w-4 h-4" style={{ color: '#14B8A6' }} />
+            <Building2 className="w-4 h-4" style={{ color: '#C6FF00' }} />
             <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Login Bancos</h1>
           </div>
           <p className="text-xs" style={{ color: 'var(--text-3)' }}>
@@ -543,7 +543,7 @@ export function LoginBancos({ isAdmin }: { isAdmin: boolean }) {
               <button
                 onClick={() => setSearch('')}
                 className="text-sm font-medium transition-colors"
-                style={{ color: '#14B8A6' }}
+                style={{ color: '#C6FF00' }}
               >
                 Limpar busca
               </button>
@@ -555,7 +555,7 @@ export function LoginBancos({ isAdmin }: { isAdmin: boolean }) {
                 <button
                   onClick={() => setModalOpen(true)}
                   className="text-sm font-medium transition-colors"
-                  style={{ color: '#14B8A6' }}
+                  style={{ color: '#C6FF00' }}
                 >
                   Adicionar primeiro banco
                 </button>

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, ChevronDown, FileText, CheckCircle, Clock, DollarSign, XCircle, Edit2, Save, Trash2, Upload, Copy, RefreshCw } from 'lucide-react';
 import { Proposal, ProposalStatus, FinancialTable } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
@@ -14,7 +14,7 @@ const STATUS_CONFIG: Record<ProposalStatus, { color: string; icon: React.ReactNo
   'Em análise':{ color: 'badge badge-amber',  icon: <Clock className="w-3 h-3" /> },
   Aprovada:    { color: 'badge badge-purple', icon: <CheckCircle className="w-3 h-3" /> },
   Paga:        { color: 'badge badge-green',  icon: <DollarSign className="w-3 h-3" /> },
-  'C PAGA':    { color: 'badge', icon: <CheckCircle className="w-3 h-3" />, style: { background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' } },
+  'C PAGA':    { color: 'badge', icon: <CheckCircle className="w-3 h-3" />, style: { background: 'rgba(198,255,0,0.15)', color: '#C6FF00', border: '1px solid rgba(198,255,0,0.3)' } },
   Cancelada:   { color: 'badge badge-red',    icon: <XCircle className="w-3 h-3" /> },
 };
 
@@ -251,7 +251,7 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
           </button>
           <button onClick={() => { setShowImport(true); setImportPreview([]); setImportResult(null); }}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-            style={{ background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' }}>
+            style={{ background: 'rgba(198,255,0,0.15)', color: '#C6FF00', border: '1px solid rgba(198,255,0,0.3)' }}>
             <Upload className="w-4 h-4" />
             Importar CSV
           </button>
@@ -263,7 +263,7 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
         {[
           { label: 'Total',               value: proposals.length,                                  color: '#60a5fa' },
           { label: 'Pagas',               value: proposals.filter(p => p.status === 'Paga' || p.status === 'C PAGA').length, color: '#4ade80' },
-          { label: 'Volume pago',          value: fmtBRL(totalPaid),                                 color: '#14B8A6' },
+          { label: 'Volume pago',          value: fmtBRL(totalPaid),                                 color: '#C6FF00' },
           { label: 'Pontos distribuídos',  value: `${totalPoints} pts`,                              color: '#fbbf24' },
         ].map((c, i) => (
           <div key={c.label} className="stat-card rounded-xl p-4 animate-fade-up" style={{ animationDelay: `${i * 50}ms` }}>
@@ -324,7 +324,7 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
                     return (
                       <th key={h} onClick={sortable ? () => handleSort(h) : undefined}
                         className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest"
-                        style={{ color: active ? '#14B8A6' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
+                        style={{ color: active ? '#C6FF00' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
                         {h}{sortable && <span className="ml-1 opacity-60">{active ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
                       </th>
                     );
@@ -373,7 +373,7 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
                       <div className="flex items-center gap-1">
                         <button onClick={() => { setEditProposal(p); setEditStatus(p.status); }}
                           className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-3)' }}
-                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(198,255,0,0.1)'; (e.currentTarget as HTMLElement).style.color = '#C6FF00'; }}
                           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
@@ -454,10 +454,10 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
             <div>
               <div className="flex justify-between text-xs mb-1.5" style={{ color: 'var(--text-3)' }}>
                 <span>Processando lotes...</span>
-                <span className="num font-semibold" style={{ color: '#14B8A6' }}>{importProgress}%</span>
+                <span className="num font-semibold" style={{ color: '#C6FF00' }}>{importProgress}%</span>
               </div>
               <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--card-border)' }}>
-                <div className="h-full rounded-full transition-all duration-300" style={{ width: `${importProgress}%`, background: 'linear-gradient(90deg,#14B8A6,#60a5fa)' }} />
+                <div className="h-full rounded-full transition-all duration-300" style={{ width: `${importProgress}%`, background: 'linear-gradient(90deg,#C6FF00,#60a5fa)' }} />
               </div>
             </div>
           )}

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, Save, RefreshCw } from 'lucide-react';
 import { TableCategory } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
@@ -82,7 +82,7 @@ export function AdminCategories({ isMaster = false }: { isMaster?: boolean }) {
                 </div>
                 <button onClick={() => { setForm({ name: c.name, multiplier: String(c.multiplier) }); setEditId(c.id); setShowForm(true); }}
                   className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-3)' }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(198,255,0,0.1)'; (e.currentTarget as HTMLElement).style.color = '#C6FF00'; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#475569'; }}>
                   <Edit2 className="w-3.5 h-3.5" />
                 </button>

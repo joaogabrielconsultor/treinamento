@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Plus, Trash2, Edit2, ChevronDown, Save, Settings, Upload, Download, RefreshCw } from 'lucide-react';
 import { FinancialTable, TableCategory, ScoringRule, Bank, Convenio } from '../../types';
 import { Modal, btnCancel, btnPrimary, primaryBg } from '../ui/Modal';
@@ -229,13 +229,13 @@ export function AdminFinancialTables() {
         <div className="flex gap-2 mb-4 flex-wrap">
           <button onClick={() => setFilterConvenio('')}
             className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${!filterConvenio ? 'text-white' : 'bg-gray-100 dark:bg-dk-surface text-gray-600 dark:text-gray-400 hover:bg-gray-200'}`}
-            style={!filterConvenio ? { backgroundColor: '#1e4033' } : {}}>
+            style={!filterConvenio ? { backgroundColor: '#151515' } : {}}>
             Todos
           </button>
           {convenios.map(cv => (
             <button key={cv.id} onClick={() => setFilterConvenio(cv.id)}
               className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${filterConvenio === cv.id ? 'text-white' : 'bg-gray-100 dark:bg-dk-surface text-gray-600 dark:text-gray-400 hover:bg-gray-200'}`}
-              style={filterConvenio === cv.id ? { backgroundColor: '#1e4033' } : {}}>
+              style={filterConvenio === cv.id ? { backgroundColor: '#151515' } : {}}>
               {cv.name}
             </button>
           ))}
@@ -397,8 +397,8 @@ export function AdminFinancialTables() {
         }
       >
         <div className="space-y-4">
-          <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)' }}>
-            <Download className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#14B8A6' }} />
+          <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: 'rgba(198,255,0,0.08)', border: '1px solid rgba(198,255,0,0.2)' }}>
+            <Download className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#C6FF00' }} />
             <div>
               <p className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>Baixe o modelo antes de importar</p>
               <p className="text-xs mt-0.5 mb-2" style={{ color: 'var(--text-3)' }}>
@@ -406,7 +406,7 @@ export function AdminFinancialTables() {
               </p>
               <button onClick={downloadTemplateFT}
                 className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium"
-                style={{ background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' }}>
+                style={{ background: 'rgba(198,255,0,0.15)', color: '#C6FF00', border: '1px solid rgba(198,255,0,0.3)' }}>
                 <Download className="w-3.5 h-3.5" /> Baixar Modelo CSV
               </button>
             </div>

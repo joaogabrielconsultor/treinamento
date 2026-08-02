@@ -1,9 +1,7 @@
-import { LayoutDashboard, Library, LogOut, ChevronRight, Users, GraduationCap, Shield, Building2, Sun, Moon, Palette, FileText, Trophy, BarChart2, Table2, Tag, ClipboardList, FileBarChart, Handshake, Package, Calculator, Wallet, Store, UserCog, BookOpen, FileSpreadsheet, ScanSearch, Receipt } from 'lucide-react';
+import { LayoutDashboard, Library, LogOut, ChevronRight, Users, GraduationCap, Shield, Building2, Palette, FileText, Trophy, BarChart2, Table2, Tag, ClipboardList, FileBarChart, Handshake, Package, Calculator, Wallet, Store, UserCog, BookOpen, FileSpreadsheet, ScanSearch, Receipt } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
-import { useState } from 'react';
 import { ViewType } from '../types';
 import { LogoComponent } from './LogoComponent';
-import { useAppContext } from '../context/AppContext';
 
 interface SidebarProps {
   currentView: ViewType;
@@ -68,7 +66,6 @@ const adminGroups: { label: string; items: { view: ViewType; icon: typeof Users;
 ];
 
 export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin, onOpenProfile }: SidebarProps) {
-  const { darkMode, toggleDarkMode } = useAppContext();
 
   const displayName = user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'Usuário';
   const displayEmail = user.email ?? '';
@@ -87,8 +84,8 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin, onO
     <aside
       className="w-60 flex flex-col h-screen sticky top-0 flex-shrink-0"
       style={{
-        background: 'linear-gradient(180deg, #0d1525 0%, #0a1120 100%)',
-        borderRight: '1px solid rgba(255,255,255,0.07)',
+        background: 'linear-gradient(180deg, #0A0A0A 0%, #000000 100%)',
+        borderRight: '1px solid rgba(255,255,255,0.08)',
       }}
     >
       {/* Brand */}
@@ -97,12 +94,11 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin, onO
           <LogoComponent size="md" />
           <div className="min-w-0">
             <span
-              className="font-bold text-sm leading-none block truncate"
+              className="text-base leading-none block truncate"
               style={{
-                background: 'linear-gradient(135deg, #2DD4BF 0%, #06B6D4 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
+                fontFamily: "'Anton', Impact, sans-serif",
+                letterSpacing: '0.04em',
+                color: '#C6FF00',
               }}
             >
               GS CRED
@@ -124,7 +120,7 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin, onO
               onClick={() => onNavigate(view)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 ${active ? 'nav-active' : ''}`}
               style={active
-                ? { color: '#2DD4BF' }
+                ? { color: '#C6FF00' }
                 : { color: '#64748B' }
               }
               onMouseEnter={(e) => {
@@ -151,10 +147,10 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin, onO
           <div className="pt-4">
             <div className="divider-cyber mb-3" />
             <div className="flex items-center gap-2 px-3 mb-2">
-              <Shield className="w-3 h-3" style={{ color: '#14B8A6' }} />
+              <Shield className="w-3 h-3" style={{ color: '#C6FF00' }} />
               <span
                 className="text-[10px] font-bold uppercase tracking-widest"
-                style={{ color: '#14B8A6' }}
+                style={{ color: '#C6FF00' }}
               >
                 Admin
               </span>
@@ -174,7 +170,7 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin, onO
                       key={view}
                       onClick={() => onNavigate(view)}
                       className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[12px] font-medium transition-all duration-200 ${active ? 'nav-active' : ''}`}
-                      style={active ? { color: '#2DD4BF' } : { color: '#64748B' }}
+                      style={active ? { color: '#C6FF00' } : { color: '#64748B' }}
                       onMouseEnter={(e) => {
                         if (!active) {
                           (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
@@ -202,26 +198,6 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin, onO
 
       {/* Bottom */}
       <div className="px-3 py-3 space-y-1" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-        <button
-          onClick={toggleDarkMode}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[12px] font-medium transition-all duration-200"
-          style={{ color: '#64748B' }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)';
-            (e.currentTarget as HTMLElement).style.color = '#94A3B8';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background = 'transparent';
-            (e.currentTarget as HTMLElement).style.color = '#64748B';
-          }}
-        >
-          {darkMode
-            ? <Sun className="w-[15px] h-[15px]" />
-            : <Moon className="w-[15px] h-[15px]" />
-          }
-          {darkMode ? 'Modo claro' : 'Modo escuro'}
-        </button>
-
         {/* User */}
         <button
           onClick={onOpenProfile}
@@ -234,9 +210,9 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin, onO
           <div
             className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-[11px] font-bold"
             style={{
-              background: 'linear-gradient(135deg, #14B8A6, #06B6D4)',
+              background: 'linear-gradient(135deg, #C6FF00, #A9E000)',
               color: '#fff',
-              boxShadow: '0 0 10px rgba(20,184,166,0.3)',
+              boxShadow: '0 0 10px rgba(198,255,0,0.3)',
             }}
           >
             {initials}

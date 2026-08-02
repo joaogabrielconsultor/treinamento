@@ -24,7 +24,7 @@ const SC_MAP: Record<string, { text: string; border: string; bg: string }> = {
   purple: { text: '#a78bfa', border: 'rgba(139,92,246,0.4)',   bg: 'rgba(139,92,246,0.1)' },
   green:  { text: '#4ade80', border: 'rgba(34,197,94,0.4)',    bg: 'rgba(34,197,94,0.1)' },
   red:    { text: '#f87171', border: 'rgba(248,113,113,0.4)',  bg: 'rgba(248,113,113,0.1)' },
-  teal:   { text: '#2DD4BF', border: 'rgba(20,184,166,0.4)',   bg: 'rgba(20,184,166,0.1)' },
+  teal:   { text: '#C6FF00', border: 'rgba(198,255,0,0.4)',   bg: 'rgba(198,255,0,0.1)' },
 };
 const ICON_MAP: Record<string, React.ReactNode> = {
   Digitada:     <FileText className="w-3 h-3" />,
@@ -716,8 +716,8 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
     { key: 'pagas',     label: 'Pagas',           value: paidProps.length,                color: '#4ade80', fmt: 'num' },
     { key: 'analise',   label: 'Em Análise',      value: analysisProps.length,            color: '#fbbf24', fmt: 'num' },
     { key: 'cancelada', label: 'Canceladas',      value: cancelledProps.length,           color: '#f87171', fmt: 'num' },
-    { key: 'volume',    label: 'Volume Pago',     value: formatCurrency(totalPaid),       color: '#14B8A6', fmt: 'str' },
-    { key: 'vtotal',    label: 'Volume Total',    value: formatCurrency(totalVolume),     color: '#2DD4BF', fmt: 'str' },
+    { key: 'volume',    label: 'Volume Pago',     value: formatCurrency(totalPaid),       color: '#C6FF00', fmt: 'str' },
+    { key: 'vtotal',    label: 'Volume Total',    value: formatCurrency(totalVolume),     color: '#C6FF00', fmt: 'str' },
     { key: 'comissao',  label: 'Minha Comissão',  value: formatCurrency(totalComissao),   color: '#a78bfa', fmt: 'str' },
     { key: 'pendente',  label: 'Comiss. Pend.',   value: formatCurrency(pendingComissao), color: '#fb923c', fmt: 'str' },
     { key: 'ticket',    label: 'Ticket Médio',    value: formatCurrency(avgTicket),       color: '#38bdf8', fmt: 'str' },
@@ -742,7 +742,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
           </button>
           <button onClick={() => setShowColPicker(v => !v)}
             className="p-2 rounded-xl transition-all" title="Colunas visíveis"
-            style={{ background: showColPicker ? 'rgba(20,184,166,0.15)' : 'var(--card-bg)', border: '1px solid var(--card-border)', color: showColPicker ? '#14B8A6' : 'var(--text-3)' }}>
+            style={{ background: showColPicker ? 'rgba(198,255,0,0.15)' : 'var(--card-bg)', border: '1px solid var(--card-border)', color: showColPicker ? '#C6FF00' : 'var(--text-3)' }}>
             <Eye className="w-4 h-4" />
           </button>
           {isMaster && (
@@ -755,7 +755,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
           {isAdmin && (
             <button onClick={() => { setShowImport(true); setImportPreview([]); setImportResult(null); }}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
-              style={{ background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' }}>
+              style={{ background: 'rgba(198,255,0,0.15)', color: '#C6FF00', border: '1px solid rgba(198,255,0,0.3)' }}>
               <Upload className="w-3.5 h-3.5" /> Importar CSV
             </button>
           )}
@@ -783,7 +783,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
               <button key={col} onClick={() => toggleCol(col)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
                 style={visibleCols.has(col)
-                  ? { background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' }
+                  ? { background: 'rgba(198,255,0,0.15)', color: '#C6FF00', border: '1px solid rgba(198,255,0,0.3)' }
                   : { background: 'var(--surface-subtle)', color: 'var(--text-3)', border: '1px solid var(--card-border)' }}>
                 {visibleCols.has(col) ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />} {col}
               </button>
@@ -795,7 +795,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
       {/* ── Cards ── */}
       <div className="mb-2 flex items-center gap-2">
         <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Período:</span>
-        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-lg" style={{ background: 'rgba(20,184,166,0.1)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.2)' }}>
+        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-lg" style={{ background: 'rgba(198,255,0,0.1)', color: '#C6FF00', border: '1px solid rgba(198,255,0,0.2)' }}>
           {datePreset === 'all' ? 'Todos os registros' :
            datePreset === 'custom' && dateFrom && dateTo
              ? `${new Date(dateFrom + 'T00:00:00').toLocaleDateString('pt-BR')} — ${new Date(dateTo + 'T00:00:00').toLocaleDateString('pt-BR')}`
@@ -821,7 +821,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
             <button key={p.key} onClick={() => setDatePreset(p.key)}
               className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap"
               style={datePreset === p.key
-                ? { background: 'rgba(20,184,166,0.2)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.4)' }
+                ? { background: 'rgba(198,255,0,0.2)', color: '#C6FF00', border: '1px solid rgba(198,255,0,0.4)' }
                 : { background: 'var(--card-bg)', color: 'var(--text-3)', border: '1px solid var(--card-border)' }}>
               {p.label}
             </button>
@@ -863,13 +863,13 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
         <button onClick={() => setShowAdvanced(v => !v)}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
           style={showAdvanced || activeFilterCount > 0
-            ? { background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.35)' }
+            ? { background: 'rgba(198,255,0,0.15)', color: '#C6FF00', border: '1px solid rgba(198,255,0,0.35)' }
             : { background: 'var(--card-bg)', color: 'var(--text-2)', border: '1px solid var(--card-border)' }}>
           <Filter className="w-4 h-4" />
           Filtros
           {activeFilterCount > 0 && (
             <span className="w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center"
-              style={{ background: '#14B8A6', color: '#000' }}>{activeFilterCount}</span>
+              style={{ background: '#C6FF00', color: '#000' }}>{activeFilterCount}</span>
           )}
         </button>
         {activeFilterCount > 0 && (
@@ -978,7 +978,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
               <button key={t.key} onClick={() => t.set(!t.val)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
                 style={t.val
-                  ? { background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' }
+                  ? { background: 'rgba(198,255,0,0.15)', color: '#C6FF00', border: '1px solid rgba(198,255,0,0.3)' }
                   : { background: 'var(--surface-subtle)', color: 'var(--text-3)', border: '1px solid var(--card-border)' }}>
                 {t.val ? <CheckCircle className="w-3 h-3" /> : <div className="w-3 h-3 rounded border" style={{ borderColor: 'var(--text-3)' }} />}
                 {t.label}
@@ -991,8 +991,8 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
       {/* ── Batch action bar ── */}
       {isAdmin && selected.size > 0 && (
         <div className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-xl animate-fade-up"
-          style={{ background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)' }}>
-          <span className="text-xs font-semibold" style={{ color: '#14B8A6' }}>{selected.size} selecionada(s)</span>
+          style={{ background: 'rgba(198,255,0,0.1)', border: '1px solid rgba(198,255,0,0.3)' }}>
+          <span className="text-xs font-semibold" style={{ color: '#C6FF00' }}>{selected.size} selecionada(s)</span>
           <div className="relative flex-1 max-w-xs">
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
             <select value={batchStatus} onChange={e => setBatchStatus(e.target.value)}
@@ -1003,7 +1003,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
           </div>
           <button onClick={applyBatchStatus} disabled={!batchStatus || applyingBatch}
             className="px-4 py-1.5 text-xs font-semibold rounded-lg transition-all disabled:opacity-50"
-            style={{ background: '#14B8A6', color: '#000' }}>
+            style={{ background: '#C6FF00', color: '#000' }}>
             {applyingBatch ? 'Aplicando...' : 'Aplicar'}
           </button>
           {isMaster && (
@@ -1059,7 +1059,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                     return (
                       <th key={h} onClick={sortable ? () => handleSort(h) : undefined}
                         className="text-left px-2 py-2.5 text-[9px] font-bold uppercase tracking-wider whitespace-nowrap select-none"
-                        style={{ color: isActive ? '#14B8A6' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', minWidth: h === '' ? '70px' : undefined }}>
+                        style={{ color: isActive ? '#C6FF00' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', minWidth: h === '' ? '70px' : undefined }}>
                         <span className="inline-flex items-center gap-0.5">
                           {h}
                           {sortable && (
@@ -1078,7 +1078,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                   const sd = statusDefs.find(s => s.name === p.status);
                   const sc = SC_MAP[sd?.color || 'blue'] || SC_MAP.blue;
                   return (
-                    <tr key={p.id} className="table-row-cyber" style={{ background: selected.has(p.id) ? 'rgba(20,184,166,0.06)' : undefined }}>
+                    <tr key={p.id} className="table-row-cyber" style={{ background: selected.has(p.id) ? 'rgba(198,255,0,0.06)' : undefined }}>
                       {isAdmin && (
                         <td className="px-2 py-2">
                           <input type="checkbox" checked={selected.has(p.id)}
@@ -1090,7 +1090,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                         <td className="px-2 py-2" title={p.id}>
                           <button onClick={() => navigator.clipboard.writeText(p.id)}
                             className="font-mono text-[10px] px-1.5 py-0.5 rounded hover:opacity-80 transition-opacity"
-                            style={{ background: 'rgba(20,184,166,0.08)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.2)', letterSpacing: '0.02em' }}>
+                            style={{ background: 'rgba(198,255,0,0.08)', color: '#C6FF00', border: '1px solid rgba(198,255,0,0.2)', letterSpacing: '0.02em' }}>
                             {p.id.slice(0, 8)}
                           </button>
                         </td>
@@ -1198,7 +1198,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                           {(isAdmin || p.allow_broker_edit) && (
                             <button onClick={() => openEdit(p)} className="p-1 rounded-lg transition-all" title="Editar"
                               style={{ color: 'var(--text-3)' }}
-                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; (e.currentTarget as HTMLElement).style.color = '#14B8A6'; }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(198,255,0,0.1)'; (e.currentTarget as HTMLElement).style.color = '#C6FF00'; }}
                               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
                               <Edit2 className="w-3 h-3" />
                             </button>
@@ -1207,7 +1207,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                             <button onClick={() => toggleBrokerEdit(p.id, p.allow_broker_edit)} className="p-1 rounded-lg transition-all"
                               style={{ color: p.allow_broker_edit ? '#4ade80' : 'var(--text-3)' }}
                               title={p.allow_broker_edit ? 'Travar edição' : 'Liberar edição'}
-                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(20,184,166,0.1)'; }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(198,255,0,0.1)'; }}
                               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
                               {p.allow_broker_edit ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
                             </button>
@@ -1347,10 +1347,10 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                 <div>
                   <div className="flex justify-between text-xs mb-1.5" style={{ color: 'var(--text-3)' }}>
                     <span>Processando...</span>
-                    <span className="font-semibold" style={{ color: '#14B8A6' }}>{importProgress}%</span>
+                    <span className="font-semibold" style={{ color: '#C6FF00' }}>{importProgress}%</span>
                   </div>
                   <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--card-border)' }}>
-                    <div className="h-full rounded-full transition-all duration-300" style={{ width: `${importProgress}%`, background: 'linear-gradient(90deg,#14B8A6,#60a5fa)' }} />
+                    <div className="h-full rounded-full transition-all duration-300" style={{ width: `${importProgress}%`, background: 'linear-gradient(90deg,#C6FF00,#60a5fa)' }} />
                   </div>
                 </div>
               )}
@@ -1546,7 +1546,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                       </div>
                     </div>
                   )}
-                  <p className="text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2" style={{ color: '#14B8A6' }}>
+                  <p className="text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2" style={{ color: '#C6FF00' }}>
                     <DollarSign className="w-3.5 h-3.5" /> Comissões desta proposta
                   </p>
                   <div className="grid grid-cols-2 gap-4">
@@ -1583,15 +1583,15 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                     <div className="flex flex-col items-center">
                       <div className="w-8 h-8 rounded-full flex items-center justify-center transition-all"
                         style={done || active
-                          ? { background: 'linear-gradient(135deg, #14B8A6, #06B6D4)', color: '#fff', boxShadow: '0 0 12px rgba(20,184,166,0.35)' }
+                          ? { background: 'linear-gradient(135deg, #C6FF00, #A9E000)', color: '#fff', boxShadow: '0 0 12px rgba(198,255,0,0.35)' }
                           : { background: 'var(--bg-surface)', border: '1px solid var(--border-2)', color: 'var(--text-3)' }}>
                         {done ? <CheckCircle className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
                       </div>
-                      <p className="text-[10px] mt-1 font-medium" style={{ color: active || done ? '#14B8A6' : 'var(--text-3)' }}>{s.label}</p>
+                      <p className="text-[10px] mt-1 font-medium" style={{ color: active || done ? '#C6FF00' : 'var(--text-3)' }}>{s.label}</p>
                     </div>
                     {i < STEPS.length - 1 && (
                       <div className="flex-1 h-px mx-2 mb-4 transition-all"
-                        style={{ background: done ? 'linear-gradient(90deg, #14B8A6, #06B6D4)' : 'var(--border-2)' }} />
+                        style={{ background: done ? 'linear-gradient(90deg, #C6FF00, #A9E000)' : 'var(--border-2)' }} />
                     )}
                   </div>
                 );
@@ -1685,8 +1685,8 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                             </div>
                           ) : null}
                           {corPct > 0 && (
-                            <div className="rounded-xl p-3 space-y-2" style={{ background: 'rgba(20,184,166,0.06)', border: '1px solid rgba(20,184,166,0.2)' }}>
-                              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#14B8A6' }}>Simulação de Comissão</p>
+                            <div className="rounded-xl p-3 space-y-2" style={{ background: 'rgba(198,255,0,0.06)', border: '1px solid rgba(198,255,0,0.2)' }}>
+                              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#C6FF00' }}>Simulação de Comissão</p>
                               <div className={`grid gap-2 ${isAdmin ? 'grid-cols-2' : 'grid-cols-1'}`}>
                                 {isAdmin && (
                                   <div>

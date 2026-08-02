@@ -177,7 +177,7 @@ function ChartCol({ h, label, paid, value, index }: { h: number; label: string; 
     <div className="chart-col flex-1 flex flex-col items-center gap-1" title={`${label}: ${fmtR(value)} (${paid} pagas)`}>
       <span className="text-[9px] font-bold num" style={{ color: paid > 0 ? '#4ade80' : 'transparent' }}>{paid || ''}</span>
       <div className="w-full flex flex-col justify-end rounded-t-lg" style={{ height: '80px', background: 'rgba(255,255,255,0.04)' }}>
-        <div className="w-full rounded-t-lg" style={{ height: colH, background: 'linear-gradient(to top, #14B8A6, #22c55e)', minHeight: h > 0 ? '4px' : '0', transition: 'height 0.7s cubic-bezier(0.16,1,0.3,1)' }} />
+        <div className="w-full rounded-t-lg" style={{ height: colH, background: 'linear-gradient(to top, #C6FF00, #22c55e)', minHeight: h > 0 ? '4px' : '0', transition: 'height 0.7s cubic-bezier(0.16,1,0.3,1)' }} />
       </div>
     </div>
   );
@@ -368,7 +368,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <div className="live-dot" />
-            <span className="text-xs font-medium" style={{ color: '#14B8A6' }}>Análise em tempo real</span>
+            <span className="text-xs font-medium" style={{ color: '#C6FF00' }}>Análise em tempo real</span>
           </div>
           <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Análise de Produção</h1>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
@@ -377,11 +377,11 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
         </div>
         <div className="relative">
           <button onClick={() => setShowNotif(v => !v)} className="relative p-2.5 rounded-xl transition-all"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: unread > 0 ? '#14B8A6' : '#475569' }}>
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: unread > 0 ? '#C6FF00' : '#475569' }}>
             {unread > 0 ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
             {unread > 0 && (
               <span className="absolute -top-1 -right-1 w-4 h-4 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg,#14B8A6,#06B6D4)' }}>
+                style={{ background: 'linear-gradient(135deg,#C6FF00,#A9E000)' }}>
                 {unread}
               </span>
             )}
@@ -392,7 +392,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
               <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
                 <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>Notificações</span>
                 <div className="flex items-center gap-2">
-                  {unread > 0 && <button onClick={markAllRead} className="text-xs" style={{ color: '#14B8A6' }}>Marcar lidas</button>}
+                  {unread > 0 && <button onClick={markAllRead} className="text-xs" style={{ color: '#C6FF00' }}>Marcar lidas</button>}
                   <button onClick={() => setShowNotif(false)}><X className="w-3.5 h-3.5" style={{ color: 'var(--text-3)' }} /></button>
                 </div>
               </div>
@@ -401,8 +401,8 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                   ? <p className="text-center py-8 text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma notificação</p>
                   : notifications.map(n => (
                     <div key={n.id} className="px-4 py-3"
-                      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: !n.read ? 'rgba(20,184,166,0.04)' : 'transparent' }}>
-                      {!n.read && <div className="w-1.5 h-1.5 rounded-full mb-1" style={{ background: '#14B8A6' }} />}
+                      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: !n.read ? 'rgba(198,255,0,0.04)' : 'transparent' }}>
+                      {!n.read && <div className="w-1.5 h-1.5 rounded-full mb-1" style={{ background: '#C6FF00' }} />}
                       <p className="text-sm" style={{ color: 'var(--text-1)' }}>{n.message}</p>
                       <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{new Date(n.created_at).toLocaleDateString('pt-BR')}</p>
                     </div>
@@ -456,7 +456,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
           <button key={t.id} onClick={() => setTab(t.id)}
             className="px-4 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap"
             style={tab === t.id
-              ? { background: 'linear-gradient(135deg,#14B8A6,#06B6D4)', color: '#fff', boxShadow: '0 2px 10px rgba(20,184,166,0.35)' }
+              ? { background: 'linear-gradient(135deg,#C6FF00,#A9E000)', color: '#fff', boxShadow: '0 2px 10px rgba(198,255,0,0.35)' }
               : { color: 'var(--text-3)' }}>
             {t.label}
           </button>
@@ -472,7 +472,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
           <div className="space-y-5">
             <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4`}>
               <KPI label="Produção Total"    value={<AnimCount to={totalPaid} fmt="currency" delay={0} />}   sub={`${paid.length} propostas pagas`}  icon={DollarSign} color="#22c55e" delay={0}   />
-              <KPI label="Hoje"              value={<AnimCount to={stats?.today?.value || 0} fmt="currency" delay={80} />} sub={`${stats?.today?.count || 0} pagas`} icon={Activity} color="#14B8A6" delay={60}  />
+              <KPI label="Hoje"              value={<AnimCount to={stats?.today?.value || 0} fmt="currency" delay={80} />} sub={`${stats?.today?.count || 0} pagas`} icon={Activity} color="#C6FF00" delay={60}  />
               <KPI label="Ticket Médio"      value={<AnimCount to={paid.length > 0 ? totalPaid / paid.length : 0} fmt="currency" delay={160} />} sub="por proposta paga" icon={BarChart2} color="#a78bfa" delay={120} />
               <KPI label="Taxa Conversão"    value={<AnimCount to={approvalPct} fmt="percent" delay={240} />} sub={`${paid.length}/${totalAll} props`} icon={TrendingUp} color="#f59e0b" delay={180} />
               {isAdmin
@@ -553,7 +553,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
               {[
                 { title: 'Top Bancos',    data: aggBank.slice(0, 3), color: '#60a5fa' },
                 { title: 'Top Convênios', data: aggConv.slice(0, 3), color: '#a78bfa' },
-                { title: 'Top Produtos',  data: aggProd.slice(0, 3), color: '#14B8A6' },
+                { title: 'Top Produtos',  data: aggProd.slice(0, 3), color: '#C6FF00' },
               ].map(({ title, data, color }, ci) => (
                 <Card key={title} delay={220 + ci * 60}>
                   <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-1)' }}>{title}</h3>
@@ -613,7 +613,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                   <button key={d.id} onClick={() => setDim(d.id)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
                     style={dim === d.id
-                      ? { background: 'rgba(20,184,166,0.2)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.3)' }
+                      ? { background: 'rgba(198,255,0,0.2)', color: '#C6FF00', border: '1px solid rgba(198,255,0,0.3)' }
                       : { color: 'var(--text-3)', border: '1px solid transparent' }}>
                     <d.Icon className="w-3.5 h-3.5" />
                     {d.label}
@@ -646,7 +646,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                       <span>{dimSort === 'value' ? 'Volume Pago' : dimSort === 'count' ? 'Qtd Props' : dimSort === 'ticket' ? 'Ticket Médio' : 'Comissão'}</span>
                     </div>
                     {dimData.map((item, i) => (
-                      <AggBar key={item.label + i} item={item} maxVal={dimData[0].value} color="#14B8A6" metric={dimSort} index={i} />
+                      <AggBar key={item.label + i} item={item} maxVal={dimData[0].value} color="#C6FF00" metric={dimSort} index={i} />
                     ))}
                     <div className="mt-4 pt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center" style={{ borderTop: '1px solid var(--card-border)' }}>
                       {[
@@ -670,7 +670,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
               {[
                 { label: 'Bancos',     value: aggBank.length, color: '#60a5fa' },
                 { label: 'Convênios',  value: aggConv.length, color: '#a78bfa' },
-                { label: 'Produtos',   value: aggProd.length, color: '#14B8A6' },
+                { label: 'Produtos',   value: aggProd.length, color: '#C6FF00' },
                 { label: 'Tabelas',    value: aggTab.length,  color: '#f59e0b' },
                 { label: 'Tipos',      value: aggTipo.length, color: '#22c55e' },
                 { label: 'Usr. Banco', value: aggUB.filter(u => u.label !== 'Sem usuário banco').length, color: '#f87171' },
@@ -689,7 +689,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
         {tab === 'brokers' && isAdmin && (
           <div className="space-y-5">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <KPI label="Corretores Ativos" value={<AnimCount to={aggBrok.length} fmt="int" delay={0} />} sub="com propostas pagas" icon={Users} color="#14B8A6" delay={0} />
+              <KPI label="Corretores Ativos" value={<AnimCount to={aggBrok.length} fmt="int" delay={0} />} sub="com propostas pagas" icon={Users} color="#C6FF00" delay={0} />
               <KPI label="Volume Total"      value={<AnimCount to={totalPaid} fmt="currency" delay={80} />} sub={`${paid.length} pagas`} icon={DollarSign} color="#22c55e" delay={60} />
               <KPI label="Ticket Médio"      value={<AnimCount to={paid.length > 0 ? totalPaid / paid.length : 0} fmt="currency" delay={160} />} sub="por proposta paga" icon={BarChart2} color="#a78bfa" delay={120} />
               <KPI label="Comissão Total"    value={<AnimCount to={comm.corrTotal} fmt="currency" delay={240} />} sub="a pagar corretores" icon={Percent} color="#f59e0b" delay={180} />
@@ -738,7 +738,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
         {tab === 'commissions' && (
           <div className="space-y-5">
             <div className={`grid grid-cols-2 ${isAdmin ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-4`}>
-              <KPI label="Comissão Corretores" value={<AnimCount to={comm.corrTotal} fmt="currency" delay={0} />}   sub="total gerada"                        icon={Percent}      color="#14B8A6" delay={0}   />
+              <KPI label="Comissão Corretores" value={<AnimCount to={comm.corrTotal} fmt="currency" delay={0} />}   sub="total gerada"                        icon={Percent}      color="#C6FF00" delay={0}   />
               {isAdmin && <KPI label="Comissão Empresa" value={<AnimCount to={comm.empTotal} fmt="currency" delay={80} />} sub="total gerada"                  icon={Building2}    color="#60a5fa" delay={60}  />}
               <KPI label="Comissão Paga"       value={<AnimCount to={comm.corrPago} fmt="currency" delay={160} />} sub={`${comm.cntPago} propostas`}           icon={CheckCircle}  color="#22c55e" delay={isAdmin ? 120 : 60} />
               <KPI label="Aguardando Pgto"     value={<AnimCount to={comm.corrPend} fmt="currency" delay={240} />} sub={`${comm.cntPend} propostas`}           icon={Clock}        color="#f59e0b" delay={isAdmin ? 180 : 120} />
@@ -774,7 +774,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                     <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Empresa vs Corretor</p>
                     {[
                       { label: 'Empresa',    value: comm.empTotal,  color: '#60a5fa' },
-                      { label: 'Corretores', value: comm.corrTotal, color: '#14B8A6' },
+                      { label: 'Corretores', value: comm.corrTotal, color: '#C6FF00' },
                     ].map((r, ri) => {
                       const total = comm.empTotal + comm.corrTotal;
                       const pct   = total > 0 ? (r.value / total) * 100 : 0;
@@ -798,7 +798,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                   {aggBrok.length === 0
                     ? <p className="text-sm" style={{ color: 'var(--text-3)' }}>Sem dados no período</p>
                     : aggBrok.slice(0, 10).map((b, i) => (
-                      <AggBar key={b.label} item={b} maxVal={aggBrok[0].commission} color="#14B8A6" metric="commission" index={i} />
+                      <AggBar key={b.label} item={b} maxVal={aggBrok[0].commission} color="#C6FF00" metric="commission" index={i} />
                     ))
                   }
                 </Card>
@@ -807,7 +807,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                   <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-1)' }}>Resumo da Minha Comissão</h3>
                   <div className="text-center py-4">
                     <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>Total Gerado</p>
-                    <p className="text-4xl font-black num" style={{ color: '#14B8A6' }}>
+                    <p className="text-4xl font-black num" style={{ color: '#C6FF00' }}>
                       <AnimCount to={comm.corrTotal} fmt="currency" delay={200} />
                     </p>
                   </div>
@@ -868,12 +868,12 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                 {goal && (
                   <Card delay={120}>
                     <div className="flex items-center gap-2 mb-4">
-                      <Target className="w-4 h-4" style={{ color: '#14B8A6' }} />
+                      <Target className="w-4 h-4" style={{ color: '#C6FF00' }} />
                       <h3 className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>Meta do Mês</h3>
                     </div>
                     <div className="space-y-5">
                       {[
-                        { label: 'Pontos',          current: stats?.my_points || 0, target: goal.target_points,    color: '#14B8A6', cls: 'progress-bar',       delay: 200 },
+                        { label: 'Pontos',          current: stats?.my_points || 0, target: goal.target_points,    color: '#C6FF00', cls: 'progress-bar',       delay: 200 },
                         { label: 'Propostas Pagas', current: paid.length,           target: goal.target_proposals, color: '#22c55e', cls: 'progress-bar-green', delay: 300 },
                       ].map(({ label, current, target, color, cls, delay: d }) => {
                         const pct = target > 0 ? Math.min(100, (current / target) * 100) : 0;
@@ -893,9 +893,9 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                       })}
                       {stats?.my_position && (
                         <div className="mt-2 p-3 rounded-xl text-center"
-                          style={{ background: 'rgba(20,184,166,0.06)', border: '1px solid rgba(20,184,166,0.2)' }}>
+                          style={{ background: 'rgba(198,255,0,0.06)', border: '1px solid rgba(198,255,0,0.2)' }}>
                           <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>Posição no ranking</p>
-                          <p className="text-3xl font-black" style={{ color: '#14B8A6' }}>
+                          <p className="text-3xl font-black" style={{ color: '#C6FF00' }}>
                             #<AnimCount to={stats.my_position} fmt="int" delay={400} />
                           </p>
                         </div>

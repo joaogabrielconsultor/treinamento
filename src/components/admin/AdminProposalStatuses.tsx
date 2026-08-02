@@ -119,7 +119,7 @@ export function AdminProposalStatuses({ isMaster = false }: { isMaster?: boolean
       <div className="flex items-center justify-between mb-6 animate-fade-up">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Tag className="w-5 h-5" style={{ color: '#14B8A6' }} />
+            <Tag className="w-5 h-5" style={{ color: '#C6FF00' }} />
             <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Status de Propostas</h1>
           </div>
           <p className="text-xs" style={{ color: 'var(--text-3)' }}>{statuses.length} status cadastrados</p>

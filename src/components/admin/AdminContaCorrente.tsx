@@ -366,7 +366,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
       <div className="flex items-center justify-between mb-4 animate-fade-up">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Wallet className="w-5 h-5" style={{ color: '#14B8A6' }} />
+            <Wallet className="w-5 h-5" style={{ color: '#C6FF00' }} />
             <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Conta Corrente — Admin</h1>
           </div>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Gerencie comissões e solicitações de saque</p>
@@ -387,7 +387,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
             <button key={t.key} onClick={() => setTab(t.key)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all"
               style={tab === t.key
-                ? { background: 'var(--card-bg)', color: '#14B8A6', boxShadow: 'var(--shadow-card)' }
+                ? { background: 'var(--card-bg)', color: '#C6FF00', boxShadow: 'var(--shadow-card)' }
                 : { color: 'var(--text-3)' }}>
               <t.icon className="w-3.5 h-3.5" />{t.label}
             </button>
@@ -440,7 +440,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
           <button onClick={() => setAllTime(v => !v)}
             className="px-3 py-2 text-xs rounded-xl font-medium transition-all"
             style={allTime
-              ? { background: 'rgba(20,184,166,0.15)', color: '#14B8A6', border: '1px solid rgba(20,184,166,0.4)' }
+              ? { background: 'rgba(198,255,0,0.15)', color: '#C6FF00', border: '1px solid rgba(198,255,0,0.4)' }
               : { background: 'var(--surface-subtle)', color: 'var(--text-3)', border: '1px solid var(--card-border)' }}>
             Todo período
           </button>
@@ -474,7 +474,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                       return (
                         <th key={h} onClick={sortable ? () => handleSaqueSort(h) : undefined}
                           className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest"
-                          style={{ color: active ? '#14B8A6' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
+                          style={{ color: active ? '#C6FF00' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
                           {h}{sortable && <span className="ml-1 opacity-60">{active ? (saqueSortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
                         </th>
                       );
@@ -500,7 +500,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                             </div>
                           ) : <span style={{ color: 'var(--text-3)' }}>—</span>}
                         </td>
-                        <td className="px-4 py-3 font-bold num text-base" style={{ color: '#14B8A6' }}>{fmtBRL(Number(s.amount))}</td>
+                        <td className="px-4 py-3 font-bold num text-base" style={{ color: '#C6FF00' }}>{fmtBRL(Number(s.amount))}</td>
                         <td className="px-4 py-3">
                           <span className="text-xs font-semibold px-2 py-1 rounded-lg" style={{ background: sc.bg, color: sc.text, border: `1px solid ${sc.border}` }}>{s.status}</span>
                         </td>
@@ -736,7 +736,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                           return (
                             <th key={h} onClick={sortable ? () => handleDespSort(h) : undefined}
                               className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest"
-                              style={{ color: active ? '#14B8A6' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
+                              style={{ color: active ? '#C6FF00' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
                               {h}{sortable && <span className="ml-1 opacity-60">{active ? (despSortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
                             </th>
                           );
@@ -801,7 +801,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
           { label: 'Empresa Pendente',   value: fmtBRL(totalEmpresaPending),      sub: 'comissão empresa a receber',                                    icon: Clock,        color: '#fb923c', bg: 'rgba(251,146,60,0.08)', border: 'rgba(251,146,60,0.2)'  },
           { label: 'Empresa Recebida',   value: fmtBRL(totalEmpresaPaid),         sub: 'comissão empresa recebida',                                     icon: DollarSign,   color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.2)' },
           { label: 'Corretores Pend.',   value: String(brokersWithPending),       sub: 'aguardando pagamento',                                          icon: Users,        color: '#60a5fa', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.2)'  },
-          { label: 'Total Geral',        value: fmtBRL(totalPending + totalPaid + totalEmpresaPending + totalEmpresaPaid), sub: 'corretor + empresa',   icon: Wallet,       color: '#14B8A6', bg: 'rgba(20,184,166,0.08)', border: 'rgba(20,184,166,0.2)'  },
+          { label: 'Total Geral',        value: fmtBRL(totalPending + totalPaid + totalEmpresaPending + totalEmpresaPaid), sub: 'corretor + empresa',   icon: Wallet,       color: '#C6FF00', bg: 'rgba(198,255,0,0.08)', border: 'rgba(198,255,0,0.2)'  },
         ].map((c, i) => (
           <div key={c.label} className="rounded-2xl p-4 animate-fade-up" style={{ background: c.bg, border: `1px solid ${c.border}`, boxShadow: 'var(--shadow-card)', animationDelay: `${i * 50}ms` }}>
             <div className="flex items-start justify-between">
@@ -862,9 +862,9 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                   <td className="px-4 py-3">
                     {b.pix_key ? (
                       <div className="flex items-center gap-1.5">
-                        <Key className="w-3 h-3 flex-shrink-0" style={{ color: '#14B8A6' }} />
+                        <Key className="w-3 h-3 flex-shrink-0" style={{ color: '#C6FF00' }} />
                         <div>
-                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ background: 'rgba(20,184,166,0.12)', color: '#2DD4BF' }}>
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ background: 'rgba(198,255,0,0.12)', color: '#C6FF00' }}>
                             {PIX_TYPE_LABELS[b.pix_key_type || ''] || b.pix_key_type}
                           </span>
                           <p className="text-xs font-mono mt-0.5" style={{ color: 'var(--text-2)' }}>{b.pix_key}</p>
@@ -1014,9 +1014,9 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
 
       {selected.size > 0 && (
         <div className="mb-3 flex items-center gap-3 px-4 py-2.5 rounded-xl animate-fade-up"
-          style={{ background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)' }}>
-          <AlertCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#14B8A6' }} />
-          <p className="text-sm flex-1" style={{ color: '#2DD4BF' }}>
+          style={{ background: 'rgba(198,255,0,0.08)', border: '1px solid rgba(198,255,0,0.2)' }}>
+          <AlertCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#C6FF00' }} />
+          <p className="text-sm flex-1" style={{ color: '#C6FF00' }}>
             <strong>{selected.size}</strong> proposta{selected.size !== 1 ? 's' : ''} selecionada{selected.size !== 1 ? 's' : ''}
           </p>
           <button
@@ -1052,7 +1052,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                     return (
                       <th key={h} onClick={sortable ? () => handleCommSort(h) : undefined}
                         className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest"
-                        style={{ color: active ? '#14B8A6' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
+                        style={{ color: active ? '#C6FF00' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
                         {h}{sortable && <span className="ml-1 opacity-60">{active ? (commSortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
                       </th>
                     );
@@ -1070,7 +1070,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                   return (
                     <tr key={p.id}
                       className="table-row-cyber"
-                      style={isChecked ? { background: 'rgba(20,184,166,0.05)' } : undefined}
+                      style={isChecked ? { background: 'rgba(198,255,0,0.05)' } : undefined}
                     >
                       <td className="px-4 py-3">
                         {isPending && (

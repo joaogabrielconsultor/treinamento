@@ -45,7 +45,7 @@ export function Pagination({ total, page, perPage, onPage, onPerPage }: Paginati
               className="w-7 h-7 rounded-lg text-xs font-semibold transition-all"
               style={
                 p === page
-                  ? { background: 'linear-gradient(135deg,#14B8A6,#06B6D4)', color: '#fff' }
+                  ? { background: 'linear-gradient(135deg,#C6FF00,#A9E000)', color: '#fff' }
                   : { color: 'var(--text-2)' }
               }
             >

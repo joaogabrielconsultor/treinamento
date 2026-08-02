@@ -37,7 +37,7 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
   return (
     <div
       className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-      style={{ background: 'linear-gradient(135deg, #050816 0%, #080d18 50%, #050816 100%)' }}
+      style={{ background: 'radial-gradient(ellipse at 30% 0%, #0A0A0A 0%, #000000 60%)' }}
     >
       {/* Background ambient glow */}
       <div
@@ -46,7 +46,7 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
           width: '700px', height: '700px',
           left: '30%', top: '50%',
           transform: 'translate(-50%, -55%)',
-          background: 'radial-gradient(ellipse, rgba(20,184,166,0.07) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse, rgba(198,255,0,0.07) 0%, transparent 70%)',
         }}
       />
       <div
@@ -54,7 +54,7 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
         style={{
           width: '400px', height: '400px',
           left: '8%', bottom: '8%',
-          background: 'radial-gradient(ellipse, rgba(6,182,212,0.05) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse, rgba(169,224,0,0.05) 0%, transparent 70%)',
         }}
       />
       {/* Grid pattern */}
@@ -75,25 +75,25 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
         <div
           className="hidden lg:flex flex-col justify-between p-9 relative"
           style={{
-            background: 'linear-gradient(160deg, rgba(11,26,20,0.65) 0%, rgba(8,13,24,0.4) 100%)',
-            borderRight: '1px solid rgba(255,255,255,0.06)',
+            background: 'linear-gradient(160deg, rgba(18,18,18,0.7) 0%, rgba(8,8,8,0.4) 100%)',
+            borderRight: '1px solid rgba(255,255,255,0.08)',
           }}
         >
           <div
             className="absolute inset-0 pointer-events-none"
-            style={{ background: 'radial-gradient(circle at 20% 10%, rgba(20,184,166,0.10), transparent 55%)' }}
+            style={{ background: 'radial-gradient(circle at 20% 10%, rgba(198,255,0,0.10), transparent 55%)' }}
           />
           <div className="relative">
             <div className="flex items-center gap-3 mb-1">
               <div
                 className="inline-flex items-center justify-center w-11 h-11 rounded-xl"
-                style={{ background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.2)', boxShadow: '0 0 24px rgba(20,184,166,0.12)' }}
+                style={{ background: 'rgba(198,255,0,0.1)', border: '1px solid rgba(198,255,0,0.2)', boxShadow: '0 0 24px rgba(198,255,0,0.12)' }}
               >
                 <LogoComponent size="sm" />
               </div>
               <span
                 className="text-lg font-bold"
-                style={{ background: 'linear-gradient(135deg, #2DD4BF 0%, #06B6D4 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+                style={{ background: 'linear-gradient(135deg, #C6FF00 0%, #A9E000 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
               >
                 GS CRED
               </span>
@@ -101,7 +101,7 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
 
             <span
               className="inline-flex items-center gap-1.5 mt-5 px-3 py-1 rounded-full text-[11px] font-semibold"
-              style={{ background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.22)', color: '#2DD4BF' }}
+              style={{ background: 'rgba(198,255,0,0.1)', border: '1px solid rgba(198,255,0,0.22)', color: '#C6FF00' }}
             >
               <ShieldCheck className="w-3 h-3" /> Plataforma para crédito consignado
             </span>
@@ -121,7 +121,7 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
               <div key={title} className="flex items-start gap-3">
                 <span
                   className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-lg mt-0.5"
-                  style={{ background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.18)', color: '#2DD4BF' }}
+                  style={{ background: 'rgba(198,255,0,0.1)', border: '1px solid rgba(198,255,0,0.18)', color: '#C6FF00' }}
                 >
                   <Icon className="w-[18px] h-[18px]" />
                 </span>
@@ -134,7 +134,7 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
           </div>
 
           <div className="relative flex items-center gap-2 mt-8 pt-5" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-            <TrendingUp className="w-4 h-4" style={{ color: '#2DD4BF' }} />
+            <TrendingUp className="w-4 h-4" style={{ color: '#C6FF00' }} />
             <span className="text-[12px]" style={{ color: '#64748B' }}>Mais produtividade, mais propostas aprovadas.</span>
           </div>
         </div>
@@ -142,13 +142,13 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
         {/* ── Formulário ── */}
         <div
           className="flex flex-col justify-center p-8 sm:p-10"
-          style={{ background: 'rgba(8,13,24,0.9)', backdropFilter: 'blur(20px)', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}
+          style={{ background: 'rgba(10,10,10,0.92)', backdropFilter: 'blur(20px)', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}
         >
           {/* Brand (mobile only — no desktop já aparece na vitrine) */}
           <div className="text-center mb-7 lg:hidden">
             <div
               className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4"
-              style={{ background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.2)', boxShadow: '0 0 30px rgba(20,184,166,0.12)' }}
+              style={{ background: 'rgba(198,255,0,0.1)', border: '1px solid rgba(198,255,0,0.2)', boxShadow: '0 0 30px rgba(198,255,0,0.12)' }}
             >
               <LogoComponent size="md" />
             </div>

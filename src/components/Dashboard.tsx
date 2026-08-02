@@ -20,7 +20,7 @@ const STATUS_COLORS: Record<string, string> = {
   'Em análise': '#f59e0b',
   'Aprovada':   '#a78bfa',
   'Paga':       '#22c55e',
-  'C PAGA':     '#14B8A6',
+  'C PAGA':     '#C6FF00',
   'Cancelada':  '#f87171',
 };
 
@@ -90,7 +90,7 @@ export function Dashboard({ user, onNavigate, isAdmin = false }: DashboardProps)
   const quickActions = [
     { view: 'proposals'   as ViewType, icon: FileText,    label: 'Propostas',        desc: 'Ver e criar propostas',       color: '#60a5fa' },
     { view: 'simulator'   as ViewType, icon: Calculator,  label: 'Simulador',        desc: 'Simular operações',           color: '#a78bfa' },
-    { view: 'production'  as ViewType, icon: TrendingUp,  label: 'Análise Detalhada',desc: 'Relatórios e gráficos',       color: '#14B8A6' },
+    { view: 'production'  as ViewType, icon: TrendingUp,  label: 'Análise Detalhada',desc: 'Relatórios e gráficos',       color: '#C6FF00' },
     { view: 'ranking'     as ViewType, icon: Trophy,      label: 'Ranking',          desc: 'Classificação da equipe',     color: '#fbbf24' },
     { view: 'catalog'     as ViewType, icon: Library,     label: 'Treinamentos',     desc: 'Cursos e capacitação',        color: '#22c55e' },
     { view: 'conta-corrente' as ViewType, icon: Wallet,   label: 'Conta Corrente',   desc: 'Saques e comissões',          color: '#f59e0b' },
@@ -113,7 +113,7 @@ export function Dashboard({ user, onNavigate, isAdmin = false }: DashboardProps)
         <div>
           <div className="flex items-center gap-2 mb-1.5">
             <div className="live-dot" />
-            <span className="text-xs font-medium" style={{ color: '#14B8A6' }}>Sistema ativo</span>
+            <span className="text-xs font-medium" style={{ color: '#C6FF00' }}>Sistema ativo</span>
           </div>
           <h1 className="text-2xl sm:text-[28px] font-bold leading-tight" style={{ color: 'var(--text-1)' }}>
             {greeting}, <span className="text-gradient-teal">{firstName}</span> 👋
@@ -126,7 +126,7 @@ export function Dashboard({ user, onNavigate, isAdmin = false }: DashboardProps)
           className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl self-center"
           style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-1)' }}
         >
-          <Calendar className="w-4 h-4" style={{ color: '#14B8A6' }} />
+          <Calendar className="w-4 h-4" style={{ color: '#C6FF00' }} />
           <span className="text-xs font-medium num" style={{ color: 'var(--text-2)' }}>{todayLabel}</span>
         </div>
       </div>
@@ -142,7 +142,7 @@ export function Dashboard({ user, onNavigate, isAdmin = false }: DashboardProps)
             </div>
           ))
           : [
-            <KpiCard key="hoje"   label="Produção Hoje"  numValue={stats?.today?.value || 0}        sub={`${stats?.today?.count || 0} propostas pagas`} icon={Activity}   color="#14B8A6" delay={0}   />,
+            <KpiCard key="hoje"   label="Produção Hoje"  numValue={stats?.today?.value || 0}        sub={`${stats?.today?.count || 0} propostas pagas`} icon={Activity}   color="#C6FF00" delay={0}   />,
             <KpiCard key="mes"    label="Este Mês"       numValue={stats?.month?.value || 0}        sub={`${stats?.month?.count || 0} pagas`}           icon={DollarSign} color="#22c55e" delay={60}  />,
             <KpiCard key="ticket" label="Ticket Médio"   numValue={stats?.avg_ticket || 0}          sub="por proposta paga"                             icon={BarChart2}  color="#a78bfa" delay={120} />,
             isAdmin
@@ -230,7 +230,7 @@ export function Dashboard({ user, onNavigate, isAdmin = false }: DashboardProps)
         <div className="animate-fade-up" style={{ animationDelay: '480ms' }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>Status das Propostas — Este Mês</h2>
-            <button onClick={() => onNavigate('production')} className="flex items-center gap-1 text-xs font-medium" style={{ color: '#14B8A6' }}>
+            <button onClick={() => onNavigate('production')} className="flex items-center gap-1 text-xs font-medium" style={{ color: '#C6FF00' }}>
               Ver análise completa <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -272,14 +272,14 @@ export function Dashboard({ user, onNavigate, isAdmin = false }: DashboardProps)
           >
             <div
               className="absolute inset-0 pointer-events-none"
-              style={{ background: 'radial-gradient(circle at 50% 0%, rgba(20,184,166,0.08), transparent 60%)' }}
+              style={{ background: 'radial-gradient(circle at 50% 0%, rgba(198,255,0,0.08), transparent 60%)' }}
             />
             <div className="relative">
               <div
                 className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 animate-float"
-                style={{ background: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.22)', boxShadow: 'var(--glow-md)' }}
+                style={{ background: 'rgba(198,255,0,0.1)', border: '1px solid rgba(198,255,0,0.22)', boxShadow: 'var(--glow-md)' }}
               >
-                <Sparkles className="w-7 h-7" style={{ color: '#2DD4BF' }} />
+                <Sparkles className="w-7 h-7" style={{ color: '#C6FF00' }} />
               </div>
               <h3 className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>
                 Tudo pronto para começar!

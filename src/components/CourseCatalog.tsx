@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { Search, Clock, BookOpen, ChevronDown } from 'lucide-react';
 import { Course, Enrollment, ViewType } from '../types';
 
@@ -70,7 +70,7 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
               className={selectCls}
               style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-1)', color: 'var(--text-2)' }}
             >
-              {categories.map((c) => <option key={c} value={c} style={{ background: '#0B1020' }}>{c}</option>)}
+              {categories.map((c) => <option key={c} value={c} style={{ background: '#050505' }}>{c}</option>)}
             </select>
             <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
           </div>
@@ -81,7 +81,7 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
               className={selectCls}
               style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-1)', color: 'var(--text-2)' }}
             >
-              {levels.map((l) => <option key={l} value={l} style={{ background: '#0B1020' }}>{l}</option>)}
+              {levels.map((l) => <option key={l} value={l} style={{ background: '#050505' }}>{l}</option>)}
             </select>
             <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
           </div>
@@ -118,7 +118,7 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
           <button
             onClick={() => { setSearch(''); setSelectedCategory('Todos'); setSelectedLevel('Todos'); }}
             className="text-sm font-medium transition-colors mt-2"
-            style={{ color: '#14B8A6' }}
+            style={{ color: '#C6FF00' }}
           >
             Limpar filtros
           </button>

@@ -53,7 +53,7 @@ export function Roteiros() {
       <div className="flex items-center gap-3 mb-6">
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: 'linear-gradient(135deg, #14B8A6 0%, #06B6D4 100%)' }}
+          style={{ background: 'linear-gradient(135deg, #C6FF00 0%, #A9E000 100%)' }}
         >
           <BookOpen className="w-5 h-5 text-white" />
         </div>
@@ -84,13 +84,13 @@ export function Roteiros() {
                 <button
                   onClick={() => toggle(key)}
                   className="w-full flex items-center gap-3 p-4 text-left transition-all"
-                  style={{ background: open ? 'rgba(20,184,166,0.05)' : 'transparent' }}
+                  style={{ background: open ? 'rgba(198,255,0,0.05)' : 'transparent' }}
                 >
-                  <Building2 className="w-5 h-5 flex-shrink-0" style={{ color: '#2DD4BF' }} />
+                  <Building2 className="w-5 h-5 flex-shrink-0" style={{ color: '#C6FF00' }} />
                   <span className="flex-1 font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{bankName}</span>
                   <span
                     className="text-xs px-2 py-0.5 rounded-full mr-2"
-                    style={{ background: 'rgba(45,212,191,0.1)', color: '#2DD4BF' }}
+                    style={{ background: 'rgba(45,212,191,0.1)', color: '#C6FF00' }}
                   >
                     {roteiros.length} roteiro{roteiros.length !== 1 ? 's' : ''}
                   </span>
@@ -122,7 +122,7 @@ export function Roteiros() {
                           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium flex-shrink-0 transition-opacity hover:opacity-80"
                           style={{
                             background: 'rgba(45,212,191,0.1)',
-                            color: '#2DD4BF',
+                            color: '#C6FF00',
                             border: '1px solid rgba(45,212,191,0.2)',
                           }}
                         >

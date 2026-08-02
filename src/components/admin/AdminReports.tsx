@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Download, Filter, RefreshCw } from 'lucide-react';
 import { Proposal, FinancialTable, Bank, Convenio, Product } from '../../types';
 
@@ -209,7 +209,7 @@ export function AdminReports() {
                   return (
                     <th key={h} onClick={() => handleSort(h)}
                       className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
-                      style={{ color: active ? '#14B8A6' : 'var(--text-3)', cursor: 'pointer', userSelect: 'none' }}>
+                      style={{ color: active ? '#C6FF00' : 'var(--text-3)', cursor: 'pointer', userSelect: 'none' }}>
                       {h} <span className="opacity-60">{active ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>
                     </th>
                   );

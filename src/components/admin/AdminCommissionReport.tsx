@@ -99,7 +99,7 @@ export function AdminCommissionReport() {
     <div className="p-6 max-w-7xl mx-auto" style={{ color: 'var(--text-1)' }}>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div className="flex items-center gap-2">
-          <Receipt className="w-5 h-5" style={{ color: '#14B8A6' }} />
+          <Receipt className="w-5 h-5" style={{ color: '#C6FF00' }} />
           <div>
             <h1 className="text-xl font-bold">Relatório de Comissões</h1>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Pendentes e pagas, por corretor, com detalhe de cada proposta</p>
@@ -181,7 +181,7 @@ export function AdminCommissionReport() {
                           {fmtMonth(m)}
                         </th>
                       ))}
-                      <th className="text-right px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: '#14B8A6' }}>
+                      <th className="text-right px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: '#C6FF00' }}>
                         Total pendente
                       </th>
                     </tr>
@@ -206,7 +206,7 @@ export function AdminCommissionReport() {
                           );
                         })}
                         <td className="px-4 py-3 text-right">
-                          <p className="font-black num text-base" style={{ color: '#14B8A6' }}>{fmtBRL(b.total_corretor_pendente)}</p>
+                          <p className="font-black num text-base" style={{ color: '#C6FF00' }}>{fmtBRL(b.total_corretor_pendente)}</p>
                           <p className="text-xs num" style={{ color: 'var(--text-3)' }}>emp. {fmtBRL(b.total_empresa_pendente)}</p>
                         </td>
                       </tr>
@@ -225,7 +225,7 @@ export function AdminCommissionReport() {
                         );
                       })}
                       <td className="px-4 py-3 text-right">
-                        <p className="font-black num text-base" style={{ color: '#14B8A6' }}>{fmtBRL(totals?.total_corretor_pendente || 0)}</p>
+                        <p className="font-black num text-base" style={{ color: '#C6FF00' }}>{fmtBRL(totals?.total_corretor_pendente || 0)}</p>
                         <p className="text-xs num" style={{ color: 'var(--text-3)' }}>emp. {fmtBRL(totals?.total_empresa_pendente || 0)}</p>
                       </td>
                     </tr>

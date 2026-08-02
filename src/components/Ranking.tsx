@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Trophy, TrendingUp, Users, Star, Crown, RefreshCw } from 'lucide-react';
 import { RankingEntry } from '../types';
 import { Pagination } from './ui/Pagination';
@@ -80,10 +80,10 @@ export function Ranking({ userId }: { userId: string }) {
               className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
               style={period === val
                 ? {
-                    background: 'rgba(20,184,166,0.15)',
-                    border: '1px solid rgba(20,184,166,0.25)',
-                    color: '#2DD4BF',
-                    boxShadow: '0 0 10px rgba(20,184,166,0.1)',
+                    background: 'rgba(198,255,0,0.15)',
+                    border: '1px solid rgba(198,255,0,0.25)',
+                    color: '#C6FF00',
+                    boxShadow: '0 0 10px rgba(198,255,0,0.1)',
                   }
                 : { color: 'var(--text-3)', border: '1px solid transparent' }
               }
@@ -103,24 +103,24 @@ export function Ranking({ userId }: { userId: string }) {
         <div
           className="rounded-2xl p-4 mb-6 flex items-center gap-4 animate-fade-up"
           style={{
-            background: 'rgba(20,184,166,0.06)',
-            border: '1px solid rgba(20,184,166,0.2)',
-            boxShadow: '0 0 24px rgba(20,184,166,0.05)',
+            background: 'rgba(198,255,0,0.06)',
+            border: '1px solid rgba(198,255,0,0.2)',
+            boxShadow: '0 0 24px rgba(198,255,0,0.05)',
             animationDelay: '60ms',
           }}
         >
           <div
             className="w-11 h-11 rounded-xl flex items-center justify-center text-base font-black flex-shrink-0"
             style={{
-              background: 'linear-gradient(135deg, #14B8A6, #06B6D4)',
+              background: 'linear-gradient(135deg, #C6FF00, #A9E000)',
               color: '#fff',
-              boxShadow: '0 0 16px rgba(20,184,166,0.35)',
+              boxShadow: '0 0 16px rgba(198,255,0,0.35)',
             }}
           >
             #{myEntry.position}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#14B8A6' }}>Sua posição</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#C6FF00' }}>Sua posição</p>
             <p className="font-bold text-sm num" style={{ color: 'var(--text-1)' }}>
               #{myEntry.position} — {myEntry.total_points} pontos
             </p>
@@ -216,7 +216,7 @@ export function Ranking({ userId }: { userId: string }) {
                 <div
                   key={e.user_id}
                   className="table-row-cyber flex items-center gap-4 px-5 py-3"
-                  style={isMe ? { background: 'rgba(20,184,166,0.06)' } : {}}
+                  style={isMe ? { background: 'rgba(198,255,0,0.06)' } : {}}
                 >
                   {/* Position */}
                   <div className="w-7 text-center flex-shrink-0">
@@ -230,7 +230,7 @@ export function Ranking({ userId }: { userId: string }) {
                   <div
                     className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
                     style={isMe
-                      ? { background: 'linear-gradient(135deg, #14B8A6, #06B6D4)', color: '#fff', boxShadow: '0 0 10px rgba(20,184,166,0.3)' }
+                      ? { background: 'linear-gradient(135deg, #C6FF00, #A9E000)', color: '#fff', boxShadow: '0 0 10px rgba(198,255,0,0.3)' }
                       : { background: 'rgba(255,255,255,0.06)', color: 'var(--text-2)', border: '1px solid var(--border-1)' }
                     }
                   >
@@ -242,7 +242,7 @@ export function Ranking({ userId }: { userId: string }) {
                     <p className="text-sm font-semibold truncate" style={{ color: isMe ? '#E2E8F0' : '#94A3B8' }}>
                       {e.full_name || e.email}
                       {isMe && (
-                        <span className="ml-2 text-[10px] font-medium" style={{ color: '#14B8A6' }}>
+                        <span className="ml-2 text-[10px] font-medium" style={{ color: '#C6FF00' }}>
                           você
                         </span>
                       )}

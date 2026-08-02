@@ -44,7 +44,7 @@ const CONFIG: Record<ToastType, { icon: typeof CheckCircle2; color: string; glow
   success: { icon: CheckCircle2,  color: '#22c55e', glow: 'rgba(34,197,94,0.35)',  bar: 'linear-gradient(90deg,#22c55e,#16a34a)', label: 'Sucesso' },
   error:   { icon: XCircle,       color: '#f87171', glow: 'rgba(248,113,113,0.35)', bar: 'linear-gradient(90deg,#f87171,#ef4444)', label: 'Erro' },
   warning: { icon: AlertTriangle, color: '#fbbf24', glow: 'rgba(245,158,11,0.35)',  bar: 'linear-gradient(90deg,#fbbf24,#d97706)', label: 'Atenção' },
-  info:    { icon: Info,          color: '#2DD4BF', glow: 'rgba(20,184,166,0.35)',  bar: 'linear-gradient(90deg,#14B8A6,#06B6D4)', label: 'Informação' },
+  info:    { icon: Info,          color: '#C6FF00', glow: 'rgba(198,255,0,0.35)',  bar: 'linear-gradient(90deg,#C6FF00,#A9E000)', label: 'Informação' },
 };
 
 let counter = 0;
