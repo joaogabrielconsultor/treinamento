@@ -1058,8 +1058,8 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                     const isActive = sortCol === h;
                     return (
                       <th key={h} onClick={sortable ? () => handleSort(h) : undefined}
-                        className="text-left px-2 py-2.5 text-[9px] font-bold uppercase tracking-wider whitespace-nowrap select-none"
-                        style={{ color: isActive ? '#C6FF00' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', minWidth: h === '' ? '70px' : undefined }}>
+                        className="text-left px-3 py-3 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap select-none"
+                        style={{ color: isActive ? '#C6FF00' : 'var(--text-2)', cursor: sortable ? 'pointer' : 'default', minWidth: h === '' ? '70px' : undefined }}>
                         <span className="inline-flex items-center gap-0.5">
                           {h}
                           {sortable && (
@@ -1095,35 +1095,35 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                           </button>
                         </td>
                       )}
-                      {visibleCols.has('Proposta') && <td className="px-2 py-2 font-mono num truncate max-w-[100px]" style={{ color: 'var(--text-2)', fontSize: '10px' }}>{p.proposal_number || '—'}</td>}
-                      {visibleCols.has('Corretor') && <td className="px-2 py-2 truncate max-w-[90px]" style={{ color: 'var(--text-2)' }}>{p.user_name || p.user_email || '—'}</td>}
-                      {visibleCols.has('Cliente') && <td className="px-2 py-2 font-semibold truncate max-w-[130px]" style={{ color: 'var(--text-1)', fontSize: '11px' }}>{p.client_name}</td>}
-                      {visibleCols.has('CPF') && <td className="px-2 py-2 font-mono truncate max-w-[95px]" style={{ color: 'var(--text-3)', fontSize: '10px' }}>{p.client_cpf || '—'}</td>}
-                      {visibleCols.has('Convênio') && <td className="px-2 py-2 truncate max-w-[90px]" style={{ color: 'var(--text-2)' }}>{p.convenio_name || p.convenio || '—'}</td>}
-                      {visibleCols.has('Banco') && <td className="px-2 py-2 truncate max-w-[90px]" style={{ color: 'var(--text-2)' }}>{p.bank_name || p.bank || '—'}</td>}
-                      {visibleCols.has('Tabela') && <td className="px-2 py-2 truncate max-w-[110px]" style={{ color: 'var(--text-3)' }}>{p.table_name || '—'}</td>}
-                      {visibleCols.has('Valor') && <td className="px-2 py-2 font-bold num whitespace-nowrap" style={{ color: 'var(--text-1)' }}>{formatCurrency(Number(p.value))}</td>}
-                      {visibleCols.has('Produto') && <td className="px-2 py-2 truncate max-w-[80px]" style={{ color: 'var(--text-3)' }}>{p.product_name || p.product || '—'}</td>}
+                      {visibleCols.has('Proposta') && <td className="px-3 py-2.5 font-mono num whitespace-nowrap" style={{ color: 'var(--text-2)', fontSize: '11px' }}>{p.proposal_number || '—'}</td>}
+                      {visibleCols.has('Corretor') && <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: 'var(--text-2)', fontSize: '11px' }}>{p.user_name || p.user_email || '—'}</td>}
+                      {visibleCols.has('Cliente') && <td className="px-3 py-2.5 font-semibold whitespace-nowrap" style={{ color: 'var(--text-1)', fontSize: '12px' }}>{p.client_name}</td>}
+                      {visibleCols.has('CPF') && <td className="px-3 py-2.5 font-mono whitespace-nowrap" style={{ color: 'var(--text-2)', fontSize: '11px' }}>{p.client_cpf || '—'}</td>}
+                      {visibleCols.has('Convênio') && <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: 'var(--text-2)', fontSize: '11px' }}>{p.convenio_name || p.convenio || '—'}</td>}
+                      {visibleCols.has('Banco') && <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: 'var(--text-2)', fontSize: '11px' }}>{p.bank_name || p.bank || '—'}</td>}
+                      {visibleCols.has('Tabela') && <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: 'var(--text-2)', fontSize: '11px' }}>{p.table_name || '—'}</td>}
+                      {visibleCols.has('Valor') && <td className="px-3 py-2.5 font-bold num whitespace-nowrap" style={{ color: 'var(--text-1)' }}>{formatCurrency(Number(p.value))}</td>}
+                      {visibleCols.has('Produto') && <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: 'var(--text-2)', fontSize: '11px' }}>{p.product_name || p.product || '—'}</td>}
                       {visibleCols.has('Status') && (
-                        <td className="px-2 py-2">
+                        <td className="px-3 py-2.5 whitespace-nowrap">
                           {isAdmin ? (
-                            <div className="relative">
-                              <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 pointer-events-none" style={{ color: sc.text }} />
+                            <div className="relative inline-block">
+                              <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none" style={{ color: sc.text }} />
                               <select value={p.status} onChange={e => quickStatusChange(p.id, e.target.value)}
-                                className="appearance-none font-semibold pl-1.5 pr-5 py-0.5 rounded-lg cursor-pointer w-full truncate"
-                                style={{ background: sc.bg, border: `1px solid ${sc.border}`, color: sc.text, fontSize: '10px' }}>
+                                className="appearance-none font-bold pl-2.5 pr-7 py-1 rounded-lg cursor-pointer"
+                                style={{ background: sc.bg, border: `1px solid ${sc.border}`, color: sc.text, fontSize: '11px', minWidth: '140px' }}>
                                 {statusDefs.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
                               </select>
                             </div>
                           ) : (
-                            <span className={`${sd ? (COLOR_MAP[sd.color] || 'badge badge-blue') : 'badge badge-blue'} inline-flex items-center gap-1 truncate max-w-full`} style={{ fontSize: '9px' }}>
+                            <span className={`${sd ? (COLOR_MAP[sd.color] || 'badge badge-blue') : 'badge badge-blue'} inline-flex items-center gap-1`}>
                               {ICON_MAP[p.status] || <FileText className="w-2.5 h-2.5" />} {p.status}
                             </span>
                           )}
                         </td>
                       )}
                       {visibleCols.has('Dt. Digit.') && (
-                        <td className="px-2 py-2 num whitespace-nowrap" style={{ color: 'var(--text-3)', fontSize: '10px' }}>
+                        <td className="px-3 py-2.5 num whitespace-nowrap" style={{ color: 'var(--text-2)', fontSize: '11px' }}>
                           {p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '—'}
                         </td>
                       )}
@@ -1159,9 +1159,9 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                         </td>
                       )}
                       {visibleCols.has('Comissão') && (
-                        <td className="px-2 py-2">
+                        <td className="px-3 py-2.5 whitespace-nowrap">
                           {Number(p.comissao_valor) > 0
-                            ? <span className="font-bold num whitespace-nowrap" style={{ color: p.status === 'Paga' ? '#4ade80' : '#facc15', fontSize: '10px' }}>{formatCurrency(Number(p.comissao_valor))}</span>
+                            ? <span className="font-bold num" style={{ color: p.status === 'Paga' ? '#4ade80' : '#facc15', fontSize: '11px' }}>{formatCurrency(Number(p.comissao_valor))}</span>
                             : <span style={{ color: 'var(--text-3)' }}>—</span>}
                         </td>
                       )}
@@ -1173,15 +1173,15 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                         </td>
                       )}
                       {visibleCols.has('Usr. Banco') && (
-                        <td className="px-2 py-2" style={{ minWidth: '110px' }}>
+                        <td className="px-3 py-2.5 whitespace-nowrap">
                           {usuariosBanco.length > 0 ? (
-                            <div className="relative">
-                              <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 pointer-events-none" style={{ color: '#60a5fa' }} />
+                            <div className="relative inline-block">
+                              <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none" style={{ color: '#60a5fa' }} />
                               <select
                                 value={p.usuario_banco_id || ''}
                                 onChange={e => quickUsuarioBanco(p.id, e.target.value)}
-                                className="appearance-none w-full pl-1.5 pr-5 py-0.5 rounded-lg cursor-pointer truncate"
-                                style={{ background: p.usuario_banco_id ? 'rgba(96,165,250,0.1)' : 'var(--surface-subtle)', border: `1px solid ${p.usuario_banco_id ? 'rgba(96,165,250,0.3)' : 'var(--card-border)'}`, color: p.usuario_banco_id ? '#60a5fa' : 'var(--text-3)', fontSize: '10px' }}
+                                className="appearance-none pl-2.5 pr-7 py-1 rounded-lg cursor-pointer"
+                                style={{ background: p.usuario_banco_id ? 'rgba(96,165,250,0.12)' : 'var(--surface-subtle)', border: `1px solid ${p.usuario_banco_id ? 'rgba(96,165,250,0.35)' : 'var(--card-border)'}`, color: p.usuario_banco_id ? '#7db8ff' : 'var(--text-2)', fontSize: '11px', minWidth: '150px' }}
                               >
                                 <option value="">— nenhum</option>
                                 {usuariosBanco.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
