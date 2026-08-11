@@ -778,17 +778,23 @@ app.get('/api/admin/conta-empresa/:loja_id/extrato', auth, adminOnly, async (req
 app.get('/api/settings', async (req, res) => {
   const { rows } = await pool.query("SELECT key, value FROM app_settings");
   const settings = Object.fromEntries(rows.map(r => [r.key, r.value]));
-  res.json({ logo_url: settings.logo_url ?? '' });
+  res.json({ logo_url: settings.logo_url ?? '', company_name: settings.company_name ?? '' });
 });
 
 app.put('/api/settings', auth, adminOnly, async (req, res) => {
-  const { logo_url } = req.body;
-  await pool.query(
-    `INSERT INTO app_settings (key, value, updated_at) VALUES ('logo_url', $1, now())
-     ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = now()`,
-    [logo_url ?? '']
-  );
-  res.json({ logo_url: logo_url ?? '' });
+  const { logo_url, company_name } = req.body;
+  async function setKey(key, value) {
+    await pool.query(
+      `INSERT INTO app_settings (key, value, updated_at) VALUES ($1, $2, now())
+       ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = now()`,
+      [key, value ?? '']
+    );
+  }
+  if (logo_url !== undefined) await setKey('logo_url', logo_url);
+  if (company_name !== undefined) await setKey('company_name', company_name);
+  const { rows } = await pool.query("SELECT key, value FROM app_settings");
+  const settings = Object.fromEntries(rows.map(r => [r.key, r.value]));
+  res.json({ logo_url: settings.logo_url ?? '', company_name: settings.company_name ?? '' });
 });
 
 // ─── LOGIN BANCOS ──────────────────────────────────────────────────────────────
@@ -967,6 +973,101 @@ app.put('/api/admin/clientes/:id', auth, masterOnly, async (req, res) => {
 app.delete('/api/admin/clientes/:id', auth, masterOnly, async (req, res) => {
   await pool.query('DELETE FROM clientes WHERE id=$1', [req.params.id]);
   res.json({ ok: true });
+});
+
+// ─── WEBHOOK CAKTO (pagamentos → libera cliente) ───────────────────────────────
+// Busca recursivamente a primeira chave que bata (independe do formato exato da Cakto)
+function digValue(obj, keys) {
+  const want = keys.map(k => k.toLowerCase());
+  let found;
+  (function walk(o) {
+    if (found !== undefined || !o || typeof o !== 'object') return;
+    for (const [k, v] of Object.entries(o)) {
+      if (found !== undefined) return;
+      if (want.includes(String(k).toLowerCase()) && (typeof v === 'string' || typeof v === 'number')) found = v;
+    }
+    for (const v of Object.values(o)) { if (v && typeof v === 'object') walk(v); }
+  })(obj);
+  return found;
+}
+
+app.post('/api/webhooks/cakto', async (req, res) => {
+  try {
+    const body = req.body || {};
+    const { rows: sr } = await pool.query("SELECT value FROM app_settings WHERE key='cakto_webhook_secret'");
+    const configured = sr[0]?.value || '';
+    const received = body.secret || req.query.secret || req.headers['x-cakto-signature'] || '';
+    if (configured && String(received) !== String(configured)) {
+      return res.status(401).json({ error: 'secret inválido' });
+    }
+
+    const data = body.data || body;
+    const customer = data.customer || data.buyer || data.cliente || body.customer || {};
+    const productObj = data.product || data.offer || data.plan || body.product || {};
+
+    const evento = String(body.event || body.type || data.event || '').toLowerCase();
+    const email = String(customer.email || digValue(body, ['email', 'customer_email']) || '').toLowerCase();
+    const nome = String(customer.name || customer.fullname || customer.nome || digValue(customer, ['name', 'fullname', 'nome']) || '');
+    const telefone = String(customer.phone || customer.telefone || customer.celular || customer.mobile || '');
+    const produto = String((typeof productObj === 'string' ? productObj : (productObj.name || productObj.title || productObj.nome)) || digValue(body, ['product_name']) || '');
+    const status = String(data.status || body.status || digValue(body, ['status']) || evento);
+    const valorRaw = data.amount ?? data.baseAmount ?? data.value ?? data.total ?? digValue(body, ['amount', 'baseamount', 'value', 'price', 'total']);
+    const valor = valorRaw != null ? Number(String(valorRaw).replace(',', '.')) || 0 : 0;
+    const metodo = String(data.paymentMethod || data.payment_method || data.method || digValue(body, ['paymentmethod', 'method']) || '');
+
+    const aprovado = /approv|paid|pago|aprov|complet|active|created/.test(`${evento} ${status}`.toLowerCase());
+
+    let clienteId = null;
+    if (aprovado && email) {
+      const { rows: ex } = await pool.query('SELECT id FROM clientes WHERE lower(email)=$1 LIMIT 1', [email]);
+      if (ex.length) {
+        clienteId = ex[0].id;
+        await pool.query(
+          "UPDATE clientes SET status='ativo', ultimo_pagamento=now(), mensalidade=CASE WHEN $2 > 0 THEN $2 ELSE mensalidade END WHERE id=$1",
+          [clienteId, valor]
+        );
+      } else {
+        const { rows: ins } = await pool.query(
+          `INSERT INTO clientes (empresa, responsavel, whatsapp, email, mensalidade, status, ultimo_pagamento)
+           VALUES ($1,$2,$3,$4,$5,'ativo', now()) RETURNING id`,
+          [nome || email, nome, telefone, email, valor]
+        );
+        clienteId = ins[0].id;
+      }
+    }
+
+    await pool.query(
+      `INSERT INTO pagamentos (cliente_id, evento, status, cliente_nome, cliente_email, cliente_telefone, produto, valor, metodo, raw)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+      [clienteId, evento, status, nome, email, telefone, produto, valor, metodo, JSON.stringify(body)]
+    );
+
+    res.json({ ok: true, provisioned: !!clienteId });
+  } catch (err) {
+    console.error('[cakto webhook]', err.message);
+    res.status(200).json({ ok: false }); // 200 evita reenvio em loop por erro interno
+  }
+});
+
+app.get('/api/admin/pagamentos', auth, masterOnly, async (req, res) => {
+  const { rows } = await pool.query(
+    'SELECT id, cliente_id, evento, status, cliente_nome, cliente_email, produto, valor, metodo, created_at FROM pagamentos ORDER BY created_at DESC LIMIT 200'
+  );
+  res.json(rows);
+});
+
+app.get('/api/admin/cakto-config', auth, masterOnly, async (req, res) => {
+  const { rows } = await pool.query("SELECT value FROM app_settings WHERE key='cakto_webhook_secret'");
+  res.json({ secret: rows[0]?.value || '' });
+});
+app.put('/api/admin/cakto-config', auth, masterOnly, async (req, res) => {
+  const { secret } = req.body || {};
+  await pool.query(
+    `INSERT INTO app_settings (key, value, updated_at) VALUES ('cakto_webhook_secret', $1, now())
+     ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = now()`,
+    [secret ?? '']
+  );
+  res.json({ secret: secret ?? '' });
 });
 
 // ─── CONVÊNIOS ────────────────────────────────────────────────────────────────

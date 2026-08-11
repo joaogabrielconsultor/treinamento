@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, FileText, Calculator, Trophy, ShieldCheck, TrendingUp } from 'lucide-react';
 import { LogoComponent } from './LogoComponent';
+import { useAppContext } from '../context/AppContext';
 
 interface AuthPageProps {
   onSuccess: () => void;
@@ -14,6 +15,7 @@ const FEATURES = [
 ];
 
 export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
+  const { companyName } = useAppContext();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -95,7 +97,7 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
                 className="text-lg font-bold"
                 style={{ background: 'linear-gradient(135deg, #C6FF00 0%, #A9E000 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
               >
-                GS CRED
+                {companyName}
               </span>
             </div>
 
@@ -156,7 +158,7 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
               className="text-2xl font-bold"
               style={{ background: 'linear-gradient(135deg, #E2E8F0 0%, #94A3B8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
             >
-              GS CRED
+              {companyName}
             </h1>
             <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
               Plataforma para crédito consignado
@@ -256,6 +258,9 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
 
             <p className="text-center text-xs mt-6" style={{ color: '#334155' }}>
               Acesso restrito — solicite credenciais ao administrador
+            </p>
+            <p className="text-center text-[10px] mt-3 uppercase tracking-widest" style={{ fontFamily: "'Space Mono', ui-monospace, monospace", color: '#3a3a3a' }}>
+              Desenvolvido por <span style={{ color: '#7a8a3a' }}>GS CRED</span>
             </p>
           </div>
         </div>

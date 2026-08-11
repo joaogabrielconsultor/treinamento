@@ -2,6 +2,7 @@ import { LayoutDashboard, Library, LogOut, ChevronRight, Users, GraduationCap, S
 import { User } from '@supabase/supabase-js';
 import { ViewType } from '../types';
 import { LogoComponent } from './LogoComponent';
+import { useAppContext } from '../context/AppContext';
 
 interface SidebarProps {
   currentView: ViewType;
@@ -66,6 +67,7 @@ const adminGroups: { label: string; items: { view: ViewType; icon: typeof Users;
 ];
 
 export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin, onOpenProfile }: SidebarProps) {
+  const { companyName } = useAppContext();
 
   const displayName = user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'Usuário';
   const displayEmail = user.email ?? '';
@@ -101,7 +103,7 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin, onO
                 color: '#C6FF00',
               }}
             >
-              GS CRED
+              {companyName}
             </span>
             <span className="text-[11px] mt-0.5 block truncate" style={{ color: '#64748B' }}>
               Plataforma Financeira
@@ -211,7 +213,7 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin, onO
             className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-[11px] font-bold"
             style={{
               background: 'linear-gradient(135deg, #C6FF00, #A9E000)',
-              color: '#fff',
+              color: '#0A0A0A',
               boxShadow: '0 0 10px rgba(198,255,0,0.3)',
             }}
           >
@@ -240,6 +242,10 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin, onO
           <LogOut className="w-[15px] h-[15px]" />
           Sair da plataforma
         </button>
+
+        <p className="text-center text-[9px] tracking-widest uppercase pt-1.5" style={{ fontFamily: "'Space Mono', ui-monospace, monospace", color: '#3f3f3f' }}>
+          Desenvolvido por <span style={{ color: '#7a8a3a' }}>GS CRED</span>
+        </p>
       </div>
     </aside>
   );

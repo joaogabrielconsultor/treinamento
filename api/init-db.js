@@ -437,6 +437,24 @@ async function initDb() {
       )
     `);
 
+    // Pagamentos recebidos via webhook (Cakto) — "Financeiro real"
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS pagamentos (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        cliente_id uuid REFERENCES clientes(id) ON DELETE SET NULL,
+        evento text NOT NULL DEFAULT '',
+        status text NOT NULL DEFAULT '',
+        cliente_nome text NOT NULL DEFAULT '',
+        cliente_email text NOT NULL DEFAULT '',
+        cliente_telefone text NOT NULL DEFAULT '',
+        produto text NOT NULL DEFAULT '',
+        valor numeric NOT NULL DEFAULT 0,
+        metodo text NOT NULL DEFAULT '',
+        raw jsonb,
+        created_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+
     // Seed badges padrão
     const { rows: badgeCheck } = await client.query('SELECT id FROM badges LIMIT 1');
     if (badgeCheck.length === 0) {

@@ -1,14 +1,28 @@
 ﻿import { useState } from 'react';
-import { Palette, Save, ImageIcon, Check, AlertCircle } from 'lucide-react';
+import { Palette, Save, ImageIcon, Check, AlertCircle, Building2 } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { LogoComponent } from '../LogoComponent';
 
 export function AdminPersonalizacao() {
-  const { logoUrl, setLogoUrl } = useAppContext();
+  const { logoUrl, setLogoUrl, companyName, setCompanyName } = useAppContext();
   const [inputUrl, setInputUrl] = useState(logoUrl);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+
+  const [nameInput, setNameInput] = useState(companyName);
+  const [savingName, setSavingName] = useState(false);
+  const [savedName, setSavedName] = useState(false);
+
+  const handleSaveName = async () => {
+    setSavingName(true);
+    try {
+      await setCompanyName(nameInput.trim());
+      setSavedName(true);
+      setTimeout(() => setSavedName(false), 2500);
+    } catch { setError('Erro ao salvar o nome.'); }
+    finally { setSavingName(false); }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -42,6 +56,28 @@ export function AdminPersonalizacao() {
       <div className="mb-8">
         <h1 className="text-xl font-bold text-gray-100">Personalização</h1>
         <p className="text-xs text-slate-500 mt-0.5">Configure a identidade visual da plataforma</p>
+      </div>
+
+      {/* Nome da empresa */}
+      <div className="rounded-2xl p-5 mb-5" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
+        <div className="flex items-center gap-2 mb-4">
+          <Building2 className="w-5 h-5" style={{ color: '#C6FF00' }} />
+          <h2 className="text-lg font-semibold" style={{ color: 'var(--text-1)' }}>Nome da empresa</h2>
+        </div>
+        <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Nome exibido na plataforma</label>
+        <div className="flex gap-3">
+          <input
+            value={nameInput}
+            onChange={(e) => { setNameInput(e.target.value); setSavedName(false); }}
+            placeholder="Ex: Consignados Silva"
+            className="input-cyber flex-1 px-3 py-2.5 text-sm rounded-xl"
+          />
+          <button onClick={handleSaveName} disabled={savingName} className="flex items-center gap-2 px-4 py-2 text-sm rounded-xl btn-cyber disabled:opacity-50">
+            {savedName ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+            {savingName ? 'Salvando...' : savedName ? 'Salvo!' : 'Salvar'}
+          </button>
+        </div>
+        <p className="text-xs mt-1.5" style={{ color: 'var(--text-3)' }}>Aparece na barra lateral e na tela de login. Deixe em branco para usar "GS CRED".</p>
       </div>
 
       <div className="rounded-2xl p-5" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>

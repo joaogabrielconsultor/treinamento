@@ -16,7 +16,7 @@ import { AdminClientes } from '../admin/AdminClientes';
 const MONO = "'Space Mono', ui-monospace, monospace";
 const ANTON = "'Anton', Impact, sans-serif";
 
-type Section = 'overview' | 'clientes' | 'suporte' | 'assinaturas';
+type Section = 'overview' | 'clientes' | 'suporte' | 'assinaturas' | 'financeiro';
 
 interface Cliente {
   id: string; empresa: string; responsavel: string; whatsapp: string; email: string;
@@ -150,6 +150,7 @@ const NAV: { key: Section; label: string; icon: typeof LayoutGrid }[] = [
   { key: 'clientes', label: 'Clientes', icon: Users },
   { key: 'suporte', label: 'Suporte', icon: Headphones },
   { key: 'assinaturas', label: 'Assinaturas', icon: CreditCard },
+  { key: 'financeiro', label: 'Financeiro', icon: DollarSign },
 ];
 
 function AdminShell({ section, setSection, onSignOut, adminName }: {
@@ -194,7 +195,7 @@ function AdminShell({ section, setSection, onSignOut, adminName }: {
       </aside>
 
       <main className="flex-1 overflow-y-auto min-w-0">
-        {section === 'clientes' ? <AdminClientes /> : section === 'overview' ? <Overview setSection={setSection} /> : section === 'suporte' ? <Suporte /> : <Assinaturas />}
+        {section === 'clientes' ? <AdminClientes /> : section === 'overview' ? <Overview setSection={setSection} /> : section === 'suporte' ? <Suporte /> : section === 'financeiro' ? <Financeiro /> : <Assinaturas />}
       </main>
     </div>
   );
@@ -297,6 +298,102 @@ function Assinaturas() {
                   <td className="px-4 py-3 num whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{c.dia_vencimento ? `dia ${c.dia_vencimento}` : '—'}</td>
                   <td className="px-4 py-3 num whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{c.ultimo_pagamento ? new Date(c.ultimo_pagamento).toLocaleDateString('pt-BR') : '—'}</td>
                   <td className="px-4 py-3 whitespace-nowrap"><span className={`badge ${STATUS_BADGE[c.status] || 'badge-neutral'}`}>{STATUS_LABEL[c.status] || c.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Financeiro (webhook Cakto) ── */
+interface Pagamento {
+  id: string; evento: string; status: string; cliente_nome: string; cliente_email: string;
+  produto: string; valor: number | string; metodo: string; created_at: string;
+}
+function Financeiro() {
+  const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [secret, setSecret] = useState('');
+  const [savingSecret, setSavingSecret] = useState(false);
+  const [savedSecret, setSavedSecret] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const webhookUrl = `${window.location.origin}/api/webhooks/cakto`;
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [p, c] = await Promise.all([
+        fetch('/api/admin/pagamentos', { headers: { Authorization: `Bearer ${token()}` } }).then(r => r.json()),
+        fetch('/api/admin/cakto-config', { headers: { Authorization: `Bearer ${token()}` } }).then(r => r.json()),
+      ]);
+      setPagamentos(Array.isArray(p) ? p : []);
+      setSecret(c?.secret || '');
+    } catch { /* ignore */ }
+    setLoading(false);
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  const saveSecret = async () => {
+    setSavingSecret(true);
+    try {
+      await fetch('/api/admin/cakto-config', { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` }, body: JSON.stringify({ secret }) });
+      setSavedSecret(true); setTimeout(() => setSavedSecret(false), 2500);
+    } catch { /* ignore */ }
+    setSavingSecret(false);
+  };
+  const copyUrl = () => { navigator.clipboard.writeText(webhookUrl); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+
+  const total = pagamentos.reduce((s, p) => s + Number(p.valor || 0), 0);
+
+  return (
+    <div className="p-8 max-w-5xl mx-auto">
+      <SectionHead title="Financeiro" subtitle="Pagamentos recebidos pelo webhook da Cakto" onReload={load} />
+
+      {/* Config webhook */}
+      <div className="rounded-2xl p-5 mb-6" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+        <h3 className="text-sm font-bold mb-1" style={{ color: 'var(--text-1)' }}>Configuração do webhook</h3>
+        <p className="text-xs mb-4" style={{ color: 'var(--text-3)' }}>Na Cakto, cadastre este endpoint no seu produto e cole o mesmo segredo aqui. Quando a compra é aprovada, o cliente é ativado automaticamente.</p>
+        <label className="block text-[11px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-3)', fontFamily: MONO }}>URL do webhook (cole na Cakto)</label>
+        <div className="flex gap-2 mb-4">
+          <input readOnly value={webhookUrl} className="input-cyber flex-1 px-3 py-2.5 text-sm rounded-xl" style={{ fontFamily: MONO }} />
+          <button onClick={copyUrl} className="px-4 py-2 text-sm rounded-xl btn-cyber">{copied ? 'Copiado!' : 'Copiar'}</button>
+        </div>
+        <label className="block text-[11px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-3)', fontFamily: MONO }}>Segredo (secret) do webhook</label>
+        <div className="flex gap-2">
+          <input value={secret} onChange={e => setSecret(e.target.value)} placeholder="cole aqui o secret da Cakto" className="input-cyber flex-1 px-3 py-2.5 text-sm rounded-xl" style={{ fontFamily: MONO }} />
+          <button onClick={saveSecret} disabled={savingSecret} className="px-4 py-2 text-sm rounded-xl btn-cyber disabled:opacity-50">{savedSecret ? 'Salvo!' : savingSecret ? '...' : 'Salvar'}</button>
+        </div>
+      </div>
+
+      {/* Financeiro real */}
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>Financeiro real <span className="badge badge-green ml-1">AO VIVO</span></h3>
+        {pagamentos.length > 0 && <span className="text-sm num font-bold" style={{ color: '#4ade80' }}>{fmtBRL(total)} recebidos</span>}
+      </div>
+
+      {loading ? <Spinner /> : pagamentos.length === 0 ? (
+        <div className="text-center py-16 rounded-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <DollarSign className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-3)' }} />
+          <p className="font-semibold" style={{ color: 'var(--text-2)' }}>Nenhum pagamento registrado ainda</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>Assim que a primeira compra cair pelo webhook da Cakto, aparece aqui.</p>
+        </div>
+      ) : (
+        <div className="rounded-2xl overflow-hidden overflow-x-auto" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <table className="w-full text-sm" style={{ minWidth: '680px' }}>
+            <thead><tr style={{ borderBottom: '1px solid var(--card-border)' }}>
+              {['Data', 'Cliente', 'Produto', 'Valor', 'Evento'].map(h => <th key={h} className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-2)' }}>{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {pagamentos.map(p => (
+                <tr key={p.id} className="table-row-cyber">
+                  <td className="px-4 py-3 num whitespace-nowrap" style={{ color: 'var(--text-2)', fontSize: '12px' }}>{new Date(p.created_at).toLocaleString('pt-BR')}</td>
+                  <td className="px-4 py-3 whitespace-nowrap"><p className="font-semibold" style={{ color: 'var(--text-1)' }}>{p.cliente_nome || '—'}</p><p className="text-xs" style={{ color: 'var(--text-3)' }}>{p.cliente_email}</p></td>
+                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{p.produto || '—'}</td>
+                  <td className="px-4 py-3 font-bold num whitespace-nowrap" style={{ color: '#4ade80' }}>{fmtBRL(Number(p.valor))}</td>
+                  <td className="px-4 py-3 whitespace-nowrap"><span className="badge badge-neutral">{p.evento || p.status}</span></td>
                 </tr>
               ))}
             </tbody>
