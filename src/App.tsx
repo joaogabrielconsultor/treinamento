@@ -31,6 +31,7 @@ import { AdminUsuariosBanco } from './components/admin/AdminUsuariosBanco';
 import { Roteiros } from './components/Roteiros';
 import { AdminRoteiros } from './components/admin/AdminRoteiros';
 import { AdminImportacao } from './components/admin/AdminImportacao';
+import { AdminPortal } from './components/admin-portal/AdminPortal';
 import { ConsultaMargem } from './components/ConsultaMargem';
 import { ProfileModal } from './components/ProfileModal';
 import { SupportButton } from './components/SupportButton';
@@ -302,9 +303,22 @@ function AppInner() {
 }
 
 export default function App() {
+  const path = window.location.pathname;
   // Rota pública de vendas — não exige login
-  if (/\/planos\/?$/.test(window.location.pathname)) {
+  if (/\/planos\/?$/.test(path)) {
     return <PlanosPage />;
+  }
+  // Portal administrativo do dono — login e layout próprios (separado do app)
+  if (/\/admin\/?$/.test(path)) {
+    return (
+      <AppProvider>
+        <ToastProvider>
+          <ConfirmProvider>
+            <AdminPortal />
+          </ConfirmProvider>
+        </ToastProvider>
+      </AppProvider>
+    );
   }
   return (
     <AppProvider>

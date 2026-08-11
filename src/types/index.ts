@@ -327,6 +327,7 @@ export type ViewType =
   | 'roteiros'
   | 'admin-roteiros'
   | 'admin-importacao'
+  | 'admin-clientes'
   | 'consulta-margem';
 
 export type AuthMode = 'login';

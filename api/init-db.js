@@ -415,6 +415,28 @@ async function initDb() {
       )
     `);
 
+    // CRM de assinaturas (painel do dono) — clientes que assinam o GS CRED
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS clientes (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        empresa text NOT NULL,
+        responsavel text NOT NULL DEFAULT '',
+        whatsapp text NOT NULL DEFAULT '',
+        email text NOT NULL DEFAULT '',
+        sistema_url text NOT NULL DEFAULT '',
+        plano text NOT NULL DEFAULT 'Completo',
+        mensalidade numeric NOT NULL DEFAULT 0,
+        dia_vencimento integer,
+        ultimo_pagamento date,
+        status text NOT NULL DEFAULT 'ativo' CHECK (status IN ('ativo','inadimplente','suspenso','teste','cancelado')),
+        logins_criados integer NOT NULL DEFAULT 0,
+        logins_limite integer,
+        features jsonb NOT NULL DEFAULT '{}'::jsonb,
+        observacoes text NOT NULL DEFAULT '',
+        created_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+
     // Seed badges padrão
     const { rows: badgeCheck } = await client.query('SELECT id FROM badges LIMIT 1');
     if (badgeCheck.length === 0) {

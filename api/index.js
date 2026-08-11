@@ -922,6 +922,53 @@ app.delete('/api/banks/:id', auth, masterOnly, async (req, res) => {
   res.json({ ok: true });
 });
 
+// ─── CLIENTES (CRM de assinaturas — painel do dono, master-only) ───────────────
+function clienteParams(b) {
+  return [
+    b.empresa, b.responsavel || '', b.whatsapp || '', b.email || '', b.sistema_url || '',
+    b.plano || 'Completo', Number(b.mensalidade) || 0,
+    b.dia_vencimento ? parseInt(b.dia_vencimento) : null,
+    b.ultimo_pagamento || null,
+    b.status || 'ativo',
+    parseInt(b.logins_criados) || 0,
+    b.logins_limite ? parseInt(b.logins_limite) : null,
+    b.features ? JSON.stringify(b.features) : '{}',
+    b.observacoes || '',
+  ];
+}
+
+app.get('/api/admin/clientes', auth, masterOnly, async (req, res) => {
+  const { rows } = await pool.query('SELECT * FROM clientes ORDER BY empresa ASC');
+  res.json(rows);
+});
+
+app.post('/api/admin/clientes', auth, masterOnly, async (req, res) => {
+  const b = req.body || {};
+  if (!b.empresa || !String(b.empresa).trim()) return res.status(400).json({ error: 'Empresa obrigatória' });
+  const { rows } = await pool.query(
+    `INSERT INTO clientes (empresa, responsavel, whatsapp, email, sistema_url, plano, mensalidade, dia_vencimento, ultimo_pagamento, status, logins_criados, logins_limite, features, observacoes)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
+    clienteParams(b)
+  );
+  res.json(rows[0]);
+});
+
+app.put('/api/admin/clientes/:id', auth, masterOnly, async (req, res) => {
+  const b = req.body || {};
+  if (!b.empresa || !String(b.empresa).trim()) return res.status(400).json({ error: 'Empresa obrigatória' });
+  const { rows } = await pool.query(
+    `UPDATE clientes SET empresa=$1, responsavel=$2, whatsapp=$3, email=$4, sistema_url=$5, plano=$6, mensalidade=$7, dia_vencimento=$8, ultimo_pagamento=$9, status=$10, logins_criados=$11, logins_limite=$12, features=$13, observacoes=$14 WHERE id=$15 RETURNING *`,
+    [...clienteParams(b), req.params.id]
+  );
+  if (!rows.length) return res.status(404).json({ error: 'Cliente não encontrado' });
+  res.json(rows[0]);
+});
+
+app.delete('/api/admin/clientes/:id', auth, masterOnly, async (req, res) => {
+  await pool.query('DELETE FROM clientes WHERE id=$1', [req.params.id]);
+  res.json({ ok: true });
+});
+
 // ─── CONVÊNIOS ────────────────────────────────────────────────────────────────
 app.get('/api/convenios', auth, async (req, res) => {
   const { rows } = await pool.query('SELECT * FROM convenios ORDER BY name ASC');
