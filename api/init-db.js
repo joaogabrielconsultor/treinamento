@@ -450,10 +450,13 @@ async function initDb() {
         produto text NOT NULL DEFAULT '',
         valor numeric NOT NULL DEFAULT 0,
         metodo text NOT NULL DEFAULT '',
+        cakto_order_id text,
         raw jsonb,
         created_at timestamptz NOT NULL DEFAULT now()
       )
     `);
+    await client.query('ALTER TABLE pagamentos ADD COLUMN IF NOT EXISTS cakto_order_id text');
+    await client.query('CREATE UNIQUE INDEX IF NOT EXISTS pagamentos_cakto_order_uidx ON pagamentos(cakto_order_id) WHERE cakto_order_id IS NOT NULL');
 
     // Seed badges padrão
     const { rows: badgeCheck } = await client.query('SELECT id FROM badges LIMIT 1');

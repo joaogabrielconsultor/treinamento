@@ -1056,18 +1056,96 @@ app.get('/api/admin/pagamentos', auth, masterOnly, async (req, res) => {
   res.json(rows);
 });
 
+async function setSetting(key, value) {
+  await pool.query(
+    `INSERT INTO app_settings (key, value, updated_at) VALUES ($1, $2, now())
+     ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = now()`,
+    [key, value ?? '']
+  );
+}
+
 app.get('/api/admin/cakto-config', auth, masterOnly, async (req, res) => {
-  const { rows } = await pool.query("SELECT value FROM app_settings WHERE key='cakto_webhook_secret'");
-  res.json({ secret: rows[0]?.value || '' });
+  const { rows } = await pool.query("SELECT key, value FROM app_settings WHERE key IN ('cakto_webhook_secret','cakto_client_id','cakto_client_secret')");
+  const s = Object.fromEntries(rows.map(r => [r.key, r.value]));
+  res.json({ secret: s.cakto_webhook_secret || '', client_id: s.cakto_client_id || '', client_secret: s.cakto_client_secret || '' });
 });
 app.put('/api/admin/cakto-config', auth, masterOnly, async (req, res) => {
-  const { secret } = req.body || {};
-  await pool.query(
-    `INSERT INTO app_settings (key, value, updated_at) VALUES ('cakto_webhook_secret', $1, now())
-     ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = now()`,
-    [secret ?? '']
-  );
-  res.json({ secret: secret ?? '' });
+  const { secret, client_id, client_secret } = req.body || {};
+  if (secret !== undefined) await setSetting('cakto_webhook_secret', secret);
+  if (client_id !== undefined) await setSetting('cakto_client_id', client_id);
+  if (client_secret !== undefined) await setSetting('cakto_client_secret', client_secret);
+  res.json({ ok: true });
+});
+
+// Autentica na Cakto (OAuth2) e devolve um access_token
+async function caktoToken() {
+  const { rows } = await pool.query("SELECT key, value FROM app_settings WHERE key IN ('cakto_client_id','cakto_client_secret')");
+  const s = Object.fromEntries(rows.map(r => [r.key, r.value]));
+  if (!s.cakto_client_id || !s.cakto_client_secret) throw new Error('Configure o Client ID e o Client Secret da Cakto.');
+  const body = new URLSearchParams({ client_id: s.cakto_client_id, client_secret: s.cakto_client_secret });
+  const r = await fetch('https://api.cakto.com.br/public_api/token/', {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body,
+  });
+  if (!r.ok) throw new Error('Falha ao autenticar na Cakto — verifique as chaves.');
+  const j = await r.json();
+  if (!j.access_token) throw new Error('A Cakto não retornou o token de acesso.');
+  return j.access_token;
+}
+
+// Sincroniza pedidos pagos da Cakto → cria/ativa clientes e registra pagamentos
+app.post('/api/admin/cakto/sync', auth, masterOnly, async (req, res) => {
+  try {
+    const tk = await caktoToken();
+    let page = 1, imported = 0, novosClientes = 0;
+    while (page <= 20) {
+      const r = await fetch(`https://api.cakto.com.br/public_api/orders/?status=paid&limit=50&page=${page}`, {
+        headers: { Authorization: `Bearer ${tk}` },
+      });
+      if (!r.ok) break;
+      const j = await r.json();
+      const orders = Array.isArray(j) ? j : (j.data || j.results || j.items || []);
+      if (!orders.length) break;
+      for (const o of orders) {
+        const orderId = String(o.id || o.orderId || o._id || '') || null;
+        const email = String(o.customer?.email || '').toLowerCase();
+        const nome = String(o.customer?.name || '');
+        const telefone = String(o.customer?.phone || '');
+        const produto = String(o.product?.name || '');
+        const valor = Number(o.amount || 0) || 0;
+        const metodo = String(o.paymentMethod || '');
+        const createdAt = o.createdAt || o.paidAt || null;
+
+        let clienteId = null;
+        if (email) {
+          const ex = await pool.query('SELECT id FROM clientes WHERE lower(email)=$1 LIMIT 1', [email]);
+          if (ex.rows.length) {
+            clienteId = ex.rows[0].id;
+            await pool.query("UPDATE clientes SET status='ativo', ultimo_pagamento=COALESCE($2::timestamptz, now()), mensalidade=CASE WHEN $3 > 0 THEN $3 ELSE mensalidade END WHERE id=$1", [clienteId, createdAt, valor]);
+          } else {
+            const ins = await pool.query(
+              `INSERT INTO clientes (empresa, responsavel, whatsapp, email, mensalidade, status, ultimo_pagamento)
+               VALUES ($1,$2,$3,$4,$5,'ativo', COALESCE($6::timestamptz, now())) RETURNING id`,
+              [nome || email, nome, telefone, email, valor, createdAt]
+            );
+            clienteId = ins.rows[0].id; novosClientes++;
+          }
+        }
+
+        const pin = await pool.query(
+          `INSERT INTO pagamentos (cliente_id, evento, status, cliente_nome, cliente_email, cliente_telefone, produto, valor, metodo, cakto_order_id, raw, created_at)
+           VALUES ($1,'order','paid',$2,$3,$4,$5,$6,$7,$8,$9, COALESCE($10::timestamptz, now()))
+           ON CONFLICT (cakto_order_id) WHERE cakto_order_id IS NOT NULL DO NOTHING RETURNING id`,
+          [clienteId, nome, email, telefone, produto, valor, metodo, orderId, JSON.stringify(o), createdAt]
+        );
+        if (pin.rows.length) imported++;
+      }
+      if (orders.length < 50) break;
+      page++;
+    }
+    res.json({ ok: true, imported, novosClientes });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // ─── CONVÊNIOS ────────────────────────────────────────────────────────────────

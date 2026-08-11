@@ -317,56 +317,100 @@ function Financeiro() {
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
   const [loading, setLoading] = useState(true);
   const [secret, setSecret] = useState('');
-  const [savingSecret, setSavingSecret] = useState(false);
-  const [savedSecret, setSavedSecret] = useState(false);
+  const [clientId, setClientId] = useState('');
+  const [clientSecret, setClientSecret] = useState('');
+  const [savingCfg, setSavingCfg] = useState(false);
+  const [savedCfg, setSavedCfg] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState('');
   const webhookUrl = `${window.location.origin}/api/webhooks/cakto`;
+
+  const loadPagamentos = useCallback(async () => {
+    const p = await fetch('/api/admin/pagamentos', { headers: { Authorization: `Bearer ${token()}` } }).then(r => r.json());
+    setPagamentos(Array.isArray(p) ? p : []);
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [p, c] = await Promise.all([
-        fetch('/api/admin/pagamentos', { headers: { Authorization: `Bearer ${token()}` } }).then(r => r.json()),
-        fetch('/api/admin/cakto-config', { headers: { Authorization: `Bearer ${token()}` } }).then(r => r.json()),
-      ]);
-      setPagamentos(Array.isArray(p) ? p : []);
-      setSecret(c?.secret || '');
+      const c = await fetch('/api/admin/cakto-config', { headers: { Authorization: `Bearer ${token()}` } }).then(r => r.json());
+      setSecret(c?.secret || ''); setClientId(c?.client_id || ''); setClientSecret(c?.client_secret || '');
+      await loadPagamentos();
     } catch { /* ignore */ }
     setLoading(false);
-  }, []);
+  }, [loadPagamentos]);
   useEffect(() => { load(); }, [load]);
 
-  const saveSecret = async () => {
-    setSavingSecret(true);
+  const saveConfig = async () => {
+    setSavingCfg(true);
     try {
-      await fetch('/api/admin/cakto-config', { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` }, body: JSON.stringify({ secret }) });
-      setSavedSecret(true); setTimeout(() => setSavedSecret(false), 2500);
+      await fetch('/api/admin/cakto-config', { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` }, body: JSON.stringify({ secret, client_id: clientId, client_secret: clientSecret }) });
+      setSavedCfg(true); setTimeout(() => setSavedCfg(false), 2500);
     } catch { /* ignore */ }
-    setSavingSecret(false);
+    setSavingCfg(false);
   };
-  const copyUrl = () => { navigator.clipboard.writeText(webhookUrl); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
+  const doSync = async () => {
+    setSyncing(true); setSyncMsg('');
+    try {
+      const r = await fetch('/api/admin/cakto/sync', { method: 'POST', headers: { Authorization: `Bearer ${token()}` } });
+      const j = await r.json();
+      if (!r.ok) { setSyncMsg(j.error || 'Erro na sincronização.'); }
+      else { setSyncMsg(`Sincronizado: ${j.imported} pagamento(s), ${j.novosClientes} cliente(s) novo(s).`); await loadPagamentos(); }
+    } catch { setSyncMsg('Erro de conexão com a Cakto.'); }
+    setSyncing(false);
+  };
+
+  const copyUrl = () => { navigator.clipboard.writeText(webhookUrl); setCopied(true); setTimeout(() => setCopied(false), 2000); };
   const total = pagamentos.reduce((s, p) => s + Number(p.valor || 0), 0);
+  const cfgLabel = 'block text-[11px] font-bold uppercase tracking-wider mb-1.5';
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
-      <SectionHead title="Financeiro" subtitle="Pagamentos recebidos pelo webhook da Cakto" onReload={load} />
+      <SectionHead title="Financeiro" subtitle="Conexão com a Cakto e pagamentos recebidos" onReload={load} />
 
-      {/* Config webhook */}
-      <div className="rounded-2xl p-5 mb-6" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-        <h3 className="text-sm font-bold mb-1" style={{ color: 'var(--text-1)' }}>Configuração do webhook</h3>
-        <p className="text-xs mb-4" style={{ color: 'var(--text-3)' }}>Na Cakto, cadastre este endpoint no seu produto e cole o mesmo segredo aqui. Quando a compra é aprovada, o cliente é ativado automaticamente.</p>
-        <label className="block text-[11px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-3)', fontFamily: MONO }}>URL do webhook (cole na Cakto)</label>
-        <div className="flex gap-2 mb-4">
-          <input readOnly value={webhookUrl} className="input-cyber flex-1 px-3 py-2.5 text-sm rounded-xl" style={{ fontFamily: MONO }} />
-          <button onClick={copyUrl} className="px-4 py-2 text-sm rounded-xl btn-cyber">{copied ? 'Copiado!' : 'Copiar'}</button>
+      {/* Opção A — API (mais fácil) */}
+      <div className="rounded-2xl p-5 mb-5" style={{ background: 'var(--card-bg)', border: '1px solid rgba(198,255,0,0.25)' }}>
+        <div className="flex items-center gap-2 mb-1">
+          <h3 className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>Conectar via API da Cakto</h3>
+          <span className="badge badge-green">Recomendado</span>
         </div>
-        <label className="block text-[11px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-3)', fontFamily: MONO }}>Segredo (secret) do webhook</label>
-        <div className="flex gap-2">
-          <input value={secret} onChange={e => setSecret(e.target.value)} placeholder="cole aqui o secret da Cakto" className="input-cyber flex-1 px-3 py-2.5 text-sm rounded-xl" style={{ fontFamily: MONO }} />
-          <button onClick={saveSecret} disabled={savingSecret} className="px-4 py-2 text-sm rounded-xl btn-cyber disabled:opacity-50">{savedSecret ? 'Salvo!' : savingSecret ? '...' : 'Salvar'}</button>
+        <p className="text-xs mb-4" style={{ color: 'var(--text-3)' }}>Cole as chaves de API da Cakto (em Integrações → Cakto API) e clique em sincronizar. Puxa suas vendas pagas e ativa os clientes automaticamente.</p>
+        <div className="grid sm:grid-cols-2 gap-3 mb-3">
+          <div>
+            <label className={cfgLabel} style={{ color: 'var(--text-3)', fontFamily: MONO }}>Client ID</label>
+            <input value={clientId} onChange={e => setClientId(e.target.value)} placeholder="Cliente ID" className="input-cyber w-full px-3 py-2.5 text-sm rounded-xl" style={{ fontFamily: MONO }} />
+          </div>
+          <div>
+            <label className={cfgLabel} style={{ color: 'var(--text-3)', fontFamily: MONO }}>Client Secret</label>
+            <input value={clientSecret} onChange={e => setClientSecret(e.target.value)} placeholder="Cliente Segredo" type="password" className="input-cyber w-full px-3 py-2.5 text-sm rounded-xl" style={{ fontFamily: MONO }} />
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button onClick={saveConfig} disabled={savingCfg} className="px-4 py-2 text-sm rounded-xl btn-ghost disabled:opacity-50">{savedCfg ? 'Salvo!' : savingCfg ? '...' : 'Salvar chaves'}</button>
+          <button onClick={doSync} disabled={syncing} className="flex items-center gap-2 px-4 py-2 text-sm rounded-xl btn-cyber disabled:opacity-50">
+            <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} /> {syncing ? 'Sincronizando...' : 'Sincronizar com Cakto'}
+          </button>
+          {syncMsg && <span className="text-xs" style={{ color: syncMsg.startsWith('Sincronizado') ? '#4ade80' : '#f87171' }}>{syncMsg}</span>}
         </div>
       </div>
+
+      {/* Opção B — Webhook (tempo real) */}
+      <details className="rounded-2xl p-5 mb-6" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+        <summary className="text-sm font-bold cursor-pointer" style={{ color: 'var(--text-1)' }}>Webhook (tempo real) — opcional</summary>
+        <p className="text-xs mt-2 mb-4" style={{ color: 'var(--text-3)' }}>Ativa o cliente no instante do pagamento. Na Cakto (Webhooks), cadastre a URL abaixo e cole o mesmo segredo aqui.</p>
+        <label className={cfgLabel} style={{ color: 'var(--text-3)', fontFamily: MONO }}>URL do webhook</label>
+        <div className="flex gap-2 mb-3">
+          <input readOnly value={webhookUrl} className="input-cyber flex-1 px-3 py-2.5 text-sm rounded-xl" style={{ fontFamily: MONO }} />
+          <button onClick={copyUrl} className="px-4 py-2 text-sm rounded-xl btn-ghost">{copied ? 'Copiado!' : 'Copiar'}</button>
+        </div>
+        <label className={cfgLabel} style={{ color: 'var(--text-3)', fontFamily: MONO }}>Segredo do webhook</label>
+        <div className="flex gap-2">
+          <input value={secret} onChange={e => setSecret(e.target.value)} placeholder="secret do webhook" className="input-cyber flex-1 px-3 py-2.5 text-sm rounded-xl" style={{ fontFamily: MONO }} />
+          <button onClick={saveConfig} disabled={savingCfg} className="px-4 py-2 text-sm rounded-xl btn-ghost disabled:opacity-50">{savedCfg ? 'Salvo!' : 'Salvar'}</button>
+        </div>
+      </details>
 
       {/* Financeiro real */}
       <div className="flex items-center justify-between mb-3">
