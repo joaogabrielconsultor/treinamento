@@ -42,7 +42,7 @@ app.use(fileUpload({ limits: { fileSize: 2 * 1024 * 1024 * 1024 } }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const MASTER_ADMIN_EMAIL = 'adm@rozesstartflow.com';
+const MASTER_ADMIN_EMAIL = process.env.MASTER_EMAIL || 'adm@rozesstartflow.com';
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR);
 
@@ -65,7 +65,7 @@ function adminOnly(req, res, next) {
   if (req.user.role !== 'admin' && req.user.role !== 'master') return res.status(403).json({ error: 'Acesso negado' });
   next();
 }
-const MASTER_EMAIL = 'adm@rozesstartflow.com';
+const MASTER_EMAIL = process.env.MASTER_EMAIL || 'adm@rozesstartflow.com';
 function masterOnly(req, res, next) {
   if (req.user.role !== 'master' && req.user.email !== MASTER_EMAIL) return res.status(403).json({ error: 'Acesso restrito ao master' });
   next();

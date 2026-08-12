@@ -488,9 +488,11 @@ async function initDb() {
       `);
     }
 
-    // Master — único usuário que pode excluir propostas e tem acesso total
-    const MASTER_EMAIL = 'adm@rozesstartflow.com';
-    await client.query(`UPDATE users SET role = 'master' WHERE email = $1`, [MASTER_EMAIL]);
+    // Master — único usuário que pode excluir propostas e tem acesso total.
+    // Configurável por instância via env MASTER_EMAIL (white-label). Só existe UM master.
+    const MASTER_EMAIL = process.env.MASTER_EMAIL || 'adm@rozesstartflow.com';
+    await client.query(`UPDATE users SET role = 'master' WHERE lower(email) = lower($1)`, [MASTER_EMAIL]);
+    await client.query(`UPDATE users SET role = 'admin' WHERE role = 'master' AND lower(email) <> lower($1)`, [MASTER_EMAIL]);
 
     console.log('Banco de dados pronto.');
   } catch (err) {
