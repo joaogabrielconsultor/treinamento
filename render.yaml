@@ -1,14 +1,24 @@
+# Blueprint do Render — cria o serviço já configurado.
+# No Render: New → Blueprint → conecte este repositório → ele lê este arquivo.
+# Depois, preencha os valores marcados como "sync: false" no painel (são secretos).
 services:
   - type: web
-    name: aprova-mais
+    name: gscorban              # → vira gscorban.onrender.com
     env: node
     plan: free
     buildCommand: npm install --include=dev && cd api && npm install && cd .. && npm run build
     startCommand: node api/index.js
+    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
-      - key: JWT_SECRET
-        generateValue: true
+      # Cole a MESMA connection string do serviço atual (mesmo banco = mesmos dados).
       - key: DATABASE_URL
+        sync: false
+      # Cole o MESMO valor do serviço atual (pra não deslogar os usuários).
+      - key: JWT_SECRET
+        sync: false
+      # (Opcional) e-mail do dono/master DESTE sistema. Em branco = adm@rozesstartflow.com.
+      # Use quando o sistema for de um cliente, pra ele ser o master do próprio sistema.
+      - key: MASTER_EMAIL
         sync: false
