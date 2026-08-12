@@ -26,6 +26,17 @@ ensureStorageBucket().catch(() => {});
 
 const app = express();
 app.use(cors());
+
+// Redirecionamento de domínio — ativado SÓ no serviço antigo via env REDIRECT_TO
+// Ex.: REDIRECT_TO=https://gscorban.onrender.com  (o serviço novo não define essa var)
+if (process.env.REDIRECT_TO) {
+  const REDIRECT_TARGET = process.env.REDIRECT_TO.replace(/\/+$/, '');
+  app.use((req, res, next) => {
+    if (req.path === '/health') return next(); // mantém o health check do Render
+    return res.redirect(301, REDIRECT_TARGET + req.originalUrl);
+  });
+}
+
 app.use(express.json());
 app.use(fileUpload({ limits: { fileSize: 2 * 1024 * 1024 * 1024 } }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
