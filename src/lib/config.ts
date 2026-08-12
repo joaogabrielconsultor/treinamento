@@ -30,7 +30,7 @@ export function buildWhatsappLink(message: string = SUPPORT_DEFAULT_MESSAGE): st
  * >>> Cole aqui o link de checkout do seu produto quando tiver. <<<
  * Se ficar vazio, o botão abre o WhatsApp de vendas.
  */
-export const CHECKOUT_URL = '';
+export const CHECKOUT_URL = 'https://pay.cakto.com.br/ifmhc6c_1015990';
 
 /** Preço exibido na página de planos. */
 export const PLAN_PRICE = 'R$ 399';

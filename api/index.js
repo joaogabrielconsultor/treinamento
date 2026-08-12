@@ -1093,8 +1093,7 @@ async function caktoToken() {
 }
 
 // Sincroniza pedidos pagos da Cakto → cria/ativa clientes e registra pagamentos
-app.post('/api/admin/cakto/sync', auth, masterOnly, async (req, res) => {
-  try {
+async function syncCaktoOrders() {
     const tk = await caktoToken();
     let page = 1, imported = 0, novosClientes = 0;
     while (page <= 20) {
@@ -1142,11 +1141,16 @@ app.post('/api/admin/cakto/sync', auth, masterOnly, async (req, res) => {
       if (orders.length < 50) break;
       page++;
     }
-    res.json({ ok: true, imported, novosClientes });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
+    return { imported, novosClientes };
+}
+
+app.post('/api/admin/cakto/sync', auth, masterOnly, async (req, res) => {
+  try { const r = await syncCaktoOrders(); res.json({ ok: true, ...r }); }
+  catch (err) { res.status(400).json({ error: err.message }); }
 });
+
+// Sincronização automática com a Cakto a cada 5 min (só roda se as chaves estiverem configuradas)
+setInterval(() => { syncCaktoOrders().catch(() => {}); }, 5 * 60 * 1000);
 
 // ─── CONVÊNIOS ────────────────────────────────────────────────────────────────
 app.get('/api/convenios', auth, async (req, res) => {
