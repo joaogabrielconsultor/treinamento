@@ -71,6 +71,10 @@ function masterOnly(req, res, next) {
   next();
 }
 
+// ─── MULTI-TENANT: contexto de conta (F1) ──────────────────────────────────────
+// Toda operação do app é isolada pela conta do usuário logado.
+function contaId(req) { return req.user?.conta_id || null; }
+
 // ─── AUTH ──────────────────────────────────────────────────────────────────────
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
@@ -81,7 +85,7 @@ app.post('/api/auth/login', async (req, res) => {
     if (user.archived_at) return res.status(403).json({ error: 'Usuário inativo. Entre em contato com o administrador.' });
     const ok = await bcrypt.compare(password, user.password_hash);
     if (!ok) return res.status(400).json({ error: 'Email ou senha incorretos' });
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role, full_name: user.full_name }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role, full_name: user.full_name, conta_id: user.conta_id }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ user: { id: user.id, email: user.email, full_name: user.full_name, role: user.role }, token });
   } catch {
     res.status(500).json({ error: 'Erro ao fazer login' });
@@ -907,35 +911,35 @@ app.delete('/api/products/:id', auth, masterOnly, async (req, res) => {
 app.get('/api/banks', auth, async (req, res) => {
   const { convenio_id } = req.query;
   if (convenio_id) {
-    // Retorna apenas bancos que têm tabelas ativas nesse convênio
+    // Retorna apenas bancos (da conta) que têm tabelas ativas nesse convênio
     const { rows } = await pool.query(`
       SELECT DISTINCT b.id, b.name, b.created_at
       FROM banks b
       JOIN financial_tables ft ON ft.bank_id = b.id
-      WHERE ft.convenio_id = $1 AND ft.active = true
+      WHERE ft.convenio_id = $1 AND ft.active = true AND b.conta_id = $2
       ORDER BY b.name ASC
-    `, [convenio_id]);
+    `, [convenio_id, contaId(req)]);
     return res.json(rows);
   }
-  const { rows } = await pool.query('SELECT * FROM banks ORDER BY name ASC');
+  const { rows } = await pool.query('SELECT * FROM banks WHERE conta_id = $1 ORDER BY name ASC', [contaId(req)]);
   res.json(rows);
 });
 
 app.post('/api/banks', auth, adminOnly, async (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: 'Nome obrigatório' });
-  const { rows } = await pool.query('INSERT INTO banks (name) VALUES ($1) RETURNING *', [name]);
+  const { rows } = await pool.query('INSERT INTO banks (name, conta_id) VALUES ($1, $2) RETURNING *', [name, contaId(req)]);
   res.json(rows[0]);
 });
 
 app.put('/api/banks/:id', auth, adminOnly, async (req, res) => {
   const { name } = req.body;
-  const { rows } = await pool.query('UPDATE banks SET name=$1 WHERE id=$2 RETURNING *', [name, req.params.id]);
+  const { rows } = await pool.query('UPDATE banks SET name=$1 WHERE id=$2 AND conta_id=$3 RETURNING *', [name, req.params.id, contaId(req)]);
   res.json(rows[0]);
 });
 
 app.delete('/api/banks/:id', auth, masterOnly, async (req, res) => {
-  await pool.query('DELETE FROM banks WHERE id=$1', [req.params.id]);
+  await pool.query('DELETE FROM banks WHERE id=$1 AND conta_id=$2', [req.params.id, contaId(req)]);
   res.json({ ok: true });
 });
 
