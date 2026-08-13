@@ -488,6 +488,46 @@ async function initDb() {
       `);
     }
 
+    // ═══════════════════════════════════════════════════════════════
+    // MULTI-TENANT — FASE 0: contas (tenants) + conta_id em todas as tabelas
+    // ═══════════════════════════════════════════════════════════════
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS contas (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        nome text NOT NULL,
+        status text NOT NULL DEFAULT 'ativo' CHECK (status IN ('ativo','inadimplente','suspenso','teste','cancelado')),
+        mensalidade numeric NOT NULL DEFAULT 0,
+        dia_vencimento integer,
+        ultimo_pagamento date,
+        cakto_email text,
+        created_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+
+    // Conta raiz = o cliente atual (com todo o histórico existente)
+    await client.query(`
+      INSERT INTO contas (nome, status)
+      SELECT 'Aprova Mais', 'ativo'
+      WHERE NOT EXISTS (SELECT 1 FROM contas)
+    `);
+    const { rows: rootRows } = await client.query(`SELECT id FROM contas ORDER BY created_at ASC LIMIT 1`);
+    const rootContaId = rootRows[0]?.id;
+
+    // Tabelas que pertencem a um cliente (recebem conta_id + backfill p/ a conta raiz)
+    const tenantTables = [
+      'users', 'proposals', 'banks', 'convenios', 'products', 'table_categories',
+      'financial_tables', 'commission_ranges', 'scoring_rules', 'proposal_statuses',
+      'withdrawal_requests', 'commission_payments', 'lojas', 'usuarios_banco', 'despesas',
+      'roteiros', 'login_bancos', 'notifications', 'user_points', 'user_badges',
+      'user_streaks', 'monthly_goals', 'courses', 'modules', 'lessons', 'enrollments',
+      'lesson_progress', 'quiz_results',
+    ];
+    for (const t of tenantTables) {
+      await client.query(`ALTER TABLE ${t} ADD COLUMN IF NOT EXISTS conta_id uuid REFERENCES contas(id) ON DELETE CASCADE`);
+      if (rootContaId) await client.query(`UPDATE ${t} SET conta_id = $1 WHERE conta_id IS NULL`, [rootContaId]);
+      await client.query(`CREATE INDEX IF NOT EXISTS ${t}_conta_idx ON ${t}(conta_id)`);
+    }
+
     // Master — único usuário que pode excluir propostas e tem acesso total.
     // Configurável por instância via env MASTER_EMAIL (white-label). Só existe UM master.
     const MASTER_EMAIL = process.env.MASTER_EMAIL || 'adm@rozesstartflow.com';
