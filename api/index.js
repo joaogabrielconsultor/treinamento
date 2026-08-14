@@ -885,25 +885,25 @@ app.post('/api/consignado/margem', auth, async (req, res) => {
 
 // ─── PRODUTOS ────────────────────────────────────────────────────────────────
 app.get('/api/products', auth, async (req, res) => {
-  const { rows } = await pool.query('SELECT * FROM products ORDER BY name ASC');
+  const { rows } = await pool.query('SELECT * FROM products WHERE conta_id=$1 ORDER BY name ASC', [contaId(req)]);
   res.json(rows);
 });
 
 app.post('/api/products', auth, adminOnly, async (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: 'Nome obrigatório' });
-  const { rows } = await pool.query('INSERT INTO products (name) VALUES ($1) RETURNING *', [name]);
+  const { rows } = await pool.query('INSERT INTO products (name, conta_id) VALUES ($1,$2) RETURNING *', [name, contaId(req)]);
   res.json(rows[0]);
 });
 
 app.put('/api/products/:id', auth, adminOnly, async (req, res) => {
   const { name } = req.body;
-  const { rows } = await pool.query('UPDATE products SET name=$1 WHERE id=$2 RETURNING *', [name, req.params.id]);
+  const { rows } = await pool.query('UPDATE products SET name=$1 WHERE id=$2 AND conta_id=$3 RETURNING *', [name, req.params.id, contaId(req)]);
   res.json(rows[0]);
 });
 
 app.delete('/api/products/:id', auth, masterOnly, async (req, res) => {
-  await pool.query('DELETE FROM products WHERE id=$1', [req.params.id]);
+  await pool.query('DELETE FROM products WHERE id=$1 AND conta_id=$2', [req.params.id, contaId(req)]);
   res.json({ ok: true });
 });
 
@@ -1169,31 +1169,31 @@ setInterval(() => { syncCaktoOrders().catch(() => {}); }, 5 * 60 * 1000);
 
 // ─── CONVÊNIOS ────────────────────────────────────────────────────────────────
 app.get('/api/convenios', auth, async (req, res) => {
-  const { rows } = await pool.query('SELECT * FROM convenios ORDER BY name ASC');
+  const { rows } = await pool.query('SELECT * FROM convenios WHERE conta_id=$1 ORDER BY name ASC', [contaId(req)]);
   res.json(rows);
 });
 
 app.post('/api/convenios', auth, adminOnly, async (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: 'Nome obrigatório' });
-  const { rows } = await pool.query('INSERT INTO convenios (name) VALUES ($1) RETURNING *', [name]);
+  const { rows } = await pool.query('INSERT INTO convenios (name, conta_id) VALUES ($1,$2) RETURNING *', [name, contaId(req)]);
   res.json(rows[0]);
 });
 
 app.put('/api/convenios/:id', auth, adminOnly, async (req, res) => {
   const { name } = req.body;
-  const { rows } = await pool.query('UPDATE convenios SET name=$1 WHERE id=$2 RETURNING *', [name, req.params.id]);
+  const { rows } = await pool.query('UPDATE convenios SET name=$1 WHERE id=$2 AND conta_id=$3 RETURNING *', [name, req.params.id, contaId(req)]);
   res.json(rows[0]);
 });
 
 app.delete('/api/convenios/:id', auth, masterOnly, async (req, res) => {
-  await pool.query('DELETE FROM convenios WHERE id=$1', [req.params.id]);
+  await pool.query('DELETE FROM convenios WHERE id=$1 AND conta_id=$2', [req.params.id, contaId(req)]);
   res.json({ ok: true });
 });
 
 // ─── CATEGORIAS ───────────────────────────────────────────────────────────────
 app.get('/api/categories', auth, async (req, res) => {
-  const { rows } = await pool.query('SELECT * FROM table_categories ORDER BY multiplier DESC, name ASC');
+  const { rows } = await pool.query('SELECT * FROM table_categories WHERE conta_id=$1 ORDER BY multiplier DESC, name ASC', [contaId(req)]);
   res.json(rows);
 });
 
@@ -1201,8 +1201,8 @@ app.post('/api/categories', auth, adminOnly, async (req, res) => {
   const { name, multiplier } = req.body;
   if (!name) return res.status(400).json({ error: 'Nome obrigatório' });
   const { rows } = await pool.query(
-    'INSERT INTO table_categories (name, multiplier) VALUES ($1,$2) RETURNING *',
-    [name, multiplier || 1]
+    'INSERT INTO table_categories (name, multiplier, conta_id) VALUES ($1,$2,$3) RETURNING *',
+    [name, multiplier || 1, contaId(req)]
   );
   res.json(rows[0]);
 });
@@ -1210,14 +1210,14 @@ app.post('/api/categories', auth, adminOnly, async (req, res) => {
 app.put('/api/categories/:id', auth, adminOnly, async (req, res) => {
   const { name, multiplier } = req.body;
   const { rows } = await pool.query(
-    'UPDATE table_categories SET name=COALESCE($1,name), multiplier=COALESCE($2,multiplier) WHERE id=$3 RETURNING *',
-    [name, multiplier, req.params.id]
+    'UPDATE table_categories SET name=COALESCE($1,name), multiplier=COALESCE($2,multiplier) WHERE id=$3 AND conta_id=$4 RETURNING *',
+    [name, multiplier, req.params.id, contaId(req)]
   );
   res.json(rows[0]);
 });
 
 app.delete('/api/categories/:id', auth, masterOnly, async (req, res) => {
-  await pool.query('DELETE FROM table_categories WHERE id=$1', [req.params.id]);
+  await pool.query('DELETE FROM table_categories WHERE id=$1 AND conta_id=$2', [req.params.id, contaId(req)]);
   res.json({ ok: true });
 });
 
@@ -2205,7 +2205,7 @@ app.post('/api/proposals/import/parse', auth, adminOnly, async (req, res) => {
 
 // ─── PROPOSAL STATUSES ────────────────────────────────────────────────────────
 app.get('/api/proposal-statuses', auth, async (req, res) => {
-  const { rows } = await pool.query('SELECT * FROM proposal_statuses ORDER BY order_index, name');
+  const { rows } = await pool.query('SELECT * FROM proposal_statuses WHERE conta_id=$1 ORDER BY order_index, name', [contaId(req)]);
   res.json(rows);
 });
 
@@ -2213,8 +2213,8 @@ app.post('/api/admin/proposal-statuses', auth, adminOnly, async (req, res) => {
   const { name, color, order_index } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'Nome obrigatório' });
   const { rows: [s] } = await pool.query(
-    'INSERT INTO proposal_statuses (name, color, order_index) VALUES ($1,$2,$3) RETURNING *',
-    [name.trim(), color || 'blue', order_index ?? 99]
+    'INSERT INTO proposal_statuses (name, color, order_index, conta_id) VALUES ($1,$2,$3,$4) RETURNING *',
+    [name.trim(), color || 'blue', order_index ?? 99, contaId(req)]
   );
   res.json(s);
 });
@@ -2222,20 +2222,20 @@ app.post('/api/admin/proposal-statuses', auth, adminOnly, async (req, res) => {
 app.put('/api/admin/proposal-statuses/:id', auth, adminOnly, async (req, res) => {
   const { name, color, order_index } = req.body;
   const { rows: [s] } = await pool.query(
-    'UPDATE proposal_statuses SET name=$1, color=$2, order_index=$3 WHERE id=$4 RETURNING *',
-    [name, color, order_index, req.params.id]
+    'UPDATE proposal_statuses SET name=$1, color=$2, order_index=$3 WHERE id=$4 AND conta_id=$5 RETURNING *',
+    [name, color, order_index, req.params.id, contaId(req)]
   );
   if (!s) return res.status(404).json({ error: 'Status não encontrado' });
   res.json(s);
 });
 
 app.delete('/api/admin/proposal-statuses/:id', auth, masterOnly, async (req, res) => {
-  const { rows: [s] } = await pool.query('SELECT * FROM proposal_statuses WHERE id=$1', [req.params.id]);
+  const { rows: [s] } = await pool.query('SELECT * FROM proposal_statuses WHERE id=$1 AND conta_id=$2', [req.params.id, contaId(req)]);
   if (!s) return res.status(404).json({ error: 'Status não encontrado' });
   if (s.is_system) return res.status(400).json({ error: 'Status do sistema não pode ser excluído' });
-  const { rows: using } = await pool.query('SELECT COUNT(*) FROM proposals WHERE status=$1', [s.name]);
+  const { rows: using } = await pool.query('SELECT COUNT(*) FROM proposals WHERE status=$1 AND conta_id=$2', [s.name, contaId(req)]);
   if (parseInt(using[0].count) > 0) return res.status(400).json({ error: `${using[0].count} proposta(s) usam esse status` });
-  await pool.query('DELETE FROM proposal_statuses WHERE id=$1', [req.params.id]);
+  await pool.query('DELETE FROM proposal_statuses WHERE id=$1 AND conta_id=$2', [req.params.id, contaId(req)]);
   res.json({ ok: true });
 });
 
