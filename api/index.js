@@ -1628,8 +1628,8 @@ app.get('/api/proposals/check-number', auth, async (req, res) => {
   const { proposal_number, exclude_id } = req.query;
   if (!proposal_number) return res.json({ exists: false });
   const { rows } = await pool.query(
-    `SELECT id, client_name FROM proposals WHERE proposal_number = $1 ${exclude_id ? 'AND id != $2' : ''}`,
-    exclude_id ? [proposal_number, exclude_id] : [proposal_number]
+    `SELECT id, client_name FROM proposals WHERE proposal_number = $1 ${exclude_id ? 'AND id != $2' : ''} AND conta_id = ${exclude_id ? '$3' : '$2'}`,
+    exclude_id ? [proposal_number, exclude_id, contaId(req)] : [proposal_number, contaId(req)]
   );
   res.json({ exists: rows.length > 0, client_name: rows[0]?.client_name || null });
 });
@@ -1641,6 +1641,7 @@ app.get('/api/proposals', auth, async (req, res) => {
   const conditions = [];
   const values = [];
   let i = 1;
+  conditions.push(`p.conta_id = $${i++}`); values.push(contaId(req)); // isolamento por conta
   if (!isAdmin) { conditions.push(`p.user_id = $${i++}`); values.push(req.user.id); }
   else if (user_id) { conditions.push(`p.user_id = $${i++}`); values.push(user_id); }
   else if (loja_id) { conditions.push(`u.loja_id = $${i++}`); values.push(loja_id); }
@@ -1710,20 +1711,20 @@ app.post('/api/proposals', auth, async (req, res) => {
     return res.status(400).json({ error: 'Preencha todos os campos obrigatórios' });
   }
   // Verifica número duplicado
-  const { rows: dup } = await pool.query('SELECT id, client_name FROM proposals WHERE proposal_number = $1', [proposal_number]);
+  const { rows: dup } = await pool.query('SELECT id, client_name FROM proposals WHERE proposal_number = $1 AND conta_id = $2', [proposal_number, contaId(req)]);
   if (dup.length > 0) {
     return res.status(409).json({ error: `Número ${proposal_number} já cadastrado para o cliente "${dup[0].client_name}"` });
   }
   // Resolve nome do produto se veio por ID
   let productName = product || '';
   if (product_id) {
-    const { rows: pr } = await pool.query('SELECT name FROM products WHERE id=$1', [product_id]);
+    const { rows: pr } = await pool.query('SELECT name FROM products WHERE id=$1 AND conta_id=$2', [product_id, contaId(req)]);
     if (pr[0]) productName = pr[0].name;
   }
   // Resolve coeficiente da tabela financeira (nunca vem do corretor)
   let coeficiente = 0;
   if (table_id) {
-    const { rows: [tbl] } = await pool.query('SELECT coeficiente FROM financial_tables WHERE id=$1', [table_id]);
+    const { rows: [tbl] } = await pool.query('SELECT coeficiente FROM financial_tables WHERE id=$1 AND conta_id=$2', [table_id, contaId(req)]);
     if (tbl) coeficiente = parseFloat(tbl.coeficiente) || 0;
   }
   // Corretor sempre cria como Digitada
@@ -1731,9 +1732,9 @@ app.post('/api/proposals', auth, async (req, res) => {
   const { body: reqBody } = req;
   const usuario_banco_id = reqBody.usuario_banco_id || null;
   const { rows } = await pool.query(
-    `INSERT INTO proposals (user_id, proposal_number, value, product, product_id, bank, convenio, table_id, bank_id, convenio_id, client_name, client_cpf, client_phone, coeficiente, status, created_at, usuario_banco_id)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'Digitada',$15,$16) RETURNING *`,
-    [req.user.id, proposal_number, value, productName, product_id||null, bank||'', convenio||'', table_id||null, bank_id||null, convenio_id||null, client_name, client_cpf, client_phone, coeficiente, proposalDate, usuario_banco_id]
+    `INSERT INTO proposals (user_id, proposal_number, value, product, product_id, bank, convenio, table_id, bank_id, convenio_id, client_name, client_cpf, client_phone, coeficiente, status, created_at, usuario_banco_id, conta_id)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'Digitada',$15,$16,$17) RETURNING *`,
+    [req.user.id, proposal_number, value, productName, product_id||null, bank||'', convenio||'', table_id||null, bank_id||null, convenio_id||null, client_name, client_cpf, client_phone, coeficiente, proposalDate, usuario_banco_id, contaId(req)]
   );
   res.json(rows[0]);
 });
@@ -1763,7 +1764,7 @@ app.patch('/api/admin/proposals/:id/toggle-edit', auth, adminOnly, async (req, r
 
 app.put('/api/proposals/:id', auth, async (req, res) => {
   const isAdmin = req.user.role === 'admin' || req.user.role === 'master';
-  const { rows: [existing] } = await pool.query('SELECT * FROM proposals WHERE id=$1', [req.params.id]);
+  const { rows: [existing] } = await pool.query('SELECT * FROM proposals WHERE id=$1 AND conta_id=$2', [req.params.id, contaId(req)]);
   if (!existing) return res.status(404).json({ error: 'Proposta não encontrada' });
   if (!isAdmin && existing.user_id !== req.user.id) return res.status(403).json({ error: 'Acesso negado' });
 
@@ -1887,9 +1888,9 @@ app.put('/api/proposals/:id', auth, async (req, res) => {
 });
 
 app.delete('/api/proposals/:id', auth, masterOnly, async (req, res) => {
-  const { rows: [p] } = await pool.query('SELECT id FROM proposals WHERE id=$1', [req.params.id]);
+  const { rows: [p] } = await pool.query('SELECT id FROM proposals WHERE id=$1 AND conta_id=$2', [req.params.id, contaId(req)]);
   if (!p) return res.status(404).json({ error: 'Proposta não encontrada' });
-  await pool.query('DELETE FROM proposals WHERE id=$1', [req.params.id]);
+  await pool.query('DELETE FROM proposals WHERE id=$1 AND conta_id=$2', [req.params.id, contaId(req)]);
   res.json({ ok: true });
 });
 
@@ -1897,7 +1898,7 @@ app.post('/api/proposals/bulk-delete', auth, masterOnly, async (req, res) => {
   const { ids } = req.body;
   if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ error: 'Nenhum id informado' });
   const placeholders = ids.map((_, i) => `$${i + 1}`).join(',');
-  await pool.query(`DELETE FROM proposals WHERE id IN (${placeholders})`, ids);
+  await pool.query(`DELETE FROM proposals WHERE id IN (${placeholders}) AND conta_id = $${ids.length + 1}`, [...ids, contaId(req)]);
   res.json({ ok: true, deleted: ids.length });
 });
 
