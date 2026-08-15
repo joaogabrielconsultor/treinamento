@@ -2314,6 +2314,8 @@ app.get('/api/production/dashboard', auth, async (req, res) => {
     extraFilters.push(`${col}::date <= $${params.length}`);
   }
 
+  params.push(contaId(req));
+  extraFilters.push(`p.conta_id = $${params.length}`); // isolamento por conta
   const baseWhere = extraFilters.length ? `AND ${extraFilters.join(' AND ')}` : '';
 
   let periodFilter = '';
@@ -2364,16 +2366,17 @@ app.get('/api/production/dashboard', auth, async (req, res) => {
     const { rows: [bb] } = await pool.query(`
       SELECT u.full_name, COALESCE(up.total_points,0)::int as points
       FROM users u JOIN user_points up ON up.user_id = u.id
+      WHERE u.conta_id = $1
       ORDER BY up.total_points DESC LIMIT 1
-    `);
+    `, [contaId(req)]);
     bestBroker = bb || null;
 
     const { rows: [tt] } = await pool.query(`
       SELECT ft.name, COUNT(p.id)::int as count
       FROM proposals p JOIN financial_tables ft ON ft.id = p.table_id
-      WHERE p.status='Paga'
+      WHERE p.status='Paga' AND p.conta_id = $1
       GROUP BY ft.name ORDER BY count DESC LIMIT 1
-    `);
+    `, [contaId(req)]);
     topTable = tt || null;
   } else {
     const { rows: [mp] } = await pool.query(
@@ -2384,8 +2387,8 @@ app.get('/api/production/dashboard', auth, async (req, res) => {
 
     const { rows: rank } = await pool.query(`
       SELECT COUNT(*)::int + 1 as pos FROM user_points
-      WHERE total_points > COALESCE((SELECT total_points FROM user_points WHERE user_id=$1),0)
-    `, [req.user.id]);
+      WHERE conta_id=$2 AND total_points > COALESCE((SELECT total_points FROM user_points WHERE user_id=$1),0)
+    `, [req.user.id, contaId(req)]);
     myPosition = rank[0]?.pos || 1;
   }
 
@@ -2417,24 +2420,24 @@ app.get('/api/production/dashboard', auth, async (req, res) => {
       pool.query(`
         SELECT COALESCE(SUM(amount),0)::numeric as total, COUNT(*)::int as count
         FROM withdrawal_requests
-        WHERE status = 'Pago'
+        WHERE status = 'Pago' AND conta_id = $1
           AND DATE_TRUNC('month', updated_at) = DATE_TRUNC('month', NOW())
-      `),
+      `, [contaId(req)]),
       pool.query(`
         SELECT COALESCE(SUM(valor),0)::numeric as total, COUNT(*)::int as count
         FROM despesas
-        WHERE DATE_TRUNC('month', data) = DATE_TRUNC('month', NOW())
-      `),
+        WHERE conta_id = $1 AND DATE_TRUNC('month', data) = DATE_TRUNC('month', NOW())
+      `, [contaId(req)]),
       pool.query(`
         SELECT ub.id, ub.nome,
                COALESCE(SUM(d.valor),0)::numeric as total,
                COUNT(*)::int as count
         FROM despesas d
         JOIN usuarios_banco ub ON ub.id = d.usuario_banco_id
-        WHERE DATE_TRUNC('month', d.data) = DATE_TRUNC('month', NOW())
+        WHERE d.conta_id = $1 AND DATE_TRUNC('month', d.data) = DATE_TRUNC('month', NOW())
         GROUP BY ub.id, ub.nome
         ORDER BY total DESC
-      `),
+      `, [contaId(req)]),
     ]);
     saidasMes = {
       comissao_paga: { total: parseFloat(comPag.total), count: comPag.count },
