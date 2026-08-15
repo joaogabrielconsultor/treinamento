@@ -1862,9 +1862,9 @@ app.put('/api/proposals/:id', auth, async (req, res) => {
     await pool.query('UPDATE proposals SET points_earned=$1 WHERE id=$2', [pts, updated.id]);
     updated.points_earned = pts;
     await pool.query(
-      `INSERT INTO user_points (user_id, total_points, updated_at) VALUES ($1,$2,now())
+      `INSERT INTO user_points (user_id, total_points, conta_id, updated_at) VALUES ($1,$2,$3,now())
        ON CONFLICT (user_id) DO UPDATE SET total_points = user_points.total_points + $2, updated_at = now()`,
-      [updated.user_id, pts]
+      [updated.user_id, pts, contaId(req)]
     );
     const client2 = await pool.connect();
     try {
@@ -1878,10 +1878,10 @@ app.put('/api/proposals/:id', auth, async (req, res) => {
     // Notifica se ultrapassou alguém no ranking
     const { rows: myRank } = await pool.query(`
       SELECT COUNT(*)::int + 1 as pos FROM user_points
-      WHERE total_points > (SELECT COALESCE(total_points,0) FROM user_points WHERE user_id=$1)
-    `, [updated.user_id]);
+      WHERE conta_id = $2 AND total_points > (SELECT COALESCE(total_points,0) FROM user_points WHERE user_id=$1)
+    `, [updated.user_id, contaId(req)]);
     if (myRank[0].pos <= 3) {
-      const { rows: allUsers } = await pool.query('SELECT user_id FROM user_points WHERE user_id != $1', [updated.user_id]);
+      const { rows: allUsers } = await pool.query('SELECT user_id FROM user_points WHERE user_id != $1 AND conta_id = $2', [updated.user_id, contaId(req)]);
       for (const row of allUsers) {
         await pool.query(
           'INSERT INTO notifications (user_id, message) VALUES ($1,$2)',
@@ -1989,7 +1989,7 @@ app.post('/api/admin/proposals/import', auth, adminOnly, async (req, res) => {
     if (!name) return null;
     const k = name.trim().toLowerCase();
     if (k in userCache) return userCache[k];
-    const { rows: r } = await pool.query(`SELECT id FROM users WHERE LOWER(TRIM(full_name)) = $1 LIMIT 1`, [k]);
+    const { rows: r } = await pool.query(`SELECT id FROM users WHERE LOWER(TRIM(full_name)) = $1 AND conta_id = $2 LIMIT 1`, [k, contaId(req)]);
     userCache[k] = r[0]?.id || null;
     return userCache[k];
   }
@@ -1998,7 +1998,7 @@ app.post('/api/admin/proposals/import', auth, adminOnly, async (req, res) => {
     if (!name) return null;
     const k = name.trim().toLowerCase();
     if (k in bankCache) return bankCache[k];
-    const { rows: r } = await pool.query(`SELECT id FROM banks WHERE LOWER(TRIM(name)) = $1 LIMIT 1`, [k]);
+    const { rows: r } = await pool.query(`SELECT id FROM banks WHERE LOWER(TRIM(name)) = $1 AND conta_id = $2 LIMIT 1`, [k, contaId(req)]);
     bankCache[k] = r[0]?.id || null;
     return bankCache[k];
   }
@@ -2007,7 +2007,7 @@ app.post('/api/admin/proposals/import', auth, adminOnly, async (req, res) => {
     if (!name) return null;
     const k = name.trim().toLowerCase();
     if (k in convenioCache) return convenioCache[k];
-    const { rows: r } = await pool.query(`SELECT id FROM convenios WHERE LOWER(TRIM(name)) = $1 LIMIT 1`, [k]);
+    const { rows: r } = await pool.query(`SELECT id FROM convenios WHERE LOWER(TRIM(name)) = $1 AND conta_id = $2 LIMIT 1`, [k, contaId(req)]);
     convenioCache[k] = r[0]?.id || null;
     return convenioCache[k];
   }
@@ -2017,7 +2017,7 @@ app.post('/api/admin/proposals/import', auth, adminOnly, async (req, res) => {
     const k = `${name}|${bank_id}|${convenio_id}`.toLowerCase();
     if (k in tableCache) return tableCache[k];
     const { rows: r } = await pool.query(
-      `SELECT id FROM financial_tables WHERE LOWER(TRIM(name)) = $1 LIMIT 1`, [name.trim().toLowerCase()]
+      `SELECT id FROM financial_tables WHERE LOWER(TRIM(name)) = $1 AND conta_id = $2 LIMIT 1`, [name.trim().toLowerCase(), contaId(req)]
     );
     tableCache[k] = r[0]?.id || null;
     return tableCache[k];
@@ -2028,7 +2028,7 @@ app.post('/api/admin/proposals/import', auth, adminOnly, async (req, res) => {
     if (!name) return null;
     const k = name.trim().toLowerCase();
     if (k in productCache) return productCache[k];
-    const { rows: r } = await pool.query(`SELECT id FROM products WHERE LOWER(TRIM(name)) = $1 LIMIT 1`, [k]);
+    const { rows: r } = await pool.query(`SELECT id FROM products WHERE LOWER(TRIM(name)) = $1 AND conta_id = $2 LIMIT 1`, [k, contaId(req)]);
     productCache[k] = r[0]?.id || null;
     return productCache[k];
   }
@@ -2076,12 +2076,12 @@ app.post('/api/admin/proposals/import', auth, adminOnly, async (req, res) => {
 
       let existingId = null;
       if (useIdMatch) {
-        const { rows: r } = await pool.query('SELECT id FROM proposals WHERE id = $1', [rowId]);
+        const { rows: r } = await pool.query('SELECT id FROM proposals WHERE id = $1 AND conta_id = $2', [rowId, contaId(req)]);
         existingId = r[0]?.id || null;
       } else {
         const { rows: r } = await pool.query(
-          'SELECT id FROM proposals WHERE proposal_number = $1 AND LOWER(TRIM(client_name)) = LOWER(TRIM($2))',
-          [proposalNumber, clientName]
+          'SELECT id FROM proposals WHERE proposal_number = $1 AND LOWER(TRIM(client_name)) = LOWER(TRIM($2)) AND conta_id = $3',
+          [proposalNumber, clientName, contaId(req)]
         );
         existingId = r[0]?.id || null;
       }
@@ -2111,22 +2111,22 @@ app.post('/api/admin/proposals/import', auth, adminOnly, async (req, res) => {
           const { rows: [ins] } = await pool.query(
             `INSERT INTO proposals
               (id, user_id, proposal_number, value, product, product_id, bank, convenio, table_id, bank_id, convenio_id,
-               client_name, client_cpf, client_phone, status, created_at, updated_at, tipo_proposta)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'',$14,$15,COALESCE($17,now()),$16)
+               client_name, client_cpf, client_phone, status, created_at, updated_at, tipo_proposta, conta_id)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'',$14,$15,COALESCE($17,now()),$16,$18)
              RETURNING id`,
             [insertId, uid, proposalNumber, value, productText, productId, bankText, convenioText, tableId,
-             bankId, convenioId, clientName, clientCpf, status, createdAt, situacao, updatedAt]
+             bankId, convenioId, clientName, clientCpf, status, createdAt, situacao, updatedAt, contaId(req)]
           );
           newId = ins?.id;
         } else {
           const { rows: [ins] } = await pool.query(
             `INSERT INTO proposals
               (user_id, proposal_number, value, product, product_id, bank, convenio, table_id, bank_id, convenio_id,
-               client_name, client_cpf, client_phone, status, created_at, updated_at, tipo_proposta)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'',$13,$14,COALESCE($16,now()),$15)
+               client_name, client_cpf, client_phone, status, created_at, updated_at, tipo_proposta, conta_id)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'',$13,$14,COALESCE($16,now()),$15,$17)
              RETURNING id`,
             [uid, proposalNumber, value, productText, productId, bankText, convenioText, tableId,
-             bankId, convenioId, clientName, clientCpf, status, createdAt, situacao, updatedAt]
+             bankId, convenioId, clientName, clientCpf, status, createdAt, situacao, updatedAt, contaId(req)]
           );
           newId = ins?.id;
         }
