@@ -244,18 +244,18 @@ app.put('/api/profile/pix', auth, async (req, res) => {
 });
 
 // ─── COURSES ───────────────────────────────────────────────────────────────────
-app.get('/api/courses', async (req, res) => {
-  const { rows } = await pool.query('SELECT * FROM courses WHERE published = true ORDER BY created_at DESC');
+app.get('/api/courses', auth, async (req, res) => {
+  const { rows } = await pool.query('SELECT * FROM courses WHERE published = true AND conta_id = $1 ORDER BY created_at DESC', [contaId(req)]);
   res.json(rows);
 });
 
 app.get('/api/courses/all', auth, adminOnly, async (req, res) => {
-  const { rows } = await pool.query('SELECT * FROM courses ORDER BY created_at DESC');
+  const { rows } = await pool.query('SELECT * FROM courses WHERE conta_id = $1 ORDER BY created_at DESC', [contaId(req)]);
   res.json(rows);
 });
 
-app.get('/api/courses/:id', async (req, res) => {
-  const { rows } = await pool.query('SELECT * FROM courses WHERE id = $1', [req.params.id]);
+app.get('/api/courses/:id', auth, async (req, res) => {
+  const { rows } = await pool.query('SELECT * FROM courses WHERE id = $1 AND conta_id = $2', [req.params.id, contaId(req)]);
   if (!rows[0]) return res.status(404).json({ error: 'Curso não encontrado' });
   res.json(rows[0]);
 });
@@ -263,8 +263,8 @@ app.get('/api/courses/:id', async (req, res) => {
 app.post('/api/courses', auth, adminOnly, async (req, res) => {
   const { title, description, category, thumbnail_url, duration_minutes, level, instructor, published } = req.body;
   const { rows } = await pool.query(
-    'INSERT INTO courses (title, description, category, thumbnail_url, duration_minutes, level, instructor, published) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
-    [title, description || '', category || 'Geral', thumbnail_url || '', duration_minutes || 0, level || 'Iniciante', instructor || '', published ?? false]
+    'INSERT INTO courses (title, description, category, thumbnail_url, duration_minutes, level, instructor, published, conta_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *',
+    [title, description || '', category || 'Geral', thumbnail_url || '', duration_minutes || 0, level || 'Iniciante', instructor || '', published ?? false, contaId(req)]
   );
   res.json(rows[0]);
 });
@@ -279,22 +279,23 @@ app.put('/api/courses/:id', auth, adminOnly, async (req, res) => {
   }
   if (!updates.length) return res.status(400).json({ error: 'Nenhum campo para atualizar' });
   values.push(req.params.id);
-  const { rows } = await pool.query(`UPDATE courses SET ${updates.join(', ')} WHERE id = $${i} RETURNING *`, values);
+  values.push(contaId(req));
+  const { rows } = await pool.query(`UPDATE courses SET ${updates.join(', ')} WHERE id = $${i} AND conta_id = $${i + 1} RETURNING *`, values);
   res.json(rows[0]);
 });
 
 app.delete('/api/courses/:id', auth, masterOnly, async (req, res) => {
-  await pool.query('DELETE FROM courses WHERE id = $1', [req.params.id]);
+  await pool.query('DELETE FROM courses WHERE id = $1 AND conta_id = $2', [req.params.id, contaId(req)]);
   res.json({ ok: true });
 });
 
 // ─── MODULES ───────────────────────────────────────────────────────────────────
-app.get('/api/courses/:id/modules', async (req, res) => {
+app.get('/api/courses/:id/modules', auth, async (req, res) => {
   const { rows: mods } = await pool.query(
-    'SELECT * FROM modules WHERE course_id = $1 ORDER BY order_index', [req.params.id]
+    'SELECT * FROM modules WHERE course_id = $1 AND conta_id = $2 ORDER BY order_index', [req.params.id, contaId(req)]
   );
   const { rows: lessons } = await pool.query(
-    'SELECT l.* FROM lessons l JOIN modules m ON l.module_id = m.id WHERE m.course_id = $1 ORDER BY l.order_index', [req.params.id]
+    'SELECT l.* FROM lessons l JOIN modules m ON l.module_id = m.id WHERE m.course_id = $1 AND l.conta_id = $2 ORDER BY l.order_index', [req.params.id, contaId(req)]
   );
   const result = mods.map(m => ({
     ...m,
@@ -306,8 +307,8 @@ app.get('/api/courses/:id/modules', async (req, res) => {
 app.post('/api/modules', auth, adminOnly, async (req, res) => {
   const { course_id, title, order_index } = req.body;
   const { rows } = await pool.query(
-    'INSERT INTO modules (course_id, title, order_index) VALUES ($1,$2,$3) RETURNING *',
-    [course_id, title, order_index || 0]
+    'INSERT INTO modules (course_id, title, order_index, conta_id) VALUES ($1,$2,$3,$4) RETURNING *',
+    [course_id, title, order_index || 0, contaId(req)]
   );
   res.json(rows[0]);
 });
@@ -315,14 +316,14 @@ app.post('/api/modules', auth, adminOnly, async (req, res) => {
 app.put('/api/modules/:id', auth, adminOnly, async (req, res) => {
   const { title, order_index } = req.body;
   const { rows } = await pool.query(
-    'UPDATE modules SET title = COALESCE($1, title), order_index = COALESCE($2, order_index) WHERE id = $3 RETURNING *',
-    [title, order_index, req.params.id]
+    'UPDATE modules SET title = COALESCE($1, title), order_index = COALESCE($2, order_index) WHERE id = $3 AND conta_id = $4 RETURNING *',
+    [title, order_index, req.params.id, contaId(req)]
   );
   res.json(rows[0]);
 });
 
 app.delete('/api/modules/:id', auth, masterOnly, async (req, res) => {
-  await pool.query('DELETE FROM modules WHERE id = $1', [req.params.id]);
+  await pool.query('DELETE FROM modules WHERE id = $1 AND conta_id = $2', [req.params.id, contaId(req)]);
   res.json({ ok: true });
 });
 
@@ -330,8 +331,8 @@ app.delete('/api/modules/:id', auth, masterOnly, async (req, res) => {
 app.post('/api/lessons', auth, adminOnly, async (req, res) => {
   const { module_id, title, content, lesson_type, duration_minutes, order_index } = req.body;
   const { rows } = await pool.query(
-    'INSERT INTO lessons (module_id, title, content, lesson_type, duration_minutes, order_index) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-    [module_id, title, content || '', lesson_type || 'video', duration_minutes || 0, order_index || 0]
+    'INSERT INTO lessons (module_id, title, content, lesson_type, duration_minutes, order_index, conta_id) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
+    [module_id, title, content || '', lesson_type || 'video', duration_minutes || 0, order_index || 0, contaId(req)]
   );
   res.json(rows[0]);
 });
@@ -346,12 +347,13 @@ app.put('/api/lessons/:id', auth, adminOnly, async (req, res) => {
   }
   if (!updates.length) return res.status(400).json({ error: 'Nenhum campo' });
   values.push(req.params.id);
-  const { rows } = await pool.query(`UPDATE lessons SET ${updates.join(', ')} WHERE id = $${i} RETURNING *`, values);
+  values.push(contaId(req));
+  const { rows } = await pool.query(`UPDATE lessons SET ${updates.join(', ')} WHERE id = $${i} AND conta_id = $${i + 1} RETURNING *`, values);
   res.json(rows[0]);
 });
 
 app.delete('/api/lessons/:id', auth, masterOnly, async (req, res) => {
-  await pool.query('DELETE FROM lessons WHERE id = $1', [req.params.id]);
+  await pool.query('DELETE FROM lessons WHERE id = $1 AND conta_id = $2', [req.params.id, contaId(req)]);
   res.json({ ok: true });
 });
 
@@ -379,8 +381,8 @@ app.post('/api/lessons/:id/upload-video', auth, adminOnly, async (req, res) => {
 
     const videoUrl = `/uploads/${filename}`;
     const { rows } = await pool.query(
-      'UPDATE lessons SET video_url = $1 WHERE id = $2 RETURNING *',
-      [videoUrl, req.params.id]
+      'UPDATE lessons SET video_url = $1 WHERE id = $2 AND conta_id = $3 RETURNING *',
+      [videoUrl, req.params.id, contaId(req)]
     );
     console.log('[UPLOAD] banco atualizado, video_url:', videoUrl);
     res.json(rows[0]);
@@ -400,8 +402,8 @@ app.post('/api/enrollments', auth, async (req, res) => {
   const { course_id } = req.body;
   try {
     const { rows } = await pool.query(
-      'INSERT INTO enrollments (user_id, course_id) VALUES ($1,$2) ON CONFLICT (user_id, course_id) DO UPDATE SET enrolled_at = now() RETURNING *',
-      [req.user.id, course_id]
+      'INSERT INTO enrollments (user_id, course_id, conta_id) VALUES ($1,$2,$3) ON CONFLICT (user_id, course_id) DO UPDATE SET enrolled_at = now() RETURNING *',
+      [req.user.id, course_id, contaId(req)]
     );
     res.json(rows[0]);
   } catch {
@@ -2517,13 +2519,15 @@ app.get('/api/goals', auth, async (req, res) => {
 
 app.post('/api/goals', auth, adminOnly, async (req, res) => {
   const { user_id, month, year, target_points, target_proposals } = req.body;
+  const { rows: [tgt] } = await pool.query('SELECT id FROM users WHERE id=$1 AND conta_id=$2', [user_id, contaId(req)]);
+  if (!tgt) return res.status(404).json({ error: 'Usuário não encontrado' });
   const { rows } = await pool.query(
-    `INSERT INTO monthly_goals (user_id, month, year, target_points, target_proposals)
-     VALUES ($1,$2,$3,$4,$5)
+    `INSERT INTO monthly_goals (user_id, month, year, target_points, target_proposals, conta_id)
+     VALUES ($1,$2,$3,$4,$5,$6)
      ON CONFLICT (user_id, month, year)
      DO UPDATE SET target_points=$4, target_proposals=$5
      RETURNING *`,
-    [user_id, month, year, target_points || 0, target_proposals || 0]
+    [user_id, month, year, target_points || 0, target_proposals || 0, contaId(req)]
   );
   res.json(rows[0]);
 });
@@ -3187,8 +3191,9 @@ app.get('/api/roteiros', auth, async (req, res) => {
     SELECT r.*, b.name AS bank_name
     FROM roteiros r
     LEFT JOIN banks b ON r.bank_id = b.id
+    WHERE r.conta_id = $1
     ORDER BY b.name NULLS LAST, r.created_at DESC
-  `);
+  `, [contaId(req)]);
   res.json(rows);
 });
 
@@ -3213,9 +3218,9 @@ app.post('/api/roteiros/upload', auth, adminOnly, async (req, res) => {
     }
     const { bank_id, title, description } = req.body;
     const { rows } = await pool.query(
-      `INSERT INTO roteiros (bank_id, title, description, file_url, original_name, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [bank_id || null, title, description || '', fileUrl, file.name, req.user.id]
+      `INSERT INTO roteiros (bank_id, title, description, file_url, original_name, created_by, conta_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [bank_id || null, title, description || '', fileUrl, file.name, req.user.id, contaId(req)]
     );
     res.json(rows[0]);
   } catch (err) {
@@ -3226,8 +3231,8 @@ app.post('/api/roteiros/upload', auth, adminOnly, async (req, res) => {
 app.put('/api/roteiros/:id', auth, adminOnly, async (req, res) => {
   const { title, description, bank_id } = req.body;
   const { rows } = await pool.query(
-    `UPDATE roteiros SET title = COALESCE($1, title), description = COALESCE($2, description), bank_id = $3 WHERE id = $4 RETURNING *`,
-    [title, description, bank_id || null, req.params.id]
+    `UPDATE roteiros SET title = COALESCE($1, title), description = COALESCE($2, description), bank_id = $3 WHERE id = $4 AND conta_id = $5 RETURNING *`,
+    [title, description, bank_id || null, req.params.id, contaId(req)]
   );
   if (!rows[0]) return res.status(404).json({ error: 'Roteiro não encontrado' });
   res.json(rows[0]);
@@ -3248,7 +3253,7 @@ app.get('/api/roteiros/:id/file', async (req, res) => {
 });
 
 app.delete('/api/roteiros/:id', auth, masterOnly, async (req, res) => {
-  const { rows } = await pool.query('SELECT file_url FROM roteiros WHERE id = $1', [req.params.id]);
+  const { rows } = await pool.query('SELECT file_url FROM roteiros WHERE id = $1 AND conta_id = $2', [req.params.id, contaId(req)]);
   if (rows[0]) {
     const { file_url } = rows[0];
     if (supabaseStorage && file_url.startsWith('http')) {
@@ -3259,7 +3264,7 @@ app.delete('/api/roteiros/:id', auth, masterOnly, async (req, res) => {
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     }
   }
-  await pool.query('DELETE FROM roteiros WHERE id = $1', [req.params.id]);
+  await pool.query('DELETE FROM roteiros WHERE id = $1 AND conta_id = $2', [req.params.id, contaId(req)]);
   res.json({ ok: true });
 });
 
