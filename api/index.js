@@ -2256,7 +2256,7 @@ app.get('/api/ranking', auth, async (req, res) => {
              COALESCE(SUM(p.value) FILTER (WHERE p.status='Paga'),0)::numeric as total_value
       FROM users u
       LEFT JOIN proposals p ON p.user_id = u.id ${dateFilter}
-      WHERE u.role != 'admin'
+      WHERE u.role != 'admin' AND u.conta_id = $1
       GROUP BY u.id, u.full_name, u.email
       ORDER BY total_points DESC, proposals_paid DESC
     `;
@@ -2269,12 +2269,12 @@ app.get('/api/ranking', auth, async (req, res) => {
       FROM users u
       LEFT JOIN user_points up ON up.user_id = u.id
       LEFT JOIN proposals p ON p.user_id = u.id
-      WHERE u.role != 'admin'
+      WHERE u.role != 'admin' AND u.conta_id = $1
       GROUP BY u.id, u.full_name, u.email, up.total_points
       ORDER BY total_points DESC, proposals_paid DESC
     `;
   }
-  const { rows } = await pool.query(query);
+  const { rows } = await pool.query(query, [contaId(req)]);
   res.json(rows.map((r, i) => ({ ...r, position: i + 1 })));
 });
 
