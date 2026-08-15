@@ -2666,9 +2666,9 @@ app.post('/api/conta-corrente/saque', auth, async (req, res) => {
   );
   const available = parseFloat(paid.paid_value) - parseFloat(already.total);
   if (Math.round(amt * 100) > Math.round(available * 100)) return res.status(400).json({ error: `Valor excede o disponível (R$ ${available.toFixed(2)})` });
-  await pool.query(`INSERT INTO withdrawal_requests (user_id, amount) VALUES ($1,$2)`, [req.user.id, amt]);
+  await pool.query(`INSERT INTO withdrawal_requests (user_id, amount, conta_id) VALUES ($1,$2,$3)`, [req.user.id, amt, contaId(req)]);
   const { rows: [me] } = await pool.query(`SELECT full_name FROM users WHERE id=$1`, [req.user.id]);
-  const { rows: admins } = await pool.query(`SELECT id FROM users WHERE role IN ('admin','master') AND archived_at IS NULL`);
+  const { rows: admins } = await pool.query(`SELECT id FROM users WHERE role IN ('admin','master') AND archived_at IS NULL AND conta_id = $1`, [contaId(req)]);
   for (const a of admins) {
     await pool.query(`INSERT INTO notifications (user_id, message) VALUES ($1,$2)`,
       [a.id, `${me.full_name || 'Corretor'} solicitou saque de R$ ${amt.toFixed(2)}`]);
@@ -2684,6 +2684,7 @@ app.get('/api/admin/saques', auth, adminOnly, async (req, res) => {
   const hasPeriod = month && year && !isNaN(m) && !isNaN(y);
   const conditions = [];
   const values = [];
+  conditions.push(`u.conta_id = $${values.length + 1}`); values.push(contaId(req));
   if (loja_id) { conditions.push(`u.loja_id = $${values.length + 1}`); values.push(loja_id); }
   if (hasPeriod) { conditions.push(`EXTRACT(MONTH FROM wr.created_at) = ${m} AND EXTRACT(YEAR FROM wr.created_at) = ${y}`); }
   const where = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
@@ -2708,8 +2709,8 @@ app.patch('/api/admin/saques/:id', auth, adminOnly, async (req, res) => {
     const d = new Date(created_at + 'T12:00:00.000Z');
     if (isNaN(d.getTime())) return res.status(400).json({ error: 'Data inválida' });
     const { rows: [wr] } = await pool.query(
-      `UPDATE withdrawal_requests SET created_at=$1, updated_at=now() WHERE id=$2 RETURNING *`,
-      [d.toISOString(), req.params.id]
+      `UPDATE withdrawal_requests SET created_at=$1, updated_at=now() WHERE id=$2 AND conta_id=$3 RETURNING *`,
+      [d.toISOString(), req.params.id, contaId(req)]
     );
     if (!wr) return res.status(404).json({ error: 'Solicitação não encontrada' });
     return res.json({ ok: true });
@@ -2717,8 +2718,8 @@ app.patch('/api/admin/saques/:id', auth, adminOnly, async (req, res) => {
   if (!['Aprovado','Pago','Recusado'].includes(status)) return res.status(400).json({ error: 'Status inválido' });
   const { rows: [wr] } = await pool.query(
     `UPDATE withdrawal_requests SET status=$1, notes=COALESCE($2,notes), reviewed_by=$3, reviewed_at=now(), updated_at=now()
-     WHERE id=$4 RETURNING *`,
-    [status, notes || null, req.user.id, req.params.id]
+     WHERE id=$4 AND conta_id=$5 RETURNING *`,
+    [status, notes || null, req.user.id, req.params.id, contaId(req)]
   );
   if (!wr) return res.status(404).json({ error: 'Solicitação não encontrada' });
   // Saque pago: o débito na conta empresa vem direto de withdrawal_requests (status='Pago')
@@ -2733,7 +2734,7 @@ app.get('/api/admin/despesas', auth, adminOnly, async (req, res) => {
   const m = parseInt(month, 10);
   const y = parseInt(year, 10);
   const hasPeriod = month && year && !isNaN(m) && !isNaN(y);
-  const periodFilter = hasPeriod ? `WHERE EXTRACT(MONTH FROM d.data::date) = ${m} AND EXTRACT(YEAR FROM d.data::date) = ${y}` : '';
+  const periodFilter = hasPeriod ? `AND EXTRACT(MONTH FROM d.data::date) = ${m} AND EXTRACT(YEAR FROM d.data::date) = ${y}` : '';
   const { rows } = await pool.query(`
     SELECT d.*, l.name as loja_name, u.full_name as created_by_name,
            ub.nome as usuario_banco_nome
@@ -2741,9 +2742,10 @@ app.get('/api/admin/despesas', auth, adminOnly, async (req, res) => {
     LEFT JOIN lojas l ON l.id = d.loja_id
     LEFT JOIN users u ON u.id = d.created_by
     LEFT JOIN usuarios_banco ub ON ub.id = d.usuario_banco_id
+    WHERE d.conta_id = $1
     ${periodFilter}
     ORDER BY d.data DESC, d.created_at DESC
-  `);
+  `, [contaId(req)]);
   res.json(rows);
 });
 
@@ -2752,8 +2754,8 @@ app.post('/api/admin/despesas', auth, adminOnly, async (req, res) => {
   const { loja_id, descricao, valor, data, usuario_banco_id } = req.body;
   if (!descricao || !valor) return res.status(400).json({ error: 'Descrição e valor são obrigatórios' });
   const { rows: [d] } = await pool.query(
-    `INSERT INTO despesas (loja_id, descricao, valor, data, created_by, usuario_banco_id) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-    [loja_id || null, descricao.trim(), parseFloat(valor), data || new Date().toISOString().split('T')[0], req.user.id, usuario_banco_id || null]
+    `INSERT INTO despesas (loja_id, descricao, valor, data, created_by, usuario_banco_id, conta_id) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+    [loja_id || null, descricao.trim(), parseFloat(valor), data || new Date().toISOString().split('T')[0], req.user.id, usuario_banco_id || null, contaId(req)]
   );
   res.json(d);
 });
@@ -2761,7 +2763,7 @@ app.post('/api/admin/despesas', auth, adminOnly, async (req, res) => {
 // Master: excluir despesa
 app.delete('/api/admin/despesas/:id', auth, masterOnly, async (req, res) => {
   const { id } = req.params;
-  const { rowCount } = await pool.query(`DELETE FROM despesas WHERE id = $1`, [id]);
+  const { rowCount } = await pool.query(`DELETE FROM despesas WHERE id = $1 AND conta_id = $2`, [id, contaId(req)]);
   if (rowCount === 0) return res.status(404).json({ error: 'Despesa não encontrada' });
   res.json({ ok: true });
 });
@@ -2782,17 +2784,18 @@ app.get('/api/admin/despesas/saldo-lojas', auth, adminOnly, async (req, res) => 
                  ELSE COALESCE(p.comissao_empresa_valor, 0) END) as total_recebido
       FROM proposals p
       JOIN users u ON u.id = p.user_id
-      WHERE p.status_comissao = 'Comissão Paga' AND u.loja_id IS NOT NULL
+      WHERE p.status_comissao = 'Comissão Paga' AND u.loja_id IS NOT NULL AND u.conta_id = $1
       GROUP BY u.loja_id
     ) emp ON emp.loja_id = l.id
     LEFT JOIN (
       SELECT loja_id, SUM(valor) as total_despesas
       FROM despesas
-      WHERE loja_id IS NOT NULL
+      WHERE loja_id IS NOT NULL AND conta_id = $1
       GROUP BY loja_id
     ) desp ON desp.loja_id = l.id
+    WHERE l.conta_id = $1
     ORDER BY l.name ASC
-  `);
+  `, [contaId(req)]);
   res.json(rows);
 });
 
@@ -2800,6 +2803,9 @@ app.get('/api/admin/despesas/saldo-lojas', auth, adminOnly, async (req, res) => 
 app.get('/api/admin/conta-corrente/user-view', auth, adminOnly, async (req, res) => {
   const targetId = req.query.user_id;
   if (!targetId) return res.status(400).json({ error: 'user_id obrigatório' });
+  // Garante que o corretor-alvo pertence à conta do admin
+  const { rows: [tgt] } = await pool.query(`SELECT id FROM users WHERE id = $1 AND conta_id = $2`, [targetId, contaId(req)]);
+  if (!tgt) return res.status(404).json({ error: 'Corretor não encontrado' });
 
   const month = req.query.month && /^\d{4}-\d{2}$/.test(req.query.month) ? req.query.month : null;
   const monthFilter = month
@@ -2894,6 +2900,7 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
   const conditions = ['p.status_comissao IS NOT NULL'];
   const values = [];
   let i = 1;
+  conditions.push(`u.conta_id = $${i++}`); values.push(contaId(req));
   if (user_id) { conditions.push(`p.user_id = $${i++}`); values.push(user_id); }
   if (status_comissao) { conditions.push(`p.status_comissao = $${i++}`); values.push(status_comissao); }
   if (loja_id) { conditions.push(`u.loja_id = $${i++}`); values.push(loja_id); }
@@ -2909,6 +2916,7 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
   const brokerConditions = ['p.status_comissao IS NOT NULL'];
   const brokerValues = [];
   let bi = 1;
+  brokerConditions.push(`u.conta_id = $${bi++}`); brokerValues.push(contaId(req));
   if (loja_id) { brokerConditions.push(`u.loja_id = $${bi++}`); brokerValues.push(loja_id); }
   if (usuario_banco_id) { brokerConditions.push(`p.usuario_banco_id = $${bi++}`); brokerValues.push(usuario_banco_id); }
   if (hasPeriod) { brokerConditions.push(`EXTRACT(MONTH FROM p.updated_at) = ${m} AND EXTRACT(YEAR FROM p.updated_at) = ${y}`); }
@@ -2954,6 +2962,7 @@ app.get('/api/admin/conta-corrente', auth, adminOnly, async (req, res) => {
   const ubConditions = ['p.status_comissao IS NOT NULL'];
   const ubValues = [];
   let ui = 1;
+  ubConditions.push(`u.conta_id = $${ui++}`); ubValues.push(contaId(req));
   if (loja_id) { ubConditions.push(`u.loja_id = $${ui++}`); ubValues.push(loja_id); }
   if (usuario_banco_id) { ubConditions.push(`p.usuario_banco_id = $${ui++}`); ubValues.push(usuario_banco_id); }
   if (hasPeriod) { ubConditions.push(`EXTRACT(MONTH FROM p.updated_at) = ${m} AND EXTRACT(YEAR FROM p.updated_at) = ${y}`); }
@@ -3009,9 +3018,9 @@ app.get('/api/admin/commission-report', auth, adminOnly, async (req, res) => {
     FROM proposals p
     JOIN users u ON u.id = p.user_id
     LEFT JOIN financial_tables ft ON ft.id = p.table_id
-    WHERE p.status_comissao IS NOT NULL
+    WHERE p.status_comissao IS NOT NULL AND u.conta_id = $1
     ORDER BY p.updated_at DESC
-  `);
+  `, [contaId(req)]);
 
   const monthsSet = new Set();
   const brokersMap = new Map();
@@ -3081,9 +3090,10 @@ app.post('/api/admin/conta-corrente/pay', auth, adminOnly, async (req, res) => {
     return res.status(400).json({ error: 'Nenhuma proposta selecionada' });
   }
   const placeholders = proposal_ids.map((_, idx) => `$${idx + 1}`).join(',');
+  const contaParam = `$${proposal_ids.length + 1}`;
   await pool.query(
-    `UPDATE proposals SET status_comissao = 'Comissão Paga', status = 'C PAGA', updated_at = now() WHERE id IN (${placeholders})`,
-    proposal_ids
+    `UPDATE proposals SET status_comissao = 'Comissão Paga', status = 'C PAGA', updated_at = now() WHERE id IN (${placeholders}) AND conta_id = ${contaParam}`,
+    [...proposal_ids, contaId(req)]
   );
   // Registra pagamento por corretor
   const { rows: affected } = await pool.query(
@@ -3095,13 +3105,13 @@ app.post('/api/admin/conta-corrente/pay', auth, adminOnly, async (req, res) => {
                ORDER BY cr.min_value DESC LIMIT 1), ft.comissao_corretor, 0) / 100, 2)), 0)::numeric as total_value,
             COUNT(*)::int as proposal_count
      FROM proposals p LEFT JOIN financial_tables ft ON ft.id = p.table_id
-     WHERE p.id IN (${placeholders}) GROUP BY p.user_id`,
-    proposal_ids
+     WHERE p.id IN (${placeholders}) AND p.conta_id = ${contaParam} GROUP BY p.user_id`,
+    [...proposal_ids, contaId(req)]
   );
   for (const row of affected) {
     await pool.query(
-      'INSERT INTO commission_payments (user_id, total_value, proposal_count, notes, paid_by) VALUES ($1,$2,$3,$4,$5)',
-      [row.user_id, row.total_value, row.proposal_count, notes || '', req.user.id]
+      'INSERT INTO commission_payments (user_id, total_value, proposal_count, notes, paid_by, conta_id) VALUES ($1,$2,$3,$4,$5,$6)',
+      [row.user_id, row.total_value, row.proposal_count, notes || '', req.user.id, contaId(req)]
     );
   }
   res.json({ ok: true, updated: proposal_ids.length });
@@ -3116,17 +3126,17 @@ app.post('/api/admin/conta-corrente/unpay', auth, masterOnly, async (req, res) =
   const placeholders = proposal_ids.map((_, idx) => `$${idx + 1}`).join(',');
   const { rowCount } = await pool.query(
     `UPDATE proposals SET status_comissao = 'Ag. Comissão', status = 'Paga', updated_at = now()
-     WHERE id IN (${placeholders}) AND status_comissao = 'Comissão Paga'`,
-    proposal_ids
+     WHERE id IN (${placeholders}) AND status_comissao = 'Comissão Paga' AND conta_id = $${proposal_ids.length + 1}`,
+    [...proposal_ids, contaId(req)]
   );
   res.json({ ok: true, updated: rowCount });
 });
 
 // Excluir pagamento de comissão (saída) — somente master
 app.delete('/api/admin/commission-payments/:id', auth, masterOnly, async (req, res) => {
-  const { rows: [cp] } = await pool.query('SELECT id FROM commission_payments WHERE id=$1', [req.params.id]);
+  const { rows: [cp] } = await pool.query('SELECT id FROM commission_payments WHERE id=$1 AND conta_id=$2', [req.params.id, contaId(req)]);
   if (!cp) return res.status(404).json({ error: 'Registro não encontrado' });
-  await pool.query('DELETE FROM commission_payments WHERE id=$1', [req.params.id]);
+  await pool.query('DELETE FROM commission_payments WHERE id=$1 AND conta_id=$2', [req.params.id, contaId(req)]);
   res.json({ ok: true });
 });
 
@@ -3135,8 +3145,8 @@ app.post('/api/admin/commission-payments/bulk-delete', auth, masterOnly, async (
   const { ids } = req.body;
   if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ error: 'IDs obrigatórios' });
   const placeholders = ids.map((_, i) => `$${i + 1}`).join(',');
-  await pool.query(`DELETE FROM commission_payments WHERE id IN (${placeholders})`, ids);
-  res.json({ ok: true, deleted: ids.length });
+  const { rowCount } = await pool.query(`DELETE FROM commission_payments WHERE id IN (${placeholders}) AND conta_id = $${ids.length + 1}`, [...ids, contaId(req)]);
+  res.json({ ok: true, deleted: rowCount });
 });
 
 // Histórico de pagamentos de comissão
@@ -3147,9 +3157,10 @@ app.get('/api/admin/conta-corrente/payments', auth, adminOnly, async (req, res) 
     FROM commission_payments cp
     JOIN users u ON u.id = cp.user_id
     LEFT JOIN users pb ON pb.id = cp.paid_by
+    WHERE cp.conta_id = $1
     ORDER BY cp.created_at DESC
     LIMIT 100
-  `);
+  `, [contaId(req)]);
   res.json(rows);
 });
 
