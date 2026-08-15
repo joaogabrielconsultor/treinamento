@@ -479,8 +479,9 @@ app.get('/api/admin/users', auth, adminOnly, async (req, res) => {
      FROM users u
      LEFT JOIN enrollments e ON e.user_id = u.id
      LEFT JOIN lojas l ON l.id = u.loja_id
-     WHERE ${showArchived ? 'u.archived_at IS NOT NULL' : 'u.archived_at IS NULL'}
-     GROUP BY u.id, l.name ORDER BY u.created_at DESC`
+     WHERE ${showArchived ? 'u.archived_at IS NOT NULL' : 'u.archived_at IS NULL'} AND u.conta_id = $1
+     GROUP BY u.id, l.name ORDER BY u.created_at DESC`,
+    [contaId(req)]
   );
   res.json(rows);
 });
@@ -488,17 +489,17 @@ app.get('/api/admin/users', auth, adminOnly, async (req, res) => {
 app.put('/api/admin/users/:id/role', auth, adminOnly, async (req, res) => {
   const { role } = req.body;
   if (!['user', 'admin'].includes(role)) return res.status(400).json({ error: 'Role inválido' });
-  // Apenas o master admin pode alterar funções
-  if (req.user.email !== MASTER_ADMIN_EMAIL) {
+  // Apenas o master (owner global ou master da própria conta) pode alterar funções
+  if (req.user.email !== MASTER_ADMIN_EMAIL && req.user.role !== 'master') {
     return res.status(403).json({ error: 'Apenas o administrador master pode alterar funções de usuários' });
   }
-  // A função do master admin não pode ser alterada
-  const { rows: target } = await pool.query('SELECT email FROM users WHERE id = $1', [req.params.id]);
+  // A função do master admin não pode ser alterada — busca só dentro da conta
+  const { rows: target } = await pool.query('SELECT email FROM users WHERE id = $1 AND conta_id = $2', [req.params.id, contaId(req)]);
   if (!target[0]) return res.status(404).json({ error: 'Usuário não encontrado' });
   if (target[0].email === MASTER_ADMIN_EMAIL) {
     return res.status(403).json({ error: 'A função do administrador master não pode ser alterada' });
   }
-  const { rows } = await pool.query('UPDATE users SET role = $1 WHERE id = $2 RETURNING id, email, full_name, role', [role, req.params.id]);
+  const { rows } = await pool.query('UPDATE users SET role = $1 WHERE id = $2 AND conta_id = $3 RETURNING id, email, full_name, role', [role, req.params.id, contaId(req)]);
   res.json(rows[0]);
 });
 
@@ -509,8 +510,8 @@ app.post('/api/admin/users', auth, adminOnly, async (req, res) => {
   try {
     const hash = await bcrypt.hash(password, 10);
     const { rows } = await pool.query(
-      'INSERT INTO users (email, password_hash, full_name, role, loja_id) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, full_name, role, loja_id, created_at',
-      [email, hash, full_name || null, role || 'user', loja_id || null]
+      'INSERT INTO users (email, password_hash, full_name, role, loja_id, conta_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, email, full_name, role, loja_id, created_at',
+      [email, hash, full_name || null, role || 'user', loja_id || null, contaId(req)]
     );
     res.json(rows[0]);
   } catch (e) {
@@ -521,44 +522,48 @@ app.post('/api/admin/users', auth, adminOnly, async (req, res) => {
 
 app.put('/api/admin/users/:id/loja', auth, adminOnly, async (req, res) => {
   const { loja_id } = req.body;
-  await pool.query('UPDATE users SET loja_id = $1 WHERE id = $2', [loja_id || null, req.params.id]);
+  await pool.query('UPDATE users SET loja_id = $1 WHERE id = $2 AND conta_id = $3', [loja_id || null, req.params.id, contaId(req)]);
   res.json({ ok: true });
 });
 
 // ─── ADMIN: ARCHIVE USER ──────────────────────────────────────────────────────
 app.put('/api/admin/users/:id/archive', auth, adminOnly, async (req, res) => {
-  if (req.user.email !== MASTER_ADMIN_EMAIL) {
+  if (req.user.email !== MASTER_ADMIN_EMAIL && req.user.role !== 'master') {
     return res.status(403).json({ error: 'Apenas o administrador master pode arquivar usuários' });
   }
-  const { rows: target } = await pool.query('SELECT email FROM users WHERE id = $1', [req.params.id]);
+  const { rows: target } = await pool.query('SELECT email FROM users WHERE id = $1 AND conta_id = $2', [req.params.id, contaId(req)]);
   if (!target[0]) return res.status(404).json({ error: 'Usuário não encontrado' });
   if (target[0].email === MASTER_ADMIN_EMAIL) {
     return res.status(403).json({ error: 'O administrador master não pode ser arquivado' });
   }
-  await pool.query('UPDATE users SET archived_at = now() WHERE id = $1', [req.params.id]);
+  await pool.query('UPDATE users SET archived_at = now() WHERE id = $1 AND conta_id = $2', [req.params.id, contaId(req)]);
   res.json({ success: true });
 });
 
 // ─── ADMIN: UNARCHIVE USER ────────────────────────────────────────────────────
 app.put('/api/admin/users/:id/unarchive', auth, adminOnly, async (req, res) => {
-  if (req.user.email !== MASTER_ADMIN_EMAIL) {
+  if (req.user.email !== MASTER_ADMIN_EMAIL && req.user.role !== 'master') {
     return res.status(403).json({ error: 'Apenas o administrador master pode reativar usuários' });
   }
-  await pool.query('UPDATE users SET archived_at = NULL WHERE id = $1', [req.params.id]);
+  await pool.query('UPDATE users SET archived_at = NULL WHERE id = $1 AND conta_id = $2', [req.params.id, contaId(req)]);
   res.json({ success: true });
 });
 
 // ─── ADMIN: CHANGE USER PASSWORD ───────────────────────────────────────────────
 app.put('/api/admin/users/:id/password', auth, adminOnly, async (req, res) => {
-  if (req.user.email !== MASTER_ADMIN_EMAIL) {
+  if (req.user.email !== MASTER_ADMIN_EMAIL && req.user.role !== 'master') {
     return res.status(403).json({ error: 'Apenas o administrador master pode alterar senhas' });
   }
   const { password } = req.body;
   if (!password || password.length < 6) return res.status(400).json({ error: 'Senha deve ter no mínimo 6 caracteres' });
-  const { rows: target } = await pool.query('SELECT email FROM users WHERE id = $1', [req.params.id]);
+  const { rows: target } = await pool.query('SELECT email FROM users WHERE id = $1 AND conta_id = $2', [req.params.id, contaId(req)]);
   if (!target[0]) return res.status(404).json({ error: 'Usuário não encontrado' });
+  // Ninguém além do próprio owner global pode trocar a senha do owner
+  if (target[0].email === MASTER_ADMIN_EMAIL && req.user.email !== MASTER_ADMIN_EMAIL) {
+    return res.status(403).json({ error: 'Sem permissão' });
+  }
   const hash = await bcrypt.hash(password, 10);
-  await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, req.params.id]);
+  await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2 AND conta_id = $3', [hash, req.params.id, contaId(req)]);
   res.json({ success: true });
 });
 
@@ -566,15 +571,15 @@ app.put('/api/admin/users/:id/profile', auth, adminOnly, async (req, res) => {
   const { full_name, email } = req.body;
   if (!full_name?.trim()) return res.status(400).json({ error: 'Nome obrigatório' });
   if (!email?.trim()) return res.status(400).json({ error: 'Email obrigatório' });
-  const { rows: target } = await pool.query('SELECT email FROM users WHERE id = $1', [req.params.id]);
+  const { rows: target } = await pool.query('SELECT email FROM users WHERE id = $1 AND conta_id = $2', [req.params.id, contaId(req)]);
   if (!target[0]) return res.status(404).json({ error: 'Usuário não encontrado' });
   if (target[0].email === MASTER_ADMIN_EMAIL && req.user.email !== MASTER_ADMIN_EMAIL) {
     return res.status(403).json({ error: 'Sem permissão para editar o master admin' });
   }
   try {
     const { rows } = await pool.query(
-      'UPDATE users SET full_name=$1, email=$2 WHERE id=$3 RETURNING id, full_name, email, role',
-      [full_name.trim(), email.trim().toLowerCase(), req.params.id]
+      'UPDATE users SET full_name=$1, email=$2 WHERE id=$3 AND conta_id=$4 RETURNING id, full_name, email, role',
+      [full_name.trim(), email.trim().toLowerCase(), req.params.id, contaId(req)]
     );
     res.json(rows[0]);
   } catch (e) {
@@ -590,27 +595,28 @@ app.get('/api/admin/lojas', auth, adminOnly, async (req, res) => {
            COUNT(u.id)::int AS user_count
     FROM lojas l
     LEFT JOIN users u ON u.loja_id = l.id AND u.archived_at IS NULL
+    WHERE l.conta_id = $1
     GROUP BY l.id ORDER BY l.name ASC
-  `);
+  `, [contaId(req)]);
   res.json(rows);
 });
 
 app.get('/api/admin/lojas/all', auth, async (req, res) => {
-  const { rows } = await pool.query('SELECT id, name FROM lojas ORDER BY name ASC');
+  const { rows } = await pool.query('SELECT id, name FROM lojas WHERE conta_id = $1 ORDER BY name ASC', [contaId(req)]);
   res.json(rows);
 });
 
 app.post('/api/admin/lojas', auth, adminOnly, async (req, res) => {
   const { name } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'Nome obrigatório' });
-  const { rows } = await pool.query('INSERT INTO lojas (name) VALUES ($1) RETURNING *', [name.trim()]);
+  const { rows } = await pool.query('INSERT INTO lojas (name, conta_id) VALUES ($1, $2) RETURNING *', [name.trim(), contaId(req)]);
   res.json(rows[0]);
 });
 
 app.put('/api/admin/lojas/:id', auth, adminOnly, async (req, res) => {
   const { name } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'Nome obrigatório' });
-  const { rows } = await pool.query('UPDATE lojas SET name = $1 WHERE id = $2 RETURNING *', [name.trim(), req.params.id]);
+  const { rows } = await pool.query('UPDATE lojas SET name = $1 WHERE id = $2 AND conta_id = $3 RETURNING *', [name.trim(), req.params.id, contaId(req)]);
   if (!rows[0]) return res.status(404).json({ error: 'Loja não encontrada' });
   res.json(rows[0]);
 });
@@ -618,13 +624,13 @@ app.put('/api/admin/lojas/:id', auth, adminOnly, async (req, res) => {
 app.delete('/api/admin/lojas/:id', auth, masterOnly, async (req, res) => {
   const { rows: check } = await pool.query('SELECT id FROM users WHERE loja_id = $1 AND archived_at IS NULL LIMIT 1', [req.params.id]);
   if (check.length > 0) return res.status(400).json({ error: 'Loja possui usuários ativos. Remova-os antes de excluir.' });
-  await pool.query('DELETE FROM lojas WHERE id = $1', [req.params.id]);
+  await pool.query('DELETE FROM lojas WHERE id = $1 AND conta_id = $2', [req.params.id, contaId(req)]);
   res.json({ ok: true });
 });
 
 // ─── USUÁRIOS BANCO ────────────────────────────────────────────────────────────
 app.get('/api/usuarios-banco', auth, async (req, res) => {
-  const { rows } = await pool.query('SELECT id, nome, descricao FROM usuarios_banco ORDER BY nome ASC');
+  const { rows } = await pool.query('SELECT id, nome, descricao FROM usuarios_banco WHERE conta_id = $1 ORDER BY nome ASC', [contaId(req)]);
   res.json(rows);
 });
 
@@ -633,29 +639,30 @@ app.get('/api/admin/usuarios-banco', auth, adminOnly, async (req, res) => {
     SELECT ub.*, COUNT(p.id)::int as proposal_count
     FROM usuarios_banco ub
     LEFT JOIN proposals p ON p.usuario_banco_id = ub.id
+    WHERE ub.conta_id = $1
     GROUP BY ub.id ORDER BY ub.nome ASC
-  `);
+  `, [contaId(req)]);
   res.json(rows);
 });
 
 app.post('/api/admin/usuarios-banco', auth, adminOnly, async (req, res) => {
   const { nome, descricao } = req.body;
   if (!nome?.trim()) return res.status(400).json({ error: 'Nome obrigatório' });
-  const { rows } = await pool.query('INSERT INTO usuarios_banco (nome, descricao) VALUES ($1,$2) RETURNING *', [nome.trim(), descricao?.trim() || '']);
+  const { rows } = await pool.query('INSERT INTO usuarios_banco (nome, descricao, conta_id) VALUES ($1,$2,$3) RETURNING *', [nome.trim(), descricao?.trim() || '', contaId(req)]);
   res.json(rows[0]);
 });
 
 app.put('/api/admin/usuarios-banco/:id', auth, adminOnly, async (req, res) => {
   const { nome, descricao } = req.body;
   if (!nome?.trim()) return res.status(400).json({ error: 'Nome obrigatório' });
-  const { rows } = await pool.query('UPDATE usuarios_banco SET nome=$1, descricao=$2 WHERE id=$3 RETURNING *', [nome.trim(), descricao?.trim() || '', req.params.id]);
+  const { rows } = await pool.query('UPDATE usuarios_banco SET nome=$1, descricao=$2 WHERE id=$3 AND conta_id=$4 RETURNING *', [nome.trim(), descricao?.trim() || '', req.params.id, contaId(req)]);
   if (!rows[0]) return res.status(404).json({ error: 'Usuário banco não encontrado' });
   res.json(rows[0]);
 });
 
 app.delete('/api/admin/usuarios-banco/:id', auth, masterOnly, async (req, res) => {
-  await pool.query('UPDATE proposals SET usuario_banco_id = NULL WHERE usuario_banco_id = $1', [req.params.id]);
-  await pool.query('DELETE FROM usuarios_banco WHERE id = $1', [req.params.id]);
+  await pool.query('UPDATE proposals SET usuario_banco_id = NULL WHERE usuario_banco_id = $1 AND conta_id = $2', [req.params.id, contaId(req)]);
+  await pool.query('DELETE FROM usuarios_banco WHERE id = $1 AND conta_id = $2', [req.params.id, contaId(req)]);
   res.json({ ok: true });
 });
 
@@ -708,8 +715,9 @@ app.get('/api/admin/conta-empresa', auth, adminOnly, async (req, res) => {
     LEFT JOIN users u ON u.loja_id = l.id AND u.archived_at IS NULL
     LEFT JOIN proposals p ON p.user_id = u.id
     LEFT JOIN financial_tables ft ON ft.id = p.table_id
+    WHERE l.conta_id = $1
     GROUP BY l.id ORDER BY l.name ASC
-  `);
+  `, [contaId(req)]);
   res.json(rows);
 });
 
@@ -729,16 +737,19 @@ app.get('/api/admin/conta-empresa/usuarios-banco', auth, adminOnly, async (req, 
     JOIN proposals p ON p.user_id = u.id
     LEFT JOIN financial_tables ft ON ft.id = p.table_id
     JOIN usuarios_banco ub ON ub.id = p.usuario_banco_id
-    WHERE p.status_comissao IS NOT NULL
+    WHERE p.status_comissao IS NOT NULL AND l.conta_id = $1
     GROUP BY l.id, ub.id, ub.nome, ub.descricao
     HAVING COUNT(p.id) FILTER (WHERE p.status_comissao = 'Comissão Paga') > 0
     ORDER BY l.id, total_empresa DESC
-  `);
+  `, [contaId(req)]);
   res.json(rows);
 });
 
 app.get('/api/admin/conta-empresa/:loja_id/extrato', auth, adminOnly, async (req, res) => {
   const { loja_id } = req.params;
+  // Garante que a loja pertence à conta do admin
+  const { rows: [lojaOk] } = await pool.query('SELECT id FROM lojas WHERE id = $1 AND conta_id = $2', [loja_id, contaId(req)]);
+  if (!lojaOk) return res.status(404).json({ error: 'Loja não encontrada' });
   // Créditos: propostas pagas dessa loja
   const { rows: creditos } = await pool.query(`
     SELECT 'credito' AS type,
@@ -814,7 +825,7 @@ app.put('/api/settings', auth, adminOnly, async (req, res) => {
 
 // ─── LOGIN BANCOS ──────────────────────────────────────────────────────────────
 app.get('/api/login-bancos', auth, async (req, res) => {
-  const { rows } = await pool.query('SELECT * FROM login_bancos ORDER BY nome ASC');
+  const { rows } = await pool.query('SELECT * FROM login_bancos WHERE conta_id = $1 ORDER BY nome ASC', [contaId(req)]);
   res.json(rows);
 });
 
@@ -822,8 +833,8 @@ app.post('/api/login-bancos', auth, adminOnly, async (req, res) => {
   const { nome, login, senha, url } = req.body;
   if (!nome || !login || !senha || !url) return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
   const { rows } = await pool.query(
-    'INSERT INTO login_bancos (nome, login, senha, url) VALUES ($1,$2,$3,$4) RETURNING *',
-    [nome, login, senha, url]
+    'INSERT INTO login_bancos (nome, login, senha, url, conta_id) VALUES ($1,$2,$3,$4,$5) RETURNING *',
+    [nome, login, senha, url, contaId(req)]
   );
   res.json(rows[0]);
 });
@@ -832,15 +843,15 @@ app.put('/api/login-bancos/:id', auth, adminOnly, async (req, res) => {
   const { nome, login, senha, url } = req.body;
   if (!nome || !login || !senha || !url) return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
   const { rows } = await pool.query(
-    'UPDATE login_bancos SET nome=$1, login=$2, senha=$3, url=$4 WHERE id=$5 RETURNING *',
-    [nome, login, senha, url, req.params.id]
+    'UPDATE login_bancos SET nome=$1, login=$2, senha=$3, url=$4 WHERE id=$5 AND conta_id=$6 RETURNING *',
+    [nome, login, senha, url, req.params.id, contaId(req)]
   );
   if (!rows[0]) return res.status(404).json({ error: 'Registro não encontrado' });
   res.json(rows[0]);
 });
 
 app.delete('/api/login-bancos/:id', auth, masterOnly, async (req, res) => {
-  await pool.query('DELETE FROM login_bancos WHERE id = $1', [req.params.id]);
+  await pool.query('DELETE FROM login_bancos WHERE id = $1 AND conta_id = $2', [req.params.id, contaId(req)]);
   res.json({ ok: true });
 });
 
@@ -1227,6 +1238,7 @@ app.get('/api/financial-tables', auth, async (req, res) => {
   const conditions = [];
   const values = [];
   let i = 1;
+  conditions.push(`ft.conta_id = $${i++}`); values.push(contaId(req));
   if (convenio_id) { conditions.push(`ft.convenio_id = $${i++}`); values.push(convenio_id); }
   if (bank_id)     { conditions.push(`ft.bank_id = $${i++}`);     values.push(bank_id); }
   // Corretores só veem tabelas ativas
@@ -1286,15 +1298,16 @@ app.post('/api/financial-tables/import', auth, adminOnly, async (req, res) => {
          WHERE name=$1 AND bank_id=$2 AND convenio_id=$3
            AND ROUND(comissao_empresa::numeric,4) = ROUND($4::numeric,4)
            AND ROUND(comissao_corretor::numeric,4) = ROUND($5::numeric,4)
+           AND conta_id=$6
          LIMIT 1`,
-        [item.name, item.bank_id, item.convenio_id, csvEmpresa, csvCorretor]
+        [item.name, item.bank_id, item.convenio_id, csvEmpresa, csvCorretor, contaId(req)]
       );
       // Fallback: se não achou pelo match preciso, tenta match só por nome+banco+convênio
       // mas só se houver exatamente UMA entrada (sem ambiguidade)
       if (existing.rows.length === 0) {
         const fallback = await pool.query(
-          'SELECT id FROM financial_tables WHERE name=$1 AND bank_id=$2 AND convenio_id=$3',
-          [item.name, item.bank_id, item.convenio_id]
+          'SELECT id FROM financial_tables WHERE name=$1 AND bank_id=$2 AND convenio_id=$3 AND conta_id=$4',
+          [item.name, item.bank_id, item.convenio_id, contaId(req)]
         );
         if (fallback.rows.length === 1) existing = fallback;
       }
@@ -1321,12 +1334,12 @@ app.post('/api/financial-tables/import', auth, adminOnly, async (req, res) => {
             name, bank_id, convenio_id, category_id, active,
             comissao_empresa, comissao_corretor, coeficiente,
             tipo_proposta, parceiro, expires_at, convenio_descricao, disponivel_para,
-            prazo_inicial, prazo_final, juros_inicial, juros_final, coef_inicial, coef_final
-          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) RETURNING id`,
+            prazo_inicial, prazo_final, juros_inicial, juros_final, coef_inicial, coef_final, conta_id
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20) RETURNING id`,
           [item.name, item.bank_id, item.convenio_id, item.category_id,
            item.active !== 'false' && item.active !== false,
            toFloat(item.comissao_empresa), toFloat(item.comissao_corretor), toFloat(item.coeficiente),
-           ...rangeValues.slice(0, 11)]
+           ...rangeValues.slice(0, 11), contaId(req)]
         );
         tableId = tRows[0].id;
         imported++;
@@ -1336,9 +1349,9 @@ app.post('/api/financial-tables/import', auth, adminOnly, async (req, res) => {
           financial_table_id, tipo_proposta, parceiro, expires_at, convenio_descricao,
           disponivel_para, prazo_inicial, prazo_final, juros_inicial, juros_final,
           coef_inicial, coef_final, comissao_empresa, comissao_corretor,
-          min_value, max_value, base_points
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
-      `, [tableId, ...rangeValues, 0, null, 0]);
+          min_value, max_value, base_points, conta_id
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+      `, [tableId, ...rangeValues, 0, null, 0, contaId(req)]);
     } catch (err) {
       errors.push({ row: item.nome || '?', error: err.message });
     }
@@ -1355,11 +1368,11 @@ app.post('/api/financial-tables', auth, adminOnly, async (req, res) => {
     `INSERT INTO financial_tables
       (name, bank_id, convenio_id, category_id, active, comissao_empresa, comissao_corretor, coeficiente,
        tipo_proposta, parceiro, expires_at, convenio_descricao, disponivel_para,
-       prazo_inicial, prazo_final, juros_inicial, juros_final, coef_inicial, coef_final)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) RETURNING *`,
+       prazo_inicial, prazo_final, juros_inicial, juros_final, coef_inicial, coef_final, conta_id)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20) RETURNING *`,
     [name, bank_id||null, convenio_id||null, category_id||null, active!==false, comissao_empresa||0, comissao_corretor||0, coeficiente||0,
      tipo_proposta||null, parceiro||null, expires_at||null, convenio_descricao||null, disponivel_para||'todos',
-     prazo_inicial||null, prazo_final||null, juros_inicial||null, juros_final||null, coef_inicial||null, coef_final||null]
+     prazo_inicial||null, prazo_final||null, juros_inicial||null, juros_final||null, coef_inicial||null, coef_final||null, contaId(req)]
   );
   res.json(rows[0]);
 });
@@ -1379,20 +1392,21 @@ app.put('/api/financial-tables/:id', auth, adminOnly, async (req, res) => {
   }
   if (!updates.length) return res.status(400).json({ error: 'Nenhum campo' });
   values.push(req.params.id);
-  const { rows } = await pool.query(`UPDATE financial_tables SET ${updates.join(', ')} WHERE id=$${i} RETURNING *`, values);
+  values.push(contaId(req));
+  const { rows } = await pool.query(`UPDATE financial_tables SET ${updates.join(', ')} WHERE id=$${i} AND conta_id=$${i + 1} RETURNING *`, values);
   res.json(rows[0]);
 });
 
 app.delete('/api/financial-tables/:id', auth, masterOnly, async (req, res) => {
-  await pool.query('DELETE FROM financial_tables WHERE id=$1', [req.params.id]);
+  await pool.query('DELETE FROM financial_tables WHERE id=$1 AND conta_id=$2', [req.params.id, contaId(req)]);
   res.json({ ok: true });
 });
 
 // ─── REGRAS DE PONTUAÇÃO ───────────────────────────────────────────────────────
 app.get('/api/scoring-rules/:table_id', auth, async (req, res) => {
   const { rows } = await pool.query(
-    'SELECT * FROM scoring_rules WHERE table_id=$1 ORDER BY min_value DESC',
-    [req.params.table_id]
+    'SELECT * FROM scoring_rules WHERE table_id=$1 AND conta_id=$2 ORDER BY min_value DESC',
+    [req.params.table_id, contaId(req)]
   );
   res.json(rows);
 });
@@ -1401,8 +1415,8 @@ app.post('/api/scoring-rules', auth, adminOnly, async (req, res) => {
   const { table_id, min_value, max_value, points } = req.body;
   if (!table_id) return res.status(400).json({ error: 'table_id obrigatório' });
   const { rows } = await pool.query(
-    'INSERT INTO scoring_rules (table_id, min_value, max_value, points) VALUES ($1,$2,$3,$4) RETURNING *',
-    [table_id, min_value || 0, max_value || null, points || 0]
+    'INSERT INTO scoring_rules (table_id, min_value, max_value, points, conta_id) VALUES ($1,$2,$3,$4,$5) RETURNING *',
+    [table_id, min_value || 0, max_value || null, points || 0, contaId(req)]
   );
   res.json(rows[0]);
 });
@@ -1410,22 +1424,23 @@ app.post('/api/scoring-rules', auth, adminOnly, async (req, res) => {
 app.put('/api/scoring-rules/:id', auth, adminOnly, async (req, res) => {
   const { min_value, max_value, points } = req.body;
   const { rows } = await pool.query(
-    'UPDATE scoring_rules SET min_value=COALESCE($1,min_value), max_value=$2, points=COALESCE($3,points) WHERE id=$4 RETURNING *',
-    [min_value, max_value || null, points, req.params.id]
+    'UPDATE scoring_rules SET min_value=COALESCE($1,min_value), max_value=$2, points=COALESCE($3,points) WHERE id=$4 AND conta_id=$5 RETURNING *',
+    [min_value, max_value || null, points, req.params.id, contaId(req)]
   );
   res.json(rows[0]);
 });
 
 app.delete('/api/scoring-rules/:id', auth, masterOnly, async (req, res) => {
-  await pool.query('DELETE FROM scoring_rules WHERE id=$1', [req.params.id]);
+  await pool.query('DELETE FROM scoring_rules WHERE id=$1 AND conta_id=$2', [req.params.id, contaId(req)]);
   res.json({ ok: true });
 });
 
 // ─── FAIXAS DE COMISSÃO ───────────────────────────────────────────────────────
 app.get('/api/commission-ranges', auth, async (req, res) => {
   const { table_id } = req.query;
-  const params = [];
-  const where = table_id ? (params.push(table_id), 'WHERE cr.financial_table_id = $1') : '';
+  const params = [contaId(req)];
+  let where = 'WHERE cr.conta_id = $1';
+  if (table_id) { params.push(table_id); where += ` AND cr.financial_table_id = $2`; }
   const { rows } = await pool.query(`
     SELECT cr.*,
       tc.name as category_name, tc.multiplier as category_multiplier,
@@ -1456,8 +1471,8 @@ app.post('/api/commission-ranges/import', auth, adminOnly, async (req, res) => {
           financial_table_id, tipo_proposta, expires_at, convenio_descricao, parceiro,
           prazo_inicial, prazo_final, juros_inicial, juros_final, coef_inicial, coef_final,
           comissao_empresa, comissao_corretor, disponivel_para,
-          category_id, min_value, max_value, base_points, multiplier
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+          category_id, min_value, max_value, base_points, multiplier, conta_id
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
       `, [
         item.financial_table_id,
         item.tipo_proposta || '',
@@ -1478,6 +1493,7 @@ app.post('/api/commission-ranges/import', auth, adminOnly, async (req, res) => {
         item.max_value ? parseFloat(item.max_value) : null,
         parseInt(item.base_points) || 0,
         item.multiplier ? parseFloat(item.multiplier) : null,
+        contaId(req),
       ]);
       imported++;
     } catch (err) {
@@ -1500,15 +1516,15 @@ app.post('/api/commission-ranges', auth, adminOnly, async (req, res) => {
       financial_table_id, tipo_proposta, expires_at, convenio_descricao, parceiro,
       prazo_inicial, prazo_final, juros_inicial, juros_final, coef_inicial, coef_final,
       comissao_empresa, comissao_corretor, disponivel_para,
-      category_id, min_value, max_value, base_points, multiplier
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+      category_id, min_value, max_value, base_points, multiplier, conta_id
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
     RETURNING *
   `, [
     financial_table_id, tipo_proposta||'', expires_at||null, convenio_descricao||'', parceiro||'',
     prazo_inicial||null, prazo_final||null, juros_inicial||null, juros_final||null,
     coef_inicial||null, coef_final||null,
     comissao_empresa||0, comissao_corretor||0, disponivel_para||'todos',
-    category_id||null, min_value||0, max_value||null, base_points||0, multiplier||null
+    category_id||null, min_value||0, max_value||null, base_points||0, multiplier||null, contaId(req)
   ]);
   res.json(rows[0]);
 });
@@ -1528,12 +1544,13 @@ app.put('/api/commission-ranges/:id', auth, adminOnly, async (req, res) => {
   }
   if (!updates.length) return res.status(400).json({ error: 'Nenhum campo' });
   values.push(req.params.id);
-  const { rows } = await pool.query(`UPDATE commission_ranges SET ${updates.join(', ')} WHERE id=$${i} RETURNING *`, values);
+  values.push(contaId(req));
+  const { rows } = await pool.query(`UPDATE commission_ranges SET ${updates.join(', ')} WHERE id=$${i} AND conta_id=$${i + 1} RETURNING *`, values);
   res.json(rows[0]);
 });
 
 app.delete('/api/commission-ranges/:id', auth, masterOnly, async (req, res) => {
-  await pool.query('DELETE FROM commission_ranges WHERE id=$1', [req.params.id]);
+  await pool.query('DELETE FROM commission_ranges WHERE id=$1 AND conta_id=$2', [req.params.id, contaId(req)]);
   res.json({ ok: true });
 });
 
