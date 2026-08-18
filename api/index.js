@@ -75,7 +75,8 @@ async function auth(req, res, next) {
   // Exceção: /auth/me continua respondendo (o app precisa carregar o shell + saber
   // quem é o usuário e o status da conta pra mostrar a tela de renovação).
   try {
-    if (req.path !== '/api/auth/me' && req.user.conta_id && String(req.user.email || '').toLowerCase() !== MASTER_EMAIL.toLowerCase()) {
+    const exemptPaywall = req.path === '/api/auth/me' || req.path.startsWith('/api/support/');
+    if (!exemptPaywall && req.user.conta_id && String(req.user.email || '').toLowerCase() !== MASTER_EMAIL.toLowerCase()) {
       const st = await getContaStatus(req.user.conta_id);
       if (st && !['ativo', 'teste'].includes(st)) {
         return res.status(402).json({ error: 'Sua assinatura está inativa. Regularize o pagamento para reativar o sistema.', paywall: true, status: st });
@@ -1258,6 +1259,100 @@ app.put('/api/admin/contas/:id/status', auth, masterOnly, async (req, res) => {
   // Espelha no registro de cliente do CRM, se houver
   await pool.query('UPDATE clientes SET status=$1 WHERE conta_id=$2', [status, req.params.id]);
   invalidateContaStatus(req.params.id); // efeito imediato no paywall
+  res.json(rows[0]);
+});
+
+// Vincula o e-mail de cobrança (Cakto) à conta — quando o pagamento cair com esse
+// e-mail, o webhook REATIVA esta conta (em vez de criar um CRM novo). Essencial
+// pra cobrar um cliente que já existe (ex.: aprovamais na primeira mensalidade).
+app.put('/api/admin/contas/:id/cobranca', auth, masterOnly, async (req, res) => {
+  const { cakto_email, mensalidade } = req.body;
+  const { rows } = await pool.query(
+    `UPDATE contas SET
+       cakto_email = COALESCE($1, cakto_email),
+       mensalidade = COALESCE($2, mensalidade)
+     WHERE id=$3 RETURNING *`,
+    [cakto_email ? String(cakto_email).toLowerCase().trim() : null, mensalidade ?? null, req.params.id]
+  );
+  if (!rows[0]) return res.status(404).json({ error: 'Conta não encontrada' });
+  res.json(rows[0]);
+});
+
+// ─── CHAT DE SUPORTE (cliente ↔ dono) ──────────────────────────────────────────
+// Cliente: lê a própria conversa (marca as do dono como lidas) e envia mensagem.
+app.get('/api/support/messages', auth, async (req, res) => {
+  const cid = contaId(req);
+  if (!cid) return res.json([]);
+  const { rows } = await pool.query(
+    'SELECT id, from_owner, body, created_at FROM support_messages WHERE conta_id=$1 ORDER BY created_at ASC LIMIT 500', [cid]
+  );
+  await pool.query('UPDATE support_messages SET read_by_client=true WHERE conta_id=$1 AND from_owner=true AND read_by_client=false', [cid]);
+  res.json(rows);
+});
+app.post('/api/support/messages', auth, async (req, res) => {
+  const cid = contaId(req);
+  const body = String(req.body?.body || '').trim();
+  if (!cid) return res.status(400).json({ error: 'Sem conta' });
+  if (!body) return res.status(400).json({ error: 'Mensagem vazia' });
+  const { rows } = await pool.query(
+    `INSERT INTO support_messages (conta_id, user_id, from_owner, body, read_by_client)
+     VALUES ($1,$2,false,$3,true) RETURNING id, from_owner, body, created_at`,
+    [cid, req.user.id, body.slice(0, 4000)]
+  );
+  res.json(rows[0]);
+});
+// Cliente: quantas respostas do dono ainda não lidas (pro badge do botão).
+app.get('/api/support/unread', auth, async (req, res) => {
+  const cid = contaId(req);
+  if (!cid) return res.json({ unread: 0 });
+  const { rows: [r] } = await pool.query(
+    'SELECT COUNT(*)::int AS unread FROM support_messages WHERE conta_id=$1 AND from_owner=true AND read_by_client=false', [cid]
+  );
+  res.json({ unread: r.unread });
+});
+
+// Dono: lista de conversas (uma por conta) com última mensagem e não lidas.
+app.get('/api/admin/support/threads', auth, masterOnly, async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT c.id AS conta_id, c.nome, c.status,
+           cl.email AS admin_email,
+           lm.body AS last_body, lm.from_owner AS last_from_owner, lm.created_at AS last_at,
+           COALESCE(u.unread,0)::int AS unread
+    FROM contas c
+    JOIN LATERAL (
+      SELECT body, from_owner, created_at FROM support_messages sm
+      WHERE sm.conta_id=c.id ORDER BY created_at DESC LIMIT 1
+    ) lm ON true
+    LEFT JOIN clientes cl ON cl.conta_id=c.id
+    LEFT JOIN (
+      SELECT conta_id, COUNT(*) AS unread FROM support_messages
+      WHERE from_owner=false AND read_by_owner=false GROUP BY conta_id
+    ) u ON u.conta_id=c.id
+    ORDER BY lm.created_at DESC
+  `);
+  res.json(rows);
+});
+// Dono: total de não lidas (badge do menu).
+app.get('/api/admin/support/unread', auth, masterOnly, async (req, res) => {
+  const { rows: [r] } = await pool.query('SELECT COUNT(*)::int AS unread FROM support_messages WHERE from_owner=false AND read_by_owner=false');
+  res.json({ unread: r.unread });
+});
+// Dono: abre uma conversa (marca as do cliente como lidas) e responde.
+app.get('/api/admin/support/:conta_id/messages', auth, masterOnly, async (req, res) => {
+  const { rows } = await pool.query(
+    'SELECT id, from_owner, body, created_at FROM support_messages WHERE conta_id=$1 ORDER BY created_at ASC LIMIT 500', [req.params.conta_id]
+  );
+  await pool.query('UPDATE support_messages SET read_by_owner=true WHERE conta_id=$1 AND from_owner=false AND read_by_owner=false', [req.params.conta_id]);
+  res.json(rows);
+});
+app.post('/api/admin/support/:conta_id/messages', auth, masterOnly, async (req, res) => {
+  const body = String(req.body?.body || '').trim();
+  if (!body) return res.status(400).json({ error: 'Mensagem vazia' });
+  const { rows } = await pool.query(
+    `INSERT INTO support_messages (conta_id, user_id, from_owner, body, read_by_owner)
+     VALUES ($1,$2,true,$3,true) RETURNING id, from_owner, body, created_at`,
+    [req.params.conta_id, req.user.id, body.slice(0, 4000)]
+  );
   res.json(rows[0]);
 });
 

@@ -543,6 +543,21 @@ async function initDb() {
     await client.query(`ALTER TABLE clientes ADD COLUMN IF NOT EXISTS conta_id uuid REFERENCES contas(id) ON DELETE SET NULL`);
     await client.query(`ALTER TABLE clientes ADD COLUMN IF NOT EXISTS senha_temporaria text`);
 
+    // Chat de suporte (cliente ↔ dono). Funciona mesmo com a conta suspensa.
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS support_messages (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        conta_id uuid REFERENCES contas(id) ON DELETE CASCADE,
+        user_id uuid REFERENCES users(id) ON DELETE SET NULL,
+        from_owner boolean NOT NULL DEFAULT false,
+        body text NOT NULL,
+        read_by_owner boolean NOT NULL DEFAULT false,
+        read_by_client boolean NOT NULL DEFAULT false,
+        created_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS support_messages_conta_idx ON support_messages(conta_id, created_at)`);
+
     // Owner global (super-admin, vê tudo no /admin) — configurável por env MASTER_EMAIL.
     // Em multi-tenant cada conta tem SEU próprio master (o comprador), criado no
     // provisionamento. Por isso NÃO rebaixamos os demais masters — apenas garantimos

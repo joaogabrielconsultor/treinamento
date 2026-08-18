@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   LayoutGrid, Users, Headphones, CreditCard, LogOut, ArrowLeft, ShieldCheck,
   Mail, Lock, Eye, EyeOff, ArrowRight, Building2, DollarSign, AlertTriangle,
-  MessageCircle, ExternalLink, RefreshCw, Boxes, KeyRound, Power, Copy,
+  MessageCircle, ExternalLink, RefreshCw, Boxes, KeyRound, Power, Copy, Send,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useIsAdmin } from '../../hooks/useAdmin';
@@ -259,24 +259,113 @@ function Overview({ setSection }: { setSection: (s: Section) => void }) {
 }
 
 /* ── Suporte ── */
+interface Thread { conta_id: string; nome: string; status: string; admin_email: string | null; last_body: string; last_from_owner: boolean; last_at: string; unread: number; }
+interface SupMsg { id: string; from_owner: boolean; body: string; created_at: string; }
+
 function Suporte() {
-  const { items, loading, reload } = useClientes();
-  const waLink = (n: string) => `https://wa.me/${(n || '').replace(/\D/g, '')}`;
+  const [threads, setThreads] = useState<Thread[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sel, setSel] = useState<Thread | null>(null);
+  const [msgs, setMsgs] = useState<SupMsg[]>([]);
+  const [text, setText] = useState('');
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const loadThreads = useCallback(async () => {
+    try {
+      const r = await fetch('/api/admin/support/threads', { headers: { Authorization: `Bearer ${token()}` } });
+      setThreads(r.ok ? await r.json() : []);
+    } catch { setThreads([]); }
+    setLoading(false);
+  }, []);
+  const loadMsgs = useCallback(async (cid: string) => {
+    try {
+      const r = await fetch(`/api/admin/support/${cid}/messages`, { headers: { Authorization: `Bearer ${token()}` } });
+      if (r.ok) setMsgs(await r.json());
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => { loadThreads(); const t = setInterval(loadThreads, 8000); return () => clearInterval(t); }, [loadThreads]);
+  useEffect(() => {
+    if (!sel) return;
+    loadMsgs(sel.conta_id);
+    const t = setInterval(() => loadMsgs(sel.conta_id), 4000);
+    return () => clearInterval(t);
+  }, [sel, loadMsgs]);
+  useEffect(() => { if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight; }, [msgs]);
+
+  const send = async () => {
+    const body = text.trim();
+    if (!body || !sel) return;
+    setText('');
+    setMsgs((m) => [...m, { id: `tmp-${Date.now()}`, from_owner: true, body, created_at: new Date().toISOString() }]);
+    try {
+      await fetch(`/api/admin/support/${sel.conta_id}/messages`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` }, body: JSON.stringify({ body }) });
+      loadMsgs(sel.conta_id); loadThreads();
+    } catch { /* ignore */ }
+  };
+
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <SectionHead title="Suporte" subtitle="Contato rápido e anotações por cliente" onReload={reload} />
-      {loading ? <Spinner /> : items.length === 0 ? <Empty /> : (
-        <div className="space-y-3">
-          {items.map(c => (
-            <div key={c.id} className="glass-card rounded-2xl p-5">
-              <div className="flex items-center justify-between gap-3 mb-2">
-                <div><h3 className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>{c.empresa}</h3>
-                  <p className="text-xs" style={{ color: 'var(--text-3)' }}>{c.responsavel || 'sem responsável'}{c.email ? ` · ${c.email}` : ''}</p></div>
-                {c.whatsapp && <a href={waLink(c.whatsapp)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold" style={{ background: '#25D366', color: '#062b14' }}><MessageCircle className="w-4 h-4" /> WhatsApp</a>}
-              </div>
-              {c.observacoes && <p className="text-sm mt-2 rounded-xl px-3 py-2 whitespace-pre-wrap" style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-1)', color: 'var(--text-2)' }}>{c.observacoes}</p>}
-            </div>
-          ))}
+    <div className="p-8 max-w-6xl mx-auto">
+      <SectionHead title="Suporte" subtitle="Chat com seus clientes — em tempo real, dentro do sistema" onReload={loadThreads} />
+      {loading ? <Spinner /> : threads.length === 0 ? (
+        <div className="text-center py-16 rounded-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <MessageCircle className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-3)' }} />
+          <p className="font-semibold" style={{ color: 'var(--text-2)' }}>Nenhuma conversa ainda</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>Quando um cliente mandar mensagem pelo chat de suporte, aparece aqui.</p>
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-[300px_1fr] gap-4" style={{ height: 560 }}>
+          {/* Lista de conversas */}
+          <div className="rounded-2xl overflow-y-auto" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+            {threads.map((t) => (
+              <button key={t.conta_id} onClick={() => setSel(t)}
+                className="w-full text-left px-4 py-3 flex items-start gap-2 transition-colors"
+                style={{ borderBottom: '1px solid var(--border-1)', background: sel?.conta_id === t.conta_id ? 'rgba(198,255,0,0.08)' : 'transparent' }}>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-sm truncate" style={{ color: 'var(--text-1)' }}>{t.nome}</span>
+                    {t.unread > 0 && <span className="flex-shrink-0 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full text-[10px] font-bold" style={{ background: '#ef4444', color: '#fff' }}>{t.unread}</span>}
+                  </div>
+                  <p className="text-xs truncate mt-0.5" style={{ color: 'var(--text-3)' }}>{t.last_from_owner ? 'Você: ' : ''}{t.last_body}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Conversa */}
+          <div className="rounded-2xl flex flex-col overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+            {!sel ? (
+              <div className="flex-1 flex items-center justify-center text-sm" style={{ color: 'var(--text-3)' }}>Selecione uma conversa</div>
+            ) : (
+              <>
+                <div className="px-4 py-3 flex-shrink-0" style={{ borderBottom: '1px solid var(--card-border)' }}>
+                  <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>{sel.nome}</p>
+                  <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>{sel.admin_email || ''} · <span className={`badge ${STATUS_BADGE[sel.status] || 'badge-neutral'}`}>{STATUS_LABEL[sel.status] || sel.status}</span></p>
+                </div>
+                <div ref={listRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-2" style={{ background: 'var(--bg-base)' }}>
+                  {msgs.map((m) => (
+                    <div key={m.id} className={`flex ${m.from_owner ? 'justify-end' : 'justify-start'}`}>
+                      <div className="max-w-[75%] px-3 py-2 rounded-2xl text-[13px] whitespace-pre-wrap break-words"
+                        style={m.from_owner
+                          ? { background: '#C6FF00', color: '#0a0a0a', fontWeight: 500, borderBottomRightRadius: 4 }
+                          : { background: 'var(--bg-surface)', color: 'var(--text-1)', border: '1px solid var(--border-1)', borderBottomLeftRadius: 4 }}>
+                        {m.body}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="p-2.5 flex items-center gap-2 flex-shrink-0" style={{ borderTop: '1px solid var(--card-border)' }}>
+                  <input value={text} onChange={(e) => setText(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
+                    placeholder="Responder..." className="flex-1 px-3 py-2 text-sm rounded-xl outline-none"
+                    style={{ background: 'var(--bg-base)', border: '1px solid var(--border-1)', color: 'var(--text-1)' }} />
+                  <button onClick={send} disabled={!text.trim()} className="flex items-center justify-center w-9 h-9 rounded-xl disabled:opacity-40" style={{ background: '#C6FF00', color: '#0a0a0a' }}>
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>

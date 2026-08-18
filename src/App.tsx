@@ -303,6 +303,7 @@ function AppInner() {
         </>)}
       </main>
       </div>
+      <SupportButton />
     </div>
   );
 }
@@ -330,7 +331,6 @@ export default function App() {
       <ToastProvider>
         <ConfirmProvider>
           <AppInner />
-          <SupportButton />
         </ConfirmProvider>
       </ToastProvider>
     </AppProvider>

@@ -1,127 +1,181 @@
-import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Headphones } from 'lucide-react';
-import { buildWhatsappLink } from '../lib/config';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { MessageCircle, X, Send, Headphones } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════
-   BOTÃO DE SUPORTE FLUTUANTE (WhatsApp)
-   Fica fixo no canto inferior direito, visível em todas as telas.
-   Ao clicar, abre um cartão com o atalho para o WhatsApp do suporte.
+   CHAT DE SUPORTE (interno, cliente ↔ dono)
+   FAB fixo no canto inferior direito. Abre um chat de verdade —
+   as mensagens vão pro painel do dono em /admin → Suporte.
+   Funciona mesmo com a assinatura suspensa.
 ═══════════════════════════════════════════════════════════════ */
 
-interface SupportButtonProps {
-  /** Nome do usuário logado — usado para personalizar a mensagem. */
-  userName?: string;
-}
+const VOLT = '#C6FF00';
 
-const WHATSAPP_GREEN = '#25D366';
+interface Msg { id: string; from_owner: boolean; body: string; created_at: string; }
 
-export function SupportButton({ userName }: SupportButtonProps) {
+const token = () => localStorage.getItem('token') ?? '';
+const authFetch = (p: string, opts?: RequestInit) =>
+  fetch(p, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}`, ...(opts?.headers || {}) } });
+
+export function SupportButton() {
   const [open, setOpen] = useState(false);
+  const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [text, setText] = useState('');
+  const [unread, setUnread] = useState(0);
+  const [sending, setSending] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const hasToken = !!token();
 
-  // Fecha ao clicar fora
+  const loadMsgs = useCallback(async () => {
+    try {
+      const r = await authFetch('/api/support/messages');
+      if (r.ok) { setMsgs(await r.json()); setUnread(0); }
+    } catch { /* ignore */ }
+  }, []);
+
+  const loadUnread = useCallback(async () => {
+    try {
+      const r = await authFetch('/api/support/unread');
+      if (r.ok) { const d = await r.json(); setUnread(d.unread || 0); }
+    } catch { /* ignore */ }
+  }, []);
+
+  // Polling: mensagens quando aberto (4s), badge de não lidas quando fechado (20s).
+  useEffect(() => {
+    if (!hasToken) return;
+    if (open) {
+      loadMsgs();
+      const t = setInterval(loadMsgs, 4000);
+      return () => clearInterval(t);
+    }
+    loadUnread();
+    const t = setInterval(loadUnread, 20000);
+    return () => clearInterval(t);
+  }, [open, hasToken, loadMsgs, loadUnread]);
+
+  // Rola pro fim quando chegam mensagens
+  useEffect(() => {
+    if (open && listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
+  }, [msgs, open]);
+
+  // Fecha ao apertar Escape
   useEffect(() => {
     if (!open) return;
-    function onClick(e: MouseEvent) {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpen(false);
-    }
-    document.addEventListener('mousedown', onClick);
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
     document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onClick);
-      document.removeEventListener('keydown', onKey);
-    };
+    return () => document.removeEventListener('keydown', onKey);
   }, [open]);
 
-  const greeting = userName
-    ? `Olá! Sou ${userName} e preciso de ajuda com a plataforma GS CRED.`
-    : undefined;
+  const send = async () => {
+    const body = text.trim();
+    if (!body || sending) return;
+    setSending(true);
+    setText('');
+    // otimista
+    const temp: Msg = { id: `tmp-${Date.now()}`, from_owner: false, body, created_at: new Date().toISOString() };
+    setMsgs((m) => [...m, temp]);
+    try {
+      const r = await authFetch('/api/support/messages', { method: 'POST', body: JSON.stringify({ body }) });
+      if (r.ok) { const saved = await r.json(); setMsgs((m) => m.map((x) => (x.id === temp.id ? saved : x))); }
+    } catch { /* ignore */ }
+    setSending(false);
+  };
+
+  if (!hasToken) return null;
 
   return (
-    <div
-      ref={rootRef}
-      className="fixed z-[9998] flex flex-col items-end gap-3"
-      style={{ right: 22, bottom: 22 }}
-    >
-      {/* Cartão de suporte */}
+    <div ref={rootRef} className="fixed z-[9998] flex flex-col items-end gap-3" style={{ right: 22, bottom: 22 }}>
       {open && (
         <div
-          className="rounded-2xl overflow-hidden w-[290px]"
+          className="rounded-2xl overflow-hidden w-[330px] flex flex-col"
           style={{
-            background: 'var(--modal-bg)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid var(--border-1)',
-            boxShadow: 'var(--shadow-lifted), 0 0 0 1px rgba(37,211,102,0.10)',
+            height: 460, maxHeight: 'calc(100vh - 120px)',
+            background: 'var(--modal-bg, #0d0d0d)', backdropFilter: 'blur(20px)',
+            border: '1px solid var(--border-1, rgba(255,255,255,0.1))',
+            boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
             animation: 'support-pop 0.26s cubic-bezier(0.16,1,0.3,1) both',
           }}
         >
           {/* Cabeçalho */}
-          <div
-            className="px-4 py-3.5 flex items-center gap-3"
-            style={{ background: 'linear-gradient(135deg, rgba(37,211,102,0.14), rgba(198,255,0,0.10))', borderBottom: '1px solid var(--border-1)' }}
-          >
-            <span
-              className="flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0"
-              style={{ background: `${WHATSAPP_GREEN}22`, color: WHATSAPP_GREEN }}
-            >
+          <div className="px-4 py-3 flex items-center gap-3 flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgba(198,255,0,0.14), rgba(169,224,0,0.06))', borderBottom: '1px solid var(--border-1, rgba(255,255,255,0.08))' }}>
+            <span className="flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0" style={{ background: 'rgba(198,255,0,0.18)', color: VOLT }}>
               <Headphones className="w-[18px] h-[18px]" />
             </span>
-            <div className="min-w-0">
-              <p className="text-[13px] font-bold leading-none" style={{ color: 'var(--text-1)' }}>Suporte</p>
-              <p className="text-[11px] mt-1 leading-none" style={{ color: 'var(--text-3)' }}>Costumamos responder rápido</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-bold leading-none" style={{ color: 'var(--text-1, #f4f4f4)' }}>Suporte GS CRED</p>
+              <p className="text-[11px] mt-1 leading-none" style={{ color: 'var(--text-3, #8a8a8a)' }}>Fale com a gente — respondemos aqui</p>
             </div>
+            <button onClick={() => setOpen(false)} style={{ color: 'var(--text-3, #8a8a8a)' }}><X className="w-4 h-4" /></button>
           </div>
 
-          {/* Corpo */}
-          <div className="px-4 py-3.5">
-            <p className="text-[12px] leading-relaxed mb-3" style={{ color: 'var(--text-2)' }}>
-              Precisa de ajuda? Fale com nossa equipe pelo WhatsApp e tire suas dúvidas em tempo real.
-            </p>
-            <a
-              href={buildWhatsappLink(greeting)}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setOpen(false)}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all"
-              style={{ background: WHATSAPP_GREEN, color: '#fff', boxShadow: '0 4px 14px rgba(37,211,102,0.35)' }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.filter = 'brightness(1.06)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.filter = 'none'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
+          {/* Mensagens */}
+          <div ref={listRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-2" style={{ background: 'var(--bg-base, #070707)' }}>
+            {msgs.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center px-4">
+                <MessageCircle className="w-8 h-8 mb-2" style={{ color: 'var(--text-3, #555)' }} />
+                <p className="text-[12px]" style={{ color: 'var(--text-3, #8a8a8a)' }}>Manda sua dúvida que a gente responde por aqui.</p>
+              </div>
+            ) : msgs.map((m) => (
+              <div key={m.id} className={`flex ${m.from_owner ? 'justify-start' : 'justify-end'}`}>
+                <div
+                  className="max-w-[80%] px-3 py-2 rounded-2xl text-[13px] leading-snug whitespace-pre-wrap break-words"
+                  style={m.from_owner
+                    ? { background: 'var(--bg-surface, #1a1a1a)', color: 'var(--text-1, #e8e8e8)', border: '1px solid var(--border-1, rgba(255,255,255,0.08))', borderBottomLeftRadius: 4 }
+                    : { background: VOLT, color: '#0a0a0a', fontWeight: 500, borderBottomRightRadius: 4 }}
+                >
+                  {m.body}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Input */}
+          <div className="p-2.5 flex items-center gap-2 flex-shrink-0" style={{ borderTop: '1px solid var(--border-1, rgba(255,255,255,0.08))', background: 'var(--modal-bg, #0d0d0d)' }}>
+            <input
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
+              placeholder="Escreva uma mensagem..."
+              className="flex-1 px-3 py-2 text-[13px] rounded-xl outline-none"
+              style={{ background: 'var(--bg-base, #070707)', border: '1px solid var(--border-1, rgba(255,255,255,0.1))', color: 'var(--text-1, #f4f4f4)' }}
+            />
+            <button
+              onClick={send}
+              disabled={!text.trim() || sending}
+              className="flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0 disabled:opacity-40"
+              style={{ background: VOLT, color: '#0a0a0a' }}
             >
-              <MessageCircle className="w-4 h-4" />
-              Abrir WhatsApp
-            </a>
+              <Send className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}
 
-      {/* Botão flutuante (FAB) */}
+      {/* FAB */}
       <button
         onClick={() => setOpen((v) => !v)}
         className="relative flex items-center justify-center rounded-full transition-all"
         style={{
-          width: 56,
-          height: 56,
-          background: open ? 'var(--bg-surface)' : `linear-gradient(135deg, ${WHATSAPP_GREEN}, #1cb455)`,
-          color: open ? 'var(--text-1)' : '#fff',
-          border: open ? '1px solid var(--border-2)' : 'none',
-          boxShadow: open ? 'var(--shadow-card)' : '0 6px 20px rgba(37,211,102,0.45)',
+          width: 56, height: 56,
+          background: open ? 'var(--bg-surface, #1a1a1a)' : `linear-gradient(135deg, ${VOLT}, #A9E000)`,
+          color: open ? 'var(--text-1, #f4f4f4)' : '#0a0a0a',
+          border: open ? '1px solid var(--border-2, rgba(255,255,255,0.14))' : 'none',
+          boxShadow: open ? 'var(--shadow-card, 0 6px 20px rgba(0,0,0,0.4))' : '0 6px 20px rgba(198,255,0,0.4)',
         }}
         onMouseEnter={(e) => { if (!open) (e.currentTarget as HTMLElement).style.transform = 'scale(1.06)'; }}
         onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = 'scale(1)'; }}
         aria-label={open ? 'Fechar suporte' : 'Abrir suporte'}
         title="Suporte"
       >
-        {!open && (
-          <span
-            className="absolute inset-0 rounded-full"
-            style={{ background: WHATSAPP_GREEN, animation: 'support-ping 2.4s cubic-bezier(0,0,0.2,1) infinite', zIndex: -1 }}
-          />
-        )}
         {open ? <X className="w-6 h-6" /> : <MessageCircle className="w-7 h-7" />}
+        {!open && unread > 0 && (
+          <span
+            className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 flex items-center justify-center rounded-full text-[11px] font-bold"
+            style={{ background: '#ef4444', color: '#fff', border: '2px solid #070707' }}
+          >
+            {unread > 9 ? '9+' : unread}
+          </span>
+        )}
       </button>
     </div>
   );
