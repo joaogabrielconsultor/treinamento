@@ -85,6 +85,18 @@ app.post('/api/auth/login', async (req, res) => {
     if (user.archived_at) return res.status(403).json({ error: 'Usuário inativo. Entre em contato com o administrador.' });
     const ok = await bcrypt.compare(password, user.password_hash);
     if (!ok) return res.status(400).json({ error: 'Email ou senha incorretos' });
+    // F3 paywall — bloqueia se a conta (tenant) não estiver ativa. O owner global sempre passa.
+    if (String(user.email).toLowerCase() !== MASTER_EMAIL.toLowerCase() && user.conta_id) {
+      const { rows: [conta] } = await pool.query('SELECT status, nome FROM contas WHERE id = $1', [user.conta_id]);
+      if (conta && !['ativo', 'teste'].includes(conta.status)) {
+        return res.status(402).json({
+          error: 'Sua assinatura está inativa. Regularize o pagamento para reativar o sistema.',
+          paywall: true,
+          status: conta.status,
+          empresa: conta.nome,
+        });
+      }
+    }
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role, full_name: user.full_name, conta_id: user.conta_id }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ user: { id: user.id, email: user.email, full_name: user.full_name, role: user.role }, token });
   } catch {
@@ -1019,6 +1031,62 @@ function digValue(obj, keys) {
   return found;
 }
 
+// ─── MULTI-TENANT F2: provisiona um CRM zerado ao confirmar o pagamento ─────────
+// Cria a conta (tenant) + usuário master do comprador (senha temporária) + status
+// padrão. Se o e-mail já é usuário do sistema, apenas reativa a conta dele.
+// Retorna { contaId, tempPassword, reused }.
+async function provisionConta({ email, nome, telefone, valor }) {
+  const lower = String(email || '').toLowerCase();
+  if (!lower) return { contaId: null, tempPassword: null, reused: false };
+
+  const { rows: exUser } = await pool.query('SELECT conta_id FROM users WHERE lower(email)=$1 LIMIT 1', [lower]);
+  if (exUser.length) {
+    // Comprador já tem sistema (ex.: cliente aprovamais destravando os dados) → reativa.
+    if (exUser[0].conta_id) {
+      await pool.query(
+        "UPDATE contas SET status='ativo', ultimo_pagamento=now(), mensalidade=CASE WHEN $2>0 THEN $2 ELSE mensalidade END WHERE id=$1",
+        [exUser[0].conta_id, valor || 0]
+      );
+    }
+    return { contaId: exUser[0].conta_id, tempPassword: null, reused: true };
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const { rows: [conta] } = await client.query(
+      `INSERT INTO contas (nome, status, mensalidade, cakto_email, ultimo_pagamento)
+       VALUES ($1,'ativo',$2,$3, now()) RETURNING id`,
+      [nome || lower, valor || 0, lower]
+    );
+    const contaId = conta.id;
+    // senha temporária legível (o dono repassa ao comprador; troca no 1º acesso)
+    const tempPassword = 'GS' + Math.random().toString(36).slice(-5) + '@' + Math.floor(100 + Math.random() * 899);
+    const hash = await bcrypt.hash(tempPassword, 10);
+    await client.query(
+      `INSERT INTO users (email, password_hash, full_name, role, conta_id) VALUES ($1,$2,$3,'master',$4)`,
+      [lower, hash, nome || '', contaId]
+    );
+    const defaults = [
+      ['Digitada', 'blue', 0, true], ['Em análise', 'amber', 1, true], ['Aprovada', 'purple', 2, true],
+      ['Paga', 'green', 3, true], ['Cancelada', 'red', 4, true],
+    ];
+    for (const [name, color, order, sys] of defaults) {
+      await client.query(
+        'INSERT INTO proposal_statuses (name, color, order_index, is_system, conta_id) VALUES ($1,$2,$3,$4,$5)',
+        [name, color, order, sys, contaId]
+      );
+    }
+    await client.query('COMMIT');
+    return { contaId, tempPassword, reused: false };
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
 app.post('/api/webhooks/cakto', async (req, res) => {
   try {
     const body = req.body || {};
@@ -1064,13 +1132,27 @@ app.post('/api/webhooks/cakto', async (req, res) => {
       }
     }
 
+    // F2 — cria/reativa o CRM zerado do comprador e vincula ao cliente do CRM do dono.
+    let provInfo = { contaId: null, tempPassword: null, reused: false };
+    if (aprovado && email) {
+      try {
+        provInfo = await provisionConta({ email, nome, telefone, valor });
+        if (provInfo.contaId && clienteId) {
+          await pool.query(
+            `UPDATE clientes SET conta_id = COALESCE(conta_id, $2), senha_temporaria = COALESCE($3, senha_temporaria) WHERE id = $1`,
+            [clienteId, provInfo.contaId, provInfo.tempPassword]
+          );
+        }
+      } catch (e) { console.error('[cakto provision]', e.message); }
+    }
+
     await pool.query(
       `INSERT INTO pagamentos (cliente_id, evento, status, cliente_nome, cliente_email, cliente_telefone, produto, valor, metodo, raw)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
       [clienteId, evento, status, nome, email, telefone, produto, valor, metodo, JSON.stringify(body)]
     );
 
-    res.json({ ok: true, provisioned: !!clienteId });
+    res.json({ ok: true, provisioned: !!clienteId, conta: provInfo.contaId, reused: provInfo.reused });
   } catch (err) {
     console.error('[cakto webhook]', err.message);
     res.status(200).json({ ok: false }); // 200 evita reenvio em loop por erro interno
@@ -1082,6 +1164,39 @@ app.get('/api/admin/pagamentos', auth, masterOnly, async (req, res) => {
     'SELECT id, cliente_id, evento, status, cliente_nome, cliente_email, produto, valor, metodo, created_at FROM pagamentos ORDER BY created_at DESC LIMIT 200'
   );
   res.json(rows);
+});
+
+// ─── MULTI-TENANT F4: painel do dono — contas (tenants) ────────────────────────
+// Lista cada CRM vendido: status da assinatura, acesso do comprador (email + senha
+// temporária p/ o dono repassar) e uso (usuários/propostas).
+app.get('/api/admin/contas', auth, masterOnly, async (req, res) => {
+  const { rows } = await pool.query(`
+    SELECT c.id, c.nome, c.status, c.mensalidade, c.dia_vencimento, c.ultimo_pagamento,
+           c.cakto_email, c.created_at,
+           cl.id as cliente_id, cl.email as admin_email, cl.senha_temporaria, cl.whatsapp, cl.responsavel,
+           (SELECT COUNT(*)::int FROM users u  WHERE u.conta_id = c.id) as user_count,
+           (SELECT COUNT(*)::int FROM proposals p WHERE p.conta_id = c.id) as proposal_count
+    FROM contas c
+    LEFT JOIN clientes cl ON cl.conta_id = c.id
+    ORDER BY c.created_at DESC
+  `);
+  res.json(rows);
+});
+
+// Ativar / suspender / cancelar manualmente uma conta (destrava ou trava o paywall).
+app.put('/api/admin/contas/:id/status', auth, masterOnly, async (req, res) => {
+  const { status } = req.body;
+  if (!['ativo', 'inadimplente', 'suspenso', 'teste', 'cancelado'].includes(status)) {
+    return res.status(400).json({ error: 'Status inválido' });
+  }
+  const { rows } = await pool.query(
+    "UPDATE contas SET status=$1, ultimo_pagamento=CASE WHEN $1='ativo' THEN now() ELSE ultimo_pagamento END WHERE id=$2 RETURNING *",
+    [status, req.params.id]
+  );
+  if (!rows[0]) return res.status(404).json({ error: 'Conta não encontrada' });
+  // Espelha no registro de cliente do CRM, se houver
+  await pool.query('UPDATE clientes SET status=$1 WHERE conta_id=$2', [status, req.params.id]);
+  res.json(rows[0]);
 });
 
 async function setSetting(key, value) {
@@ -1156,6 +1271,16 @@ async function syncCaktoOrders() {
             );
             clienteId = ins.rows[0].id; novosClientes++;
           }
+          // F2 — provisiona/reativa o CRM zerado do comprador
+          try {
+            const prov = await provisionConta({ email, nome, telefone, valor });
+            if (prov.contaId && clienteId) {
+              await pool.query(
+                `UPDATE clientes SET conta_id = COALESCE(conta_id, $2), senha_temporaria = COALESCE($3, senha_temporaria) WHERE id = $1`,
+                [clienteId, prov.contaId, prov.tempPassword]
+              );
+            }
+          } catch (e) { console.error('[cakto sync provision]', e.message); }
         }
 
         const pin = await pool.query(

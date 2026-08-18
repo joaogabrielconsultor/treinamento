@@ -282,8 +282,10 @@ async function initDb() {
       { name: 'Cancelada',   color: 'red',    order: 4, is_system: true },
     ];
     for (const s of defaultStatuses) {
+      // Idempotente sem depender de UNIQUE(name) — que vira único-por-conta na F2.
       await client.query(
-        `INSERT INTO proposal_statuses (name, color, order_index, is_system) VALUES ($1,$2,$3,$4) ON CONFLICT (name) DO NOTHING`,
+        `INSERT INTO proposal_statuses (name, color, order_index, is_system)
+         SELECT $1,$2,$3,$4 WHERE NOT EXISTS (SELECT 1 FROM proposal_statuses WHERE name=$1)`,
         [s.name, s.color, s.order, s.is_system]
       );
     }
@@ -528,11 +530,28 @@ async function initDb() {
       await client.query(`CREATE INDEX IF NOT EXISTS ${t}_conta_idx ON ${t}(conta_id)`);
     }
 
-    // Master — único usuário que pode excluir propostas e tem acesso total.
-    // Configurável por instância via env MASTER_EMAIL (white-label). Só existe UM master.
+    // ═══════════════════════════════════════════════════════════════
+    // MULTI-TENANT — FASE 2: provisionamento (compra → CRM zerado)
+    // ═══════════════════════════════════════════════════════════════
+    // proposal_statuses.name era UNIQUE global — impede cada conta ter seus próprios
+    // status. Troca para único POR conta.
+    await client.query(`ALTER TABLE proposal_statuses DROP CONSTRAINT IF EXISTS proposal_statuses_name_key`);
+    await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS proposal_statuses_conta_name_uidx ON proposal_statuses(conta_id, name)`);
+
+    // Liga cada cliente (CRM do dono) à sua conta (tenant) + guarda a senha temporária
+    // gerada no provisionamento, para o dono repassar ao comprador.
+    await client.query(`ALTER TABLE clientes ADD COLUMN IF NOT EXISTS conta_id uuid REFERENCES contas(id) ON DELETE SET NULL`);
+    await client.query(`ALTER TABLE clientes ADD COLUMN IF NOT EXISTS senha_temporaria text`);
+
+    // Owner global (super-admin, vê tudo no /admin) — configurável por env MASTER_EMAIL.
+    // Em multi-tenant cada conta tem SEU próprio master (o comprador), criado no
+    // provisionamento. Por isso NÃO rebaixamos os demais masters — apenas garantimos
+    // que o owner global seja master e fique na conta raiz.
     const MASTER_EMAIL = process.env.MASTER_EMAIL || 'adm@rozesstartflow.com';
     await client.query(`UPDATE users SET role = 'master' WHERE lower(email) = lower($1)`, [MASTER_EMAIL]);
-    await client.query(`UPDATE users SET role = 'admin' WHERE role = 'master' AND lower(email) <> lower($1)`, [MASTER_EMAIL]);
+    if (rootContaId) {
+      await client.query(`UPDATE users SET conta_id = $2 WHERE lower(email) = lower($1) AND conta_id IS NULL`, [MASTER_EMAIL, rootContaId]);
+    }
 
     console.log('Banco de dados pronto.');
   } catch (err) {
