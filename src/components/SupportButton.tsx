@@ -66,6 +66,13 @@ export function SupportButton() {
     return () => document.removeEventListener('keydown', onKey);
   }, [open]);
 
+  // Permite abrir o chat de qualquer lugar (ex.: link "falar com suporte" na tela de renovação)
+  useEffect(() => {
+    const openIt = () => setOpen(true);
+    window.addEventListener('open-support-chat', openIt);
+    return () => window.removeEventListener('open-support-chat', openIt);
+  }, []);
+
   const send = async () => {
     const body = text.trim();
     if (!body || sending) return;
