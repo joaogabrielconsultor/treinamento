@@ -109,20 +109,15 @@ app.post('/api/auth/login', async (req, res) => {
     if (user.archived_at) return res.status(403).json({ error: 'Usuário inativo. Entre em contato com o administrador.' });
     const ok = await bcrypt.compare(password, user.password_hash);
     if (!ok) return res.status(400).json({ error: 'Email ou senha incorretos' });
-    // F3 paywall — bloqueia se a conta (tenant) não estiver ativa. O owner global sempre passa.
-    if (String(user.email).toLowerCase() !== MASTER_EMAIL.toLowerCase() && user.conta_id) {
-      const { rows: [conta] } = await pool.query('SELECT status, nome FROM contas WHERE id = $1', [user.conta_id]);
-      if (conta && !['ativo', 'teste'].includes(conta.status)) {
-        return res.status(402).json({
-          error: 'Sua assinatura está inativa. Regularize o pagamento para reativar o sistema.',
-          paywall: true,
-          status: conta.status,
-          empresa: conta.nome,
-        });
-      }
-    }
+    // Assinatura suspensa NÃO bloqueia o login — o cliente entra normal e vê a tela
+    // de renovação DENTRO do sistema (sidebar navegável). O bloqueio real acontece
+    // nas rotas de dados (middleware auth → 402) e o app mostra a RenewOverlay.
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role, full_name: user.full_name, conta_id: user.conta_id }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ user: { id: user.id, email: user.email, full_name: user.full_name, role: user.role }, token });
+    let conta_status = 'ativo';
+    if (String(user.email).toLowerCase() !== MASTER_EMAIL.toLowerCase() && user.conta_id) {
+      conta_status = (await getContaStatus(user.conta_id)) || 'ativo';
+    }
+    res.json({ user: { id: user.id, email: user.email, full_name: user.full_name, role: user.role, conta_status }, token });
   } catch {
     res.status(500).json({ error: 'Erro ao fazer login' });
   }

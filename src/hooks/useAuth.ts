@@ -32,7 +32,9 @@ export function useAuth() {
   const signIn = async (email: string, password: string) => {
     const data = await api.post<{ user: AuthUser; token: string }>('/auth/login', { email, password });
     localStorage.setItem('token', data.token);
-    clearSuspended(); // login só passa se a conta está ativa
+    // suspenso entra normal e cai na tela de renovação dentro do app
+    if (data.user?.conta_status && !['ativo', 'teste'].includes(data.user.conta_status)) markSuspended(data.user.conta_status);
+    else clearSuspended();
     setUser(data.user);
   };
 
