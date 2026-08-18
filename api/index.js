@@ -528,6 +528,8 @@ app.post('/api/quiz-results', auth, async (req, res) => {
 // ─── ADMIN: USERS ──────────────────────────────────────────────────────────────
 app.get('/api/admin/users', auth, adminOnly, async (req, res) => {
   const showArchived = req.query.archived === 'true';
+  // O dono/super-admin (MASTER_EMAIL) nunca aparece na gestão de usuários de um
+  // cliente — ele administra tudo pelo /admin. Fica escondido da lista do tenant.
   const { rows } = await pool.query(
     `SELECT u.id, u.full_name, u.email, u.role, u.created_at, u.archived_at,
             u.loja_id, l.name AS loja_name,
@@ -536,8 +538,9 @@ app.get('/api/admin/users', auth, adminOnly, async (req, res) => {
      LEFT JOIN enrollments e ON e.user_id = u.id
      LEFT JOIN lojas l ON l.id = u.loja_id
      WHERE ${showArchived ? 'u.archived_at IS NOT NULL' : 'u.archived_at IS NULL'} AND u.conta_id = $1
+       AND lower(u.email) <> lower($2)
      GROUP BY u.id, l.name ORDER BY u.created_at DESC`,
-    [contaId(req)]
+    [contaId(req), MASTER_EMAIL]
   );
   res.json(rows);
 });
