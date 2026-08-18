@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   LayoutGrid, Users, Headphones, CreditCard, LogOut, ArrowLeft, ShieldCheck,
   Mail, Lock, Eye, EyeOff, ArrowRight, Building2, DollarSign, AlertTriangle,
-  MessageCircle, ExternalLink, RefreshCw,
+  MessageCircle, ExternalLink, RefreshCw, Boxes, KeyRound, Power, Copy,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useIsAdmin } from '../../hooks/useAdmin';
@@ -16,7 +16,14 @@ import { AdminClientes } from '../admin/AdminClientes';
 const MONO = "'Space Mono', ui-monospace, monospace";
 const ANTON = "'Anton', Impact, sans-serif";
 
-type Section = 'overview' | 'clientes' | 'suporte' | 'assinaturas' | 'financeiro';
+type Section = 'overview' | 'contas' | 'clientes' | 'suporte' | 'assinaturas' | 'financeiro';
+
+interface Conta {
+  id: string; nome: string; status: string; mensalidade: number | string;
+  dia_vencimento: number | null; ultimo_pagamento: string | null; cakto_email: string | null;
+  created_at: string; admin_email: string | null; senha_temporaria: string | null;
+  whatsapp: string | null; user_count: number; proposal_count: number;
+}
 
 interface Cliente {
   id: string; empresa: string; responsavel: string; whatsapp: string; email: string;
@@ -147,6 +154,7 @@ function AdminLogin({ signIn, signOut, loggedNotMaster, email }: {
 /* ── Shell (sidebar + conteúdo) ── */
 const NAV: { key: Section; label: string; icon: typeof LayoutGrid }[] = [
   { key: 'overview', label: 'Visão Geral', icon: LayoutGrid },
+  { key: 'contas', label: 'CRMs vendidos', icon: Boxes },
   { key: 'clientes', label: 'Clientes', icon: Users },
   { key: 'suporte', label: 'Suporte', icon: Headphones },
   { key: 'assinaturas', label: 'Assinaturas', icon: CreditCard },
@@ -195,7 +203,7 @@ function AdminShell({ section, setSection, onSignOut, adminName }: {
       </aside>
 
       <main className="flex-1 overflow-y-auto min-w-0">
-        {section === 'clientes' ? <AdminClientes /> : section === 'overview' ? <Overview setSection={setSection} /> : section === 'suporte' ? <Suporte /> : section === 'financeiro' ? <Financeiro /> : <Assinaturas />}
+        {section === 'contas' ? <Contas /> : section === 'clientes' ? <AdminClientes /> : section === 'overview' ? <Overview setSection={setSection} /> : section === 'suporte' ? <Suporte /> : section === 'financeiro' ? <Financeiro /> : <Assinaturas />}
       </main>
     </div>
   );
@@ -443,6 +451,115 @@ function Financeiro() {
             </tbody>
           </table>
         </div>
+      )}
+    </div>
+  );
+}
+
+/* ── CRMs vendidos (contas / tenants) ── */
+function Contas() {
+  const [items, setItems] = useState<Conta[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const r = await fetch('/api/admin/contas', { headers: { Authorization: `Bearer ${token()}` } });
+      const d = await r.json();
+      setItems(Array.isArray(d) ? d : []);
+    } catch { setItems([]); }
+    setLoading(false);
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  const setStatus = async (id: string, status: string) => {
+    setBusy(id);
+    try {
+      await fetch(`/api/admin/contas/${id}/status`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+        body: JSON.stringify({ status }),
+      });
+      await load();
+    } catch { /* ignore */ }
+    setBusy(null);
+  };
+
+  const copy = (text: string, key: string) => { navigator.clipboard.writeText(text); setCopied(key); setTimeout(() => setCopied(null), 1800); };
+  const ativos = items.filter(c => c.status === 'ativo').length;
+
+  return (
+    <div className="p-8 max-w-6xl mx-auto">
+      <SectionHead title="CRMs vendidos" subtitle="Cada compra gera um sistema próprio e zerado. Repasse o acesso ao comprador." onReload={load} />
+      {loading ? <Spinner /> : items.length === 0 ? (
+        <div className="text-center py-16 rounded-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <Boxes className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-3)' }} />
+          <p className="font-semibold" style={{ color: 'var(--text-2)' }}>Nenhum CRM vendido ainda</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>Quando uma compra cair pela Cakto, o sistema do comprador aparece aqui — já criado e zerado.</p>
+        </div>
+      ) : (
+        <>
+          <p className="text-xs mb-4" style={{ color: 'var(--text-3)', fontFamily: MONO }}>{items.length} conta(s) · {ativos} ativa(s)</p>
+          <div className="space-y-3">
+            {items.map(c => (
+              <div key={c.id} className="glass-card rounded-2xl p-5">
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>{c.nome}</h3>
+                      <span className={`badge ${STATUS_BADGE[c.status] || 'badge-neutral'}`}>{STATUS_LABEL[c.status] || c.status}</span>
+                    </div>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
+                      {c.admin_email || c.cakto_email || 'sem e-mail'} · {c.user_count} usuário(s) · {c.proposal_count} proposta(s)
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {c.status === 'ativo' ? (
+                      <button onClick={() => setStatus(c.id, 'suspenso')} disabled={busy === c.id}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold disabled:opacity-50"
+                        style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', color: '#f87171' }}>
+                        <Power className="w-3.5 h-3.5" /> Suspender
+                      </button>
+                    ) : (
+                      <button onClick={() => setStatus(c.id, 'ativo')} disabled={busy === c.id}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold btn-cyber disabled:opacity-50">
+                        <Power className="w-3.5 h-3.5" /> Ativar
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Acesso do comprador */}
+                {(c.admin_email || c.senha_temporaria) && (
+                  <div className="mt-3 grid sm:grid-cols-2 gap-2">
+                    <div className="rounded-xl px-3 py-2 flex items-center justify-between gap-2" style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-1)' }}>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)', fontFamily: MONO }}>Login</p>
+                        <p className="text-sm truncate" style={{ color: 'var(--text-1)', fontFamily: MONO }}>{c.admin_email || '—'}</p>
+                      </div>
+                      {c.admin_email && <button onClick={() => copy(c.admin_email!, `mail-${c.id}`)} className="flex-shrink-0" style={{ color: '#C6FF00' }} title="Copiar">{copied === `mail-${c.id}` ? '✓' : <Copy className="w-4 h-4" />}</button>}
+                    </div>
+                    <div className="rounded-xl px-3 py-2 flex items-center justify-between gap-2" style={{ background: 'rgba(198,255,0,0.06)', border: '1px solid rgba(198,255,0,0.25)' }}>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1" style={{ color: '#C6FF00', fontFamily: MONO }}><KeyRound className="w-3 h-3" /> Senha temporária</p>
+                        <p className="text-sm truncate" style={{ color: 'var(--text-1)', fontFamily: MONO }}>{c.senha_temporaria || '— (comprador já tinha conta)'}</p>
+                      </div>
+                      {c.senha_temporaria && <button onClick={() => copy(c.senha_temporaria!, `pw-${c.id}`)} className="flex-shrink-0" style={{ color: '#C6FF00' }} title="Copiar">{copied === `pw-${c.id}` ? '✓' : <Copy className="w-4 h-4" />}</button>}
+                    </div>
+                  </div>
+                )}
+                {c.whatsapp && (
+                  <a href={`https://wa.me/${c.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Seu sistema GS CRED está pronto! Acesse com login ${c.admin_email} e senha ${c.senha_temporaria || '(a que combinamos)'} — troque a senha no primeiro acesso.`)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 mt-3 px-3.5 py-2 rounded-xl text-xs font-semibold no-underline" style={{ background: '#25D366', color: '#062b14' }}>
+                    <MessageCircle className="w-4 h-4" /> Enviar acesso por WhatsApp
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

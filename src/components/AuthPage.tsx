@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Mail, Lock, Eye, EyeOff, ArrowRight, FileText, Calculator, Trophy, ShieldCheck, TrendingUp } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, FileText, Calculator, Trophy, ShieldCheck, TrendingUp, Lock as LockIcon } from 'lucide-react';
 import { LogoComponent } from './LogoComponent';
 import { useAppContext } from '../context/AppContext';
+import { buildCheckoutLink, SUPPORT_WHATSAPP } from '../lib/config';
 
 interface AuthPageProps {
   onSuccess: () => void;
@@ -21,16 +22,23 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [paywall, setPaywall] = useState<{ message: string; status: string } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setPaywall(null);
     try {
       await signIn(email, password);
       onSuccess();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Credenciais inválidas');
+      const payload = (err as { payload?: { paywall?: boolean; error?: string; status?: string } })?.payload;
+      if (payload?.paywall) {
+        setPaywall({ message: payload.error || 'Assinatura inativa.', status: payload.status || 'inativo' });
+      } else {
+        setError(err instanceof Error ? err.message : 'Credenciais inválidas');
+      }
     } finally {
       setLoading(false);
     }
@@ -234,6 +242,41 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
                 >
                   <span className="mt-0.5">⚠</span>
                   <span>{error}</span>
+                </div>
+              )}
+
+              {paywall && (
+                <div
+                  className="rounded-xl px-4 py-4 text-sm"
+                  style={{
+                    background: 'rgba(198,255,0,0.06)',
+                    border: '1px solid rgba(198,255,0,0.28)',
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-2" style={{ color: '#C6FF00' }}>
+                    <LockIcon className="w-4 h-4" />
+                    <span className="font-semibold uppercase tracking-wide text-[12px]" style={{ fontFamily: "'Space Mono', ui-monospace, monospace" }}>
+                      Assinatura {paywall.status}
+                    </span>
+                  </div>
+                  <p className="leading-relaxed mb-3" style={{ color: '#CBD5E1' }}>{paywall.message}</p>
+                  <a
+                    href={buildCheckoutLink()}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn-cyber w-full py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 no-underline"
+                  >
+                    Regularizar pagamento <ArrowRight className="w-4 h-4" />
+                  </a>
+                  <a
+                    href={`https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent('Olá! Preciso reativar minha assinatura do GS CRED.')}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block text-center text-[12px] mt-3 no-underline"
+                    style={{ color: '#94A3B8' }}
+                  >
+                    Já paguei / falar com o suporte
+                  </a>
                 </div>
               )}
 

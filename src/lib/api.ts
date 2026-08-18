@@ -20,7 +20,12 @@ async function req<T>(method: string, path: string, body?: unknown, auth = false
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Erro na requisição');
+  if (!res.ok) {
+    const err = new Error(data.error || 'Erro na requisição') as Error & { payload?: unknown; status?: number };
+    err.payload = data;
+    err.status = res.status;
+    throw err;
+  }
   return data as T;
 }
 
