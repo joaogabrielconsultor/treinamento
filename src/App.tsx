@@ -222,7 +222,7 @@ function AppInner() {
       <div className="flex-1 flex flex-col min-w-0">
       <TopBar currentView={currentView} user={adaptedUser} onOpenProfile={() => setShowProfile(true)} />
       <main className="flex-1 overflow-y-auto" style={{ background: 'var(--bg-base)' }}>
-        {suspended ? <RenewOverlay status={paywallStatus} /> : (<>
+        {suspended ? <RenewOverlay status={paywallStatus} loginEmail={user.email} caktoEmail={user.conta_cakto_email ?? null} firstPayment={!!user.conta_primeiro_pagamento} /> : (<>
         {currentView === 'dashboard' && (
           <Dashboard user={adaptedUser} onNavigate={navigate} isAdmin={isAdmin} />
         )}

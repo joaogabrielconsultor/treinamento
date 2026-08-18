@@ -75,7 +75,7 @@ async function auth(req, res, next) {
   // Exceção: /auth/me continua respondendo (o app precisa carregar o shell + saber
   // quem é o usuário e o status da conta pra mostrar a tela de renovação).
   try {
-    const exemptPaywall = req.path === '/api/auth/me' || req.path.startsWith('/api/support/');
+    const exemptPaywall = req.path === '/api/auth/me' || req.path.startsWith('/api/support/') || req.path.startsWith('/api/billing/');
     if (!exemptPaywall && req.user.conta_id && String(req.user.email || '').toLowerCase() !== MASTER_EMAIL.toLowerCase()) {
       const st = await getContaStatus(req.user.conta_id);
       if (st && !['ativo', 'teste'].includes(st)) {
@@ -114,27 +114,39 @@ app.post('/api/auth/login', async (req, res) => {
     // de renovação DENTRO do sistema (sidebar navegável). O bloqueio real acontece
     // nas rotas de dados (middleware auth → 402) e o app mostra a RenewOverlay.
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role, full_name: user.full_name, conta_id: user.conta_id }, JWT_SECRET, { expiresIn: '7d' });
-    let conta_status = 'ativo';
+    let conta_status = 'ativo', conta_cakto_email = null, conta_primeiro_pagamento = false;
     if (String(user.email).toLowerCase() !== MASTER_EMAIL.toLowerCase() && user.conta_id) {
-      conta_status = (await getContaStatus(user.conta_id)) || 'ativo';
+      const c = await getContaBilling(user.conta_id);
+      conta_status = c?.status || 'ativo';
+      conta_cakto_email = c?.cakto_email || null;
+      conta_primeiro_pagamento = !c?.ultimo_pagamento;
     }
-    res.json({ user: { id: user.id, email: user.email, full_name: user.full_name, role: user.role, conta_status }, token });
+    res.json({ user: { id: user.id, email: user.email, full_name: user.full_name, role: user.role, conta_status, conta_cakto_email, conta_primeiro_pagamento }, token });
   } catch {
     res.status(500).json({ error: 'Erro ao fazer login' });
   }
 });
 
+async function getContaBilling(id) {
+  const { rows: [c] } = await pool.query('SELECT status, cakto_email, ultimo_pagamento FROM contas WHERE id=$1', [id]);
+  return c || null;
+}
+
 app.get('/api/auth/me', auth, async (req, res) => {
   const { rows } = await pool.query('SELECT id, email, full_name, role, pix_key, pix_key_type, phone, photo_url, created_at FROM users WHERE id = $1', [req.user.id]);
   const me = rows[0] || null;
   if (me) {
-    // Status da assinatura da conta (pro app decidir mostrar a tela de renovação).
-    // Owner global e conta sem tenant = sempre 'ativo'.
-    let conta_status = 'ativo';
+    // Status + dados de cobrança da conta (pro app mostrar a tela de renovação e,
+    // no 1º pagamento, pedir o e-mail pra vincular). Owner global = sempre ativo.
+    me.conta_status = 'ativo';
+    me.conta_cakto_email = null;
+    me.conta_primeiro_pagamento = false;
     if (String(me.email).toLowerCase() !== MASTER_EMAIL.toLowerCase() && req.user.conta_id) {
-      conta_status = (await getContaStatus(req.user.conta_id)) || 'ativo';
+      const c = await getContaBilling(req.user.conta_id);
+      me.conta_status = c?.status || 'ativo';
+      me.conta_cakto_email = c?.cakto_email || null;
+      me.conta_primeiro_pagamento = !c?.ultimo_pagamento; // nunca pagou
     }
-    me.conta_status = conta_status;
   }
   res.json(me);
 });
@@ -1069,17 +1081,22 @@ async function provisionConta({ email, nome, telefone, valor }) {
   const lower = String(email || '').toLowerCase();
   if (!lower) return { contaId: null, tempPassword: null, reused: false };
 
-  const { rows: exUser } = await pool.query('SELECT conta_id FROM users WHERE lower(email)=$1 LIMIT 1', [lower]);
-  if (exUser.length) {
-    // Comprador já tem sistema (ex.: cliente aprovamais destravando os dados) → reativa.
-    if (exUser[0].conta_id) {
-      await pool.query(
-        "UPDATE contas SET status='ativo', ultimo_pagamento=now(), mensalidade=CASE WHEN $2>0 THEN $2 ELSE mensalidade END WHERE id=$1",
-        [exUser[0].conta_id, valor || 0]
-      );
-      invalidateContaStatus(exUser[0].conta_id);
-    }
-    return { contaId: exUser[0].conta_id, tempPassword: null, reused: true };
+  // Procura uma conta existente pelo e-mail — como usuário, como e-mail de cobrança
+  // vinculado (cakto_email) OU como cliente do CRM. Cobre o caso do cliente que já
+  // existe (ex.: aprovamais) pagando pela 1ª vez com o e-mail que ele vinculou.
+  const { rows: ex } = await pool.query(
+    `SELECT id AS conta_id FROM contas   WHERE lower(cakto_email)=$1
+     UNION SELECT conta_id FROM users    WHERE lower(email)=$1 AND conta_id IS NOT NULL
+     UNION SELECT conta_id FROM clientes WHERE lower(email)=$1 AND conta_id IS NOT NULL
+     LIMIT 1`, [lower]
+  );
+  if (ex.length && ex[0].conta_id) {
+    await pool.query(
+      "UPDATE contas SET status='ativo', ultimo_pagamento=now(), mensalidade=CASE WHEN $2>0 THEN $2 ELSE mensalidade END WHERE id=$1",
+      [ex[0].conta_id, valor || 0]
+    );
+    invalidateContaStatus(ex[0].conta_id);
+    return { contaId: ex[0].conta_id, tempPassword: null, reused: true };
   }
 
   const client = await pool.connect();
@@ -1309,6 +1326,17 @@ app.get('/api/support/unread', auth, async (req, res) => {
     'SELECT COUNT(*)::int AS unread FROM support_messages WHERE conta_id=$1 AND from_owner=true AND read_by_client=false', [cid]
   );
   res.json({ unread: r.unread });
+});
+
+// Cliente: salva/confirma o e-mail que usará no pagamento (vincula à conta dele).
+// Assim, quando o pagamento cair com esse e-mail, o webhook REATIVA a conta certa.
+app.post('/api/billing/email', auth, async (req, res) => {
+  const cid = contaId(req);
+  if (!cid) return res.status(400).json({ error: 'Sem conta' });
+  const email = String(req.body?.email || '').toLowerCase().trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'E-mail inválido' });
+  await pool.query('UPDATE contas SET cakto_email=$1 WHERE id=$2', [email, cid]);
+  res.json({ ok: true, cakto_email: email });
 });
 
 // Dono: lista de conversas (uma por conta) com última mensagem e não lidas.

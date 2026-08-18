@@ -10,6 +10,8 @@ export interface AuthUser {
   phone?: string | null;
   photo_url?: string | null;
   conta_status?: string;
+  conta_cakto_email?: string | null;
+  conta_primeiro_pagamento?: boolean;
 }
 
 export function useAuth() {
