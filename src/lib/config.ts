@@ -34,7 +34,7 @@ export const CHECKOUT_URL = 'https://pay.cakto.com.br/ifmhc6c_1015990';
 
 /** Preço exibido na página de planos. */
 export const PLAN_PRICE = 'R$ 399';
-export const PLAN_PERIOD = 'pagamento único';
+export const PLAN_PERIOD = 'por mês';
 
 /** Destino do botão de compra: checkout se configurado, senão WhatsApp de vendas. */
 export function buildCheckoutLink(): string {

@@ -70,7 +70,7 @@ export function PlanosPage() {
           </a>
           <a href="#planos" className="gsp-pill gsp-pill-ghost gsp-pill-lg">Ver o que inclui</a>
         </div>
-        <div className="gsp-micro">PAGAMENTO ÚNICO · SEM MENSALIDADE · ACESSO NA HORA</div>
+        <div className="gsp-micro">ASSINATURA MENSAL · ACESSO NA HORA · CANCELE QUANDO QUISER</div>
       </section>
 
       {/* Marquee — assinatura */}
@@ -102,12 +102,12 @@ export function PlanosPage() {
       {/* Pricing */}
       <section id="planos" className="gsp-section gsp-pricing">
         <div className="gsp-kicker" style={{ textAlign: 'center' }}>// PLANO ÚNICO</div>
-        <h2 className="gsp-h2">UM PLANO. TUDO DENTRO.</h2>
+        <h2 className="gsp-h2">UM PLANO. TUDO DENTRO. SEM FIDELIDADE.</h2>
         <div className="gsp-price-card">
           <div className="gsp-price-head">
             <span className="gsp-badge">PLANO COMPLETO</span>
-            <div className="gsp-price">{PLAN_PRICE}</div>
-            <div className="gsp-period">{PLAN_PERIOD.toUpperCase()} · SEM MENSALIDADE</div>
+            <div className="gsp-price">{PLAN_PRICE}<span style={{ fontSize: '0.4em', opacity: 0.7 }}>/mês</span></div>
+            <div className="gsp-period">ASSINATURA MENSAL · CANCELE QUANDO QUISER</div>
           </div>
           <ul className="gsp-list">
             {INCLUDED.map((item) => (

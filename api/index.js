@@ -1087,6 +1087,24 @@ async function provisionConta({ email, nome, telefone, valor }) {
   }
 }
 
+// F3 recorrência — assinatura lapsou/cancelou/estornou → suspende a conta (paywall).
+// NÃO apaga dados: o dono reativa com 1 clique quando o cliente regularizar.
+async function suspendContaByEmail(email, newStatus) {
+  const lower = String(email || '').toLowerCase();
+  if (!lower) return null;
+  const { rows } = await pool.query(
+    `SELECT id FROM contas WHERE lower(cakto_email)=$1
+     UNION SELECT conta_id FROM users    WHERE lower(email)=$1 AND conta_id IS NOT NULL
+     UNION SELECT conta_id FROM clientes WHERE lower(email)=$1 AND conta_id IS NOT NULL
+     LIMIT 1`, [lower]
+  );
+  const id = rows[0]?.id;
+  if (!id) return null;
+  await pool.query('UPDATE contas   SET status=$1 WHERE id=$2', [newStatus, id]);
+  await pool.query('UPDATE clientes SET status=$1 WHERE conta_id=$2', [newStatus, id]);
+  return id;
+}
+
 app.post('/api/webhooks/cakto', async (req, res) => {
   try {
     const body = req.body || {};
@@ -1111,7 +1129,10 @@ app.post('/api/webhooks/cakto', async (req, res) => {
     const valor = valorRaw != null ? Number(String(valorRaw).replace(',', '.')) || 0 : 0;
     const metodo = String(data.paymentMethod || data.payment_method || data.method || digValue(body, ['paymentmethod', 'method']) || '');
 
-    const aprovado = /approv|paid|pago|aprov|complet|active|created/.test(`${evento} ${status}`.toLowerCase());
+    const sig = `${evento} ${status}`.toLowerCase();
+    // Evento negativo da assinatura → suspende (paywall). Tem prioridade sobre o positivo.
+    const cancelado = /refund|estorn|chargeback|charged_back|cancel|expir|refus|declin|overdue|atras|unpaid|nao_pago|não_pago|fail|falh|suspend|inadimpl/.test(sig);
+    const aprovado = !cancelado && /approv|paid|pago|aprov|complet|active|renew|renov|created|subscription_created/.test(sig);
 
     let clienteId = null;
     if (aprovado && email) {
@@ -1146,13 +1167,22 @@ app.post('/api/webhooks/cakto', async (req, res) => {
       } catch (e) { console.error('[cakto provision]', e.message); }
     }
 
+    // F3 recorrência — assinatura cancelada/estornada/vencida → suspende a conta (cai no paywall).
+    let suspendedConta = null;
+    if (cancelado && email) {
+      try {
+        const novoStatus = /refund|estorn|chargeback|charged_back/.test(sig) ? 'cancelado' : 'suspenso';
+        suspendedConta = await suspendContaByEmail(email, novoStatus);
+      } catch (e) { console.error('[cakto suspend]', e.message); }
+    }
+
     await pool.query(
       `INSERT INTO pagamentos (cliente_id, evento, status, cliente_nome, cliente_email, cliente_telefone, produto, valor, metodo, raw)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
       [clienteId, evento, status, nome, email, telefone, produto, valor, metodo, JSON.stringify(body)]
     );
 
-    res.json({ ok: true, provisioned: !!clienteId, conta: provInfo.contaId, reused: provInfo.reused });
+    res.json({ ok: true, provisioned: !!clienteId, conta: provInfo.contaId, reused: provInfo.reused, suspended: suspendedConta });
   } catch (err) {
     console.error('[cakto webhook]', err.message);
     res.status(200).json({ ok: false }); // 200 evita reenvio em loop por erro interno
