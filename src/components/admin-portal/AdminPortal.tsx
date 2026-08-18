@@ -164,6 +164,19 @@ const NAV: { key: Section; label: string; icon: typeof LayoutGrid }[] = [
 function AdminShell({ section, setSection, onSignOut, adminName }: {
   section: Section; setSection: (s: Section) => void; onSignOut: () => void; adminName: string;
 }) {
+  const [supportUnread, setSupportUnread] = useState(0);
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const r = await fetch('/api/admin/support/unread', { headers: { Authorization: `Bearer ${token()}` } });
+        if (r.ok) { const d = await r.json(); setSupportUnread(d.unread || 0); }
+      } catch { /* ignore */ }
+    };
+    load();
+    const t = setInterval(load, 15000);
+    return () => clearInterval(t);
+  }, [section]);
+
   return (
     <div className="flex min-h-screen" style={{ background: '#050505' }}>
       {/* Sidebar */}
@@ -183,7 +196,12 @@ function AdminShell({ section, setSection, onSignOut, adminName }: {
                 style={active ? { background: 'rgba(198,255,0,0.1)', color: '#C6FF00', border: '1px solid rgba(198,255,0,0.25)' } : { color: '#8A8A8A' }}
                 onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
                 onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                <Icon className="w-[17px] h-[17px]" /> {label}
+                <Icon className="w-[17px] h-[17px]" /> <span className="flex-1 text-left">{label}</span>
+                {key === 'suporte' && supportUnread > 0 && (
+                  <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full text-[10px] font-bold" style={{ background: '#ef4444', color: '#fff' }}>
+                    {supportUnread > 9 ? '9+' : supportUnread}
+                  </span>
+                )}
               </button>
             );
           })}
