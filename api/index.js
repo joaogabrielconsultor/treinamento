@@ -49,16 +49,38 @@ if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR);
 // ─── Health check ──────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
+// ─── Paywall contínuo: status da conta (cache 30s) ─────────────────────────────
+const _contaStatusCache = new Map();
+function invalidateContaStatus(id) { _contaStatusCache.delete(id); }
+async function getContaStatus(id) {
+  const now = Date.now();
+  const c = _contaStatusCache.get(id);
+  if (c && c.exp > now) return c.status;
+  const { rows } = await pool.query('SELECT status FROM contas WHERE id=$1', [id]);
+  const status = rows[0]?.status ?? null;
+  _contaStatusCache.set(id, { status, exp: now + 30000 });
+  return status;
+}
+
 // ─── Auth middleware ───────────────────────────────────────────────────────────
-function auth(req, res, next) {
+async function auth(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Token obrigatório' });
   try {
     req.user = jwt.verify(token, JWT_SECRET);
-    next();
   } catch {
-    res.status(401).json({ error: 'Token inválido' });
+    return res.status(401).json({ error: 'Token inválido' });
   }
+  // Assinatura suspensa/cancelada bloqueia TUDO (não só o login). Owner global passa.
+  try {
+    if (req.user.conta_id && String(req.user.email || '').toLowerCase() !== MASTER_EMAIL.toLowerCase()) {
+      const st = await getContaStatus(req.user.conta_id);
+      if (st && !['ativo', 'teste'].includes(st)) {
+        return res.status(402).json({ error: 'Sua assinatura está inativa. Regularize o pagamento para reativar o sistema.', paywall: true, status: st });
+      }
+    }
+  } catch { /* em erro de checagem, não derruba o usuário */ }
+  next();
 }
 
 function adminOnly(req, res, next) {
@@ -1047,6 +1069,7 @@ async function provisionConta({ email, nome, telefone, valor }) {
         "UPDATE contas SET status='ativo', ultimo_pagamento=now(), mensalidade=CASE WHEN $2>0 THEN $2 ELSE mensalidade END WHERE id=$1",
         [exUser[0].conta_id, valor || 0]
       );
+      invalidateContaStatus(exUser[0].conta_id);
     }
     return { contaId: exUser[0].conta_id, tempPassword: null, reused: true };
   }
@@ -1102,6 +1125,7 @@ async function suspendContaByEmail(email, newStatus) {
   if (!id) return null;
   await pool.query('UPDATE contas   SET status=$1 WHERE id=$2', [newStatus, id]);
   await pool.query('UPDATE clientes SET status=$1 WHERE conta_id=$2', [newStatus, id]);
+  invalidateContaStatus(id);
   return id;
 }
 
@@ -1226,6 +1250,7 @@ app.put('/api/admin/contas/:id/status', auth, masterOnly, async (req, res) => {
   if (!rows[0]) return res.status(404).json({ error: 'Conta não encontrada' });
   // Espelha no registro de cliente do CRM, se houver
   await pool.query('UPDATE clientes SET status=$1 WHERE conta_id=$2', [status, req.params.id]);
+  invalidateContaStatus(req.params.id); // efeito imediato no paywall
   res.json(rows[0]);
 });
 

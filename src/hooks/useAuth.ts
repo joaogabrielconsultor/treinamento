@@ -26,6 +26,7 @@ export function useAuth() {
   const signIn = async (email: string, password: string) => {
     const data = await api.post<{ user: AuthUser; token: string }>('/auth/login', { email, password });
     localStorage.setItem('token', data.token);
+    sessionStorage.removeItem('paywall_kick'); // rearma o kick pra uma futura suspensão
     setUser(data.user);
   };
 
