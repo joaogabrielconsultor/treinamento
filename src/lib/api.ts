@@ -21,14 +21,8 @@ async function req<T>(method: string, path: string, body?: unknown, auth = false
   });
   const data = await res.json();
   if (!res.ok) {
-    // Assinatura suspensa durante o uso (paywall contínuo): desloga e volta ao login.
-    if (res.status === 402 && data?.paywall && auth) {
-      localStorage.removeItem('token');
-      if (!sessionStorage.getItem('paywall_kick')) {
-        sessionStorage.setItem('paywall_kick', '1');
-        window.location.reload();
-      }
-    }
+    // 402 (assinatura suspensa) NÃO desloga — o interceptor global (main.tsx) marca
+    // o estado suspenso e o app mostra a tela de renovação mantendo o usuário logado.
     const err = new Error(data.error || 'Erro na requisição') as Error & { payload?: unknown; status?: number };
     err.payload = data;
     err.status = res.status;

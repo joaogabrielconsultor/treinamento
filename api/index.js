@@ -3580,8 +3580,20 @@ app.delete('/api/roteiros/:id', auth, masterOnly, async (req, res) => {
 
 // ─── FRONTEND (produção) ──────────────────────────────────────────────────────
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../dist')));
+  // Assets têm hash no nome → podem cachear pra sempre. O index.html NÃO pode cachear
+  // (ele aponta pros bundles novos a cada deploy) — senão o navegador fica preso numa
+  // versão antiga do app.
+  app.use(express.static(path.join(__dirname, '../dist'), {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('index.html')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      } else if (/\/assets\//.test(filePath)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    },
+  }));
   app.get(/.*/, (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.sendFile(path.join(__dirname, '../dist/index.html'));
   });
 }

@@ -26,7 +26,8 @@ export function RenewOverlay({ status, loginEmail, caktoEmail, firstPayment }: P
 
   const [email, setEmail] = useState(caktoEmail || loginEmail || '');
   const [bound, setBound] = useState(!!caktoEmail);
-  const [editing, setEditing] = useState(firstPayment && !caktoEmail);
+  // RENOVAR só é liberado depois de salvar/confirmar o e-mail — então começa sempre editando.
+  const [editing, setEditing] = useState(true);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
 
@@ -102,14 +103,12 @@ export function RenewOverlay({ status, loginEmail, caktoEmail, firstPayment }: P
               style={{ background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.16)', color: '#f4f4f4', fontFamily: MONO }}
             />
             {err && <p className="text-[12px] mb-2" style={{ color: '#f87171' }}>{err}</p>}
-            <div className="flex items-center gap-2">
-              <button onClick={saveEmail} disabled={saving}
-                className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-[14px] font-bold disabled:opacity-60"
-                style={{ fontFamily: MONO, background: VOLT, color: '#0a0a0a' }}>
-                {saving ? 'Salvando...' : <>Salvar e continuar <ArrowRight className="w-[17px] h-[17px]" strokeWidth={2.6} /></>}
-              </button>
-              {bound && <button onClick={() => { setEditing(false); setErr(''); setEmail(caktoEmail || loginEmail || ''); }} className="px-4 py-3 rounded-full text-[13px]" style={{ color: '#9A9A9A' }}>cancelar</button>}
-            </div>
+            <button onClick={saveEmail} disabled={saving}
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-[14px] font-bold disabled:opacity-60"
+              style={{ fontFamily: MONO, background: VOLT, color: '#0a0a0a' }}>
+              {saving ? 'Salvando...' : <>Salvar e liberar renovação <ArrowRight className="w-[17px] h-[17px]" strokeWidth={2.6} /></>}
+            </button>
+            <p className="text-center text-[11px] mt-2" style={{ color: '#6B6B6B' }}>o botão de renovar aparece após confirmar o e-mail</p>
           </div>
         ) : (
           <div className="mt-6 flex flex-col items-center gap-3">
