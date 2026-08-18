@@ -37,6 +37,8 @@ import { ProfileModal } from './components/ProfileModal';
 import { SupportButton } from './components/SupportButton';
 import { TopBar } from './components/TopBar';
 import { PlanosPage } from './components/PlanosPage';
+import { RenewOverlay } from './components/RenewOverlay';
+import { usePaywall } from './lib/paywall';
 import { ToastProvider } from './components/ui/Toast';
 import { ConfirmProvider } from './components/ui/ConfirmDialog';
 import { useAuth } from './hooks/useAuth';
@@ -49,6 +51,7 @@ import { ViewType, Lesson } from './types';
 
 function AppInner() {
   const { user, loading: authLoading, signIn, signOut } = useAuth();
+  const { suspended, status: paywallStatus } = usePaywall();
   useIdleLogout(signOut, !!user);
 
   const VALID_VIEWS = new Set<ViewType>([
@@ -219,6 +222,7 @@ function AppInner() {
       <div className="flex-1 flex flex-col min-w-0">
       <TopBar currentView={currentView} user={adaptedUser} onOpenProfile={() => setShowProfile(true)} />
       <main className="flex-1 overflow-y-auto" style={{ background: 'var(--bg-base)' }}>
+        {suspended ? <RenewOverlay status={paywallStatus} /> : (<>
         {currentView === 'dashboard' && (
           <Dashboard user={adaptedUser} onNavigate={navigate} isAdmin={isAdmin} />
         )}
@@ -296,6 +300,7 @@ function AppInner() {
         {currentView === 'admin-roteiros'        && isAdmin && <AdminRoteiros isMaster={isMaster} />}
         {currentView === 'admin-importacao'     && isAdmin && <AdminImportacao />}
         {currentView === 'consulta-margem'     && <ConsultaMargem isAdmin={isAdmin} />}
+        </>)}
       </main>
       </div>
     </div>

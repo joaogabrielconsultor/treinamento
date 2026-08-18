@@ -72,8 +72,10 @@ async function auth(req, res, next) {
     return res.status(401).json({ error: 'Token inválido' });
   }
   // Assinatura suspensa/cancelada bloqueia TUDO (não só o login). Owner global passa.
+  // Exceção: /auth/me continua respondendo (o app precisa carregar o shell + saber
+  // quem é o usuário e o status da conta pra mostrar a tela de renovação).
   try {
-    if (req.user.conta_id && String(req.user.email || '').toLowerCase() !== MASTER_EMAIL.toLowerCase()) {
+    if (req.path !== '/api/auth/me' && req.user.conta_id && String(req.user.email || '').toLowerCase() !== MASTER_EMAIL.toLowerCase()) {
       const st = await getContaStatus(req.user.conta_id);
       if (st && !['ativo', 'teste'].includes(st)) {
         return res.status(402).json({ error: 'Sua assinatura está inativa. Regularize o pagamento para reativar o sistema.', paywall: true, status: st });
@@ -128,7 +130,17 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.get('/api/auth/me', auth, async (req, res) => {
   const { rows } = await pool.query('SELECT id, email, full_name, role, pix_key, pix_key_type, phone, photo_url, created_at FROM users WHERE id = $1', [req.user.id]);
-  res.json(rows[0] || null);
+  const me = rows[0] || null;
+  if (me) {
+    // Status da assinatura da conta (pro app decidir mostrar a tela de renovação).
+    // Owner global e conta sem tenant = sempre 'ativo'.
+    let conta_status = 'ativo';
+    if (String(me.email).toLowerCase() !== MASTER_EMAIL.toLowerCase() && req.user.conta_id) {
+      conta_status = (await getContaStatus(req.user.conta_id)) || 'ativo';
+    }
+    me.conta_status = conta_status;
+  }
+  res.json(me);
 });
 
 app.put('/api/profile', auth, async (req, res) => {

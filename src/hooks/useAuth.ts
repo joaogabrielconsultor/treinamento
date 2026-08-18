@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
+import { markSuspended, clearSuspended } from '../lib/paywall';
 
 export interface AuthUser {
   id: string;
@@ -8,6 +9,7 @@ export interface AuthUser {
   role: 'user' | 'admin' | 'master';
   phone?: string | null;
   photo_url?: string | null;
+  conta_status?: string;
 }
 
 export function useAuth() {
@@ -18,7 +20,11 @@ export function useAuth() {
     const token = localStorage.getItem('token');
     if (!token) { setLoading(false); return; }
     api.get<AuthUser>('/auth/me', true)
-      .then(setUser)
+      .then((u) => {
+        setUser(u);
+        if (u?.conta_status && !['ativo', 'teste'].includes(u.conta_status)) markSuspended(u.conta_status);
+        else clearSuspended();
+      })
       .catch(() => localStorage.removeItem('token'))
       .finally(() => setLoading(false));
   }, []);
@@ -26,7 +32,7 @@ export function useAuth() {
   const signIn = async (email: string, password: string) => {
     const data = await api.post<{ user: AuthUser; token: string }>('/auth/login', { email, password });
     localStorage.setItem('token', data.token);
-    sessionStorage.removeItem('paywall_kick'); // rearma o kick pra uma futura suspensão
+    clearSuspended(); // login só passa se a conta está ativa
     setUser(data.user);
   };
 
