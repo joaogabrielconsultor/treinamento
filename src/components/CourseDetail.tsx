@@ -39,7 +39,7 @@ export function CourseDetail({
   const totalLessons = modules.reduce((acc, m) => acc + (m.lessons?.length || 0), 0);
 
   return (
-    <div className="p-8 max-w-5xl mx-auto" style={{ color: 'var(--text-1)' }}>
+    <div className="page">
       <button
         onClick={() => onNavigate('catalog')}
         className="flex items-center gap-2 text-sm font-medium mb-6 transition-all"

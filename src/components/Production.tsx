@@ -80,7 +80,7 @@ function KPI({ label, value, sub, icon: Icon, color, delay = 0 }: {
     <div className="stat-card rounded-2xl p-5 animate-fade-up" style={{ animationDelay: `${delay}ms` }}>
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-3)' }}>{label}</p>
+          <p className="text-xs font-medium mb-3" style={{ color: 'var(--text-3)' }}>{label}</p>
           <p className="text-xl font-black num" style={{ color: 'var(--text-1)' }}>{value}</p>
           {sub && <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{sub}</p>}
         </div>
@@ -361,17 +361,13 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
   );
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto" style={{ color: 'var(--text-1)' }}>
+    <div className="page">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 animate-fade-up">
+      <div className="page-header">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <div className="live-dot" />
-            <span className="text-xs font-medium" style={{ color: '#C6FF00' }}>Análise em tempo real</span>
-          </div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Análise de Produção</h1>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
+          <h1 className="page-title">Análise de Produção</h1>
+          <p className="page-subtitle">
             {isAdmin ? 'Visão completa da equipe' : 'Sua performance detalhada'}
           </p>
         </div>
@@ -586,7 +582,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                     <Award className="w-6 h-6" style={{ color: '#fbbf24' }} />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Melhor Corretor do Período</p>
+                    <p className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Melhor Corretor do Período</p>
                     <p className="text-lg font-black" style={{ color: '#fbbf24' }}>{stats.best_broker.full_name}</p>
                     <p className="text-xs" style={{ color: 'var(--text-3)' }}>{stats.best_broker.points} pontos</p>
                   </div>
@@ -640,7 +636,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                 ? <p className="text-sm text-center py-8" style={{ color: 'var(--text-3)' }}>Sem propostas pagas no período</p>
                 : (
                   <>
-                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider pb-3 mb-1"
+                    <div className="flex justify-between text-xs font-medium pb-3 mb-1"
                       style={{ color: 'var(--text-3)', borderBottom: '1px solid var(--card-border)' }}>
                       <span>Dimensão</span>
                       <span>{dimSort === 'value' ? 'Volume Pago' : dimSort === 'count' ? 'Qtd Props' : dimSort === 'ticket' ? 'Ticket Médio' : 'Comissão'}</span>
@@ -771,7 +767,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
 
                 {isAdmin && comm.corrTotal + comm.empTotal > 0 && (
                   <div className="mt-5 pt-4 space-y-3" style={{ borderTop: '1px solid var(--card-border)' }}>
-                    <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Empresa vs Corretor</p>
+                    <p className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Empresa vs Corretor</p>
                     {[
                       { label: 'Empresa',    value: comm.empTotal,  color: '#60a5fa' },
                       { label: 'Corretores', value: comm.corrTotal, color: '#C6FF00' },
@@ -806,7 +802,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                 <Card delay={160}>
                   <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-1)' }}>Resumo da Minha Comissão</h3>
                   <div className="text-center py-4">
-                    <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>Total Gerado</p>
+                    <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>Total Gerado</p>
                     <p className="text-4xl font-black num" style={{ color: '#C6FF00' }}>
                       <AnimCount to={comm.corrTotal} fmt="currency" delay={200} />
                     </p>
@@ -853,7 +849,7 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                     <div className="grid grid-cols-2 gap-3 mt-5">
                       {[
                         { label: 'Streak atual', value: streak.current_streak, color: '#fbbf24' },
-                        { label: 'Recorde',      value: streak.best_streak,    color: '#94a3b8' },
+                        { label: 'Recorde',      value: streak.best_streak,    color: 'var(--text-2)' },
                       ].map(({ label, value, color }) => (
                         <div key={label} className="rounded-xl p-3 text-center"
                           style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)' }}>
@@ -918,14 +914,14 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                 </div>
                 {badges.some(b => b.earned) && (
                   <>
-                    <p className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: '#fbbf24' }}>Conquistadas</p>
+                    <p className="text-xs font-medium mb-3" style={{ color: '#fbbf24' }}>Conquistadas</p>
                     <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-8 gap-2 mb-6">
                       {badges.filter(b => b.earned).map((b, i) => (
                         <div key={b.id} title={`${b.name}: ${b.description}`}
                           className="badge-card flex flex-col items-center p-2.5 rounded-xl animate-fade-up"
                           style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', boxShadow: '0 0 12px rgba(245,158,11,0.08)', animationDelay: `${100 + i * 30}ms` }}>
                           <span className="text-xl badge-icon">{b.icon}</span>
-                          <span className="text-[9px] text-center mt-1.5 leading-tight line-clamp-2" style={{ color: '#94A3B8' }}>{b.name}</span>
+                          <span className="text-[9px] text-center mt-1.5 leading-tight line-clamp-2" style={{ color: 'var(--text-2)' }}>{b.name}</span>
                         </div>
                       ))}
                     </div>
@@ -933,14 +929,14 @@ export function Production({ isAdmin }: { isAdmin: boolean }) {
                 )}
                 {badges.some(b => !b.earned) && (
                   <>
-                    <p className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--text-3)' }}>Em progresso</p>
+                    <p className="text-xs font-medium mb-3" style={{ color: 'var(--text-3)' }}>Em progresso</p>
                     <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-8 gap-2">
                       {badges.filter(b => !b.earned).map((b, i) => (
                         <div key={b.id} title={`${b.name}: ${b.description}`}
                           className="badge-card flex flex-col items-center p-2.5 rounded-xl opacity-50 animate-fade-up"
                           style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', filter: 'grayscale(0.75)', animationDelay: `${150 + i * 25}ms` }}>
                           <span className="text-xl badge-icon">{b.icon}</span>
-                          <span className="text-[9px] text-center mt-1.5 leading-tight line-clamp-2" style={{ color: '#64748B' }}>{b.name}</span>
+                          <span className="text-[9px] text-center mt-1.5 leading-tight line-clamp-2" style={{ color: 'var(--text-3)' }}>{b.name}</span>
                         </div>
                       ))}
                     </div>

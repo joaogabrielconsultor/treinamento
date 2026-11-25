@@ -39,12 +39,12 @@ function UsuarioBancoModal({ item, onClose, onSave }: {
         </div>
         <form onSubmit={handleSave} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: 'var(--text-3)' }}>Nome</label>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>Nome</label>
             <input value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: João, Fernando..." autoFocus
               className="input-cyber w-full px-3 py-2.5 text-sm rounded-xl" />
           </div>
           <div>
-            <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: 'var(--text-3)' }}>Descrição (opcional)</label>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>Descrição (opcional)</label>
             <input value={descricao} onChange={e => setDescricao(e.target.value)} placeholder="Ex: Conta Caixa Econômica..."
               className="input-cyber w-full px-3 py-2.5 text-sm rounded-xl" />
           </div>
@@ -119,7 +119,7 @@ export function AdminUsuariosBanco({ isMaster = false }: { isMaster?: boolean })
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto" style={{ color: 'var(--text-1)' }}>
+    <div className="page page-narrow">
       {modal !== null && (
         <UsuarioBancoModal
           item={modal === 'new' ? null : modal as UsuarioBanco}
@@ -135,13 +135,13 @@ export function AdminUsuariosBanco({ isMaster = false }: { isMaster?: boolean })
         />
       )}
 
-      <div className="flex items-center justify-between mb-6 animate-fade-up">
+      <div className="page-header">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <UserCog className="w-5 h-5" style={{ color: '#C6FF00' }} />
-            <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Usuários Banco</h1>
+            <UserCog className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--text-3)' }} />
+            <h1 className="page-title">Usuários Banco</h1>
           </div>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Contas bancárias onde as comissões são recebidas</p>
+          <p className="page-subtitle">Contas bancárias onde as comissões são recebidas</p>
         </div>
         <button onClick={() => setModal('new')} className="flex items-center gap-2 px-4 py-2 text-sm rounded-xl btn-cyber font-semibold">
           <Plus className="w-4 h-4" /> Novo Usuário Banco
@@ -163,7 +163,7 @@ export function AdminUsuariosBanco({ isMaster = false }: { isMaster?: boolean })
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                   {['Nome / Descrição', 'Propostas', 'Cadastro', ''].map(h => (
-                    <th key={h} className="text-left px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
+                    <th key={h} className="text-left px-5 py-3.5 text-xs font-medium" style={{ color: 'var(--text-3)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>

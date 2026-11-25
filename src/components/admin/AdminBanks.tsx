@@ -47,15 +47,15 @@ export function AdminBanks({ isMaster = false }: { isMaster?: boolean }) {
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="page page-narrow">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#151515' }}>
             <Building2 className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-100">Bancos</h1>
-            <p className="text-xs text-slate-500 mt-0.5">{items.length} bancos cadastrados</p>
+            <h1 className="page-title">Bancos</h1>
+            <p className="page-subtitle">{items.length} bancos cadastrados</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -86,12 +86,12 @@ export function AdminBanks({ isMaster = false }: { isMaster?: boolean }) {
               <p className="flex-1 font-medium" style={{ color: 'var(--text-1)' }}>{b.name}</p>
               <div className="flex items-center gap-1">
                 <button onClick={() => { setName(b.name); setEditId(b.id); setShowForm(true); }}
-                  className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-dk-surface text-gray-400 hover:text-gray-600 transition-colors">
+                  className="p-1.5 rounded-lg hover:bg-surface-hover dark:hover:bg-dk-surface text-ink-3 hover:text-ink-1 transition-colors">
                   <Edit2 className="w-3.5 h-3.5" />
                 </button>
                 {isMaster && (
                   <button onClick={() => del(b.id)}
-                    className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors">
+                    className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-ink-3 hover:text-red-500 transition-colors">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 )}

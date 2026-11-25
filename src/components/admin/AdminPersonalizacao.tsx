@@ -52,10 +52,10 @@ export function AdminPersonalizacao() {
   };
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
+    <div className="page page-narrow">
       <div className="mb-8">
-        <h1 className="text-xl font-bold text-gray-100">Personalização</h1>
-        <p className="text-xs text-slate-500 mt-0.5">Configure a identidade visual da plataforma</p>
+        <h1 className="page-title">Personalização</h1>
+        <p className="page-subtitle">Configure a identidade visual da plataforma</p>
       </div>
 
       {/* Nome da empresa */}
@@ -83,16 +83,16 @@ export function AdminPersonalizacao() {
       <div className="rounded-2xl p-5" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
         <div className="flex items-center gap-2 mb-6">
           <Palette className="w-5 h-5 text-brand" />
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Logo da plataforma</h2>
+          <h2 className="text-lg font-semibold text-ink-1 text-ink-1">Logo da plataforma</h2>
         </div>
 
         {/* Preview */}
-        <div className="mb-6 p-5 bg-gray-50 dark:bg-dk-surface rounded-xl border border-dashed border-gray-200 dark:border-dk-border flex items-center justify-center">
+        <div className="mb-6 p-5 bg-surface-subtle dark:bg-dk-surface rounded-xl border border-dashed border-line dark:border-dk-border flex items-center justify-center">
           <div className="flex items-center gap-4">
             <LogoComponent size="lg" />
             <div>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Preview da logo</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              <p className="text-sm font-medium text-ink-2 text-ink-2">Preview da logo</p>
+              <p className="text-xs text-ink-3 text-ink-3 mt-0.5">
                 {logoUrl ? 'Logo personalizada ativa — visível para todos os usuários' : 'Usando logo padrão'}
               </p>
             </div>
@@ -105,7 +105,7 @@ export function AdminPersonalizacao() {
               URL da Logo
             </label>
             <div className="relative">
-              <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-3" />
               <input
                 type="url"
                 value={inputUrl}
@@ -114,7 +114,7 @@ export function AdminPersonalizacao() {
                 className="input-cyber w-full pl-10 pr-4 py-2.5 text-sm rounded-xl"
               />
             </div>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
+            <p className="text-xs text-ink-3 text-ink-3 mt-1.5">
               Formatos suportados: PNG, SVG, JPG, WebP. Fundo transparente recomendado.
             </p>
           </div>

@@ -1,116 +1,88 @@
+import { Menu, ChevronRight } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { ViewType } from '../types';
+import { navItems, adminGroups } from './Sidebar';
 
 /* ═══════════════════════════════════════════════════════════════
-   BARRA SUPERIOR — GS CRED
-   Moldura de topo: eyebrow mono + seção em Anton + status/data/usuário.
-   Dá corpo à estrutura (sidebar + topo + conteúdo).
+   BARRA SUPERIOR
+   Mostra onde o usuário está (trilha), a data e o acesso ao perfil.
+   O título grande fica no cabeçalho de cada página.
 ═══════════════════════════════════════════════════════════════ */
 
-const VIEW_LABELS: Record<string, string> = {
-  dashboard: 'Dashboard',
-  production: 'Produção',
-  proposals: 'Propostas',
-  simulator: 'Simulador',
-  ranking: 'Ranking',
-  'conta-corrente': 'Conta Corrente',
-  catalog: 'Treinamentos',
+const EXTRA_LABELS: Partial<Record<ViewType, string>> = {
   course: 'Treinamento',
   lesson: 'Aula',
-  'login-bancos': 'Login Bancos',
-  roteiros: 'Roteiros',
-  'consulta-margem': 'Consulta de Margem',
-  'admin-users': 'Usuários',
-  'admin-convenios': 'Convênios',
-  'admin-banks': 'Bancos',
-  'admin-products': 'Produtos',
-  'admin-financial-tables': 'Tabelas',
-  'admin-categories': 'Categorias',
-  'admin-reports': 'Relatórios',
-  'admin-conta-corrente': 'Conta Corrente',
-  'admin-commission-report': 'Relatório de Comissões',
-  'admin-lojas': 'Lojas',
-  'admin-usuarios-banco': 'Usuários Banco',
-  'admin-proposal-statuses': 'Status de Propostas',
-  'admin-conta-empresa': 'Conta Empresa',
-  'admin-courses': 'Treinamentos',
-  'admin-course-edit': 'Editar Curso',
-  'admin-roteiros': 'Roteiros',
-  'admin-importacao': 'Importação CRM',
-  'admin-personalizacao': 'Personalização',
+  'admin-course-edit': 'Editar curso',
 };
 
-const MONO = "'Space Mono', ui-monospace, monospace";
-const ANTON = "'Anton', Impact, sans-serif";
+function trail(view: ViewType): string[] {
+  const main = navItems.find(i => i.view === view);
+  if (main) return [main.label];
+  for (const g of adminGroups) {
+    const it = g.items.find(i => i.view === view);
+    if (it) return ['Admin', g.label, it.label];
+  }
+  if (view === 'admin-course-edit') return ['Admin', 'Treinamentos', 'Editar curso'];
+  if (view === 'course' || view === 'lesson') return ['Treinamentos', EXTRA_LABELS[view]!];
+  return [EXTRA_LABELS[view] ?? 'Início'];
+}
 
 interface TopBarProps {
   currentView: ViewType;
   user: User;
   onOpenProfile: () => void;
+  onOpenMenu?: () => void;
 }
 
-export function TopBar({ currentView, user, onOpenProfile }: TopBarProps) {
-  const label = VIEW_LABELS[currentView] ?? 'GS CRED';
+export function TopBar({ currentView, user, onOpenProfile, onOpenMenu }: TopBarProps) {
+  const crumbs = trail(currentView);
   const displayName = user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'Usuário';
   const initials = displayName.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase();
-  const today = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const today = new Date().toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' }).replace('.', '');
 
   return (
     <header
-      className="sticky top-0 z-30 flex items-center justify-between gap-4 px-6"
+      className="sticky top-0 z-30 flex items-center justify-between gap-3 h-14 px-4 sm:px-7 xl:px-10"
       style={{
-        height: 64,
-        background: 'rgba(5,5,5,0.82)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(255,255,255,0.09)',
+        background: 'rgba(15,17,19,0.86)',
+        backdropFilter: 'saturate(140%) blur(10px)',
+        WebkitBackdropFilter: 'saturate(140%) blur(10px)',
+        borderBottom: '1px solid var(--border-1)',
       }}
     >
-      {/* Seção atual */}
-      <div className="min-w-0">
-        <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.22em', color: '#C6FF00' }}>
-          // GS.SISTEMA
-        </div>
-        <h1
-          className="truncate leading-none mt-1"
-          style={{ fontFamily: ANTON, fontSize: 22, letterSpacing: '0.02em', textTransform: 'uppercase', color: '#F4F4F4' }}
-        >
-          {label}
-        </h1>
+      <div className="flex items-center gap-2 min-w-0">
+        {onOpenMenu && (
+          <button onClick={onOpenMenu} className="lg:hidden btn btn-icon -ml-2" style={{ color: 'var(--text-2)' }} aria-label="Abrir menu">
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
+        <nav aria-label="Você está em" className="flex items-center gap-1.5 min-w-0 text-[13px]">
+          {crumbs.map((c, i) => {
+            const last = i === crumbs.length - 1;
+            return (
+              <span key={i} className={`flex items-center gap-1.5 min-w-0 ${last ? '' : 'hidden sm:flex'}`}>
+                <span className="truncate" style={{ color: last ? 'var(--text-1)' : 'var(--text-3)', fontWeight: last ? 500 : 400 }}>{c}</span>
+                {!last && <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--text-4)' }} />}
+              </span>
+            );
+          })}
+        </nav>
       </div>
 
-      {/* Status + data + usuário */}
       <div className="flex items-center gap-3 flex-shrink-0">
-        <div
-          className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg"
-          style={{ background: 'rgba(198,255,0,0.06)', border: '1px solid rgba(198,255,0,0.2)' }}
-        >
-          <span className="live-dot" />
-          <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.1em', color: '#C6FF00' }}>ONLINE</span>
-        </div>
-
-        <div
-          className="hidden sm:block px-3 py-1.5 rounded-lg"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', fontFamily: MONO, fontSize: 11, letterSpacing: '0.06em', color: '#9A9A9A' }}
-        >
-          {today}
-        </div>
-
+        <span className="hidden sm:block text-[13px] capitalize" style={{ color: 'var(--text-3)' }}>{today}</span>
         <button
           onClick={onOpenProfile}
-          className="flex items-center gap-2.5 pl-1 pr-3 py-1 rounded-full transition-all"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(198,255,0,0.4)'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.09)'; }}
+          className="flex items-center gap-2 rounded-full pl-0.5 pr-0.5 sm:pr-3 py-0.5 transition-colors hover:bg-white/5"
           title="Editar perfil"
         >
           <span
-            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #C6FF00, #A9E000)', color: '#0A0A0A', fontFamily: MONO, fontWeight: 700, fontSize: 12 }}
+            className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-[11px] font-semibold"
+            style={{ background: 'var(--accent)', color: 'var(--accent-ink)' }}
           >
             {initials}
           </span>
-          <span className="hidden sm:block text-[12px] font-semibold truncate max-w-[140px]" style={{ color: '#E2E8F0' }}>
+          <span className="hidden sm:block text-[13px] font-medium truncate max-w-[160px]" style={{ color: 'var(--text-1)' }}>
             {displayName}
           </span>
         </button>

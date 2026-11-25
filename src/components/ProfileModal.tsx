@@ -138,19 +138,19 @@ export function ProfileModal({ user, onClose, onUpdated }: Props) {
           {tab === 'info' && (
             <form onSubmit={saveInfo} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: 'var(--text-3)' }}>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>
                   <User className="w-3 h-3 inline mr-1" />Nome completo
                 </label>
                 <input value={name} onChange={e => setName(e.target.value)} className={inp} placeholder="Seu nome" />
               </div>
               <div>
-                <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: 'var(--text-3)' }}>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>
                   <Mail className="w-3 h-3 inline mr-1" />Email
                 </label>
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={inp} placeholder="seu@email.com" />
               </div>
               <div>
-                <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: 'var(--text-3)' }}>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>
                   <Phone className="w-3 h-3 inline mr-1" />Telefone / WhatsApp
                 </label>
                 <input value={phone} onChange={e => setPhone(e.target.value)} className={inp} placeholder="(48) 99999-9999" />
@@ -178,7 +178,7 @@ export function ProfileModal({ user, onClose, onUpdated }: Props) {
                 { label: 'Confirmar nova senha', value: confirmPwd, set: setConfirmPwd, show: showNew, toggle: () => setShowNew(v => !v) },
               ].map(({ label, value, set, show, toggle }) => (
                 <div key={label}>
-                  <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: 'var(--text-3)' }}>{label}</label>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>{label}</label>
                   <div className="relative">
                     <input type={show ? 'text' : 'password'} value={value} onChange={e => set(e.target.value)}
                       className={`${inp} pr-10`} placeholder="••••••••" />

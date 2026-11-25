@@ -23,7 +23,7 @@ export function LogoComponent({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
 
   return (
     <div className={`${wrap} bg-brand rounded-xl flex items-center justify-center flex-shrink-0`}>
-      <BookOpen className={`${icon} text-white`} />
+      <BookOpen className={`${icon}`} style={{ color: "var(--accent-ink)" }} />
     </div>
   );
 }

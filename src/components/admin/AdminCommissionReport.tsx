@@ -96,13 +96,13 @@ export function AdminCommissionReport() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto" style={{ color: 'var(--text-1)' }}>
+    <div className="page">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div className="flex items-center gap-2">
-          <Receipt className="w-5 h-5" style={{ color: '#C6FF00' }} />
+          <Receipt className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--text-3)' }} />
           <div>
-            <h1 className="text-xl font-bold">Relatório de Comissões</h1>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Pendentes e pagas, por corretor, com detalhe de cada proposta</p>
+            <h1 className="page-title">Relatório de Comissões</h1>
+            <p className="page-subtitle">Pendentes e pagas, por corretor, com detalhe de cada proposta</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -118,14 +118,14 @@ export function AdminCommissionReport() {
       {/* Filtros */}
       <div className="rounded-2xl p-4 mb-6 flex items-center gap-3 flex-wrap" style={cardStyle}>
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Corretor</label>
+          <label className="block text-xs font-semibold text-ink-3 mb-1">Corretor</label>
           <select value={filterCorretor} onChange={e => setFilterCorretor(e.target.value)} className="input-cyber text-sm rounded-xl" style={{ minWidth: '200px' }}>
             <option value="">Todos</option>
             {allBrokers.map(b => <option key={b.user_id} value={b.user_id}>{b.user_name || b.user_email}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Status comissão</label>
+          <label className="block text-xs font-semibold text-ink-3 mb-1">Status comissão</label>
           <select value={filterStatus} onChange={e => setFilterStatus(e.target.value as typeof filterStatus)} className="input-cyber text-sm rounded-xl" style={{ minWidth: '160px' }}>
             <option value="">Todos</option>
             <option value="Ag. Comissão">Pendente</option>
@@ -137,19 +137,19 @@ export function AdminCommissionReport() {
       {/* Cards resumo */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="rounded-2xl p-4" style={cardStyle}>
-          <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>Pendente — Corretores</p>
+          <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>Pendente — Corretores</p>
           <p className="text-xl font-black num" style={{ color: '#f59e0b' }}>{fmtBRL(totals?.total_corretor_pendente || 0)}</p>
         </div>
         <div className="rounded-2xl p-4" style={cardStyle}>
-          <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>Pendente — Empresa</p>
+          <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>Pendente — Empresa</p>
           <p className="text-xl font-black num" style={{ color: '#fb923c' }}>{fmtBRL(totals?.total_empresa_pendente || 0)}</p>
         </div>
         <div className="rounded-2xl p-4" style={cardStyle}>
-          <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>Já paga — Corretores</p>
+          <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>Já paga — Corretores</p>
           <p className="text-xl font-black num" style={{ color: '#4ade80' }}>{fmtBRL(totals?.total_corretor_pago || 0)}</p>
         </div>
         <div className="rounded-2xl p-4" style={cardStyle}>
-          <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>Já paga — Empresa</p>
+          <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>Já paga — Empresa</p>
           <p className="text-xl font-black num" style={{ color: '#a78bfa' }}>{fmtBRL(totals?.total_empresa_pago || 0)}</p>
         </div>
       </div>
@@ -167,21 +167,21 @@ export function AdminCommissionReport() {
           {months.length > 0 && (
             <div className="rounded-2xl overflow-hidden mb-6" style={cardStyle}>
               <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
-                <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Pendente por mês</h2>
+                <h2 className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Pendente por mês</h2>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                      <th className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest sticky left-0" style={{ color: 'var(--text-3)', background: 'var(--card-bg)' }}>
+                      <th className="text-left px-4 py-3.5 text-xs font-medium sticky left-0" style={{ color: 'var(--text-3)', background: 'var(--card-bg)' }}>
                         <Users className="w-3 h-3 inline mr-1" />Corretor
                       </th>
                       {months.map(m => (
-                        <th key={m} className="text-right px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: 'var(--text-3)' }}>
+                        <th key={m} className="text-right px-4 py-3.5 text-xs font-medium whitespace-nowrap" style={{ color: 'var(--text-3)' }}>
                           {fmtMonth(m)}
                         </th>
                       ))}
-                      <th className="text-right px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: '#C6FF00' }}>
+                      <th className="text-right px-4 py-3.5 text-xs font-medium whitespace-nowrap" style={{ color: '#C6FF00' }}>
                         Total pendente
                       </th>
                     </tr>
@@ -238,7 +238,7 @@ export function AdminCommissionReport() {
           {/* Detalhe por corretor — clique para expandir */}
           <div className="rounded-2xl overflow-hidden" style={cardStyle}>
             <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
-              <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Detalhe por corretor</h2>
+              <h2 className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Detalhe por corretor</h2>
             </div>
             {brokers.map(b => {
               const isOpen = expanded.has(b.user_id);
@@ -257,11 +257,11 @@ export function AdminCommissionReport() {
                     </div>
                     <div className="flex items-center gap-6 text-right">
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Pendente</p>
+                        <p className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Pendente</p>
                         <p className="font-bold num" style={{ color: '#f59e0b' }}>{fmtBRL(b.total_corretor_pendente)}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Já paga</p>
+                        <p className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Já paga</p>
                         <p className="font-bold num" style={{ color: '#4ade80' }}>{fmtBRL(b.total_corretor_pago)}</p>
                       </div>
                     </div>
@@ -272,7 +272,7 @@ export function AdminCommissionReport() {
                         <thead>
                           <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                             {['Data', 'Proposta', 'Cliente', 'Banco', 'Tabela', 'Valor', 'Com. Corretor', 'Com. Empresa', 'Status'].map(h => (
-                              <th key={h} className="text-left px-3 py-2 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
+                              <th key={h} className="text-left px-3 py-2 text-xs font-medium whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
                             ))}
                           </tr>
                         </thead>

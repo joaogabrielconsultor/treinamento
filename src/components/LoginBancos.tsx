@@ -269,7 +269,7 @@ function FieldRow({ icon: Icon, label, children }: {
       style={{ background: 'var(--surface-subtle)', border: '1px solid var(--card-border)' }}
     >
       <Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--text-3)' }} />
-      <span className="text-[10px] font-bold uppercase tracking-wider w-9 flex-shrink-0" style={{ color: 'var(--text-3)' }}>{label}</span>
+      <span className="text-xs font-medium w-9 flex-shrink-0" style={{ color: 'var(--text-3)' }}>{label}</span>
       {children}
     </div>
   );
@@ -441,7 +441,7 @@ export function LoginBancos({ isAdmin }: { isAdmin: boolean }) {
   }
 
   return (
-    <div className="p-8 max-w-5xl mx-auto" style={{ color: 'var(--text-1)' }}>
+    <div className="page">
       {(modalOpen || editingBanco) && (
         <BancoModal
           banco={editingBanco}
@@ -458,13 +458,13 @@ export function LoginBancos({ isAdmin }: { isAdmin: boolean }) {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-8 animate-fade-up">
+      <div className="page-header">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Building2 className="w-4 h-4" style={{ color: '#C6FF00' }} />
-            <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Login Bancos</h1>
+            <h1 className="page-title">Login Bancos</h1>
           </div>
-          <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+          <p className="page-subtitle">
             {bancos.length} banco{bancos.length !== 1 ? 's' : ''} cadastrado{bancos.length !== 1 ? 's' : ''}
           </p>
         </div>

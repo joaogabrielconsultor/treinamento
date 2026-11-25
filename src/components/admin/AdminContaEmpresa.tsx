@@ -103,7 +103,7 @@ function ExtratoView({ loja, onBack, isMaster = false }: { loja: LojaBalance; on
           <div key={c.label} className="rounded-2xl p-4" style={{ background: c.bg, border: `1px solid ${c.border}`, boxShadow: 'var(--shadow-card)' }}>
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>{c.label}</p>
+                <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>{c.label}</p>
                 <p className="text-xl font-black num" style={{ color: c.color }}>{c.value}</p>
               </div>
               <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: c.bg }}>
@@ -120,7 +120,7 @@ function ExtratoView({ loja, onBack, isMaster = false }: { loja: LojaBalance; on
         <div className="rounded-2xl overflow-hidden"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
           <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--card-border)' }}>
-            <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Extrato</h3>
+            <h3 className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Extrato</h3>
             {selected.size > 0 && isMaster && (
               <button
                 onClick={() => setConfirmDel(true)}
@@ -151,7 +151,7 @@ function ExtratoView({ loja, onBack, isMaster = false }: { loja: LojaBalance; on
                     />
                   </th>
                   {['Tipo', 'Corretor', 'Descrição', 'Valor', 'Data'].map(h => (
-                    <th key={h} className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
+                    <th key={h} className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-3)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -313,13 +313,13 @@ export function AdminContaEmpresa({ isMaster = false }: { isMaster?: boolean }) 
   const inpSel = 'input-cyber px-2 py-1.5 rounded-lg text-xs';
 
   return (
-    <div className="p-6 max-w-6xl mx-auto" style={{ color: 'var(--text-1)' }}>
-      <div className="flex items-center justify-between mb-6 animate-fade-up">
+    <div className="page">
+      <div className="page-header">
         <div className="flex items-center gap-2">
-          <Building2 className="w-5 h-5" style={{ color: '#C6FF00' }} />
+          <Building2 className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--text-3)' }} />
           <div>
-            <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Conta Empresa</h1>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Saldo e extrato financeiro por loja</p>
+            <h1 className="page-title">Conta Empresa</h1>
+            <p className="page-subtitle">Saldo e extrato financeiro por loja</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -350,7 +350,7 @@ export function AdminContaEmpresa({ isMaster = false }: { isMaster?: boolean }) 
               <div key={c.label} className="rounded-2xl p-4 animate-fade-up" style={{ background: c.bg, border: `1px solid ${c.border}`, boxShadow: 'var(--shadow-card)', animationDelay: `${i * 50}ms` }}>
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>{c.label}</p>
+                    <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>{c.label}</p>
                     <p className="text-xl font-black num" style={{ color: c.color }}>{c.value}</p>
                     <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{c.sub}</p>
                   </div>
@@ -381,7 +381,7 @@ export function AdminContaEmpresa({ isMaster = false }: { isMaster?: boolean }) 
                       const sortable = !!SORT_FIELDS[h]; const active = sortCol === h;
                       return (
                         <th key={h} onClick={sortable ? () => handleSort(h) : undefined}
-                          className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest"
+                          className="text-left px-4 py-3.5 text-xs font-medium"
                           style={{ color: active ? '#C6FF00' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
                           {h}{sortable && <span className="ml-1 opacity-60">{active ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
                         </th>

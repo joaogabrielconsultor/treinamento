@@ -123,7 +123,7 @@ export function AdminImportacao() {
     <div className="p-6 max-w-full">
       <div className="flex items-center gap-3 mb-6">
         <FileSpreadsheet className="w-6 h-6" style={{ color: 'var(--accent)' }} />
-        <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Importação CRM</h1>
+        <h1 className="page-title">Importação CRM</h1>
       </div>
 
       {/* Step: upload */}
@@ -216,7 +216,7 @@ export function AdminImportacao() {
           {/* Preview table */}
           <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
             <div className="overflow-x-auto">
-              <table className="w-full text-xs">
+              <table className="w-full text-[13px]">
                 <thead>
                   <tr style={{ background: 'var(--card-2)', color: 'var(--text-3)' }}>
                     <th className="px-3 py-2 text-left font-semibold">Proposta</th>
@@ -224,7 +224,7 @@ export function AdminImportacao() {
                     <th className="px-3 py-2 text-left font-semibold">Corretor</th>
                     <th className="px-3 py-2 text-left font-semibold">Banco</th>
                     <th className="px-3 py-2 text-left font-semibold">Tabela</th>
-                    <th className="px-3 py-2 text-right font-semibold">Valor</th>
+                    <th className="px-3 py-2 text-right font-semibold th-num">Valor</th>
                     <th className="px-3 py-2 text-left font-semibold">Status</th>
                     <th className="px-3 py-2 text-left font-semibold">Dt. Digit.</th>
                     <th className="px-3 py-2 text-left font-semibold">Dt. Status</th>

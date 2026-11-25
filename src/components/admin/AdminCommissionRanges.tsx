@@ -76,7 +76,7 @@ function Label({ text, required }: { text: string; required?: boolean }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="text-xs font-bold uppercase tracking-wider mb-3 pb-1" style={{ color: 'var(--text-3)', borderBottom: '1px solid var(--card-border)' }}>{title}</h3>
+      <h3 className="text-xs font-medium mb-3 pb-1" style={{ color: 'var(--text-3)', borderBottom: '1px solid var(--card-border)' }}>{title}</h3>
       {children}
     </div>
   );
@@ -258,12 +258,12 @@ export function AdminCommissionRanges({ isMaster = false }: { isMaster?: boolean
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="page">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Faixas de Comissão</h1>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
+          <h1 className="page-title">Faixas de Comissão</h1>
+          <p className="page-subtitle">
             {hasFilters ? `${filtered.length} de ${ranges.length} faixas` : `${ranges.length} faixas cadastradas`}
           </p>
         </div>
@@ -289,7 +289,7 @@ export function AdminCommissionRanges({ isMaster = false }: { isMaster?: boolean
       <div className="rounded-2xl p-4 mb-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
         <div className="flex items-center gap-2 mb-3">
           <Filter className="w-3.5 h-3.5" style={{ color: 'var(--text-3)' }} />
-          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Filtros</span>
+          <span className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Filtros</span>
           {hasFilters && (
             <button onClick={clearFilters}
               className="ml-auto flex items-center gap-1 text-xs px-2 py-1 rounded-lg transition-colors"
@@ -302,15 +302,15 @@ export function AdminCommissionRanges({ isMaster = false }: { isMaster?: boolean
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           <div>
-            <label className="block text-[10px] font-semibold mb-1 uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Data Cadastro — De</label>
+            <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--text-3)' }}>Data Cadastro — De</label>
             <input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)} className={inpSm} />
           </div>
           <div>
-            <label className="block text-[10px] font-semibold mb-1 uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Data Cadastro — Até</label>
+            <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--text-3)' }}>Data Cadastro — Até</label>
             <input type="date" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)} className={inpSm} />
           </div>
           <div>
-            <label className="block text-[10px] font-semibold mb-1 uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Banco</label>
+            <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--text-3)' }}>Banco</label>
             <div className="relative">
               <ChevronDown className="absolute right-2 top-2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
               <select value={filterBanco} onChange={e => setFilterBanco(e.target.value)} className={`${inpSm} appearance-none pr-7`}>
@@ -320,7 +320,7 @@ export function AdminCommissionRanges({ isMaster = false }: { isMaster?: boolean
             </div>
           </div>
           <div>
-            <label className="block text-[10px] font-semibold mb-1 uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Convênio</label>
+            <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--text-3)' }}>Convênio</label>
             <div className="relative">
               <ChevronDown className="absolute right-2 top-2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
               <select value={filterConvenio} onChange={e => setFilterConvenio(e.target.value)} className={`${inpSm} appearance-none pr-7`}>
@@ -330,12 +330,12 @@ export function AdminCommissionRanges({ isMaster = false }: { isMaster?: boolean
             </div>
           </div>
           <div>
-            <label className="block text-[10px] font-semibold mb-1 uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Tipo Proposta</label>
+            <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--text-3)' }}>Tipo Proposta</label>
             <input value={filterTipoProposta} onChange={e => setFilterTipoProposta(e.target.value)}
               className={inpSm} placeholder="Buscar tipo..." />
           </div>
           <div>
-            <label className="block text-[10px] font-semibold mb-1 uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Disponível para</label>
+            <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--text-3)' }}>Disponível para</label>
             <div className="relative">
               <ChevronDown className="absolute right-2 top-2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
               <select value={filterDisponivelPara} onChange={e => setFilterDisponivelPara(e.target.value)} className={`${inpSm} appearance-none pr-7`}>
@@ -347,7 +347,7 @@ export function AdminCommissionRanges({ isMaster = false }: { isMaster?: boolean
             </div>
           </div>
           <div className="col-span-2">
-            <label className="block text-[10px] font-semibold mb-1 uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Tabela Financeira</label>
+            <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--text-3)' }}>Tabela Financeira</label>
             <div className="relative">
               <ChevronDown className="absolute right-2 top-2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
               <select value={filterTable} onChange={e => setFilterTable(e.target.value)} className={`${inpSm} appearance-none pr-7`}>
@@ -428,13 +428,13 @@ export function AdminCommissionRanges({ isMaster = false }: { isMaster?: boolean
                   {/* Data grid */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-3)' }}>Faixa de Valor</p>
+                      <p className="text-xs mb-0.5" style={{ color: 'var(--text-3)' }}>Faixa de Valor</p>
                       <p className="font-semibold text-sm num" style={{ color: 'var(--text-1)' }}>
                         {fmtBRL(Number(r.min_value))}{r.max_value ? ` → ${fmtBRL(Number(r.max_value))}` : ' ou mais'}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-3)' }}>Prazo</p>
+                      <p className="text-xs mb-0.5" style={{ color: 'var(--text-3)' }}>Prazo</p>
                       <p className="font-semibold text-sm num" style={{ color: 'var(--text-1)' }}>
                         {r.prazo_inicial != null
                           ? r.prazo_final != null
@@ -449,12 +449,12 @@ export function AdminCommissionRanges({ isMaster = false }: { isMaster?: boolean
                       )}
                     </div>
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-3)' }}>Comissão</p>
+                      <p className="text-xs mb-0.5" style={{ color: 'var(--text-3)' }}>Comissão</p>
                       <p className="font-semibold num text-xs" style={{ color: '#60a5fa' }}>Empresa: {r.comissao_empresa}%</p>
                       <p className="font-semibold num text-xs" style={{ color: '#4ade80' }}>Corretor: {r.comissao_corretor}%</p>
                     </div>
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-3)' }}>Pontuação</p>
+                      <p className="text-xs mb-0.5" style={{ color: 'var(--text-3)' }}>Pontuação</p>
                       <div className="flex items-center gap-1">
                         <Star className="w-3.5 h-3.5 text-yellow-500" />
                         <span className="font-bold num" style={{ color: '#fbbf24' }}>{pts} pts</span>
@@ -664,18 +664,18 @@ export function AdminCommissionRanges({ isMaster = false }: { isMaster?: boolean
           <div>
             <label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>Selecione o arquivo CSV</label>
             <input ref={fileRef} type="file" accept=".csv" onChange={handleFileChange}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 cursor-pointer" />
+              className="block w-full text-sm text-ink-3 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 cursor-pointer" />
           </div>
 
           {importRows.length > 0 && (
             <div>
               <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>{importRows.length} linha(s) detectada(s)</p>
               <div className="max-h-52 overflow-y-auto rounded-xl" style={{ border: '1px solid var(--card-border)' }}>
-                <table className="w-full text-xs">
+                <table className="w-full text-[13px]">
                   <thead>
                     <tr style={{ background: 'var(--surface-subtle)', borderBottom: '1px solid var(--card-border)' }}>
                       {['Tabela', 'Tipo Proposta', 'Prazo', 'Comissão Emp./Cor.', 'Status'].map(h => (
-                        <th key={h} className="text-left px-3 py-2 font-semibold uppercase tracking-wider text-[10px]" style={{ color: 'var(--text-3)' }}>{h}</th>
+                        <th key={h} className="text-left px-3 py-2 font-semibold text-xs" style={{ color: 'var(--text-3)' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>

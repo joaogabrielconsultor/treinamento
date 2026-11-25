@@ -119,14 +119,14 @@ function AdminLogin({ signIn, signOut, loggedNotMaster, email }: {
           ) : (
             <form onSubmit={submit} className="space-y-4">
               <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider mb-1.5" style={{ color: '#8A8A8A', fontFamily: MONO }}>E-mail de administrador</label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: '#8A8A8A', fontFamily: MONO }}>E-mail de administrador</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#7C7C7C' }} />
                   <input type="email" value={mail} onChange={e => setMail(e.target.value)} required placeholder="admin@empresa.com" className="input-cyber w-full pl-10 pr-4 py-2.5 text-sm rounded-xl" />
                 </div>
               </div>
               <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider mb-1.5" style={{ color: '#8A8A8A', fontFamily: MONO }}>Senha</label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: '#8A8A8A', fontFamily: MONO }}>Senha</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#7C7C7C' }} />
                   <input type={show ? 'text' : 'password'} value={pass} onChange={e => setPass(e.target.value)} required minLength={6} placeholder="••••••••" className="input-cyber w-full pl-10 pr-11 py-2.5 text-sm rounded-xl" />
@@ -187,7 +187,7 @@ function AdminShell({ section, setSection, onSignOut, adminName }: {
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1">
-          <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-widest" style={{ fontFamily: MONO, color: '#555' }}>Gestão</p>
+          <p className="px-3 mb-1 text-xs font-medium" style={{ fontFamily: MONO, color: '#555' }}>Gestão</p>
           {NAV.map(({ key, label, icon: Icon }) => {
             const active = section === key;
             return (
@@ -240,7 +240,7 @@ function Overview({ setSection }: { setSection: (s: Section) => void }) {
     { label: 'Receita mensal', value: fmtBRL(mrr), icon: DollarSign, color: '#facc15' },
   ];
   return (
-    <div className="p-8 max-w-6xl mx-auto">
+    <div className="page">
       <SectionHead title="Visão Geral" subtitle="Resumo dos seus assinantes" onReload={reload} />
       {loading ? <Spinner /> : (
         <>
@@ -248,7 +248,7 @@ function Overview({ setSection }: { setSection: (s: Section) => void }) {
             {stats.map(s => (
               <div key={s.label} className="stat-card rounded-2xl p-5">
                 <div className="flex items-start justify-between">
-                  <div><p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-3)' }}>{s.label}</p>
+                  <div><p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>{s.label}</p>
                     <p className="text-2xl font-black num" style={{ color: 'var(--text-1)' }}>{s.value}</p></div>
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${s.color}18`, border: `1px solid ${s.color}30` }}><s.icon className="w-5 h-5" style={{ color: s.color }} /></div>
                 </div>
@@ -323,7 +323,7 @@ function Suporte() {
   };
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
+    <div className="page">
       <SectionHead title="Suporte" subtitle="Chat com seus clientes — em tempo real, dentro do sistema" onReload={loadThreads} />
       {loading ? <Spinner /> : threads.length === 0 ? (
         <div className="text-center py-16 rounded-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
@@ -394,14 +394,14 @@ function Suporte() {
 function Assinaturas() {
   const { items, loading, reload } = useClientes();
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="page">
       <SectionHead title="Assinaturas" subtitle="Mensalidade e status de cada cliente" onReload={reload} />
       {loading ? <Spinner /> : items.length === 0 ? <Empty /> : (
         <div className="rounded-2xl overflow-hidden overflow-x-auto" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
           <table className="w-full text-sm" style={{ minWidth: '640px' }}>
             <thead><tr style={{ borderBottom: '1px solid var(--card-border)' }}>
               {['Empresa', 'Plano', 'Mensalidade', 'Vencimento', 'Último pgto', 'Status'].map(h => (
-                <th key={h} className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-2)' }}>{h}</th>
+                <th key={h} className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-2)' }}>{h}</th>
               ))}
             </tr></thead>
             <tbody>
@@ -482,7 +482,7 @@ function Financeiro() {
   const cfgLabel = 'block text-[11px] font-bold uppercase tracking-wider mb-1.5';
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="page">
       <SectionHead title="Financeiro" subtitle="Conexão com a Cakto e pagamentos recebidos" onReload={load} />
 
       {/* Opção A — API (mais fácil) */}
@@ -543,12 +543,12 @@ function Financeiro() {
         <div className="rounded-2xl overflow-hidden overflow-x-auto" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
           <table className="w-full text-sm" style={{ minWidth: '680px' }}>
             <thead><tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-              {['Data', 'Cliente', 'Produto', 'Valor', 'Evento'].map(h => <th key={h} className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-2)' }}>{h}</th>)}
+              {['Data', 'Cliente', 'Produto', 'Valor', 'Evento'].map(h => <th key={h} className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-2)' }}>{h}</th>)}
             </tr></thead>
             <tbody>
               {pagamentos.map(p => (
                 <tr key={p.id} className="table-row-cyber">
-                  <td className="px-4 py-3 num whitespace-nowrap" style={{ color: 'var(--text-2)', fontSize: '12px' }}>{new Date(p.created_at).toLocaleString('pt-BR')}</td>
+                  <td className="px-4 py-3 num whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{new Date(p.created_at).toLocaleString('pt-BR')}</td>
                   <td className="px-4 py-3 whitespace-nowrap"><p className="font-semibold" style={{ color: 'var(--text-1)' }}>{p.cliente_nome || '—'}</p><p className="text-xs" style={{ color: 'var(--text-3)' }}>{p.cliente_email}</p></td>
                   <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{p.produto || '—'}</td>
                   <td className="px-4 py-3 font-bold num whitespace-nowrap" style={{ color: '#4ade80' }}>{fmtBRL(Number(p.valor))}</td>
@@ -597,7 +597,7 @@ function Contas() {
   const ativos = items.filter(c => c.status === 'ativo').length;
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
+    <div className="page">
       <SectionHead title="CRMs vendidos" subtitle="Cada compra gera um sistema próprio e zerado. Repasse o acesso ao comprador." onReload={load} />
       {loading ? <Spinner /> : items.length === 0 ? (
         <div className="text-center py-16 rounded-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
@@ -642,14 +642,14 @@ function Contas() {
                   <div className="mt-3 grid sm:grid-cols-2 gap-2">
                     <div className="rounded-xl px-3 py-2 flex items-center justify-between gap-2" style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-1)' }}>
                       <div className="min-w-0">
-                        <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)', fontFamily: MONO }}>Login</p>
+                        <p className="text-xs font-medium" style={{ color: 'var(--text-3)', fontFamily: MONO }}>Login</p>
                         <p className="text-sm truncate" style={{ color: 'var(--text-1)', fontFamily: MONO }}>{c.admin_email || '—'}</p>
                       </div>
                       {c.admin_email && <button onClick={() => copy(c.admin_email!, `mail-${c.id}`)} className="flex-shrink-0" style={{ color: '#C6FF00' }} title="Copiar">{copied === `mail-${c.id}` ? '✓' : <Copy className="w-4 h-4" />}</button>}
                     </div>
                     <div className="rounded-xl px-3 py-2 flex items-center justify-between gap-2" style={{ background: 'rgba(198,255,0,0.06)', border: '1px solid rgba(198,255,0,0.25)' }}>
                       <div className="min-w-0">
-                        <p className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1" style={{ color: '#C6FF00', fontFamily: MONO }}><KeyRound className="w-3 h-3" /> Senha temporária</p>
+                        <p className="text-xs font-medium flex items-center gap-1" style={{ color: '#C6FF00', fontFamily: MONO }}><KeyRound className="w-3 h-3" /> Senha temporária</p>
                         <p className="text-sm truncate" style={{ color: 'var(--text-1)', fontFamily: MONO }}>{c.senha_temporaria || '— (comprador já tinha conta)'}</p>
                       </div>
                       {c.senha_temporaria && <button onClick={() => copy(c.senha_temporaria!, `pw-${c.id}`)} className="flex-shrink-0" style={{ color: '#C6FF00' }} title="Copiar">{copied === `pw-${c.id}` ? '✓' : <Copy className="w-4 h-4" />}</button>}

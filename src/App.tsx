@@ -133,6 +133,7 @@ function AppInner() {
   const [simPrefill, setSimPrefill] = useState<SimPrefill | null>(null);
   const simPrefillFromSim = useRef(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
 
   if (authLoading) {
     return (
@@ -203,7 +204,9 @@ function AppInner() {
         user={adaptedUser}
         onSignOut={signOut}
         isAdmin={isAdmin}
-        onOpenProfile={() => setShowProfile(true)}
+        onOpenProfile={() => { setNavOpen(false); setShowProfile(true); }}
+        open={navOpen}
+        onClose={() => setNavOpen(false)}
       />
       {showProfile && (
         <ProfileModal
@@ -220,8 +223,8 @@ function AppInner() {
       )}
 
       <div className="flex-1 flex flex-col min-w-0">
-      <TopBar currentView={currentView} user={adaptedUser} onOpenProfile={() => setShowProfile(true)} />
-      <main className="flex-1 overflow-y-auto" style={{ background: 'var(--bg-base)' }}>
+      <TopBar currentView={currentView} user={adaptedUser} onOpenProfile={() => setShowProfile(true)} onOpenMenu={() => setNavOpen(true)} />
+      <main className="flex-1 min-w-0" style={{ background: 'var(--bg-base)' }}>
         {suspended ? <RenewOverlay status={paywallStatus} loginEmail={user.email} caktoEmail={user.conta_cakto_email ?? null} firstPayment={!!user.conta_primeiro_pagamento} /> : (<>
         {currentView === 'dashboard' && (
           <Dashboard user={adaptedUser} onNavigate={navigate} isAdmin={isAdmin} />

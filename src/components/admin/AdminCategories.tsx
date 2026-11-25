@@ -44,11 +44,11 @@ export function AdminCategories({ isMaster = false }: { isMaster?: boolean }) {
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    <div className="page page-narrow">
+      <div className="page-header">
         <div>
-          <h1 className="text-xl font-bold text-gray-100">Categorias de Tabelas</h1>
-          <p className="text-xs text-slate-500 mt-0.5">Configure os multiplicadores de pontuação</p>
+          <h1 className="page-title">Categorias de Tabelas</h1>
+          <p className="page-subtitle">Configure os multiplicadores de pontuação</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={load} className="flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl btn-ghost">
@@ -125,7 +125,7 @@ export function AdminCategories({ isMaster = false }: { isMaster?: boolean }) {
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Multiplicador</label>
             <input type="number" step="0.01" min="0.1" value={form.multiplier} onChange={e => setForm(f => ({ ...f, multiplier: e.target.value }))} className={inp} required />
-            <p className="text-xs text-gray-400 mt-1">Ex: 2 = dobra os pontos, 0.5 = metade dos pontos</p>
+            <p className="text-xs text-ink-3 mt-1">Ex: 2 = dobra os pontos, 0.5 = metade dos pontos</p>
           </div>
         </form>
       </Modal>

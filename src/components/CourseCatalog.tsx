@@ -37,11 +37,11 @@ export function CourseCatalog({ courses, enrollments, loading, onNavigate }: Cou
   const selectCls = 'input-cyber px-3 py-2.5 text-sm rounded-xl appearance-none cursor-pointer pr-8';
 
   return (
-    <div className="p-8 max-w-6xl mx-auto" style={{ color: 'var(--text-1)' }}>
+    <div className="page">
       {/* Header */}
       <div className="mb-8 animate-fade-up">
-        <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Catálogo de Treinamentos</h1>
-        <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>
+        <h1 className="page-title">Catálogo de Treinamentos</h1>
+        <p className="page-subtitle">
           {courses.length} treinamentos disponíveis
         </p>
       </div>

@@ -71,18 +71,18 @@ export function SimuladorFuturo({ produto }: { produto: ProdutoFuturo }) {
 
         {op === 'compra' ? (
           <>
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-3)' }}>
+            <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>
               Simular saldo para compra
             </p>
             <div className="overflow-x-auto mb-3">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>
+                  <tr className="text-xs" style={{ color: 'var(--text-3)' }}>
                     <th className="text-left py-1 pr-2"></th>
                     <th className="text-left py-1 pr-2">Parcela (R$)</th>
                     <th className="text-left py-1 pr-2">Taxa (% a.m.)</th>
                     <th className="text-left py-1 pr-2">Prazo restante</th>
-                    <th className="text-right py-1 pr-2">Saldo simulado</th>
+                    <th className="text-right py-1 pr-2 th-num">Saldo simulado</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -156,7 +156,7 @@ export function SimuladorFuturo({ produto }: { produto: ProdutoFuturo }) {
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)', background: 'rgba(0,0,0,0.12)' }}>
                   {['', 'Taxa', 'Prazo', 'Coef.', 'Parcela', 'Seguro', 'Simulado', ...(op === 'compra' ? ['Líquido cliente'] : [])].map(h => (
-                    <th key={h} className="text-left px-3 py-3 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
+                    <th key={h} className="text-left px-3 py-3 text-xs font-medium whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>

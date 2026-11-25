@@ -265,8 +265,8 @@ export function Simulator({ onSendProposal, isAdmin = false, corretor }: Simulat
     return (
       <div className="p-6 max-w-[1400px] mx-auto">
         <div className="mb-6">
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Simulador Financeiro</h1>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
+          <h1 className="page-title">Simulador Financeiro</h1>
+          <p className="page-subtitle">
             Mesmo cálculo da planilha SIMULADOR FEDERAIS (SIAPE cartões e empréstimo)
           </p>
         </div>
@@ -280,8 +280,8 @@ export function Simulator({ onSendProposal, isAdmin = false, corretor }: Simulat
     <div className="p-6 max-w-[1400px] mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Simulador Financeiro</h1>
-        <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
+        <h1 className="page-title">Simulador Financeiro</h1>
+        <p className="page-subtitle">
           Simule operações em segundos e converta em proposta com um clique
         </p>
       </div>
@@ -292,7 +292,7 @@ export function Simulator({ onSendProposal, isAdmin = false, corretor }: Simulat
         {modeToggle}
 
         {/* Required fields label */}
-        <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-3)' }}>
+        <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>
           Campos obrigatórios
         </p>
 
@@ -377,7 +377,7 @@ export function Simulator({ onSendProposal, isAdmin = false, corretor }: Simulat
         {/* Campos do cliente — apenas no modo compra-divida */}
         {mode === 'compra-divida' && (
           <div className="mb-4 p-4 rounded-xl" style={{ background: 'rgba(139,92,246,0.07)', border: '1px solid rgba(139,92,246,0.25)' }}>
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: '#a78bfa' }}>
+            <p className="text-xs font-medium mb-3" style={{ color: '#a78bfa' }}>
               Dados para Gerar Proposta
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -587,7 +587,7 @@ export function Simulator({ onSendProposal, isAdmin = false, corretor }: Simulat
                       const sortable = !!SIM_SORT[h]; const active = sortCol === h;
                       return (
                         <th key={h} onClick={sortable ? () => handleSort(h) : undefined}
-                          className="text-left px-3 py-3 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
+                          className="text-left px-3 py-3 text-xs font-medium whitespace-nowrap"
                           style={{ color: active ? '#C6FF00' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
                           {h}{sortable && <span className="ml-1 opacity-60">{active ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
                         </th>
