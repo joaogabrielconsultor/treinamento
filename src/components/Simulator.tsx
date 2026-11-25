@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Calculator, ChevronDown, ArrowRight, TrendingUp, Zap, SlidersHorizontal, RefreshCw } from 'lucide-react';
+import { Calculator, ChevronDown, ArrowRight, TrendingUp, Zap, SlidersHorizontal, RefreshCw, CreditCard, Landmark } from 'lucide-react';
+import { SimuladorFuturo } from './SimuladorFuturo';
 import { FinancialTable, Bank, Convenio } from '../types';
 import type { AuthUser } from '../hooks/useAuth';
 
@@ -46,7 +47,7 @@ interface SimulatorProps {
 }
 
 export function Simulator({ onSendProposal, isAdmin = false, corretor }: SimulatorProps) {
-  const [mode, setMode] = useState<'parcela' | 'credito' | 'compra-divida'>('parcela');
+  const [mode, setMode] = useState<'parcela' | 'credito' | 'compra-divida' | 'cartao-futuro' | 'emprestimo-futuro'>('parcela');
   const [inputVal, setInputVal] = useState('');
   const [dividaVal, setDividaVal] = useState('');
 
@@ -231,6 +232,50 @@ export function Simulator({ onSendProposal, isAdmin = false, corretor }: Simulat
 
   const optionalActiveCount = [filterConvenioDesc, filterBanco, filterParceiro, filterUsuarioBanco].filter(Boolean).length;
 
+  const modeToggle = (
+    <div className="flex flex-wrap items-center gap-1 p-1 rounded-xl mb-5 w-fit max-w-full" style={{ background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.06)' }}>
+      {([
+        { key: 'parcela',           label: 'Por Parcela',             icon: <Zap className="w-3.5 h-3.5" /> },
+        { key: 'credito',           label: 'Por Crédito',             icon: <TrendingUp className="w-3.5 h-3.5" /> },
+        { key: 'compra-divida',     label: 'Compra de Dívida',        icon: <RefreshCw className="w-3.5 h-3.5" /> },
+        { key: 'cartao-futuro',     label: 'SIAPE Cartão Futuro',     icon: <CreditCard className="w-3.5 h-3.5" /> },
+        { key: 'emprestimo-futuro', label: 'SIAPE Empréstimo Futuro', icon: <Landmark className="w-3.5 h-3.5" /> },
+      ] as const).map(m => (
+        <button
+          key={m.key}
+          onClick={() => { setMode(m.key); setDividaVal(''); resetResults(); }}
+          className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-all"
+          style={mode === m.key
+            ? { background: m.key === 'compra-divida'
+                ? 'linear-gradient(135deg,#8b5cf6,#6366f1)'
+                : 'linear-gradient(135deg,#C6FF00,#A9E000)',
+                color: '#fff',
+                boxShadow: m.key === 'compra-divida'
+                  ? '0 2px 10px rgba(139,92,246,0.35)'
+                  : '0 2px 10px rgba(198,255,0,0.35)' }
+            : { color: 'var(--text-3)' }}
+        >
+          {m.icon} {m.label}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (mode === 'cartao-futuro' || mode === 'emprestimo-futuro') {
+    return (
+      <div className="p-6 max-w-[1400px] mx-auto">
+        <div className="mb-6">
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Simulador Financeiro</h1>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
+            Mesmo cálculo da planilha SIMULADOR FEDERAIS (SIAPE cartões e empréstimo)
+          </p>
+        </div>
+        {modeToggle}
+        <SimuladorFuturo key={mode} produto={mode === 'cartao-futuro' ? 'cartao' : 'emprestimo'} />
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 max-w-[1400px] mx-auto">
       {/* Header */}
@@ -244,31 +289,7 @@ export function Simulator({ onSendProposal, isAdmin = false, corretor }: Simulat
       {/* Input card */}
       <div className="rounded-2xl p-5 mb-5" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
 
-        {/* Mode toggle */}
-        <div className="inline-flex items-center gap-1 p-1 rounded-xl mb-5" style={{ background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.06)' }}>
-          {([
-            { key: 'parcela',       label: 'Por Parcela',      icon: <Zap className="w-3.5 h-3.5" /> },
-            { key: 'credito',       label: 'Por Crédito',      icon: <TrendingUp className="w-3.5 h-3.5" /> },
-            { key: 'compra-divida', label: 'Compra de Dívida', icon: <RefreshCw className="w-3.5 h-3.5" /> },
-          ] as const).map(m => (
-            <button
-              key={m.key}
-              onClick={() => { setMode(m.key); setDividaVal(''); resetResults(); }}
-              className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-all"
-              style={mode === m.key
-                ? { background: m.key === 'compra-divida'
-                    ? 'linear-gradient(135deg,#8b5cf6,#6366f1)'
-                    : 'linear-gradient(135deg,#C6FF00,#A9E000)',
-                    color: '#fff',
-                    boxShadow: m.key === 'compra-divida'
-                      ? '0 2px 10px rgba(139,92,246,0.35)'
-                      : '0 2px 10px rgba(198,255,0,0.35)' }
-                : { color: 'var(--text-3)' }}
-            >
-              {m.icon} {m.label}
-            </button>
-          ))}
-        </div>
+        {modeToggle}
 
         {/* Required fields label */}
         <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-3)' }}>
