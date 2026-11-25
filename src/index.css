@@ -75,6 +75,13 @@ html.dark {
 
   --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'Geist Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+
+  /* Movimento: uma curva de saída suave para tudo, três durações */
+  --ease-out:   cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-1: 120ms;  /* hover, cor */
+  --dur-2: 200ms;  /* pressionar, abrir menus */
+  --dur-3: 320ms;  /* entrada de tela, gaveta, modal */
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -199,10 +206,11 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
     border-bottom: 1px solid var(--border-1);
   }
   .card-interactive {
-    transition: border-color .15s ease, background-color .15s ease;
+    transition: border-color var(--dur-1) var(--ease-out), background-color var(--dur-1) var(--ease-out);
     cursor: pointer;
   }
   .card-interactive:hover { border-color: var(--border-2); background: #181B1F; }
+  .card-interactive:active { transform: scale(0.995); }
 
   /* ── Botões ─────────────────────────────────────────────── */
   .btn {
@@ -217,7 +225,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
     font-weight: 500;
     white-space: nowrap;
     border: 1px solid transparent;
-    transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+    transition: background-color var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out);
     cursor: pointer;
   }
   .btn:disabled { opacity: .45; cursor: not-allowed; }
@@ -337,7 +345,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
     font-size: 13px;
     font-weight: 500;
     color: var(--text-3);
-    transition: background-color .15s ease, color .15s ease;
+    transition: background-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
   }
   .seg > button:hover { color: var(--text-1); }
   .seg > button[aria-selected="true"], .seg > button.is-active {
@@ -362,7 +370,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
     font-size: 13.5px;
     font-weight: 450;
     color: var(--text-3);
-    transition: background-color .12s ease, color .12s ease;
+    transition: background-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
   }
   .nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text-1); }
   .nav-item .nav-icon { width: 16px; height: 16px; flex-shrink: 0; }
@@ -408,7 +416,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
   background: var(--bg-card);
   border: 1px solid var(--card-border);
   box-shadow: var(--shadow-card);
-  transition: border-color .15s ease, background-color .15s ease;
+  transition: border-color var(--dur-1) var(--ease-out), background-color var(--dur-1) var(--ease-out);
 }
 .glass-card:hover { border-color: var(--border-2); }
 
@@ -424,7 +432,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
   letter-spacing: 0;
   text-transform: none;
   border: 1px solid transparent;
-  transition: background-color .15s ease, box-shadow .15s ease;
+  transition: background-color var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out);
 }
 .btn-cyber:hover:not(:disabled) { background: var(--accent-hover); }
 .btn-cyber:active:not(:disabled) { background: var(--accent3); }
@@ -441,7 +449,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
   background: var(--bg-surface);
   border: 1px solid var(--border-2);
   color: var(--text-2);
-  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+  transition: background-color var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
 }
 .btn-ghost:hover:not(:disabled) {
   background: #22272C;
@@ -454,7 +462,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
   background: var(--neg-soft);
   border: 1px solid rgba(248,113,113,0.28);
   color: var(--neg);
-  transition: background-color .15s ease, border-color .15s ease;
+  transition: background-color var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out);
 }
 .btn-danger:hover:not(:disabled) {
   background: rgba(248,113,113,0.18);
@@ -467,7 +475,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
   border: 1px solid var(--border-2);
   color: var(--text-1);
   border-radius: var(--r-md);
-  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+  transition: border-color var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out), background-color var(--dur-1) var(--ease-out);
 }
 .input-cyber:hover:not(:disabled):not(:focus) { border-color: #3A4047; }
 .input-cyber:focus {
@@ -570,7 +578,7 @@ input[type="month"].input-cyber::-webkit-calendar-picker-indicator { filter: inv
 
 /* Linhas de tabela legadas */
 .table-row-cyber {
-  transition: background-color .12s ease;
+  transition: background-color var(--dur-1) var(--ease-out);
   border-bottom: 1px solid var(--border-1);
 }
 .table-row-cyber:hover { background: var(--surface-subtle); }
@@ -582,7 +590,7 @@ input[type="month"].input-cyber::-webkit-calendar-picker-indicator { filter: inv
   box-shadow: var(--shadow-card);
   position: relative;
   overflow: hidden;
-  transition: border-color .15s ease;
+  transition: border-color var(--dur-1) var(--ease-out);
 }
 .stat-card:hover { border-color: var(--border-2); }
 
@@ -661,7 +669,7 @@ input[type="month"].input-cyber::-webkit-calendar-picker-indicator { filter: inv
    LINHAS INTERATIVAS — produção, ranking, funil, gráfico
 ═══════════════════════════════════════════════════════════════ */
 .agg-row {
-  transition: background-color .12s ease;
+  transition: background-color var(--dur-1) var(--ease-out);
   border-radius: 6px;
   margin: 0 -8px;
   padding: 0 8px;
@@ -670,19 +678,51 @@ input[type="month"].input-cyber::-webkit-calendar-picker-indicator { filter: inv
 .agg-row:hover { background: var(--surface-subtle); }
 
 .rank-row {
-  transition: background-color .12s ease, border-color .12s ease;
+  transition: background-color var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out);
   border-left: 2px solid transparent;
   border-radius: 0 6px 6px 0;
 }
 .rank-row:hover { background: var(--surface-subtle); border-left-color: var(--accent-line); }
 
 .funnel-row {
-  transition: background-color .12s ease;
+  transition: background-color var(--dur-1) var(--ease-out);
   border-radius: 6px;
   margin: 0 -6px;
   padding: 4px 6px;
 }
 .funnel-row:hover { background: var(--surface-subtle); }
 
-.chart-col { transition: filter .12s ease; cursor: default; }
+.chart-col { transition: filter var(--dur-1) var(--ease-out); cursor: default; }
 .chart-col:hover { filter: brightness(1.2); }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   MOVIMENTO
+   Regras: só opacity/transform animam (GPU, sem tremer layout);
+   entrada de tela única por página, sem cascata de elementos.
+═══════════════════════════════════════════════════════════════ */
+@keyframes view-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+/* backwards: depois de terminar não sobra transform (senão modais fixed se desalinham) */
+.view-enter { animation: view-enter var(--dur-3) var(--ease-out) backwards; }
+
+/* Sem cascata: blocos que chegam depois (dados, modais) só surgem suavemente */
+.animate-fade-up { animation-delay: 0ms !important; }
+
+/* Retorno tátil ao clicar */
+.btn, .btn-cyber, .btn-ghost, .nav-item {
+  transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+  transition-duration: var(--dur-1), var(--dur-1), var(--dur-1), var(--dur-1), var(--dur-2), var(--dur-1);
+  transition-timing-function: var(--ease-out);
+}
+.btn:active:not(:disabled), .btn-cyber:active:not(:disabled), .btn-ghost:active:not(:disabled) { transform: scale(0.97); }
+.nav-item:active { transform: scale(0.985); }
+
+/* Gaveta do menu no celular */
+.sidebar { transition-timing-function: var(--ease-out) !important; transition-duration: var(--dur-3) !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .view-enter { animation: none; }
+}

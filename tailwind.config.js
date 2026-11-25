@@ -6,7 +6,7 @@ export default {
     extend: {
       keyframes: {
         'modal-in': {
-          '0%':   { opacity: '0', transform: 'translateY(14px) scale(0.96)' },
+          '0%':   { opacity: '0', transform: 'translateY(8px) scale(0.98)' },
           '100%': { opacity: '1', transform: 'translateY(0)   scale(1)'    },
         },
         'overlay-in': {
@@ -30,7 +30,7 @@ export default {
           '50%':      { transform: 'translateY(-5px)' },
         },
         'fade-up': {
-          '0%':   { opacity: '0', transform: 'translateY(4px)' },
+          '0%':   { opacity: '0', transform: 'translateY(3px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         'border-spin': {
@@ -44,14 +44,20 @@ export default {
           '100%': { transform: 'translateX(100%)', opacity: '0' },
         },
       },
+      // transition-all só anima propriedades baratas (nada de padding/altura tremendo)
+      transitionProperty: {
+        all: 'color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, width',
+      },
+      transitionTimingFunction: { DEFAULT: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+      transitionDuration: { DEFAULT: '160ms' },
       animation: {
-        'modal-in':   'modal-in   0.24s cubic-bezier(0.16,1,0.3,1) both',
-        'overlay-in': 'overlay-in 0.18s ease-out both',
+        'modal-in':   'modal-in   0.28s cubic-bezier(0.22,1,0.36,1) both',
+        'overlay-in': 'overlay-in 0.2s cubic-bezier(0.22,1,0.36,1) both',
         'shimmer':    'shimmer 2.5s linear infinite',
         'pulse-glow': 'pulse-glow 2.2s ease-in-out infinite',
         'radar-ping': 'radar-ping 1.6s cubic-bezier(0,0,0.2,1) infinite',
         'float':      'none',
-        'fade-up':    'fade-up 0.4s cubic-bezier(0.16,1,0.3,1) both',
+        'fade-up':    'fade-up 0.26s cubic-bezier(0.22,1,0.36,1) backwards',
         'cyber-line': 'none',
       },
       colors: {

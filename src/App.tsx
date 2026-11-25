@@ -86,6 +86,16 @@ function AppInner() {
   // View de destino ao carregar/logar (preserva a intenção de /admin)
   const landingView = useRef<ViewType>(computeInitialView());
   const [currentView, setCurrentView] = useState<ViewType>(landingView.current);
+  // Troca de tela: volta ao topo e reinicia a animação de entrada (sem remontar os componentes)
+  const viewRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+    const el = viewRef.current;
+    if (!el) return;
+    el.classList.remove('view-enter');
+    void el.offsetWidth;
+    el.classList.add('view-enter');
+  }, [currentView]);
 
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(() => {
     const { view, id } = parseHash();
@@ -225,6 +235,7 @@ function AppInner() {
       <div className="flex-1 flex flex-col min-w-0">
       <TopBar currentView={currentView} user={adaptedUser} onOpenProfile={() => setShowProfile(true)} onOpenMenu={() => setNavOpen(true)} />
       <main className="flex-1 min-w-0" style={{ background: 'var(--bg-base)' }}>
+        <div ref={viewRef} className="view-enter">
         {suspended ? <RenewOverlay status={paywallStatus} loginEmail={user.email} caktoEmail={user.conta_cakto_email ?? null} firstPayment={!!user.conta_primeiro_pagamento} /> : (<>
         {currentView === 'dashboard' && (
           <Dashboard user={adaptedUser} onNavigate={navigate} isAdmin={isAdmin} />
@@ -304,6 +315,7 @@ function AppInner() {
         {currentView === 'admin-importacao'     && isAdmin && <AdminImportacao />}
         {currentView === 'consulta-margem'     && <ConsultaMargem isAdmin={isAdmin} />}
         </>)}
+        </div>
       </main>
       </div>
       <SupportButton />
