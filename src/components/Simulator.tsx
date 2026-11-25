@@ -267,11 +267,18 @@ export function Simulator({ onSendProposal, isAdmin = false, corretor }: Simulat
         <div className="mb-6">
           <h1 className="page-title">Simulador Financeiro</h1>
           <p className="page-subtitle">
-            Mesmo cálculo da planilha SIMULADOR FEDERAIS (SIAPE cartões e empréstimo)
+            Compra com várias dívidas, usando as tabelas cadastradas
           </p>
         </div>
         {modeToggle}
-        <SimuladorFuturo key={mode} produto={mode === 'cartao-futuro' ? 'cartao' : 'emprestimo'} />
+        <SimuladorFuturo
+          key={mode}
+          produto={mode === 'cartao-futuro' ? 'cartao' : 'emprestimo'}
+          tables={allTables}
+          loading={dataLoading}
+          isAdmin={isAdmin}
+          onSendProposal={data => onSendProposal(data)}
+        />
       </div>
     );
   }
