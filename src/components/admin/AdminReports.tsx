@@ -201,7 +201,7 @@ export function AdminReports() {
       {/* Table */}
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="data-table text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                 {['Data', 'Proposta', 'Corretor', 'Cliente', 'Banco', 'Tabela', 'Produto', 'Convênio', 'Valor', 'Status', 'Pts'].map(h => {

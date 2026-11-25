@@ -466,7 +466,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
             </div>
           ) : (
             <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
-              <table className="w-full text-sm">
+              <table className="data-table text-sm">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                     {['Corretor','Chave PIX','Valor','Status','Data','Ações'].map(h => {
@@ -688,7 +688,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                   <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
                     <h2 className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Saldo por Loja</h2>
                   </div>
-                  <table className="w-full text-sm">
+                  <table className="data-table text-sm">
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                         {['Loja', 'Emp. Recebido', 'Despesas', 'Saldo'].map(h => (
@@ -728,7 +728,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                 </div>
               ) : (
                 <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
-                  <table className="w-full text-sm">
+                  <table className="data-table text-sm">
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                         {['Data', 'Loja', 'Pago de', 'Descrição', 'Valor', 'Lançado por', ...(isMaster ? [''] : [])].map(h => {
@@ -825,7 +825,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
           <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
             <h2 className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Resumo por Corretor</h2>
           </div>
-          <table className="w-full text-sm">
+          <table className="data-table text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                 {([
@@ -921,7 +921,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
           <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
             <h2 className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Resumo por Usuário Banco</h2>
           </div>
-          <table className="w-full text-sm">
+          <table className="data-table text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                 {([
@@ -1040,7 +1040,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
         <div className="rounded-2xl overflow-hidden animate-fade-up"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)', animationDelay: '140ms' }}>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="data-table text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                   <th className="px-4 py-3.5 w-10">

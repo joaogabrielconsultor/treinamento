@@ -569,7 +569,7 @@ export function Simulator({ onSendProposal, isAdmin = false, corretor }: Simulat
 
           <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="data-table ">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--card-border)', background: 'rgba(0,0,0,0.12)' }}>
                     {[

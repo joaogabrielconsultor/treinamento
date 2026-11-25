@@ -159,7 +159,7 @@ export function AdminUsuariosBanco({ isMaster = false }: { isMaster?: boolean })
               <p className="text-sm" style={{ color: 'var(--text-3)' }}>Nenhum usuário banco cadastrado</p>
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <table className="data-table text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                   {['Nome / Descrição', 'Propostas', 'Cadastro', ''].map(h => (

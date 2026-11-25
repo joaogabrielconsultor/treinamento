@@ -135,7 +135,7 @@ function ExtratoView({ loja, onBack, isMaster = false }: { loja: LojaBalance; on
             <div className="text-center py-16 text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma movimentação encontrada</div>
           ) : (
             <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="data-table text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                   <th className="px-3 py-3 w-8">
@@ -374,7 +374,7 @@ export function AdminContaEmpresa({ isMaster = false }: { isMaster?: boolean }) 
             <div className="rounded-2xl overflow-hidden animate-fade-up"
               style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)', animationDelay: '80ms' }}>
               <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="data-table text-sm">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                     {['Loja', 'Corretores', 'Recebido', 'Saídas', 'Saldo', 'Pend. Corretores', ''].map(h => {

@@ -42,22 +42,13 @@ export function Modal({ open, onClose, title, subtitle, size = 'md', children, f
       <div
         className={`relative flex flex-col w-full ${SIZES[size]} max-h-[90vh] rounded-2xl animate-modal-in modal-panel`}
       >
-        {/* Accent top line */}
-        <div
-          style={{
-            position: 'absolute', top: 0, left: 0, right: 0, height: '1px',
-            background: 'linear-gradient(90deg, transparent, rgba(198,255,0,0.4), transparent)',
-            borderRadius: '16px 16px 0 0',
-          }}
-        />
-
         {/* Header */}
         <div
           className="flex items-center justify-between px-6 py-4 flex-shrink-0"
           style={{ borderBottom: '1px solid var(--card-border)' }}
         >
           <div className="min-w-0 pr-3">
-            <h2 className="text-base font-bold leading-tight" style={{ color: 'var(--text-1)' }}>{title}</h2>
+            <h2 className="text-[15px] font-semibold leading-tight tracking-tight" style={{ color: 'var(--text-1)' }}>{title}</h2>
             {subtitle && (
               <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-3)' }}>{subtitle}</p>
             )}
@@ -65,16 +56,9 @@ export function Modal({ open, onClose, title, subtitle, size = 'md', children, f
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl transition-all flex-shrink-0"
-            style={{ color: 'var(--text-3)', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--card-border)' }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)';
-              (e.currentTarget as HTMLElement).style.color = '#94A3B8';
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
-              (e.currentTarget as HTMLElement).style.color = '#475569';
-            }}
+            className="btn btn-icon flex-shrink-0 -mr-2 hover:bg-white/5"
+            style={{ color: 'var(--text-3)' }}
+            aria-label="Fechar"
           >
             <X className="w-4 h-4" />
           </button>

@@ -530,7 +530,7 @@ export function ContaCorrente({ adminMode, isAdmin }: { adminMode?: { userId: st
           <h2 className="text-sm font-bold mb-3" style={{ color: 'var(--text-1)' }}>Saques Solicitados</h2>
           <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="data-table text-sm">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                     {['Data', 'Valor', 'Status', 'Observação'].map(h => {
@@ -607,7 +607,7 @@ export function ContaCorrente({ adminMode, isAdmin }: { adminMode?: { userId: st
         ) : (
           <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="data-table text-sm">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                     {['Proposta', 'Cliente', 'CPF', 'Banco / Tabela', 'Valor', 'Comissão', 'Status'].map(h => {

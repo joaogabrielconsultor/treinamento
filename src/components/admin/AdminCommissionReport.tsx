@@ -170,7 +170,7 @@ export function AdminCommissionReport() {
                 <h2 className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Pendente por mês</h2>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="data-table text-sm">
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                       <th className="text-left px-4 py-3.5 text-xs font-medium sticky left-0" style={{ color: 'var(--text-3)', background: 'var(--card-bg)' }}>
@@ -268,7 +268,7 @@ export function AdminCommissionReport() {
                   </button>
                   {isOpen && (
                     <div className="overflow-x-auto px-4 pb-4">
-                      <table className="w-full text-sm">
+                      <table className="data-table text-sm">
                         <thead>
                           <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                             {['Data', 'Proposta', 'Cliente', 'Banco', 'Tabela', 'Valor', 'Com. Corretor', 'Com. Empresa', 'Status'].map(h => (

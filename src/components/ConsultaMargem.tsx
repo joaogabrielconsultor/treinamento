@@ -52,7 +52,7 @@ function TabelaMargem({ titulo, itens, cor }: { titulo: string; itens: MargemIte
       <div className="px-4 py-2.5" style={{ background: `${cor.accent}12`, borderBottom: `1px solid ${cor.border}` }}>
         <span className="text-xs font-medium" style={{ color: cor.accent }}>{titulo}</span>
       </div>
-      <table className="w-full">
+      <table className="data-table ">
         <thead>
           <tr style={{ borderBottom: `1px solid ${cor.border}` }}>
             <th className="px-4 py-2 text-left text-xs font-semibold" style={{ color: 'var(--text-3)' }}>Produto</th>

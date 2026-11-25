@@ -75,7 +75,7 @@ export function SimuladorFuturo({ produto }: { produto: ProdutoFuturo }) {
               Simular saldo para compra
             </p>
             <div className="overflow-x-auto mb-3">
-              <table className="w-full text-sm">
+              <table className="data-table text-sm">
                 <thead>
                   <tr className="text-xs" style={{ color: 'var(--text-3)' }}>
                     <th className="text-left py-1 pr-2"></th>
@@ -152,7 +152,7 @@ export function SimuladorFuturo({ produto }: { produto: ProdutoFuturo }) {
       ) : (
         <div className="rounded-2xl overflow-hidden" style={card}>
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="data-table ">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)', background: 'rgba(0,0,0,0.12)' }}>
                   {['', 'Taxa', 'Prazo', 'Coef.', 'Parcela', 'Seguro', 'Simulado', ...(op === 'compra' ? ['Líquido cliente'] : [])].map(h => (

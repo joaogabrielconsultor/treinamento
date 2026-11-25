@@ -671,7 +671,7 @@ export function AdminCommissionRanges({ isMaster = false }: { isMaster?: boolean
             <div>
               <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>{importRows.length} linha(s) detectada(s)</p>
               <div className="max-h-52 overflow-y-auto rounded-xl" style={{ border: '1px solid var(--card-border)' }}>
-                <table className="w-full text-[13px]">
+                <table className="data-table text-[13px]">
                   <thead>
                     <tr style={{ background: 'var(--surface-subtle)', borderBottom: '1px solid var(--card-border)' }}>
                       {['Tabela', 'Tipo Proposta', 'Prazo', 'Comissão Emp./Cor.', 'Status'].map(h => (

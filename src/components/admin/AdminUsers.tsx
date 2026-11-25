@@ -446,7 +446,7 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
         }}
       >
         <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="data-table ">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
               {['Usuário', 'Loja', 'Função', 'Matrículas', 'Cadastro', ''].map(h => {

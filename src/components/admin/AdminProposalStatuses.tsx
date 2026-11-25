@@ -146,7 +146,7 @@ export function AdminProposalStatuses({ isMaster = false }: { isMaster?: boolean
               <p className="text-sm" style={{ color: 'var(--text-3)' }}>Nenhum status cadastrado</p>
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <table className="data-table text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                   {['Status', 'Tipo', ''].map(h => (

@@ -316,7 +316,7 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
         <div className="rounded-2xl overflow-hidden animate-fade-up"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)', animationDelay: '120ms' }}>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
+            <table className="data-table text-sm" style={{ tableLayout: 'fixed' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                   {['Proposta', 'Corretor', 'Nome do Cliente', 'CPF', 'Convênio', 'Banco', 'Tabela', 'Valor', 'Status', 'Pontos', 'Ações'].map(h => {
@@ -469,7 +469,7 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
                 {importPreview.length} linha(s) detectada(s) — prévia das primeiras 10:
               </p>
               <div className="rounded-xl overflow-hidden overflow-x-auto max-h-56" style={{ border: '1px solid var(--card-border)' }}>
-                <table className="w-full text-[13px]" style={{ minWidth: '700px' }}>
+                <table className="data-table text-[13px]" style={{ minWidth: '700px' }}>
                   <thead>
                     <tr style={{ background: 'var(--card-border)' }}>
                       {['Proposta','Cliente','CPF','Corretor','Banco','Convênio','Tabela','Valor','Status'].map(h => (

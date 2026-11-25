@@ -216,7 +216,7 @@ export function AdminImportacao() {
           {/* Preview table */}
           <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
             <div className="overflow-x-auto">
-              <table className="w-full text-[13px]">
+              <table className="data-table text-[13px]">
                 <thead>
                   <tr style={{ background: 'var(--card-2)', color: 'var(--text-3)' }}>
                     <th className="px-3 py-2 text-left font-semibold">Proposta</th>

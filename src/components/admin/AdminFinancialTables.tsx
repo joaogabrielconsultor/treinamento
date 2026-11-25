@@ -246,7 +246,7 @@ export function AdminFinancialTables() {
         <div className="flex justify-center py-16"><div className="spinner-cyber" /></div>
       ) : (
         <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
-          <table className="w-full text-sm">
+          <table className="data-table text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                 {['Nome da Tabela', 'Convênio', 'Banco', 'Categoria', 'Coeficiente', 'Comissão Emp.', 'Comissão Cor.', 'Status', 'Ações'].map(h => (
@@ -422,7 +422,7 @@ export function AdminFinancialTables() {
             <div>
               <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>{importRows.length} linha(s) detectada(s)</p>
               <div className="max-h-52 overflow-y-auto rounded-xl" style={{ border: '1px solid var(--card-border)' }}>
-                <table className="w-full text-[13px]">
+                <table className="data-table text-[13px]">
                   <thead>
                     <tr style={{ background: 'var(--surface-subtle)', borderBottom: '1px solid var(--card-border)' }}>
                       {['Nome', 'Banco', 'Convênio', 'Categoria', 'Com. Emp.', 'Status'].map(h => (

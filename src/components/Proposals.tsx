@@ -1358,7 +1358,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                 <div>
                   <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-3)' }}>{importPreview.length} linha(s) — prévia das primeiras 10:</p>
                   <div className="rounded-xl overflow-hidden overflow-x-auto max-h-56" style={{ border: '1px solid var(--card-border)' }}>
-                    <table className="w-full text-[13px]" style={{ minWidth: '600px' }}>
+                    <table className="data-table text-[13px]" style={{ minWidth: '600px' }}>
                       <thead><tr style={{ background: 'var(--card-border)' }}>
                         {['Proposta','Cliente','Corretor','Banco','Valor','Status'].map(h => (
                           <th key={h} className="px-3 py-2 text-left font-semibold" style={{ color: 'var(--text-3)' }}>{h}</th>
