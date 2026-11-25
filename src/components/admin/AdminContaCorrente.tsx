@@ -466,7 +466,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
             </div>
           ) : (
             <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
-              <table className="data-table text-sm">
+              <table data-num="3" className="data-table text-sm">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                     {['Corretor','Chave PIX','Valor','Status','Data','Ações'].map(h => {
@@ -688,7 +688,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                   <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
                     <h2 className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Saldo por Loja</h2>
                   </div>
-                  <table className="data-table text-sm">
+                  <table data-num="2 3 4" className="data-table text-sm">
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                         {['Loja', 'Emp. Recebido', 'Despesas', 'Saldo'].map(h => (
@@ -796,22 +796,22 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
       {/* Cards globais */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {[
-          { label: 'Corr. A Receber',    value: fmtBRL(totalPending),            sub: `disponível p/ saque`,                                          icon: Clock,        color: '#f59e0b', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.2)'  },
-          { label: 'Corr. Pago (Saque)', value: fmtBRL(totalPaid),               sub: `${filteredBrokers.reduce((a, b) => a + b.paid_count, 0)} saque(s)`,     icon: CheckCircle,  color: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.2)'  },
-          { label: 'Empresa Pendente',   value: fmtBRL(totalEmpresaPending),      sub: 'comissão empresa a receber',                                    icon: Clock,        color: '#fb923c', bg: 'rgba(251,146,60,0.08)', border: 'rgba(251,146,60,0.2)'  },
-          { label: 'Empresa Recebida',   value: fmtBRL(totalEmpresaPaid),         sub: 'comissão empresa recebida',                                     icon: DollarSign,   color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.2)' },
-          { label: 'Corretores Pend.',   value: String(brokersWithPending),       sub: 'aguardando pagamento',                                          icon: Users,        color: '#60a5fa', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.2)'  },
-          { label: 'Total Geral',        value: fmtBRL(totalPending + totalPaid + totalEmpresaPending + totalEmpresaPaid), sub: 'corretor + empresa',   icon: Wallet,       color: '#C6FF00', bg: 'rgba(198,255,0,0.08)', border: 'rgba(198,255,0,0.2)'  },
-        ].map((c, i) => (
-          <div key={c.label} className="rounded-2xl p-4 animate-fade-up" style={{ background: c.bg, border: `1px solid ${c.border}`, boxShadow: 'var(--shadow-card)', animationDelay: `${i * 50}ms` }}>
+          { label: 'Corr. A Receber',    value: fmtBRL(totalPending),            sub: `disponível p/ saque`,                                          icon: Clock,        color: 'var(--warn)', bg: 'var(--bg-surface)', border: 'var(--card-border)'  },
+          { label: 'Corr. Pago (Saque)', value: fmtBRL(totalPaid),               sub: `${filteredBrokers.reduce((a, b) => a + b.paid_count, 0)} saque(s)`,     icon: CheckCircle,  color: 'var(--pos)', bg: 'var(--bg-surface)', border: 'var(--card-border)'  },
+          { label: 'Empresa Pendente',   value: fmtBRL(totalEmpresaPending),      sub: 'comissão empresa a receber',                                    icon: Clock,        color: 'var(--warn)', bg: 'var(--bg-surface)', border: 'var(--card-border)'  },
+          { label: 'Empresa Recebida',   value: fmtBRL(totalEmpresaPaid),         sub: 'comissão empresa recebida',                                     icon: DollarSign,   color: 'var(--text-1)', bg: 'var(--bg-surface)', border: 'var(--card-border)' },
+          { label: 'Corretores Pend.',   value: String(brokersWithPending),       sub: 'aguardando pagamento',                                          icon: Users,        color: 'var(--text-1)', bg: 'var(--bg-surface)', border: 'var(--card-border)'  },
+          { label: 'Total Geral',        value: fmtBRL(totalPending + totalPaid + totalEmpresaPending + totalEmpresaPaid), sub: 'corretor + empresa',   icon: Wallet,       color: 'var(--accent)', bg: 'var(--bg-surface)', border: 'var(--card-border)'  },
+        ].map((c) => (
+          <div key={c.label} className="card card-pad">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>{c.label}</p>
-                <p className="text-xl font-black num" style={{ color: c.color }}>{c.value}</p>
+                <p className="text-xl font-semibold num" style={{ color: c.color }}>{c.value}</p>
                 <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{c.sub}</p>
               </div>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: c.bg }}>
-                <c.icon className="w-4 h-4" style={{ color: c.color }} />
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-1)' }}>
+                <c.icon className="w-4 h-4" style={{ color: 'var(--text-3)' }} />
               </div>
             </div>
           </div>
@@ -1040,7 +1040,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
         <div className="rounded-2xl overflow-hidden animate-fade-up"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)', animationDelay: '140ms' }}>
           <div className="overflow-x-auto">
-            <table className="data-table text-sm">
+            <table data-num="7 8 9" className="data-table text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                   <th className="px-4 py-3.5 w-10">

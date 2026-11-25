@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   LayoutGrid, Users, Headphones, CreditCard, LogOut, ArrowLeft, ShieldCheck,
-  Mail, Lock, Eye, EyeOff, ArrowRight, Building2, DollarSign, AlertTriangle,
+  Mail, Lock, Eye, EyeOff, ArrowRight, Building2, DollarSign,
   MessageCircle, ExternalLink, RefreshCw, Boxes, KeyRound, Power, Copy, Send,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -230,28 +230,27 @@ function Overview({ setSection }: { setSection: (s: Section) => void }) {
   const ativos = items.filter(c => c.status === 'ativo').length;
   const inadimplentes = items.filter(c => c.status === 'inadimplente');
   const mrr = items.filter(c => c.status === 'ativo').reduce((s, c) => s + Number(c.mensalidade || 0), 0);
+  // Receita é o número que importa: vai na célula principal da régua
   const stats = [
-    { label: 'Clientes', value: String(items.length), icon: Building2, color: '#C6FF00' },
-    { label: 'Ativos', value: String(ativos), icon: Users, color: '#22c55e' },
-    { label: 'Inadimplentes', value: String(inadimplentes.length), icon: AlertTriangle, color: '#f87171' },
-    { label: 'Receita mensal', value: fmtBRL(mrr), icon: DollarSign, color: '#facc15' },
+    { label: 'Receita mensal', value: fmtBRL(mrr), sub: 'assinantes ativos', color: 'var(--accent)', primary: true },
+    { label: 'Clientes', value: String(items.length), sub: 'no total', color: 'var(--text-1)' },
+    { label: 'Ativos', value: String(ativos), sub: 'em dia', color: 'var(--text-1)' },
+    { label: 'Inadimplentes', value: String(inadimplentes.length), sub: 'precisam de atenção', color: inadimplentes.length ? 'var(--neg)' : 'var(--text-1)' },
   ];
   return (
     <div className="page">
       <SectionHead title="Visão Geral" subtitle="Resumo dos seus assinantes" onReload={reload} />
       {loading ? <Spinner /> : (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <section className="card kpi-strip mb-8" aria-label="Indicadores dos assinantes">
             {stats.map(s => (
-              <div key={s.label} className="stat-card rounded-2xl p-5">
-                <div className="flex items-start justify-between">
-                  <div><p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>{s.label}</p>
-                    <p className="text-2xl font-black num" style={{ color: 'var(--text-1)' }}>{s.value}</p></div>
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${s.color}18`, border: `1px solid ${s.color}30` }}><s.icon className="w-5 h-5" style={{ color: s.color }} /></div>
-                </div>
+              <div key={s.label} className={`kpi-cell ${s.primary ? 'kpi-cell-primary' : ''}`}>
+                <p className="kpi-label">{s.label}</p>
+                <p className="kpi-value truncate" style={{ color: s.color, ...(s.primary ? { fontSize: 30 } : {}) }}>{s.value}</p>
+                <p className="text-[13px] mt-1" style={{ color: 'var(--text-3)' }}>{s.sub}</p>
               </div>
             ))}
-          </div>
+          </section>
 
           <div className="rounded-2xl p-6" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
             <div className="flex items-center justify-between mb-4">
@@ -538,7 +537,7 @@ function Financeiro() {
         </div>
       ) : (
         <div className="rounded-2xl overflow-hidden overflow-x-auto" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-          <table className="data-table text-sm" style={{ minWidth: '680px' }}>
+          <table data-num="4" className="data-table text-sm" style={{ minWidth: '680px' }}>
             <thead><tr style={{ borderBottom: '1px solid var(--card-border)' }}>
               {['Data', 'Cliente', 'Produto', 'Valor', 'Evento'].map(h => <th key={h} className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-2)' }}>{h}</th>)}
             </tr></thead>

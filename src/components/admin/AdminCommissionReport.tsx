@@ -268,7 +268,7 @@ export function AdminCommissionReport() {
                   </button>
                   {isOpen && (
                     <div className="overflow-x-auto px-4 pb-4">
-                      <table className="data-table text-sm">
+                      <table data-num="6 7 8" className="data-table text-sm">
                         <thead>
                           <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                             {['Data', 'Proposta', 'Cliente', 'Banco', 'Tabela', 'Valor', 'Com. Corretor', 'Com. Empresa', 'Status'].map(h => (

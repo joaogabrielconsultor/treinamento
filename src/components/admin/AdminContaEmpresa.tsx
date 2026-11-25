@@ -96,18 +96,18 @@ function ExtratoView({ loja, onBack, isMaster = false }: { loja: LojaBalance; on
 
       <div className="grid grid-cols-3 gap-4 mb-6">
         {[
-          { label: 'Total Entradas', value: fmtBRL(totalCreditos), color: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.2)', icon: TrendingUp },
-          { label: 'Total Saídas', value: fmtBRL(totalDebitos), color: '#f87171', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)', icon: TrendingDown },
+          { label: 'Total Entradas', value: fmtBRL(totalCreditos), color: 'var(--pos)', bg: 'var(--bg-surface)', border: 'var(--card-border)', icon: TrendingUp },
+          { label: 'Total Saídas', value: fmtBRL(totalDebitos), color: 'var(--neg)', bg: 'var(--bg-surface)', border: 'var(--card-border)', icon: TrendingDown },
           { label: 'Saldo', value: fmtBRL(saldo), color: saldo >= 0 ? '#4ade80' : '#f87171', bg: saldo >= 0 ? 'rgba(74,222,128,0.08)' : 'rgba(239,68,68,0.08)', border: saldo >= 0 ? 'rgba(74,222,128,0.2)' : 'rgba(239,68,68,0.2)', icon: DollarSign },
         ].map(c => (
-          <div key={c.label} className="rounded-2xl p-4" style={{ background: c.bg, border: `1px solid ${c.border}`, boxShadow: 'var(--shadow-card)' }}>
+          <div key={c.label} className="card card-pad">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>{c.label}</p>
-                <p className="text-xl font-black num" style={{ color: c.color }}>{c.value}</p>
+                <p className="text-xl font-semibold num" style={{ color: c.color }}>{c.value}</p>
               </div>
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: c.bg }}>
-                <c.icon className="w-4 h-4" style={{ color: c.color }} />
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-1)' }}>
+                <c.icon className="w-4 h-4" style={{ color: 'var(--text-3)' }} />
               </div>
             </div>
           </div>
@@ -135,7 +135,7 @@ function ExtratoView({ loja, onBack, isMaster = false }: { loja: LojaBalance; on
             <div className="text-center py-16 text-sm" style={{ color: 'var(--text-3)' }}>Nenhuma movimentação encontrada</div>
           ) : (
             <div className="overflow-x-auto">
-            <table className="data-table text-sm">
+            <table data-num="5" className="data-table text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                   <th className="px-3 py-3 w-8">
@@ -343,19 +343,19 @@ export function AdminContaEmpresa({ isMaster = false }: { isMaster?: boolean }) 
         <>
           <div className="grid grid-cols-3 gap-4 mb-6">
             {[
-              { label: 'Comissão Recebida', value: fmtBRL(totalCreditos), sub: 'já recebida do banco', color: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.2)', icon: TrendingUp },
-              { label: 'Total Saídas', value: fmtBRL(totalDebitos), sub: 'saques + despesas', color: '#f87171', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)', icon: TrendingDown },
-              { label: 'Pend. Corretores', value: fmtBRL(totalPendente), sub: 'a pagar aos corretores', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)', icon: Clock },
-            ].map((c, i) => (
-              <div key={c.label} className="rounded-2xl p-4 animate-fade-up" style={{ background: c.bg, border: `1px solid ${c.border}`, boxShadow: 'var(--shadow-card)', animationDelay: `${i * 50}ms` }}>
+              { label: 'Comissão Recebida', value: fmtBRL(totalCreditos), sub: 'já recebida do banco', color: 'var(--pos)', bg: 'var(--bg-surface)', border: 'var(--card-border)', icon: TrendingUp },
+              { label: 'Total Saídas', value: fmtBRL(totalDebitos), sub: 'saques + despesas', color: 'var(--neg)', bg: 'var(--bg-surface)', border: 'var(--card-border)', icon: TrendingDown },
+              { label: 'Pend. Corretores', value: fmtBRL(totalPendente), sub: 'a pagar aos corretores', color: 'var(--warn)', bg: 'var(--bg-surface)', border: 'var(--card-border)', icon: Clock },
+            ].map((c) => (
+              <div key={c.label} className="card card-pad">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>{c.label}</p>
-                    <p className="text-xl font-black num" style={{ color: c.color }}>{c.value}</p>
+                    <p className="text-xl font-semibold num" style={{ color: c.color }}>{c.value}</p>
                     <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{c.sub}</p>
                   </div>
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: c.bg }}>
-                    <c.icon className="w-4 h-4" style={{ color: c.color }} />
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-1)' }}>
+                <c.icon className="w-4 h-4" style={{ color: 'var(--text-3)' }} />
                   </div>
                 </div>
               </div>
@@ -374,7 +374,7 @@ export function AdminContaEmpresa({ isMaster = false }: { isMaster?: boolean }) 
             <div className="rounded-2xl overflow-hidden animate-fade-up"
               style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)', animationDelay: '80ms' }}>
               <div className="overflow-x-auto">
-              <table className="data-table text-sm">
+              <table data-num="2 3 4 5 6" className="data-table text-sm">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                     {['Loja', 'Corretores', 'Recebido', 'Saídas', 'Saldo', 'Pend. Corretores', ''].map(h => {

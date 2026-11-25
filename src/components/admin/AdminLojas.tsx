@@ -158,7 +158,7 @@ export function AdminLojas({ isMaster = false }: { isMaster?: boolean }) {
             </div>
           ) : (
             <div className="overflow-x-auto">
-            <table className="data-table text-sm">
+            <table data-num="2" className="data-table text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                   {['Loja', 'Corretores', 'Cadastro', ''].map(h => (

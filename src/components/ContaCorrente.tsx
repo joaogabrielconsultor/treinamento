@@ -324,11 +324,10 @@ export function ContaCorrente({ adminMode, isAdmin }: { adminMode?: { userId: st
       {/* Header */}
       {/* Seletor de corretor para admin (sem adminMode externo) */}
       {isAdmin && !adminMode && (
-        <div className="mb-5 animate-fade-up rounded-2xl p-4"
-          style={{ background: 'rgba(96,165,250,0.06)', border: '1px solid rgba(96,165,250,0.2)' }}>
+        <div className="card card-pad mb-5">
           <div className="flex items-center gap-2 mb-3">
-            <Eye className="w-4 h-4" style={{ color: '#60a5fa' }} />
-            <span className="text-xs font-medium" style={{ color: '#60a5fa' }}>Ver conta de um corretor</span>
+            <Eye className="w-4 h-4" style={{ color: 'var(--info)' }} />
+            <span className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>Ver conta de um corretor</span>
           </div>
           <div className="flex flex-wrap gap-2 items-center">
             <div className="relative flex-1" style={{ minWidth: '220px' }}>
@@ -346,14 +345,13 @@ export function ContaCorrente({ adminMode, isAdmin }: { adminMode?: { userId: st
             </div>
             {selectedUser && (
               <button onClick={() => setSelectedUser(null)}
-                className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-semibold"
-                style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171', border: '1px solid rgba(248,113,113,0.2)' }}>
+                className="btn btn-secondary">
                 <X className="w-3.5 h-3.5" /> Minha conta
               </button>
             )}
           </div>
           {selectedUser && (
-            <p className="text-xs mt-2" style={{ color: '#60a5fa' }}>
+            <p className="text-xs mt-2" style={{ color: 'var(--text-3)' }}>
               Visualizando como: <strong>{selectedUser.userName}</strong>
             </p>
           )}
@@ -363,7 +361,7 @@ export function ContaCorrente({ adminMode, isAdmin }: { adminMode?: { userId: st
       {/* Banner modo admin externo */}
       {adminMode && (
         <div className="mb-4 rounded-xl px-4 py-3 flex items-center gap-2 animate-fade-up"
-          style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)', color: '#60a5fa' }}>
+          style={{ background: 'var(--info-soft)', border: '1px solid var(--info-soft)', color: 'var(--info)' }}>
           <Eye className="w-4 h-4 flex-shrink-0" />
           <span className="text-xs font-semibold">Visualizando como corretor: <span className="font-bold">{adminMode.userName}</span></span>
         </div>
@@ -377,23 +375,22 @@ export function ContaCorrente({ adminMode, isAdmin }: { adminMode?: { userId: st
           </div>
           <p className="page-subtitle">Acompanhe suas comissões, saques e produção</p>
         </div>
-        <button onClick={() => load()} className="flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl btn-ghost">
+        <button onClick={() => load()} className="btn btn-secondary btn-sm">
           <RefreshCw className="w-3.5 h-3.5" /> Atualizar
         </button>
       </div>
 
       {/* Chave PIX + botão saque */}
-      <div className="rounded-2xl p-4 mb-6 animate-fade-up flex flex-wrap items-center justify-between gap-4"
-        style={{ background: 'rgba(198,255,0,0.06)', border: '1px solid rgba(198,255,0,0.2)', boxShadow: 'var(--shadow-card)' }}>
+      <div className="card card-pad mb-6 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(198,255,0,0.12)' }}>
-            <Key className="w-4 h-4" style={{ color: '#C6FF00' }} />
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-2)' }}>
+            <Key className="w-4 h-4" style={{ color: 'var(--text-2)' }} />
           </div>
           <div>
             <p className="text-xs font-medium mb-0.5" style={{ color: 'var(--text-3)' }}>Chave PIX</p>
             {pixInfo.pix_key ? (
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-lg" style={{ background: 'rgba(198,255,0,0.15)', color: '#C6FF00' }}>
+                <span className="text-xs font-medium px-2 py-0.5 rounded-md" style={{ background: 'var(--bg-surface)', color: 'var(--text-2)', border: '1px solid var(--border-2)' }}>
                   {PIX_TYPE_LABELS[pixInfo.pix_key_type || ''] || pixInfo.pix_key_type}
                 </span>
                 <span className="text-sm font-mono font-semibold" style={{ color: 'var(--text-1)' }}>{pixInfo.pix_key}</span>
@@ -405,7 +402,7 @@ export function ContaCorrente({ adminMode, isAdmin }: { adminMode?: { userId: st
         </div>
         {!effectiveAdminMode && (
           <div className="flex items-center gap-2 flex-shrink-0">
-            <button onClick={() => setShowPixModal(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold btn-cyber">
+            <button onClick={() => setShowPixModal(true)} className="btn btn-secondary btn-sm">
               <Edit2 className="w-3.5 h-3.5" />
               {pixInfo.pix_key ? 'Editar PIX' : 'Cadastrar PIX'}
             </button>
@@ -414,111 +411,109 @@ export function ContaCorrente({ adminMode, isAdmin }: { adminMode?: { userId: st
       </div>
 
       {saqueSuccess && (
-        <div className="mb-4 rounded-xl px-4 py-3 text-sm font-medium animate-fade-up flex items-center gap-2"
-          style={{ background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)', color: '#4ade80' }}>
+        <div className="mb-4 rounded-lg px-4 py-3 text-sm font-medium animate-fade-up flex items-center gap-2"
+          style={{ background: 'var(--pos-soft)', border: '1px solid var(--pos-soft)', color: 'var(--pos)' }}>
           <CheckCircle className="w-4 h-4 flex-shrink-0" /> {saqueSuccess}
         </div>
       )}
 
       {/* Cards do mês selecionado */}
-      <div className="mb-4 animate-fade-up">
+      <div className="mb-4">
         <p className="text-xs font-medium mb-3" style={{ color: 'var(--text-3)' }}>
           {monthLabel(filterMonth || currentMonthValue())}
         </p>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-2xl p-4 stat-card" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="card card-pad">
             <div className="flex items-start justify-between mb-2">
               <p className="text-xs font-medium leading-tight flex-1 mr-1" style={{ color: 'var(--text-3)' }}>Aguardando Liberação</p>
               <InfoCard text="Comissão das propostas pagas que a empresa ainda não liberou. Aguarda confirmação." />
             </div>
-            <p className="text-lg font-black num" style={{ color: '#f59e0b' }}>{fmtBRL(summary.pending_value)}</p>
+            <p className="text-xl font-semibold num" style={{ color: 'var(--warn)' }}>{fmtBRL(summary.pending_value)}</p>
             <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{summary.pending_count} proposta{summary.pending_count !== 1 ? 's' : ''}</p>
           </div>
-          <div className="rounded-2xl p-4 stat-card" style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)' }}>
+          <div className="card card-pad">
             <div className="flex items-start justify-between mb-2">
               <p className="text-xs font-medium leading-tight flex-1 mr-1" style={{ color: 'var(--text-3)' }}>Recebido no Mês</p>
               <InfoCard text="Comissão confirmada pela empresa neste mês." />
             </div>
-            <p className="text-lg font-black num" style={{ color: '#4ade80' }}>{fmtBRL(summary.paid_value)}</p>
+            <p className="text-xl font-semibold num" style={{ color: 'var(--pos)' }}>{fmtBRL(summary.paid_value)}</p>
             <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{summary.paid_count} proposta{summary.paid_count !== 1 ? 's' : ''}</p>
           </div>
-          <div className="rounded-2xl p-4 stat-card" style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)' }}>
+          <div className="card card-pad">
             <div className="flex items-start justify-between mb-2">
               <p className="text-xs font-medium leading-tight flex-1 mr-1" style={{ color: 'var(--text-3)' }}>Total do Mês</p>
               <InfoCard text="Soma de toda a sua comissão do mês: aguardando + confirmada." />
             </div>
-            <p className="text-lg font-black num" style={{ color: '#a78bfa' }}>{fmtBRL(summary.pending_value + summary.paid_value)}</p>
+            <p className="text-xl font-semibold num" style={{ color: 'var(--text-1)' }}>{fmtBRL(summary.pending_value + summary.paid_value)}</p>
             <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{summary.pending_count + summary.paid_count} proposta{(summary.pending_count + summary.paid_count) !== 1 ? 's' : ''}</p>
           </div>
         </div>
       </div>
 
       {/* Saldo acumulado — disponível em destaque */}
-      <div className="rounded-2xl p-5 mb-4 animate-fade-up"
-        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)', animationDelay: '60ms' }}>
+      <div className="card card-pad mb-4">
         <p className="text-xs font-medium mb-4" style={{ color: 'var(--text-3)' }}>Seu saldo acumulado</p>
 
         {/* Hero: disponível para saque */}
-        <div className="rounded-xl p-4 mb-3 flex items-center justify-between gap-4"
-          style={{ background: 'rgba(198,255,0,0.10)', border: '1px solid rgba(198,255,0,0.3)' }}>
+        <div className="rounded-lg p-4 mb-3 flex flex-wrap items-center justify-between gap-4"
+          style={{ background: 'var(--bg-surface)', border: '1px solid var(--accent-line)' }}>
           <div>
             <div className="flex items-center gap-1.5 mb-1">
-              <ArrowDownToLine className="w-4 h-4 flex-shrink-0" style={{ color: '#C6FF00' }} />
+              <ArrowDownToLine className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--text-3)' }} />
               <span className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Disponível para Saque</span>
               <InfoCard text="Comissão recebida menos saques já solicitados (pagos + pendentes). É o que você pode sacar agora." />
             </div>
-            <p className="text-2xl font-black num" style={{ color: '#C6FF00' }}>{fmtBRL(summary.available_balance)}</p>
-            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>pronto para solicitar</p>
+            <p className="text-[28px] leading-tight font-semibold num" style={{ color: 'var(--accent)' }}>{fmtBRL(summary.available_balance)}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>pronto para solicitar</p>
           </div>
           {!effectiveAdminMode && summary.available_balance > 0 && (
             <button onClick={() => { setShowSaqueModal(true); setSaqueError(''); setSaqueAmount(''); }}
-              className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold"
-              style={{ background: 'rgba(198,255,0,0.15)', color: '#C6FF00', border: '1px solid rgba(198,255,0,0.3)' }}>
+              className="btn btn-primary flex-shrink-0">
               <Send className="w-3.5 h-3.5" /> Solicitar Saque
             </button>
           )}
         </div>
 
         {/* Recebido + sacado — dinâmico conforme filtro de mês */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="rounded-xl p-3" style={{ background: 'rgba(74,222,128,0.07)', border: '1px solid rgba(74,222,128,0.18)' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+          <div className="rounded-lg p-3" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-1)' }}>
             <div className="flex items-center gap-1.5 mb-1.5">
-              <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#4ade80' }} />
+              <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--pos)' }} />
               <span className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>
                 {filterMonth ? 'Recebido no Mês' : 'Total Recebido'}
               </span>
               <InfoCard text={filterMonth ? 'Comissão confirmada pela empresa neste mês.' : 'Total que a empresa confirmou e reservou pra você desde mai/2026.'} />
             </div>
-            <p className="text-base font-black num" style={{ color: '#4ade80' }}>{fmtBRL(recebidoVal)}</p>
-            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>
+            <p className="text-base font-semibold num" style={{ color: 'var(--pos)' }}>{fmtBRL(recebidoVal)}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
               {filterMonth && recebidoCount !== undefined
                 ? `${recebidoCount} proposta${recebidoCount !== 1 ? 's' : ''}`
                 : 'acumulado desde mai/2026'}
             </p>
           </div>
-          <div className="rounded-xl p-3" style={{ background: 'rgba(248,113,113,0.07)', border: '1px solid rgba(248,113,113,0.18)' }}>
+          <div className="rounded-lg p-3" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-1)' }}>
             <div className="flex items-center gap-1.5 mb-1.5">
-              <Send className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#f87171' }} />
+              <Send className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--text-3)' }} />
               <span className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>
                 {filterMonth ? 'Sacado no Mês' : 'Já Sacado'}
               </span>
               <InfoCard text={filterMonth ? 'Saques pagos com data neste mês.' : 'Total de saques pagos — dinheiro já enviado ao seu PIX.'} />
             </div>
-            <p className="text-base font-black num" style={{ color: '#f87171' }}>{fmtBRL(sacadoVal)}</p>
-            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>{sacadoCount} saque{sacadoCount !== 1 ? 's' : ''} pago{sacadoCount !== 1 ? 's' : ''}</p>
+            <p className="text-base font-semibold num" style={{ color: 'var(--text-1)' }}>{fmtBRL(sacadoVal)}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{sacadoCount} saque{sacadoCount !== 1 ? 's' : ''} pago{sacadoCount !== 1 ? 's' : ''}</p>
           </div>
         </div>
 
         {/* Barra de progresso: sacado vs disponível */}
         {summary.all_time_paid_value > 0 && (
           <div>
-            <div className="flex justify-between text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>
+            <div className="flex justify-between text-xs mb-1.5" style={{ color: 'var(--text-3)' }}>
               <span>Sacado: {pctSacado.toFixed(0)}%</span>
               <span>Disponível: {(100 - pctSacado).toFixed(0)}%</span>
             </div>
-            <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-              <div className="h-2 rounded-full transition-all duration-700"
-                style={{ width: `${pctSacado}%`, background: 'linear-gradient(90deg, #f87171, #fb923c)' }} />
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--accent-soft)' }}>
+              <div className="h-1.5 rounded-full transition-all duration-700"
+                style={{ width: `${pctSacado}%`, background: 'var(--text-4)' }} />
             </div>
           </div>
         )}
@@ -526,11 +521,11 @@ export function ContaCorrente({ adminMode, isAdmin }: { adminMode?: { userId: st
 
       {/* Saques solicitados */}
       {saques.length > 0 && (
-        <div className="mb-8 animate-fade-up" style={{ animationDelay: '80ms' }}>
+        <div className="mb-8">
           <h2 className="text-sm font-bold mb-3" style={{ color: 'var(--text-1)' }}>Saques Solicitados</h2>
           <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
             <div className="overflow-x-auto">
-              <table className="data-table text-sm">
+              <table data-num="2" className="data-table text-sm">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                     {['Data', 'Valor', 'Status', 'Observação'].map(h => {
@@ -607,7 +602,7 @@ export function ContaCorrente({ adminMode, isAdmin }: { adminMode?: { userId: st
         ) : (
           <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
             <div className="overflow-x-auto">
-              <table className="data-table text-sm">
+              <table data-num="5 6" className="data-table text-sm">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                     {['Proposta', 'Cliente', 'CPF', 'Banco / Tabela', 'Valor', 'Comissão', 'Status'].map(h => {

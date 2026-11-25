@@ -726,3 +726,20 @@ input[type="month"].input-cyber::-webkit-calendar-picker-indicator { filter: inv
 @media (prefers-reduced-motion: reduce) {
   .view-enter { animation: none; }
 }
+
+/* Colunas numéricas em tabelas com cabeçalho gerado por lista: <table data-num="5 6"> alinha essas colunas à direita */
+.data-table[data-num~="1"] :is(th,td):nth-child(1),
+.data-table[data-num~="2"] :is(th,td):nth-child(2),
+.data-table[data-num~="3"] :is(th,td):nth-child(3),
+.data-table[data-num~="4"] :is(th,td):nth-child(4),
+.data-table[data-num~="5"] :is(th,td):nth-child(5),
+.data-table[data-num~="6"] :is(th,td):nth-child(6),
+.data-table[data-num~="7"] :is(th,td):nth-child(7),
+.data-table[data-num~="8"] :is(th,td):nth-child(8),
+.data-table[data-num~="9"] :is(th,td):nth-child(9),
+.data-table[data-num~="10"] :is(th,td):nth-child(10),
+.data-table[data-num~="11"] :is(th,td):nth-child(11),
+.data-table[data-num~="12"] :is(th,td):nth-child(12) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

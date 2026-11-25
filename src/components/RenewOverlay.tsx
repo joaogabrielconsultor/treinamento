@@ -3,10 +3,6 @@ import { ArrowRight, ShieldCheck, Lock, Mail, Check, Pencil, MessageCircle } fro
 import { buildCheckoutLink, PLAN_PRICE } from '../lib/config';
 import { useAppContext } from '../context/AppContext';
 
-const MONO = "'Space Mono', ui-monospace, monospace";
-const ANTON = "'Anton', Impact, sans-serif";
-const VOLT = '#C6FF00';
-
 const token = () => localStorage.getItem('token') ?? '';
 
 interface Props {
@@ -50,109 +46,109 @@ export function RenewOverlay({ status, loginEmail, caktoEmail, firstPayment }: P
   const openChat = () => window.dispatchEvent(new Event('open-support-chat'));
 
   return (
-    <div
-      className="min-h-full w-full flex items-center justify-center p-6 relative overflow-hidden"
-      style={{ background: 'radial-gradient(ellipse at 50% -10%, #0C0C0C 0%, #000 65%)', minHeight: 'calc(100vh - 64px)' }}
-    >
-      <div className="absolute pointer-events-none" style={{ width: 620, height: 620, top: -120, left: '50%', transform: 'translateX(-50%)', background: 'radial-gradient(ellipse, rgba(198,255,0,0.10) 0%, transparent 70%)' }} />
-      <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)', backgroundSize: '44px 44px' }} />
-
-      <div className="relative z-10 w-full max-w-xl text-center">
-        <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-bold" style={{ fontFamily: MONO, letterSpacing: '0.14em', background: 'rgba(198,255,0,0.1)', border: `1px solid rgba(198,255,0,0.3)`, color: VOLT }}>
-          <Lock className="w-3.5 h-3.5" /> ASSINATURA {cancelado ? 'CANCELADA' : 'SUSPENSA'}
+    <div className="w-full flex items-center justify-center px-5 py-10" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <div className="w-full max-w-lg">
+        <span
+          className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium"
+          style={{ background: cancelado ? 'var(--neg-soft)' : 'var(--warn-soft)', color: cancelado ? 'var(--neg)' : 'var(--warn)' }}
+        >
+          <Lock className="w-3.5 h-3.5" /> Assinatura {cancelado ? 'cancelada' : 'suspensa'}
         </span>
 
-        <h1 className="mt-6" style={{ fontFamily: ANTON, fontSize: 'clamp(34px, 6vw, 60px)', lineHeight: 0.92, letterSpacing: '0.01em', color: '#F4F4F4', textTransform: 'uppercase' }}>
-          RENOVE E<br /><span style={{ color: VOLT }}>VOLTE A OPERAR</span>
+        <h1 className="mt-4 text-[30px] sm:text-[34px] font-semibold leading-[1.1] tracking-tight" style={{ color: 'var(--text-1)' }}>
+          Renove e volte a operar
         </h1>
 
-        <p className="mt-4 text-[15px] leading-relaxed mx-auto max-w-md" style={{ color: '#A3A3A3' }}>
+        <p className="mt-3 text-[15px] leading-relaxed" style={{ color: 'var(--text-2)' }}>
           {cancelado ? 'Sua assinatura foi cancelada, mas ' : 'Sua mensalidade está pendente, mas '}
-          <strong style={{ color: '#E5E5E5' }}>seus dados continuam salvos</strong>. Regularize e o {companyName} volta na hora.
+          <strong className="font-medium" style={{ color: 'var(--text-1)' }}>seus dados continuam salvos</strong>. Regularize e o {companyName} volta na hora.
         </p>
 
-        {/* preço */}
-        <div className="mt-6 inline-flex flex-col items-center">
-          <div style={{ fontFamily: ANTON, fontSize: 46, lineHeight: 1, color: '#F4F4F4' }}>
-            {PLAN_PRICE}<span style={{ fontSize: 18, opacity: 0.7 }}>/mês</span>
-          </div>
-          <div className="mt-1 text-xs font-medium" style={{ fontFamily: MONO, color: '#6B6B6B' }}>
-            Assinatura mensal · Cancele quando quiser
-          </div>
-        </div>
-
-        {/* ── E-MAIL DE COBRANÇA ── */}
-        {editing ? (
-          <div className="mt-6 mx-auto max-w-md rounded-2xl p-5 text-left" style={{ background: 'rgba(198,255,0,0.06)', border: '2px solid rgba(198,255,0,0.4)', boxShadow: '0 0 30px rgba(198,255,0,0.12)' }}>
-            <div className="flex items-center gap-2 mb-2" style={{ color: VOLT }}>
-              <Mail className="w-4 h-4" />
-              <span className="text-[12px] font-bold" style={{ fontFamily: MONO }}>{firstPayment ? 'Seu primeiro pagamento' : 'E-mail de pagamento'}</span>
+        <div className="card mt-8">
+          {/* preço */}
+          <div className="card-header">
+            <div>
+              <p className="kpi-label">Plano mensal</p>
+              <p className="mt-1 text-[28px] font-semibold leading-none num" style={{ color: 'var(--text-1)' }}>
+                {PLAN_PRICE}<span className="text-sm font-normal ml-1" style={{ color: 'var(--text-3)' }}>/mês</span>
+              </p>
             </div>
-            <p className="text-[13px] leading-relaxed mb-2" style={{ color: '#CBD5E1' }}>
-              Confirme o <strong style={{ color: '#fff' }}>e-mail que você vai usar no pagamento</strong> pra vincular à sua conta.
-            </p>
-            <p className="text-[12px] leading-relaxed mb-3 rounded-lg px-3 py-2" style={{ color: '#E9D8A6', background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.25)' }}>
-              ⚠️ <strong>Importante:</strong> pague na Cakto com <u>exatamente este mesmo e-mail</u>. É por ele que o sistema reconhece o pagamento e <strong>libera a sua conta</strong>. Com outro e-mail, não libera automático.
-            </p>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="seu@email.com"
-              className="w-full px-3.5 py-2.5 text-sm rounded-xl outline-none mb-2"
-              style={{ background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.16)', color: '#f4f4f4', fontFamily: MONO }}
-            />
-            {err && <p className="text-[12px] mb-2" style={{ color: '#f87171' }}>{err}</p>}
-            <button onClick={saveEmail} disabled={saving}
-              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-[14px] font-bold disabled:opacity-60"
-              style={{ fontFamily: MONO, background: VOLT, color: '#0a0a0a' }}>
-              {saving ? 'Salvando...' : <>Salvar e liberar renovação <ArrowRight className="w-[17px] h-[17px]" strokeWidth={2.6} /></>}
-            </button>
-            <p className="text-center text-[11px] mt-2" style={{ color: '#6B6B6B' }}>o botão de renovar aparece após confirmar o e-mail</p>
+            <p className="text-xs text-right" style={{ color: 'var(--text-3)' }}>Cancele quando<br />quiser</p>
           </div>
-        ) : (
-          <div className="mt-6 flex flex-col items-center gap-3">
-            {bound && (
-              <div className="w-full max-w-md rounded-2xl px-4 py-4" style={{ background: 'rgba(198,255,0,0.08)', border: '2px solid rgba(198,255,0,0.45)', boxShadow: '0 0 30px rgba(198,255,0,0.12)' }}>
-                <div className="flex items-center justify-center gap-2" style={{ color: VOLT }}>
-                  <Check className="w-4 h-4" strokeWidth={3} />
-                  <span className="text-xs font-medium" style={{ fontFamily: MONO }}>E-mail vinculado</span>
+
+          <div className="card-pad">
+            {/* ── E-MAIL DE COBRANÇA ── */}
+            {editing ? (
+              <div className="animate-fade-up">
+                <label htmlFor="renew-email" className="field-label flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5" /> {firstPayment ? 'E-mail do seu primeiro pagamento' : 'E-mail de pagamento'}
+                </label>
+                <input
+                  id="renew-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="seu@email.com"
+                  className="input-cyber w-full px-3.5 py-2.5 text-sm"
+                />
+                {err && <p className="text-xs mt-2" style={{ color: 'var(--neg)' }}>{err}</p>}
+
+                <div className="mt-3 rounded-lg px-3.5 py-3 text-[13px] leading-relaxed" style={{ background: 'var(--warn-soft)', color: 'var(--text-2)' }}>
+                  <strong className="font-medium" style={{ color: 'var(--warn)' }}>Importante:</strong> pague na Cakto com
+                  {' '}<strong className="font-medium" style={{ color: 'var(--text-1)' }}>exatamente este mesmo e-mail</strong>. É por ele que o sistema reconhece o pagamento e libera a sua conta — com outro e-mail, não libera automático.
                 </div>
-                <div className="text-center text-[17px] font-bold mt-1 break-all" style={{ color: '#F4F4F4', fontFamily: MONO }}>{caktoEmail || email}</div>
-                <p className="text-center text-[12px] mt-2 leading-snug" style={{ color: '#c7d38f' }}>
-                  Pague na Cakto com <strong style={{ color: '#fff' }}>este mesmo e-mail</strong> — é por ele que o sistema <strong style={{ color: '#fff' }}>libera a sua conta</strong>.
-                </p>
-                <button onClick={() => setEditing(true)} className="mx-auto mt-2 flex items-center gap-1.5 text-[12px]" style={{ color: VOLT }}>
-                  <Pencil className="w-3 h-3" /> trocar e-mail
+
+                <button onClick={saveEmail} disabled={saving} className="btn btn-primary w-full !h-11 mt-4">
+                  {saving ? 'Salvando...' : <>Salvar e liberar renovação <ArrowRight className="w-4 h-4" /></>}
                 </button>
+                <p className="field-hint text-center mt-2">O botão de renovar aparece depois de confirmar o e-mail.</p>
+              </div>
+            ) : (
+              <div className="animate-fade-up">
+                {bound && (
+                  <div className="rounded-lg px-4 py-3.5 mb-4 flex items-start gap-3" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-2)' }}>
+                    <Check className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--pos)' }} strokeWidth={2.5} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs" style={{ color: 'var(--text-3)' }}>E-mail vinculado</p>
+                      <p className="text-[15px] font-medium mt-0.5 break-all" style={{ color: 'var(--text-1)' }}>{caktoEmail || email}</p>
+                      <p className="text-xs mt-1.5 leading-snug" style={{ color: 'var(--text-3)' }}>
+                        Pague na Cakto com este mesmo e-mail — é por ele que o sistema libera a sua conta.
+                      </p>
+                    </div>
+                    <button onClick={() => setEditing(true)} className="btn btn-sm btn-secondary flex-shrink-0">
+                      <Pencil className="w-3 h-3" /> Trocar
+                    </button>
+                  </div>
+                )}
+
+                <a
+                  href={buildCheckoutLink()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary w-full !h-11 no-underline"
+                >
+                  Renovar agora <ArrowRight className="w-4 h-4" />
+                </a>
+
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+                  {!bound && !firstPayment && (
+                    <button onClick={() => setEditing(true)} className="inline-flex items-center gap-1.5 text-[13px] hover:underline" style={{ color: 'var(--text-2)' }}>
+                      <Mail className="w-3.5 h-3.5" /> Vincular o e-mail do meu pagamento
+                    </button>
+                  )}
+                  <button onClick={openChat} className="inline-flex items-center gap-1.5 text-[13px] hover:underline" style={{ color: 'var(--text-2)' }}>
+                    <MessageCircle className="w-3.5 h-3.5" /> Já paguei? Falar com o suporte
+                  </button>
+                </div>
               </div>
             )}
-            <a
-              href={buildCheckoutLink()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full text-[15px] font-bold no-underline transition-transform"
-              style={{ fontFamily: MONO, background: VOLT, color: '#0A0A0A', boxShadow: '0 0 34px rgba(198,255,0,0.35)' }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}
-            >
-              RENOVAR AGORA <ArrowRight className="w-[18px] h-[18px]" strokeWidth={2.6} />
-            </a>
-            {!bound && !firstPayment && (
-              <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 text-[12px]" style={{ color: '#9A9A9A' }}>
-                <Mail className="w-3.5 h-3.5" /> vincular o e-mail do meu pagamento
-              </button>
-            )}
-            <button onClick={openChat} className="flex items-center gap-1.5 text-[13px]" style={{ color: '#9A9A9A' }}>
-              <MessageCircle className="w-3.5 h-3.5" /> já paguei? falar com o suporte
-            </button>
           </div>
-        )}
-
-        <div className="mt-8 flex items-center justify-center gap-2 text-[11px]" style={{ color: '#555', fontFamily: MONO }}>
-          <ShieldCheck className="w-3.5 h-3.5" style={{ color: '#4a5a2a' }} />
-          SEUS DADOS ESTÃO PRESERVADOS · NADA FOI APAGADO
         </div>
+
+        <p className="mt-5 flex items-center gap-2 text-xs" style={{ color: 'var(--text-3)' }}>
+          <ShieldCheck className="w-3.5 h-3.5" style={{ color: 'var(--pos)' }} />
+          Seus dados estão preservados — nada foi apagado.
+        </p>
       </div>
     </div>
   );
