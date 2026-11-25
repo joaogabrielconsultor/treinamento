@@ -17,9 +17,9 @@ export default {
           '0%':   { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition:  '200% 0' },
         },
+        // no-op: o brilho pulsante saiu do sistema visual
         'pulse-glow': {
-          '0%, 100%': { boxShadow: '0 0 4px rgba(198,255,0,0.3)' },
-          '50%':      { boxShadow: '0 0 18px rgba(198,255,0,0.65)' },
+          '0%, 100%': { opacity: '1' },
         },
         'radar-ping': {
           '0%':       { transform: 'scale(1)', opacity: '0.8' },
@@ -30,7 +30,7 @@ export default {
           '50%':      { transform: 'translateY(-5px)' },
         },
         'fade-up': {
-          '0%':   { opacity: '0', transform: 'translateY(10px)' },
+          '0%':   { opacity: '0', transform: 'translateY(4px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         'border-spin': {
@@ -50,11 +50,33 @@ export default {
         'shimmer':    'shimmer 2.5s linear infinite',
         'pulse-glow': 'pulse-glow 2.2s ease-in-out infinite',
         'radar-ping': 'radar-ping 1.6s cubic-bezier(0,0,0.2,1) infinite',
-        'float':      'float 3.5s ease-in-out infinite',
+        'float':      'none',
         'fade-up':    'fade-up 0.4s cubic-bezier(0.16,1,0.3,1) both',
-        'cyber-line': 'cyber-line 3s ease-in-out infinite',
+        'cyber-line': 'none',
       },
       colors: {
+        ink: {
+          1: 'var(--text-1)',
+          2: 'var(--text-2)',
+          3: 'var(--text-3)',
+          4: 'var(--text-4)',
+        },
+        line: {
+          DEFAULT: 'var(--border-1)',
+          strong:  'var(--border-2)',
+        },
+        surface: {
+          deep:    'var(--bg-deep)',
+          base:    'var(--bg-base)',
+          card:    'var(--bg-card)',
+          DEFAULT: 'var(--bg-surface)',
+          subtle:  'var(--surface-subtle)',
+          hover:   'var(--surface-hover)',
+        },
+        pos:  'var(--pos)',
+        neg:  'var(--neg)',
+        warn: 'var(--warn)',
+        info: 'var(--info)',
         brand: {
           DEFAULT: '#C6FF00',
           hover:   '#B0E600',
@@ -79,11 +101,15 @@ export default {
         },
       },
       fontFamily: {
-        sans: [
-          'Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI',
-          'system-ui', 'sans-serif',
-        ],
-        mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace'],
+        sans: ['Geist', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        mono: ['Geist Mono', 'ui-monospace', 'Cascadia Mono', 'Consolas', 'monospace'],
+      },
+      borderRadius: {
+        sm: '6px',
+        md: '9px',
+        lg: '10px',
+        xl: '12px',
+        '2xl': '16px',
       },
       backdropBlur: {
         xs: '2px',

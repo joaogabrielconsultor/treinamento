@@ -90,7 +90,7 @@ function QuizEditor({ content, onChange }: { content: string; onChange: (v: stri
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <label className="text-xs font-medium text-gray-500">Questões da prova</label>
+        <label className="text-xs font-medium text-ink-3">Questões da prova</label>
         <button
           type="button"
           onClick={addQuestion}
@@ -101,29 +101,29 @@ function QuizEditor({ content, onChange }: { content: string; onChange: (v: stri
       </div>
 
       {questions.length === 0 && (
-        <p className="text-xs text-gray-400 text-center py-4 border border-dashed border-gray-200 rounded-xl">
+        <p className="text-xs text-ink-3 text-center py-4 border border-dashed border-line rounded-xl">
           Nenhuma questão adicionada ainda.
         </p>
       )}
 
       {questions.map((q, qi) => (
-        <div key={qi} className="border border-gray-200 rounded-xl p-4 space-y-3">
+        <div key={qi} className="border border-line rounded-xl p-4 space-y-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-gray-400 w-5">{qi + 1}.</span>
+            <span className="text-xs font-bold text-ink-3 w-5">{qi + 1}.</span>
             <input
               type="text"
               value={q.question}
               onChange={(e) => setQuestion(qi, e.target.value)}
               placeholder="Texto da questão"
-              className="flex-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-1.5 text-sm border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <button type="button" onClick={() => removeQuestion(qi)} className="text-gray-300 hover:text-red-500">
+            <button type="button" onClick={() => removeQuestion(qi)} className="text-ink-2 hover:text-red-500">
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
 
           <div className="space-y-2 pl-7">
-            <p className="text-xs text-gray-400">Opções — marque a correta:</p>
+            <p className="text-xs text-ink-3">Opções — marque a correta:</p>
             {q.options.map((opt, oi) => (
               <div key={oi} className="flex items-center gap-2">
                 <button
@@ -131,7 +131,7 @@ function QuizEditor({ content, onChange }: { content: string; onChange: (v: stri
                   onClick={() => setCorrect(qi, oi)}
                   title="Marcar como correta"
                   className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                    q.correct === oi ? 'border-green-500 bg-green-500' : 'border-gray-300 hover:border-green-400'
+                    q.correct === oi ? 'border-green-500 bg-green-500' : 'border-line hover:border-green-400'
                   }`}
                 >
                   {q.correct === oi && <CheckCircle2 className="w-3 h-3 text-white" />}
@@ -141,10 +141,10 @@ function QuizEditor({ content, onChange }: { content: string; onChange: (v: stri
                   value={opt}
                   onChange={(e) => setOption(qi, oi, e.target.value)}
                   placeholder={`Opção ${oi + 1}`}
-                  className="flex-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-3 py-1.5 text-sm border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 {q.options.length > 2 && (
-                  <button type="button" onClick={() => removeOption(qi, oi)} className="text-gray-300 hover:text-red-500">
+                  <button type="button" onClick={() => removeOption(qi, oi)} className="text-ink-2 hover:text-red-500">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 )}
@@ -171,15 +171,15 @@ function VideoUrlInput({ currentUrl, onChange }: {
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-xs font-medium text-gray-500">Link do vídeo</label>
+      <label className="block text-xs font-medium text-ink-3">Link do vídeo</label>
       <div className="relative">
-        <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+        <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-3" />
         <input
           type="url"
           value={currentUrl || ''}
           onChange={(e) => onChange(e.target.value)}
           placeholder="https://www.youtube.com/watch?v=..."
-          className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full pl-9 pr-3 py-2 text-sm border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
       {currentUrl && (
@@ -187,7 +187,7 @@ function VideoUrlInput({ currentUrl, onChange }: {
           <CheckCircle2 className="w-3.5 h-3.5" /> Link salvo
         </div>
       )}
-      <p className="text-xs text-gray-400">Suporta YouTube, Vimeo ou link direto de vídeo</p>
+      <p className="text-xs text-ink-3">Suporta YouTube, Vimeo ou link direto de vídeo</p>
     </div>
   );
 }
@@ -227,15 +227,15 @@ function LessonRow({
   };
 
   return (
-    <div className="border border-gray-100 rounded-xl overflow-hidden">
+    <div className="border border-line rounded-xl overflow-hidden">
       <div
-        className="flex items-center gap-3 px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+        className="flex items-center gap-3 px-4 py-3 bg-surface-subtle cursor-pointer hover:bg-surface-hover transition-colors"
         onClick={() => setExpanded((p) => !p)}
       >
-        <GripVertical className="w-4 h-4 text-gray-300 flex-shrink-0" />
+        <GripVertical className="w-4 h-4 text-ink-2 flex-shrink-0" />
         <Icon className="w-4 h-4 text-blue-500 flex-shrink-0" />
-        <span className="flex-1 text-sm font-medium text-gray-700 truncate">{local.title}</span>
-        <span className="text-xs text-gray-400">{local.duration_minutes} min</span>
+        <span className="flex-1 text-sm font-medium text-ink-2 truncate">{local.title}</span>
+        <span className="text-xs text-ink-3">{local.duration_minutes} min</span>
         <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
           {lessonTypeLabel[local.lesson_type]}
         </span>
@@ -244,19 +244,19 @@ function LessonRow({
             e.stopPropagation();
             if (await confirmDialog({ title: 'Excluir aula?', message: 'Deseja realmente excluir esta aula?', variant: 'danger', confirmText: 'Excluir' })) onDelete(moduleId, lesson.id);
           }}
-          className="p-1 rounded text-gray-300 hover:text-red-500 transition-colors"
+          className="p-1 rounded text-ink-2 hover:text-red-500 transition-colors"
         >
           <Trash2 className="w-3.5 h-3.5" />
         </button>
         {expanded ? (
-          <ChevronDown className="w-4 h-4 text-gray-400" />
+          <ChevronDown className="w-4 h-4 text-ink-3" />
         ) : (
-          <ChevronRight className="w-4 h-4 text-gray-400" />
+          <ChevronRight className="w-4 h-4 text-ink-3" />
         )}
       </div>
 
       {expanded && (
-        <div className="p-4 space-y-3 border-t border-gray-100">
+        <div className="p-4 space-y-3 border-t border-line">
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
               <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Título da aula</label>
@@ -264,7 +264,7 @@ function LessonRow({
                 type="text"
                 value={local.title}
                 onChange={(e) => set('title', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -274,7 +274,7 @@ function LessonRow({
                 min={0}
                 value={local.duration_minutes}
                 onChange={(e) => set('duration_minutes', parseInt(e.target.value) || 0)}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -284,7 +284,7 @@ function LessonRow({
             <select
               value={local.lesson_type}
               onChange={(e) => set('lesson_type', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-surface-card"
             >
               <option value="video">Vídeo</option>
               <option value="text">Texto</option>
@@ -316,7 +316,7 @@ function LessonRow({
                 value={local.content}
                 onChange={(e) => set('content', e.target.value)}
                 rows={5}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono resize-y"
+                className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono resize-y"
                 placeholder={local.lesson_type === 'video' ? 'Notas sobre o vídeo...' : 'Conteúdo da aula (suporta Markdown)...'}
               />
             </div>
@@ -360,9 +360,9 @@ function ModuleSection({
   const [titleDirty, setTitleDirty] = useState(false);
 
   return (
-    <div className="border border-gray-200 rounded-2xl overflow-hidden">
-      <div className="flex items-center gap-3 px-5 py-4 bg-white">
-        <button onClick={() => setExpanded((p) => !p)} className="text-gray-400 hover:text-gray-600">
+    <div className="border border-line rounded-2xl overflow-hidden">
+      <div className="flex items-center gap-3 px-5 py-4 bg-surface-card">
+        <button onClick={() => setExpanded((p) => !p)} className="text-ink-3 hover:text-ink-1">
           {expanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
         </button>
         <input
@@ -372,19 +372,19 @@ function ModuleSection({
           onBlur={() => {
             if (titleDirty) { onUpdateModule(module.id, { title }); setTitleDirty(false); }
           }}
-          className="flex-1 text-sm font-semibold text-gray-800 bg-transparent border-0 focus:outline-none focus:bg-blue-50 focus:px-2 rounded transition-all"
+          className="flex-1 text-sm font-semibold text-ink-1 bg-transparent border-0 focus:outline-none focus:bg-blue-50 focus:px-2 rounded transition-all"
         />
-        <span className="text-xs text-gray-400">{module.lessons?.length || 0} aula{(module.lessons?.length || 0) !== 1 ? 's' : ''}</span>
+        <span className="text-xs text-ink-3">{module.lessons?.length || 0} aula{(module.lessons?.length || 0) !== 1 ? 's' : ''}</span>
         <button
           onClick={async () => { if (await confirmDialog({ title: 'Excluir módulo?', message: 'O módulo e todas as suas aulas serão excluídos.', variant: 'danger', confirmText: 'Excluir' })) onDeleteModule(module.id); }}
-          className="p-1 text-gray-300 hover:text-red-500 transition-colors"
+          className="p-1 text-ink-2 hover:text-red-500 transition-colors"
         >
           <Trash2 className="w-4 h-4" />
         </button>
       </div>
 
       {expanded && (
-        <div className="px-5 pb-4 space-y-2 bg-gray-50 border-t border-gray-100">
+        <div className="px-5 pb-4 space-y-2 bg-surface-subtle border-t border-line">
           <div className="pt-3 space-y-2">
             {module.lessons?.map((lesson) => (
               <LessonRow
@@ -450,21 +450,21 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
   const current = { ...course, ...form };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="page page-narrow">
       <button
         onClick={() => onNavigate('admin-courses')}
-        className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 mb-6 transition-colors"
+        className="flex items-center gap-2 text-sm text-ink-3 hover:text-ink-1 mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         Voltar para Treinamentos
       </button>
 
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-xl font-bold text-gray-100">Editar Curso</h1>
+      <div className="page-header">
+        <h1 className="page-title">Editar Curso</h1>
         <div className="flex items-center gap-3">
           <span
             className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-              current.published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+              current.published ? 'bg-green-100 text-green-700' : 'bg-surface-subtle text-ink-3'
             }`}
           >
             {current.published ? 'Publicado' : 'Rascunho'}
@@ -484,7 +484,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
 
       {/* Course metadata */}
       <div className="rounded-2xl p-5 mb-6 space-y-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
-        <h2 className="text-base font-semibold text-gray-800 mb-4">Informações do Curso</h2>
+        <h2 className="text-base font-semibold text-ink-1 mb-4">Informações do Curso</h2>
 
         <div>
           <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Título</label>
@@ -492,7 +492,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
             type="text"
             value={current.title}
             onChange={(e) => field('title', e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -502,7 +502,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
             value={current.description}
             onChange={(e) => field('description', e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+            className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
           />
         </div>
 
@@ -513,7 +513,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
               type="text"
               value={current.category}
               onChange={(e) => field('category', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
@@ -521,7 +521,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
             <select
               value={current.level}
               onChange={(e) => field('level', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-surface-card"
             >
               <option>Iniciante</option>
               <option>Intermediário</option>
@@ -537,7 +537,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
               type="text"
               value={current.instructor}
               onChange={(e) => field('instructor', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
@@ -547,7 +547,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
               min={0}
               value={current.duration_minutes}
               onChange={(e) => field('duration_minutes', parseInt(e.target.value) || 0)}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -558,7 +558,7 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
             type="text"
             value={current.thumbnail_url}
             onChange={(e) => field('thumbnail_url', e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="https://..."
           />
         </div>
@@ -566,21 +566,21 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
         <div className="flex items-center gap-3 pt-1">
           <label className="flex items-center gap-2 cursor-pointer select-none">
             <div
-              className={`relative w-10 h-5 rounded-full transition-colors ${current.published ? 'bg-blue-600' : 'bg-gray-200'}`}
+              className={`relative w-10 h-5 rounded-full transition-colors ${current.published ? 'bg-blue-600' : 'bg-surface-subtle'}`}
               onClick={() => field('published', !current.published)}
             >
               <span
-                className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${current.published ? 'translate-x-5' : 'translate-x-0.5'}`}
+                className={`absolute top-0.5 w-4 h-4 bg-surface-card rounded-full shadow transition-transform ${current.published ? 'translate-x-5' : 'translate-x-0.5'}`}
               />
             </div>
-            <span className="text-sm text-gray-700 font-medium">Publicar curso</span>
+            <span className="text-sm text-ink-2 font-medium">Publicar curso</span>
           </label>
         </div>
       </div>
 
       {/* Modules & Lessons */}
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-base font-semibold text-gray-800">Módulos e Aulas</h2>
+        <h2 className="text-base font-semibold text-ink-1">Módulos e Aulas</h2>
         <button
           onClick={addModule}
           className="flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors font-medium"
@@ -604,8 +604,8 @@ export function AdminCourseEdit({ courseId, onNavigate }: AdminCourseEditProps) 
         ))}
 
         {modules.length === 0 && (
-          <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-2xl">
-            <p className="text-gray-400 text-sm mb-3">Nenhum módulo ainda</p>
+          <div className="text-center py-12 border-2 border-dashed border-line rounded-2xl">
+            <p className="text-ink-3 text-sm mb-3">Nenhum módulo ainda</p>
             <button
               onClick={addModule}
               className="inline-flex items-center gap-2 px-4 py-2 text-sm text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors"

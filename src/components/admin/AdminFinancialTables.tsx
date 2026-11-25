@@ -197,11 +197,11 @@ export function AdminFinancialTables() {
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="page">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold text-gray-100">Tabelas Financeiras</h1>
-          <p className="text-xs text-slate-500 mt-0.5">{tables.length} tabelas cadastradas</p>
+          <h1 className="page-title">Tabelas Financeiras</h1>
+          <p className="page-subtitle">{tables.length} tabelas cadastradas</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <button onClick={load} className="flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl btn-ghost">
@@ -228,13 +228,13 @@ export function AdminFinancialTables() {
       {convenios.length > 0 && (
         <div className="flex gap-2 mb-4 flex-wrap">
           <button onClick={() => setFilterConvenio('')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${!filterConvenio ? 'text-white' : 'bg-gray-100 dark:bg-dk-surface text-gray-600 dark:text-gray-400 hover:bg-gray-200'}`}
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${!filterConvenio ? 'text-white' : 'bg-surface-subtle dark:bg-dk-surface text-ink-2 text-ink-3 hover:bg-surface-hover'}`}
             style={!filterConvenio ? { backgroundColor: '#151515' } : {}}>
             Todos
           </button>
           {convenios.map(cv => (
             <button key={cv.id} onClick={() => setFilterConvenio(cv.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${filterConvenio === cv.id ? 'text-white' : 'bg-gray-100 dark:bg-dk-surface text-gray-600 dark:text-gray-400 hover:bg-gray-200'}`}
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${filterConvenio === cv.id ? 'text-white' : 'bg-surface-subtle dark:bg-dk-surface text-ink-2 text-ink-3 hover:bg-surface-hover'}`}
               style={filterConvenio === cv.id ? { backgroundColor: '#151515' } : {}}>
               {cv.name}
             </button>
@@ -246,28 +246,28 @@ export function AdminFinancialTables() {
         <div className="flex justify-center py-16"><div className="spinner-cyber" /></div>
       ) : (
         <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
-          <table className="w-full text-sm">
+          <table className="data-table text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                 {['Nome da Tabela', 'Convênio', 'Banco', 'Categoria', 'Coeficiente', 'Comissão Emp.', 'Comissão Cor.', 'Status', 'Ações'].map(h => (
-                  <th key={h} className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
+                  <th key={h} className="text-left px-4 py-3.5 text-xs font-medium" style={{ color: 'var(--text-3)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={8} className="text-center py-12 text-gray-400">Nenhuma tabela cadastrada</td></tr>
+                <tr><td colSpan={8} className="text-center py-12 text-ink-3">Nenhuma tabela cadastrada</td></tr>
               ) : paginated.map(t => (
                 <tr key={t.id} className="table-row-cyber">
-                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-white max-w-[200px] truncate">{t.name}</td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{t.convenio_name || '—'}</td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{t.bank_name || '—'}</td>
+                  <td className="px-4 py-3 font-medium text-ink-1 text-ink-1 max-w-[200px] truncate">{t.name}</td>
+                  <td className="px-4 py-3 text-ink-2 text-ink-3">{t.convenio_name || '—'}</td>
+                  <td className="px-4 py-3 text-ink-2 text-ink-3">{t.bank_name || '—'}</td>
                   <td className="px-4 py-3">
                     {t.category_name ? (
                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-brand/10 text-brand">
                         {t.category_name} <span className="opacity-60">×{t.category_multiplier}</span>
                       </span>
-                    ) : <span className="text-gray-400">—</span>}
+                    ) : <span className="text-ink-3">—</span>}
                   </td>
                   <td className="px-4 py-3 font-mono text-xs" style={{ color: '#a78bfa' }}>
                     {t.coeficiente ? Number(t.coeficiente).toFixed(7) : '—'}
@@ -275,22 +275,22 @@ export function AdminFinancialTables() {
                   <td className="px-4 py-3 text-blue-600 dark:text-blue-400 font-medium text-xs">{t.comissao_empresa != null ? `${Number(t.comissao_empresa).toFixed(2)}%` : '—'}</td>
                   <td className="px-4 py-3 text-green-600 dark:text-green-400 font-medium text-xs">{t.comissao_corretor != null ? `${Number(t.comissao_corretor).toFixed(2)}%` : '—'}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${t.active ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-gray-100 dark:bg-dk-surface text-gray-500'}`}>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${t.active ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-surface-subtle dark:bg-dk-surface text-ink-3'}`}>
                       {t.active ? 'Ativo' : 'Inativo'}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
                       <button onClick={() => openRules(t)} title="Regras de pontuação"
-                        className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-dk-surface text-gray-400 hover:text-brand transition-colors">
+                        className="p-1.5 rounded-lg hover:bg-surface-hover dark:hover:bg-dk-surface text-ink-3 hover:text-brand transition-colors">
                         <Settings className="w-3.5 h-3.5" />
                       </button>
                       <button onClick={() => { setForm({ name: t.name, bank_id: t.bank_id || '', convenio_id: t.convenio_id || '', category_id: t.category_id || '', active: t.active, comissao_empresa: String(t.comissao_empresa ?? ''), comissao_corretor: String(t.comissao_corretor ?? ''), coeficiente: String(t.coeficiente ?? '') }); setEditId(t.id); setShowForm(true); }}
-                        className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-dk-surface text-gray-400 hover:text-gray-600 transition-colors">
+                        className="p-1.5 rounded-lg hover:bg-surface-hover dark:hover:bg-dk-surface text-ink-3 hover:text-ink-1 transition-colors">
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
                       <button onClick={() => deleteTable(t.id)}
-                        className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors">
+                        className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-ink-3 hover:text-red-500 transition-colors">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -326,7 +326,7 @@ export function AdminFinancialTables() {
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Convênio <span className="text-red-400">*</span></label>
             <div className="relative">
-              <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-ink-3 pointer-events-none" />
               <select value={form.convenio_id} onChange={e => setForm(f => ({ ...f, convenio_id: e.target.value }))} className={`${inp} appearance-none pr-8 ${!form.convenio_id ? 'border-red-200' : ''}`}>
                 <option value="">Selecione o convênio</option>
                 {convenios.map(cv => <option key={cv.id} value={cv.id}>{cv.name}</option>)}
@@ -337,7 +337,7 @@ export function AdminFinancialTables() {
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Banco <span className="text-red-400">*</span></label>
             <div className="relative">
-              <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-ink-3 pointer-events-none" />
               <select value={form.bank_id} onChange={e => setForm(f => ({ ...f, bank_id: e.target.value }))} className={`${inp} appearance-none pr-8 ${!form.bank_id ? 'border-red-200' : ''}`}>
                 <option value="">Selecione o banco</option>
                 {banks.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -348,7 +348,7 @@ export function AdminFinancialTables() {
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>Categoria <span className="text-red-400">*</span></label>
             <div className="relative">
-              <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-ink-3 pointer-events-none" />
               <select value={form.category_id} onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))} className={`${inp} appearance-none pr-8 ${!form.category_id ? 'border-red-200' : ''}`}>
                 <option value="">Selecione a categoria</option>
                 {categories.map(c => <option key={c.id} value={c.id}>{c.name} (×{c.multiplier})</option>)}
@@ -375,7 +375,7 @@ export function AdminFinancialTables() {
           </div>
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" checked={form.active} onChange={e => setForm(f => ({ ...f, active: e.target.checked }))} className="w-4 h-4 rounded" />
-            <span className="text-sm text-gray-700 dark:text-gray-300">Tabela ativa</span>
+            <span className="text-sm text-ink-2 text-ink-2">Tabela ativa</span>
           </label>
         </form>
       </Modal>
@@ -415,18 +415,18 @@ export function AdminFinancialTables() {
           <div>
             <label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>Selecione o arquivo CSV</label>
             <input ref={fileRef} type="file" accept=".csv" onChange={handleImportFile}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 cursor-pointer" />
+              className="block w-full text-sm text-ink-3 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 cursor-pointer" />
           </div>
 
           {importRows.length > 0 && (
             <div>
               <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>{importRows.length} linha(s) detectada(s)</p>
               <div className="max-h-52 overflow-y-auto rounded-xl" style={{ border: '1px solid var(--card-border)' }}>
-                <table className="w-full text-xs">
+                <table className="data-table text-[13px]">
                   <thead>
                     <tr style={{ background: 'var(--surface-subtle)', borderBottom: '1px solid var(--card-border)' }}>
                       {['Nome', 'Banco', 'Convênio', 'Categoria', 'Com. Emp.', 'Status'].map(h => (
-                        <th key={h} className="text-left px-3 py-2 font-semibold uppercase tracking-wider text-[10px]" style={{ color: 'var(--text-3)' }}>{h}</th>
+                        <th key={h} className="text-left px-3 py-2 font-semibold text-xs" style={{ color: 'var(--text-3)' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -476,38 +476,38 @@ export function AdminFinancialTables() {
       >
         <div className="space-y-4">
           {rulesTable?.convenio_name && (
-            <p className="text-xs text-gray-400">{rulesTable.convenio_name} · {rulesTable.bank_name}</p>
+            <p className="text-xs text-ink-3">{rulesTable.convenio_name} · {rulesTable.bank_name}</p>
           )}
           {rules.length > 0 && (
             <div className="space-y-2">
               {rules.map(r => (
-                <div key={r.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-dk-surface rounded-xl">
-                  <div className="flex-1 text-sm text-gray-700 dark:text-gray-300">
+                <div key={r.id} className="flex items-center gap-3 p-3 bg-surface-subtle dark:bg-dk-surface rounded-xl">
+                  <div className="flex-1 text-sm text-ink-2 text-ink-2">
                     {fmtBRL(Number(r.min_value))} {r.max_value ? `→ ${fmtBRL(Number(r.max_value))}` : 'ou mais'} = <span className="font-bold text-brand">{r.points} pontos</span>
                     {rulesTable?.category_multiplier && rulesTable.category_multiplier !== 1 && (
-                      <span className="text-xs text-gray-400 ml-2">(×{rulesTable.category_multiplier} = {Math.round(r.points * Number(rulesTable.category_multiplier))} pts)</span>
+                      <span className="text-xs text-ink-3 ml-2">(×{rulesTable.category_multiplier} = {Math.round(r.points * Number(rulesTable.category_multiplier))} pts)</span>
                     )}
                   </div>
-                  <button onClick={() => deleteRule(r.id)} className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500">
+                  <button onClick={() => deleteRule(r.id)} className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-ink-3 hover:text-red-500">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ))}
             </div>
           )}
-          <form onSubmit={addRule} className="border border-dashed border-gray-200 dark:border-dk-border rounded-xl p-4">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Adicionar faixa</p>
+          <form onSubmit={addRule} className="border border-dashed border-line dark:border-dk-border rounded-xl p-4">
+            <p className="text-xs font-semibold text-ink-3 mb-3">Adicionar faixa</p>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Mínimo (R$) *</label>
+                <label className="block text-xs text-ink-3 mb-1">Mínimo (R$) *</label>
                 <input type="number" step="0.01" min="0" value={newRule.min_value} onChange={e => setNewRule(r => ({ ...r, min_value: e.target.value }))} className={inp} placeholder="0" required />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Máximo (R$)</label>
+                <label className="block text-xs text-ink-3 mb-1">Máximo (R$)</label>
                 <input type="number" step="0.01" min="0" value={newRule.max_value} onChange={e => setNewRule(r => ({ ...r, max_value: e.target.value }))} className={inp} placeholder="Sem limite" />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Pontos base *</label>
+                <label className="block text-xs text-ink-3 mb-1">Pontos base *</label>
                 <input type="number" min="0" value={newRule.points} onChange={e => setNewRule(r => ({ ...r, points: e.target.value }))} className={inp} placeholder="10" required />
               </div>
             </div>
@@ -516,7 +516,7 @@ export function AdminFinancialTables() {
             </button>
           </form>
           {rulesTable?.category_name && (
-            <p className="text-xs text-gray-400 text-center">
+            <p className="text-xs text-ink-3 text-center">
               Categoria: <strong>{rulesTable.category_name}</strong> (multiplicador ×{rulesTable.category_multiplier})
             </p>
           )}

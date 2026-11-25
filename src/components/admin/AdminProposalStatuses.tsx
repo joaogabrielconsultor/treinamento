@@ -41,13 +41,13 @@ function StatusModal({ status, onClose, onSave }: {
         </div>
         <form onSubmit={handle} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: 'var(--text-3)' }}>Nome do Status</label>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>Nome do Status</label>
             <input value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Em Vistoria" autoFocus
               className="input-cyber w-full px-3 py-2.5 text-sm rounded-xl" disabled={status?.is_system} />
             {status?.is_system && <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>Nome do status do sistema não pode ser alterado</p>}
           </div>
           <div>
-            <label className="block text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: 'var(--text-3)' }}>Cor</label>
+            <label className="block text-xs font-semibold mb-2" style={{ color: 'var(--text-3)' }}>Cor</label>
             <div className="flex flex-wrap gap-2">
               {COLORS.map(c => (
                 <button key={c.value} type="button" onClick={() => setColor(c.value)}
@@ -111,18 +111,18 @@ export function AdminProposalStatuses({ isMaster = false }: { isMaster?: boolean
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto" style={{ color: 'var(--text-1)' }}>
+    <div className="page page-narrow">
       {modal !== null && (
         <StatusModal status={modal === 'new' ? null : modal as ProposalStatusDef} onClose={() => setModal(null)} onSave={handleSave} />
       )}
 
-      <div className="flex items-center justify-between mb-6 animate-fade-up">
+      <div className="page-header">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Tag className="w-5 h-5" style={{ color: '#C6FF00' }} />
-            <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Status de Propostas</h1>
+            <Tag className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--text-3)' }} />
+            <h1 className="page-title">Status de Propostas</h1>
           </div>
-          <p className="text-xs" style={{ color: 'var(--text-3)' }}>{statuses.length} status cadastrados</p>
+          <p className="page-subtitle">{statuses.length} status cadastrados</p>
         </div>
         <button onClick={() => setModal('new')} className="flex items-center gap-2 px-4 py-2 text-sm rounded-xl btn-cyber font-semibold">
           <Plus className="w-4 h-4" /> Novo Status
@@ -146,11 +146,11 @@ export function AdminProposalStatuses({ isMaster = false }: { isMaster?: boolean
               <p className="text-sm" style={{ color: 'var(--text-3)' }}>Nenhum status cadastrado</p>
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <table className="data-table text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                   {['Status', 'Tipo', ''].map(h => (
-                    <th key={h} className="text-left px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
+                    <th key={h} className="text-left px-5 py-3.5 text-xs font-medium" style={{ color: 'var(--text-3)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>

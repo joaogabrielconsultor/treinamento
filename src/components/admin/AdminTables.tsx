@@ -94,7 +94,7 @@ function Label({ text, required }: { text: string; required?: boolean }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="text-xs font-bold uppercase tracking-wider mb-3 pb-1" style={{ color: 'var(--text-3)', borderBottom: '1px solid var(--card-border)' }}>{title}</h3>
+      <h3 className="text-xs font-medium mb-3 pb-1" style={{ color: 'var(--text-3)', borderBottom: '1px solid var(--card-border)' }}>{title}</h3>
       {children}
     </div>
   );
@@ -363,12 +363,12 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
   const preview = calcPreview(rangeForm, categories);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="page">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Tabelas Financeiras</h1>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
+          <h1 className="page-title">Tabelas Financeiras</h1>
+          <p className="page-subtitle">
             {hasFilters ? `${filtered.length} de ${tables.length} tabelas` : `${tables.length} tabelas cadastradas`}
           </p>
         </div>
@@ -389,7 +389,7 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
       <div className="rounded-2xl p-4 mb-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
         <div className="flex items-center gap-2 mb-3">
           <Filter className="w-3.5 h-3.5" style={{ color: 'var(--text-3)' }} />
-          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Filtros</span>
+          <span className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Filtros</span>
           {hasFilters && (
             <button onClick={() => { setFilterBanco(''); setFilterConvenio(''); setFilterDateFrom(''); setFilterDateTo(''); }}
               className="ml-auto flex items-center gap-1 text-xs px-2 py-1 rounded-lg transition-colors" style={{ color: '#f87171' }}
@@ -401,15 +401,15 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div>
-            <label className="block text-[10px] font-semibold mb-1 uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Data Cadastro — De</label>
+            <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--text-3)' }}>Data Cadastro — De</label>
             <input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)} className={inpSm} />
           </div>
           <div>
-            <label className="block text-[10px] font-semibold mb-1 uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Data Cadastro — Até</label>
+            <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--text-3)' }}>Data Cadastro — Até</label>
             <input type="date" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)} className={inpSm} />
           </div>
           <div>
-            <label className="block text-[10px] font-semibold mb-1 uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Banco</label>
+            <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--text-3)' }}>Banco</label>
             <div className="relative">
               <ChevronDown className="absolute right-2 top-2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
               <select value={filterBanco} onChange={e => setFilterBanco(e.target.value)} className={`${inpSm} appearance-none pr-7`}>
@@ -419,7 +419,7 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
             </div>
           </div>
           <div>
-            <label className="block text-[10px] font-semibold mb-1 uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>Convênio</label>
+            <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--text-3)' }}>Convênio</label>
             <div className="relative">
               <ChevronDown className="absolute right-2 top-2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
               <select value={filterConvenio} onChange={e => setFilterConvenio(e.target.value)} className={`${inpSm} appearance-none pr-7`}>
@@ -457,7 +457,7 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{t.name}</span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${t.active ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-gray-100 dark:bg-dk-surface text-gray-500'}`}>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${t.active ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-surface-subtle dark:bg-dk-surface text-ink-3'}`}>
                           {t.active ? 'Ativo' : 'Inativo'}
                         </span>
                       </div>
@@ -519,7 +519,7 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
                     <div style={{ borderTop: '1px solid var(--card-border)', background: 'rgba(0,0,0,0.04)' }}>
                       <div className="p-4">
                         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>
+                          <span className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>
                             Faixas de Comissão {!isLoadingRanges && `(${ranges.length})`}
                           </span>
                           <div className="flex items-center gap-2">
@@ -548,23 +548,23 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
                                   <div className="flex items-start justify-between gap-3">
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 flex-1 text-xs">
                                       <div>
-                                        <p className="text-[10px] uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-3)' }}>Faixa de Valor</p>
+                                        <p className="text-xs mb-0.5" style={{ color: 'var(--text-3)' }}>Faixa de Valor</p>
                                         <p className="font-semibold num" style={{ color: 'var(--text-1)' }}>{fmtBRL(Number(r.min_value))}{r.max_value ? ` → ${fmtBRL(Number(r.max_value))}` : ' ou mais'}</p>
                                       </div>
                                       <div>
-                                        <p className="text-[10px] uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-3)' }}>Prazo</p>
+                                        <p className="text-xs mb-0.5" style={{ color: 'var(--text-3)' }}>Prazo</p>
                                         <p className="font-semibold num" style={{ color: 'var(--text-1)' }}>
                                           {r.prazo_inicial != null ? (r.prazo_final != null ? `${r.prazo_inicial} → ${r.prazo_final} meses` : `${r.prazo_inicial} meses`) : '—'}
                                         </p>
                                         {r.juros_inicial != null && <p className="text-[10px] num mt-0.5" style={{ color: 'var(--text-3)' }}>{r.juros_inicial}{r.juros_final != null ? ` → ${r.juros_final}` : ''}% a.m.</p>}
                                       </div>
                                       <div>
-                                        <p className="text-[10px] uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-3)' }}>Comissão</p>
+                                        <p className="text-xs mb-0.5" style={{ color: 'var(--text-3)' }}>Comissão</p>
                                         <p className="num font-semibold" style={{ color: '#60a5fa' }}>Emp: {r.comissao_empresa}%</p>
                                         <p className="num font-semibold" style={{ color: '#4ade80' }}>Cor: {r.comissao_corretor}%</p>
                                       </div>
                                       <div>
-                                        <p className="text-[10px] uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-3)' }}>Pontuação</p>
+                                        <p className="text-xs mb-0.5" style={{ color: 'var(--text-3)' }}>Pontuação</p>
                                         <div className="flex items-center gap-1"><Star className="w-3 h-3 text-yellow-500" /><span className="font-bold num" style={{ color: '#fbbf24' }}>{pts} pts</span></div>
                                         {r.tipo_proposta && <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>{r.tipo_proposta}</p>}
                                       </div>
@@ -613,10 +613,10 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
             <div className="space-y-4">
               <div><Label text="Nome da Tabela" required /><input value={tableForm.name} onChange={e => setTableForm(f => ({ ...f, name: e.target.value }))} className={inp} required placeholder="Ex: APROVAMAIS NEO_096-299_318661 - CC-CB" /></div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div><Label text="Convênio" required /><div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" /><select value={tableForm.convenio_id} onChange={e => setTableForm(f => ({ ...f, convenio_id: e.target.value }))} className={`${inp} appearance-none pr-8`}><option value="">Selecione o convênio</option>{convenios.map(cv => <option key={cv.id} value={cv.id}>{cv.name}</option>)}</select></div></div>
-                <div><Label text="Banco" required /><div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" /><select value={tableForm.bank_id} onChange={e => setTableForm(f => ({ ...f, bank_id: e.target.value }))} className={`${inp} appearance-none pr-8`}><option value="">Selecione o banco</option>{banks.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div></div>
+                <div><Label text="Convênio" required /><div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-ink-3 pointer-events-none" /><select value={tableForm.convenio_id} onChange={e => setTableForm(f => ({ ...f, convenio_id: e.target.value }))} className={`${inp} appearance-none pr-8`}><option value="">Selecione o convênio</option>{convenios.map(cv => <option key={cv.id} value={cv.id}>{cv.name}</option>)}</select></div></div>
+                <div><Label text="Banco" required /><div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-ink-3 pointer-events-none" /><select value={tableForm.bank_id} onChange={e => setTableForm(f => ({ ...f, bank_id: e.target.value }))} className={`${inp} appearance-none pr-8`}><option value="">Selecione o banco</option>{banks.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div></div>
               </div>
-              <div><Label text="Categoria" required /><div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" /><select value={tableForm.category_id} onChange={e => setTableForm(f => ({ ...f, category_id: e.target.value }))} className={`${inp} appearance-none pr-8`}><option value="">Selecione a categoria</option>{categories.map(c => <option key={c.id} value={c.id}>{c.name} (×{c.multiplier})</option>)}</select></div></div>
+              <div><Label text="Categoria" required /><div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-ink-3 pointer-events-none" /><select value={tableForm.category_id} onChange={e => setTableForm(f => ({ ...f, category_id: e.target.value }))} className={`${inp} appearance-none pr-8`}><option value="">Selecione a categoria</option>{categories.map(c => <option key={c.id} value={c.id}>{c.name} (×{c.multiplier})</option>)}</select></div></div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label text="Comissão Empresa (%)" /><input type="number" step="0.01" min="0" max="100" value={tableForm.comissao_empresa} onChange={e => setTableForm(f => ({ ...f, comissao_empresa: e.target.value }))} className={inp} placeholder="0.00" /></div>
                 <div><Label text="Comissão Corretor (%)" /><input type="number" step="0.01" min="0" max="100" value={tableForm.comissao_corretor} onChange={e => setTableForm(f => ({ ...f, comissao_corretor: e.target.value }))} className={inp} placeholder="0.00" /></div>
@@ -695,11 +695,11 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
           {rules.length > 0 && <div className="space-y-2">{rules.map(r => (
             <div key={r.id} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-1)' }}>
               <div className="flex-1 text-sm" style={{ color: 'var(--text-2)' }}>{fmtBRL(Number(r.min_value))} {r.max_value ? `→ ${fmtBRL(Number(r.max_value))}` : 'ou mais'} = <span className="font-bold text-brand">{r.points} pontos</span>{rulesTable?.category_multiplier && rulesTable.category_multiplier !== 1 && <span className="text-xs ml-2" style={{ color: 'var(--text-3)' }}>(×{rulesTable.category_multiplier} = {Math.round(r.points * Number(rulesTable.category_multiplier))} pts)</span>}</div>
-              {isMaster && <button onClick={() => deleteRule(r.id)} className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>}
+              {isMaster && <button onClick={() => deleteRule(r.id)} className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-ink-3 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>}
             </div>
           ))}</div>}
           <form onSubmit={addRule} className="border border-dashed rounded-xl p-4" style={{ borderColor: 'var(--card-border)' }}>
-            <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-3)' }}>Adicionar faixa</p>
+            <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-3)' }}>Adicionar faixa</p>
             <div className="grid grid-cols-3 gap-3">
               <div><label className="block text-xs mb-1" style={{ color: 'var(--text-3)' }}>Mínimo (R$) *</label><input type="number" step="0.01" min="0" value={newRule.min_value} onChange={e => setNewRule(r => ({ ...r, min_value: e.target.value }))} className={inp} placeholder="0" required /></div>
               <div><label className="block text-xs mb-1" style={{ color: 'var(--text-3)' }}>Máximo (R$)</label><input type="number" step="0.01" min="0" value={newRule.max_value} onChange={e => setNewRule(r => ({ ...r, max_value: e.target.value }))} className={inp} placeholder="Sem limite" /></div>
@@ -739,12 +739,12 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
           {!importingTables && (
             <div><label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>Selecione o arquivo CSV</label>
               <input ref={fileTablesRef} type="file" accept=".csv" onChange={e => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = ev => { setImportTableRows(parseCSV(ev.target?.result as string)); setImportTableErrors([]); }; r.readAsText(f, 'UTF-8'); }}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 cursor-pointer" /></div>
+                className="block w-full text-sm text-ink-3 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 cursor-pointer" /></div>
           )}
           {!importingTables && importTableRows.length > 0 && (
             <div><p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>{importTableRows.length} linha(s) detectada(s)</p>
               <div className="max-h-52 overflow-y-auto rounded-xl" style={{ border: '1px solid var(--card-border)' }}>
-                <table className="w-full text-xs"><thead><tr style={{ background: 'var(--surface-subtle)', borderBottom: '1px solid var(--card-border)' }}>{['Nome','Banco','Convênio','Categoria','Status'].map(h => <th key={h} className="text-left px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>{h}</th>)}</tr></thead>
+                <table className="data-table text-[13px]"><thead><tr style={{ background: 'var(--surface-subtle)', borderBottom: '1px solid var(--card-border)' }}>{['Nome','Banco','Convênio','Categoria','Status'].map(h => <th key={h} className="text-left px-3 py-2 text-xs font-semibold" style={{ color: 'var(--text-3)' }}>{h}</th>)}</tr></thead>
                   <tbody>{importTableRows.map((row, i) => { const bOk = banks.find(b => b.name.toLowerCase() === (row.banco||'').toLowerCase()); const cvOk = convenios.find(c => c.name.toLowerCase() === (row.convenio||'').toLowerCase()); const catOk = categories.find(c => c.name.toLowerCase() === (row.categoria||'').toLowerCase()); const ok = !!(bOk && cvOk && catOk && row.nome); return (<tr key={i} style={{ borderBottom: '1px solid var(--card-border)' }}><td className="px-3 py-2 max-w-[140px] truncate" style={{ color: 'var(--text-1)' }}>{row.nome||'—'}</td><td className="px-3 py-2" style={{ color: bOk ? 'var(--text-2)' : '#f87171' }}>{row.banco||'—'}{!bOk&&' ⚠'}</td><td className="px-3 py-2" style={{ color: cvOk ? 'var(--text-2)' : '#f87171' }}>{row.convenio||'—'}{!cvOk&&' ⚠'}</td><td className="px-3 py-2" style={{ color: catOk ? 'var(--text-2)' : '#f87171' }}>{row.categoria||'—'}{!catOk&&' ⚠'}</td><td className="px-3 py-2"><span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${ok ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'}`}>{ok ? 'OK' : 'Erro'}</span></td></tr>); })}</tbody>
                 </table>
               </div>
@@ -768,11 +768,11 @@ export function AdminTables({ isMaster = false }: { isMaster?: boolean }) {
           </div>
           <div><label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>Selecione o arquivo CSV</label>
             <input ref={fileRangesRef} type="file" accept=".csv" onChange={e => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = ev => { setImportRangeRows(parseCSV(ev.target?.result as string)); setImportRangeErrors([]); }; r.readAsText(f, 'UTF-8'); }}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 cursor-pointer" /></div>
+              className="block w-full text-sm text-ink-3 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 cursor-pointer" /></div>
           {importRangeRows.length > 0 && (
             <div><p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>{importRangeRows.length} linha(s) detectada(s)</p>
               <div className="max-h-48 overflow-y-auto rounded-xl" style={{ border: '1px solid var(--card-border)' }}>
-                <table className="w-full text-xs"><thead><tr style={{ background: 'var(--surface-subtle)', borderBottom: '1px solid var(--card-border)' }}>{['Tipo Proposta','Prazo','Comissão','Pts'].map(h => <th key={h} className="text-left px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>{h}</th>)}</tr></thead>
+                <table className="data-table text-[13px]"><thead><tr style={{ background: 'var(--surface-subtle)', borderBottom: '1px solid var(--card-border)' }}>{['Tipo Proposta','Prazo','Comissão','Pts'].map(h => <th key={h} className="text-left px-3 py-2 text-xs font-semibold" style={{ color: 'var(--text-3)' }}>{h}</th>)}</tr></thead>
                   <tbody>{importRangeRows.map((row, i) => (<tr key={i} style={{ borderBottom: '1px solid var(--card-border)' }}><td className="px-3 py-2" style={{ color: 'var(--text-2)' }}>{row.tipo_proposta||'—'}</td><td className="px-3 py-2 num" style={{ color: 'var(--text-2)' }}>{row.prazo_inicial && row.prazo_final ? `${row.prazo_inicial}→${row.prazo_final}` : row.prazo_inicial||'—'}</td><td className="px-3 py-2 num" style={{ color: 'var(--text-2)' }}>{row.comissao_empresa ? `E:${row.comissao_empresa}%` : ''}{row.comissao_corretor ? ` C:${row.comissao_corretor}%` : ''}</td><td className="px-3 py-2 num" style={{ color: '#fbbf24' }}>{row.base_points||'—'}</td></tr>))}</tbody>
                 </table>
               </div>

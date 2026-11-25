@@ -44,7 +44,7 @@ export function Ranking({ userId }: { userId: string }) {
   ] as const;
 
   return (
-    <div className="p-6 max-w-4xl mx-auto" style={{ color: 'var(--text-1)' }}>
+    <div className="page page-narrow">
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6 animate-fade-up">
@@ -60,8 +60,8 @@ export function Ranking({ userId }: { userId: string }) {
             <Trophy className="w-5 h-5" style={{ color: '#fbbf24' }} />
           </div>
           <div>
-            <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Ranking</h1>
-            <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+            <h1 className="page-title">Ranking</h1>
+            <p className="page-subtitle">
               {entries.length} corretores na disputa
             </p>
           </div>
@@ -120,7 +120,7 @@ export function Ranking({ userId }: { userId: string }) {
             #{myEntry.position}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#C6FF00' }}>Sua posição</p>
+            <p className="text-xs font-medium" style={{ color: '#C6FF00' }}>Sua posição</p>
             <p className="font-bold text-sm num" style={{ color: 'var(--text-1)' }}>
               #{myEntry.position} — {myEntry.total_points} pontos
             </p>
@@ -203,7 +203,7 @@ export function Ranking({ userId }: { userId: string }) {
             style={{ borderBottom: '1px solid var(--card-border)' }}
           >
             <TrendingUp className="w-3.5 h-3.5" style={{ color: 'var(--text-3)' }} />
-            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>
+            <span className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>
               Classificação completa
             </span>
           </div>

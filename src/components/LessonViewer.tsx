@@ -293,7 +293,7 @@ export function LessonViewer({
   const contentParagraphs = lesson.content?.split('\n').filter(Boolean) ?? [];
 
   return (
-    <div className="p-8 max-w-4xl mx-auto" style={{ color: 'var(--text-1)' }}>
+    <div className="page page-narrow">
       <button
         onClick={onBack}
         className="flex items-center gap-2 text-sm font-medium mb-6 transition-all"
@@ -424,14 +424,14 @@ export function LessonViewer({
               boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
             }}
           >
-            <h3 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-3)' }}>
+            <h3 className="text-xs font-medium mb-3" style={{ color: 'var(--text-3)' }}>
               Conteúdo do curso
             </h3>
             <div className="space-y-3">
               {modules.map((module) => (
                 <div key={module.id}>
                   <p
-                    className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 mb-1"
+                    className="text-xs font-medium px-2 py-1 mb-1"
                     style={{ color: '#334155' }}
                   >
                     {module.title}

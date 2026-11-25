@@ -32,7 +32,7 @@ function LojaModal({ loja, onClose, onSave }: {
         </div>
         <form onSubmit={handleSave} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: 'var(--text-3)' }}>Nome da Loja</label>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-3)' }}>Nome da Loja</label>
             <input value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Loja Centro" autoFocus
               className="input-cyber w-full px-3 py-2.5 text-sm rounded-xl" />
           </div>
@@ -112,7 +112,7 @@ export function AdminLojas({ isMaster = false }: { isMaster?: boolean }) {
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto" style={{ color: 'var(--text-1)' }}>
+    <div className="page page-narrow">
       {modal !== null && modal !== undefined && (
         <LojaModal
           loja={modal === 'new' ? null : modal as Loja}
@@ -128,13 +128,13 @@ export function AdminLojas({ isMaster = false }: { isMaster?: boolean }) {
         />
       )}
 
-      <div className="flex items-center justify-between mb-6 animate-fade-up">
+      <div className="page-header">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Store className="w-5 h-5" style={{ color: '#C6FF00' }} />
-            <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Lojas</h1>
+            <Store className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--text-3)' }} />
+            <h1 className="page-title">Lojas</h1>
           </div>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{lojas.length} loja{lojas.length !== 1 ? 's' : ''} cadastrada{lojas.length !== 1 ? 's' : ''}</p>
+          <p className="page-subtitle">{lojas.length} loja{lojas.length !== 1 ? 's' : ''} cadastrada{lojas.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={load} className="flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl btn-ghost">
@@ -158,11 +158,11 @@ export function AdminLojas({ isMaster = false }: { isMaster?: boolean }) {
             </div>
           ) : (
             <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="data-table text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                   {['Loja', 'Corretores', 'Cadastro', ''].map(h => (
-                    <th key={h} className="text-left px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
+                    <th key={h} className="text-left px-5 py-3.5 text-xs font-medium" style={{ color: 'var(--text-3)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>

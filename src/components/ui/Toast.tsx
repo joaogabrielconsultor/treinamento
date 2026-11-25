@@ -41,10 +41,10 @@ interface ToastAPI {
 const ToastContext = createContext<ToastAPI | null>(null);
 
 const CONFIG: Record<ToastType, { icon: typeof CheckCircle2; color: string; glow: string; bar: string; label: string }> = {
-  success: { icon: CheckCircle2,  color: '#22c55e', glow: 'rgba(34,197,94,0.35)',  bar: 'linear-gradient(90deg,#22c55e,#16a34a)', label: 'Sucesso' },
-  error:   { icon: XCircle,       color: '#f87171', glow: 'rgba(248,113,113,0.35)', bar: 'linear-gradient(90deg,#f87171,#ef4444)', label: 'Erro' },
-  warning: { icon: AlertTriangle, color: '#fbbf24', glow: 'rgba(245,158,11,0.35)',  bar: 'linear-gradient(90deg,#fbbf24,#d97706)', label: 'Atenção' },
-  info:    { icon: Info,          color: '#C6FF00', glow: 'rgba(198,255,0,0.35)',  bar: 'linear-gradient(90deg,#C6FF00,#A9E000)', label: 'Informação' },
+  success: { icon: CheckCircle2,  color: '#4ADE80', glow: 'rgba(74,222,128,0.22)',  bar: '#4ADE80', label: 'Sucesso' },
+  error:   { icon: XCircle,       color: '#F87171', glow: 'rgba(248,113,113,0.22)', bar: '#F87171', label: 'Erro' },
+  warning: { icon: AlertTriangle, color: '#FBBF24', glow: 'rgba(251,191,36,0.22)',  bar: '#FBBF24', label: 'Atenção' },
+  info:    { icon: Info,          color: '#60A5FA', glow: 'rgba(96,165,250,0.22)',  bar: '#60A5FA', label: 'Informação' },
 };
 
 let counter = 0;

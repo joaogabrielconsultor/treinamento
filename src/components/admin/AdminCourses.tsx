@@ -35,11 +35,11 @@ export function AdminCourses({ onNavigate, isMaster = false }: AdminCoursesProps
   }
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
+    <div className="page">
+      <div className="page-header">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Gestão de Treinamentos</h1>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
+          <h1 className="page-title">Gestão de Treinamentos</h1>
+          <p className="page-subtitle">
             {courses.length} curso{courses.length !== 1 ? 's' : ''} cadastrado{courses.length !== 1 ? 's' : ''}
           </p>
         </div>
@@ -85,7 +85,7 @@ export function AdminCourses({ onNavigate, isMaster = false }: AdminCoursesProps
               <div className="flex items-center gap-2 mt-2 flex-wrap">
                 <span className="text-xs" style={{ color: 'var(--text-3)' }}>{course.category}</span>
                 <span className="text-xs" style={{ color: 'var(--border-2)' }}>•</span>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${levelColors[course.level] || 'bg-gray-100 text-gray-600'}`}>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${levelColors[course.level] || 'bg-surface-subtle text-ink-2'}`}>
                   {course.level}
                 </span>
                 <span className="text-xs" style={{ color: 'var(--border-2)' }}>•</span>

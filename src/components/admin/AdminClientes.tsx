@@ -120,11 +120,11 @@ export function AdminClientes() {
   ];
 
   return (
-    <div className="p-4 sm:p-8 max-w-6xl mx-auto">
+    <div className="page">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Clientes & Assinaturas</h1>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Painel do dono — gerencie quem assina o GS CRED</p>
+          <h1 className="page-title">Clientes & Assinaturas</h1>
+          <p className="page-subtitle">Painel do dono — gerencie quem assina o GS CRED</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={load} className="flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl btn-ghost">
@@ -142,7 +142,7 @@ export function AdminClientes() {
           <div key={s.label} className="stat-card rounded-2xl p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-3)' }}>{s.label}</p>
+                <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>{s.label}</p>
                 <p className="text-xl font-black num" style={{ color: 'var(--text-1)' }}>{s.value}</p>
               </div>
               <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${s.color}18`, border: `1px solid ${s.color}30` }}>
@@ -314,7 +314,7 @@ function Info({ icon: Icon, label, value }: { icon: React.ElementType; label: st
     <div className="flex items-start gap-2">
       <Icon className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: 'var(--text-3)' }} />
       <div className="min-w-0">
-        <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>{label}</p>
+        <p className="text-xs" style={{ color: 'var(--text-3)' }}>{label}</p>
         <p className="font-semibold" style={{ color: 'var(--text-1)' }}>{value}</p>
       </div>
     </div>

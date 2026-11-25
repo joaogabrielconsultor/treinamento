@@ -233,11 +233,11 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto" style={{ color: 'var(--text-1)' }}>
-      <div className="flex items-center justify-between mb-6 animate-fade-up">
+    <div className="page">
+      <div className="page-header">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Propostas — Admin</h1>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{proposals.length} propostas no sistema</p>
+          <h1 className="page-title">Propostas — Admin</h1>
+          <p className="page-subtitle">{proposals.length} propostas no sistema</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={load} className="flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl btn-ghost">
@@ -267,7 +267,7 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
           { label: 'Pontos distribuídos',  value: `${totalPoints} pts`,                              color: '#fbbf24' },
         ].map((c, i) => (
           <div key={c.label} className="stat-card rounded-xl p-4 animate-fade-up" style={{ animationDelay: `${i * 50}ms` }}>
-            <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>{c.label}</p>
+            <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>{c.label}</p>
             <p className="text-xl font-black num" style={{ color: c.color }}>{c.value}</p>
           </div>
         ))}
@@ -316,14 +316,14 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
         <div className="rounded-2xl overflow-hidden animate-fade-up"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)', animationDelay: '120ms' }}>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
+            <table className="data-table text-sm" style={{ tableLayout: 'fixed' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                   {['Proposta', 'Corretor', 'Nome do Cliente', 'CPF', 'Convênio', 'Banco', 'Tabela', 'Valor', 'Status', 'Pontos', 'Ações'].map(h => {
                     const sortable = !!SORT_FIELDS[h]; const active = sortCol === h;
                     return (
                       <th key={h} onClick={sortable ? () => handleSort(h) : undefined}
-                        className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest"
+                        className="text-left px-4 py-3.5 text-xs font-medium"
                         style={{ color: active ? '#C6FF00' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
                         {h}{sortable && <span className="ml-1 opacity-60">{active ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
                       </th>
@@ -469,7 +469,7 @@ export function AdminProposals({ isMaster = false }: { isMaster?: boolean }) {
                 {importPreview.length} linha(s) detectada(s) — prévia das primeiras 10:
               </p>
               <div className="rounded-xl overflow-hidden overflow-x-auto max-h-56" style={{ border: '1px solid var(--card-border)' }}>
-                <table className="w-full text-xs" style={{ minWidth: '700px' }}>
+                <table className="data-table text-[13px]" style={{ minWidth: '700px' }}>
                   <thead>
                     <tr style={{ background: 'var(--card-border)' }}>
                       {['Proposta','Cliente','CPF','Corretor','Banco','Convênio','Tabela','Valor','Status'].map(h => (

@@ -116,12 +116,12 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
               <ShieldCheck className="w-3 h-3" /> Plataforma para crédito consignado
             </span>
 
-            <h2 className="text-[26px] font-bold leading-tight mt-4" style={{ color: '#E2E8F0' }}>
+            <h2 className="text-[26px] font-bold leading-tight mt-4" style={{ color: 'var(--text-1)' }}>
               Toda a operação da sua<br />
               <span className="text-gradient-teal">empresa de consignado</span><br />
               em um só lugar.
             </h2>
-            <p className="text-sm mt-3 max-w-xs leading-relaxed" style={{ color: '#94A3B8' }}>
+            <p className="text-sm mt-3 max-w-xs leading-relaxed" style={{ color: 'var(--text-2)' }}>
               Do primeiro contato ao pagamento da comissão — gestão, produção e treinamento da sua equipe de vendas.
             </p>
           </div>
@@ -137,7 +137,7 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
                 </span>
                 <div>
                   <p className="text-[13px] font-semibold" style={{ color: '#CBD5E1' }}>{title}</p>
-                  <p className="text-[12px] mt-0.5 leading-snug" style={{ color: '#64748B' }}>{desc}</p>
+                  <p className="text-[12px] mt-0.5 leading-snug" style={{ color: 'var(--text-3)' }}>{desc}</p>
                 </div>
               </div>
             ))}
@@ -145,7 +145,7 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
 
           <div className="relative flex items-center gap-2 mt-8 pt-5" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
             <TrendingUp className="w-4 h-4" style={{ color: '#C6FF00' }} />
-            <span className="text-[12px]" style={{ color: '#64748B' }}>Mais produtividade, mais propostas aprovadas.</span>
+            <span className="text-[12px]" style={{ color: 'var(--text-3)' }}>Mais produtividade, mais propostas aprovadas.</span>
           </div>
         </div>
 
@@ -255,7 +255,7 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
                 >
                   <div className="flex items-center gap-2 mb-2" style={{ color: '#C6FF00' }}>
                     <LockIcon className="w-4 h-4" />
-                    <span className="font-semibold uppercase tracking-wide text-[12px]" style={{ fontFamily: "'Space Mono', ui-monospace, monospace" }}>
+                    <span className="font-semibold text-[12px]" >
                       Assinatura {paywall.status}
                     </span>
                   </div>
@@ -273,7 +273,7 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
                     target="_blank"
                     rel="noreferrer"
                     className="block text-center text-[12px] mt-3 no-underline"
-                    style={{ color: '#94A3B8' }}
+                    style={{ color: 'var(--text-2)' }}
                   >
                     Já paguei / falar com o suporte
                   </a>
@@ -302,7 +302,7 @@ export function AuthPage({ onSuccess, signIn }: AuthPageProps) {
             <p className="text-center text-xs mt-6" style={{ color: '#334155' }}>
               Acesso restrito — solicite credenciais ao administrador
             </p>
-            <p className="text-center text-[10px] mt-3 uppercase tracking-widest" style={{ fontFamily: "'Space Mono', ui-monospace, monospace", color: '#3a3a3a' }}>
+            <p className="text-center text-xs mt-3" style={{ color: '#3a3a3a' }}>
               Desenvolvido por <span style={{ color: '#7a8a3a' }}>GS CRED</span>
             </p>
           </div>

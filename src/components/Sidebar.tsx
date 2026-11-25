@@ -1,4 +1,4 @@
-import { LayoutDashboard, Library, LogOut, ChevronRight, Users, GraduationCap, Shield, Building2, Palette, FileText, Trophy, BarChart2, Table2, Tag, ClipboardList, FileBarChart, Handshake, Package, Calculator, Wallet, Store, UserCog, BookOpen, FileSpreadsheet, ScanSearch, Receipt } from 'lucide-react';
+import { LayoutDashboard, Library, LogOut, Users, GraduationCap, Building2, Palette, FileText, Trophy, BarChart2, Table2, Tag, FileBarChart, Handshake, Package, Calculator, Wallet, Store, UserCog, BookOpen, FileSpreadsheet, ScanSearch, Receipt, X } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { ViewType } from '../types';
 import { LogoComponent } from './LogoComponent';
@@ -11,62 +11,81 @@ interface SidebarProps {
   onSignOut: () => void;
   isAdmin: boolean;
   onOpenProfile: () => void;
+  /** Menu aberto no celular (abaixo de lg a sidebar vira gaveta). */
+  open?: boolean;
+  onClose?: () => void;
 }
 
-const navItems = [
-  { view: 'dashboard'    as ViewType, icon: LayoutDashboard, label: 'Dashboard' },
-  { view: 'production'   as ViewType, icon: BarChart2,       label: 'Produção' },
-  { view: 'proposals'    as ViewType, icon: FileText,        label: 'Propostas' },
-  { view: 'simulator'   as ViewType, icon: Calculator,      label: 'Simulador' },
-  { view: 'ranking'         as ViewType, icon: Trophy,    label: 'Ranking' },
-  { view: 'conta-corrente'  as ViewType, icon: Wallet,    label: 'Conta Corrente' },
-  { view: 'catalog'         as ViewType, icon: Library,   label: 'Treinamentos' },
-  { view: 'login-bancos'    as ViewType, icon: Building2, label: 'Login Bancos' },
-  { view: 'roteiros'        as ViewType, icon: BookOpen,   label: 'Roteiros' },
-  { view: 'consulta-margem' as ViewType, icon: ScanSearch, label: 'Consulta Margem' },
+type NavItem = { view: ViewType; icon: typeof Users; label: string };
+
+export const navItems: NavItem[] = [
+  { view: 'dashboard',       icon: LayoutDashboard, label: 'Dashboard' },
+  { view: 'production',      icon: BarChart2,       label: 'Produção' },
+  { view: 'proposals',       icon: FileText,        label: 'Propostas' },
+  { view: 'simulator',       icon: Calculator,      label: 'Simulador' },
+  { view: 'ranking',         icon: Trophy,          label: 'Ranking' },
+  { view: 'conta-corrente',  icon: Wallet,          label: 'Conta Corrente' },
+  { view: 'catalog',         icon: Library,         label: 'Treinamentos' },
+  { view: 'login-bancos',    icon: Building2,       label: 'Login Bancos' },
+  { view: 'roteiros',        icon: BookOpen,        label: 'Roteiros' },
+  { view: 'consulta-margem', icon: ScanSearch,      label: 'Consulta Margem' },
 ];
 
-const adminGroups: { label: string; items: { view: ViewType; icon: typeof Users; label: string }[] }[] = [
+export const adminGroups: { label: string; items: NavItem[] }[] = [
   {
     label: 'Cadastros',
     items: [
-      { view: 'admin-users'            as ViewType, icon: Users,     label: 'Usuários' },
-      { view: 'admin-convenios'        as ViewType, icon: Handshake, label: 'Convênios' },
-      { view: 'admin-banks'            as ViewType, icon: Building2, label: 'Bancos' },
-      { view: 'admin-products'         as ViewType, icon: Package,   label: 'Produtos' },
-      { view: 'admin-financial-tables' as ViewType, icon: Table2,    label: 'Tabelas' },
-      { view: 'admin-categories'       as ViewType, icon: Tag,       label: 'Categorias' },
+      { view: 'admin-users',            icon: Users,     label: 'Usuários' },
+      { view: 'admin-convenios',        icon: Handshake, label: 'Convênios' },
+      { view: 'admin-banks',            icon: Building2, label: 'Bancos' },
+      { view: 'admin-products',         icon: Package,   label: 'Produtos' },
+      { view: 'admin-financial-tables', icon: Table2,    label: 'Tabelas' },
+      { view: 'admin-categories',       icon: Tag,       label: 'Categorias' },
     ],
   },
   {
     label: 'Financeiro',
     items: [
-      { view: 'admin-conta-corrente'    as ViewType, icon: Wallet,       label: 'Conta Corrente' },
-      { view: 'admin-reports'           as ViewType, icon: FileBarChart, label: 'Relatórios' },
-      { view: 'admin-commission-report' as ViewType, icon: Receipt,      label: 'Relatório Comissões' },
-      { view: 'admin-proposal-statuses' as ViewType, icon: Tag,          label: 'Status Propostas' },
-      { view: 'admin-conta-empresa'     as ViewType, icon: Building2,    label: 'Conta Empresa' },
+      { view: 'admin-conta-corrente',    icon: Wallet,       label: 'Conta Corrente' },
+      { view: 'admin-reports',           icon: FileBarChart, label: 'Relatórios' },
+      { view: 'admin-commission-report', icon: Receipt,      label: 'Relatório Comissões' },
+      { view: 'admin-proposal-statuses', icon: Tag,          label: 'Status Propostas' },
+      { view: 'admin-conta-empresa',     icon: Building2,    label: 'Conta Empresa' },
     ],
   },
   {
     label: 'Operação',
     items: [
-      { view: 'admin-lojas'          as ViewType, icon: Store,           label: 'Lojas' },
-      { view: 'admin-usuarios-banco' as ViewType, icon: UserCog,         label: 'Usuários Banco' },
-      { view: 'admin-importacao'     as ViewType, icon: FileSpreadsheet, label: 'Importação CRM' },
+      { view: 'admin-lojas',          icon: Store,           label: 'Lojas' },
+      { view: 'admin-usuarios-banco', icon: UserCog,         label: 'Usuários Banco' },
+      { view: 'admin-importacao',     icon: FileSpreadsheet, label: 'Importação CRM' },
     ],
   },
   {
-    label: 'Conteúdo & Sistema',
+    label: 'Conteúdo e sistema',
     items: [
-      { view: 'admin-courses'        as ViewType, icon: GraduationCap, label: 'Treinamentos' },
-      { view: 'admin-roteiros'       as ViewType, icon: BookOpen,      label: 'Roteiros' },
-      { view: 'admin-personalizacao' as ViewType, icon: Palette,       label: 'Personalização' },
+      { view: 'admin-courses',        icon: GraduationCap, label: 'Treinamentos' },
+      { view: 'admin-roteiros',       icon: BookOpen,      label: 'Roteiros' },
+      { view: 'admin-personalizacao', icon: Palette,       label: 'Personalização' },
     ],
   },
 ];
 
-export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin, onOpenProfile }: SidebarProps) {
+function NavButton({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
+  const Icon = item.icon;
+  return (
+    <button
+      onClick={onClick}
+      aria-current={active ? 'page' : undefined}
+      className={`nav-item ${active ? 'nav-active' : ''}`}
+    >
+      <Icon className="nav-icon" />
+      <span className="flex-1 min-w-0 text-left truncate">{item.label}</span>
+    </button>
+  );
+}
+
+export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin, onOpenProfile, open = false, onClose }: SidebarProps) {
   const { companyName } = useAppContext();
 
   const displayName = user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'Usuário';
@@ -82,171 +101,88 @@ export function Sidebar({ currentView, onNavigate, user, onSignOut, isAdmin, onO
     currentView === view ||
     (view === 'admin-courses' && currentView === 'admin-course-edit');
 
+  const go = (view: ViewType) => { onNavigate(view); onClose?.(); };
+
   return (
-    <aside
-      className="w-60 flex flex-col h-screen sticky top-0 flex-shrink-0"
-      style={{
-        background: 'linear-gradient(180deg, #0A0A0A 0%, #000000 100%)',
-        borderRight: '1px solid rgba(255,255,255,0.08)',
-      }}
-    >
-      {/* Brand */}
-      <div className="px-4 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-        <div className="flex items-center gap-3">
-          <LogoComponent size="md" />
-          <div className="min-w-0">
-            <span
-              className="text-base leading-none block truncate"
-              style={{
-                fontFamily: "'Anton', Impact, sans-serif",
-                letterSpacing: '0.04em',
-                color: '#C6FF00',
-              }}
-            >
+    <>
+      {/* fundo escurecido da gaveta (só no celular) */}
+      <div
+        className={`fixed inset-0 z-40 bg-black/60 lg:hidden transition-opacity ${open ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <aside
+        className={`sidebar fixed lg:sticky top-0 left-0 z-50 lg:z-auto h-screen w-[260px] lg:w-[248px] flex flex-col flex-shrink-0 transition-transform duration-200 lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}
+        aria-label="Navegação principal"
+      >
+        {/* Marca */}
+        <div className="flex items-center gap-3 px-5 h-16 flex-shrink-0">
+          <LogoComponent size="sm" />
+          <div className="min-w-0 flex-1">
+            <span className="block truncate text-[15px] font-semibold tracking-tight" style={{ color: 'var(--text-1)' }}>
               {companyName}
             </span>
-            <span className="text-[11px] mt-0.5 block truncate" style={{ color: '#64748B' }}>
-              Plataforma Financeira
+            <span className="block truncate text-xs" style={{ color: 'var(--text-3)' }}>
+              Crédito consignado
             </span>
           </div>
-        </div>
-      </div>
-
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {navItems.map(({ view, icon: Icon, label }) => {
-          const active = currentView === view;
-          return (
-            <button
-              key={view}
-              onClick={() => onNavigate(view)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 ${active ? 'nav-active' : ''}`}
-              style={active
-                ? { color: '#C6FF00' }
-                : { color: '#64748B' }
-              }
-              onMouseEnter={(e) => {
-                if (!active) {
-                  (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
-                  (e.currentTarget as HTMLElement).style.color = '#94A3B8';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!active) {
-                  (e.currentTarget as HTMLElement).style.background = 'transparent';
-                  (e.currentTarget as HTMLElement).style.color = '#64748B';
-                }
-              }}
-            >
-              <Icon className="w-[17px] h-[17px] flex-shrink-0" />
-              <span className="flex-1 min-w-0 text-left truncate">{label}</span>
-              {active && <ChevronRight className="w-3.5 h-3.5 opacity-60 flex-shrink-0" />}
+          {onClose && (
+            <button onClick={onClose} className="lg:hidden btn btn-icon" style={{ color: 'var(--text-3)' }} aria-label="Fechar menu">
+              <X className="w-4 h-4" />
             </button>
-          );
-        })}
+          )}
+        </div>
 
-        {isAdmin && (
-          <div className="pt-4">
-            <div className="divider-cyber mb-3" />
-            <div className="flex items-center gap-2 px-3 mb-2">
-              <Shield className="w-3 h-3" style={{ color: '#C6FF00' }} />
-              <span
-                className="text-[10px] font-bold uppercase tracking-widest"
-                style={{ color: '#C6FF00' }}
-              >
-                Admin
-              </span>
-            </div>
-            {adminGroups.map((group, gi) => (
-              <div key={group.label} className={gi > 0 ? 'mt-3' : ''}>
-                <span
-                  className="block px-3 mb-1 text-[9px] font-bold uppercase tracking-widest"
-                  style={{ color: '#475569' }}
-                >
-                  {group.label}
-                </span>
-                {group.items.map(({ view, icon: Icon, label }) => {
-                  const active = isAdminActive(view);
-                  return (
-                    <button
-                      key={view}
-                      onClick={() => onNavigate(view)}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[12px] font-medium transition-all duration-200 ${active ? 'nav-active' : ''}`}
-                      style={active ? { color: '#C6FF00' } : { color: '#64748B' }}
-                      onMouseEnter={(e) => {
-                        if (!active) {
-                          (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
-                          (e.currentTarget as HTMLElement).style.color = '#94A3B8';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!active) {
-                          (e.currentTarget as HTMLElement).style.background = 'transparent';
-                          (e.currentTarget as HTMLElement).style.color = '#64748B';
-                        }
-                      }}
-                    >
-                      <Icon className="w-[15px] h-[15px] flex-shrink-0" />
-                      <span className="flex-1 min-w-0 text-left truncate">{label}</span>
-                      {active && <ChevronRight className="w-3 h-3 opacity-60 flex-shrink-0" />}
-                    </button>
-                  );
-                })}
-              </div>
+        {/* Navegação */}
+        <nav className="flex-1 overflow-y-auto px-3 pb-4">
+          <div className="space-y-px">
+            {navItems.map(item => (
+              <NavButton key={item.view} item={item} active={currentView === item.view} onClick={() => go(item.view)} />
             ))}
           </div>
-        )}
-      </nav>
 
-      {/* Bottom */}
-      <div className="px-3 py-3 space-y-1" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-        {/* User */}
-        <button
-          onClick={onOpenProfile}
-          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl mt-1 transition-all text-left"
-          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.09)'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; }}
-          title="Editar perfil"
-        >
-          <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-[11px] font-bold"
-            style={{
-              background: 'linear-gradient(135deg, #C6FF00, #A9E000)',
-              color: '#0A0A0A',
-              boxShadow: '0 0 10px rgba(198,255,0,0.3)',
-            }}
-          >
-            {initials}
+          {isAdmin && adminGroups.map(group => (
+            <div key={group.label} className="mt-6">
+              <div className="nav-group-label">{group.label}</div>
+              <div className="space-y-px">
+                {group.items.map(item => (
+                  <NavButton key={item.view} item={item} active={isAdminActive(item.view)} onClick={() => go(item.view)} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        {/* Usuário */}
+        <div className="flex-shrink-0 p-3" style={{ borderTop: '1px solid var(--border-1)' }}>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={onOpenProfile}
+              className="nav-item flex-1 min-w-0 !h-auto !py-2"
+              title="Editar perfil"
+            >
+              <span
+                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-semibold"
+                style={{ background: 'var(--accent)', color: 'var(--accent-ink)' }}
+              >
+                {initials}
+              </span>
+              <span className="flex-1 min-w-0 text-left">
+                <span className="block text-[13px] font-medium truncate" style={{ color: 'var(--text-1)' }}>{displayName}</span>
+                <span className="block text-xs truncate" style={{ color: 'var(--text-3)' }}>{displayEmail}</span>
+              </span>
+            </button>
+            <button
+              onClick={onSignOut}
+              className="btn btn-icon nav-signout"
+              title="Sair"
+              aria-label="Sair da plataforma"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[12px] font-semibold truncate" style={{ color: '#E2E8F0' }}>{displayName}</p>
-            <p className="text-[10px] truncate" style={{ color: '#64748B' }}>{displayEmail}</p>
-          </div>
-          <UserCog className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#475569' }} />
-        </button>
-
-        <button
-          onClick={onSignOut}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[12px] font-medium transition-all duration-200"
-          style={{ color: '#64748B' }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.08)';
-            (e.currentTarget as HTMLElement).style.color = '#f87171';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background = 'transparent';
-            (e.currentTarget as HTMLElement).style.color = '#64748B';
-          }}
-        >
-          <LogOut className="w-[15px] h-[15px]" />
-          Sair da plataforma
-        </button>
-
-        <p className="text-center text-[9px] tracking-widest uppercase pt-1.5" style={{ fontFamily: "'Space Mono', ui-monospace, monospace", color: '#3f3f3f' }}>
-          Desenvolvido por <span style={{ color: '#7a8a3a' }}>GS CRED</span>
-        </p>
-      </div>
-    </aside>
+        </div>
+      </aside>
+    </>
   );
 }

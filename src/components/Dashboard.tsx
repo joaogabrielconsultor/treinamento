@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, FileText, Calculator, Trophy, Library, Wallet, TrendingUp, BarChart2, ArrowRight, Activity, Percent, TrendingDown, Receipt, Calendar, Sparkles } from 'lucide-react';
+import { FileText, Calculator, Trophy, Library, Wallet, TrendingUp, ArrowRight, TrendingDown, Receipt, Calendar } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { ViewType } from '../types';
 import { useCountUp } from '../hooks/useCountUp';
@@ -37,31 +37,22 @@ function AnimBar({ pct, color, delay = 0 }: { pct: number; color: string; delay?
   );
 }
 
-function KpiCard({ label, numValue, textValue, sub, icon: Icon, color, delay = 0 }: {
+function KpiCell({ label, numValue, textValue, sub, primary = false, delay = 0 }: {
   label: string;
   numValue?: number;
   textValue?: string;
   sub?: string;
-  icon: React.ElementType;
-  color: string;
+  primary?: boolean;
   delay?: number;
 }) {
   const animated = useCountUp(numValue ?? 0, 900, delay + 80);
   const display = textValue ?? (numValue !== undefined ? fmtR(animated) : '—');
 
   return (
-    <div className="stat-card rounded-2xl p-5 animate-fade-up" style={{ animationDelay: `${delay}ms` }}>
-      <div className="flex items-start justify-between">
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-3)' }}>{label}</p>
-          <p className="text-xl font-black num" style={{ color: 'var(--text-1)' }}>{display}</p>
-          {sub && <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{sub}</p>}
-        </div>
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 animate-pulse-glow"
-          style={{ background: `${color}18`, border: `1px solid ${color}30` }}>
-          <Icon className="w-5 h-5" style={{ color }} />
-        </div>
-      </div>
+    <div className={`kpi-cell ${primary ? 'kpi-cell-primary' : ''}`}>
+      <p className="kpi-label">{label}</p>
+      <p className="kpi-value truncate" style={primary ? { color: 'var(--accent)', fontSize: 30 } : undefined}>{display}</p>
+      {sub && <p className="text-[13px] mt-1" style={{ color: 'var(--text-3)' }}>{sub}</p>}
     </div>
   );
 }
@@ -88,17 +79,17 @@ export function Dashboard({ user, onNavigate, isAdmin = false }: DashboardProps)
   }, []);
 
   const quickActions = [
-    { view: 'proposals'   as ViewType, icon: FileText,    label: 'Propostas',        desc: 'Ver e criar propostas',       color: '#60a5fa' },
-    { view: 'simulator'   as ViewType, icon: Calculator,  label: 'Simulador',        desc: 'Simular operações',           color: '#a78bfa' },
-    { view: 'production'  as ViewType, icon: TrendingUp,  label: 'Análise Detalhada',desc: 'Relatórios e gráficos',       color: '#C6FF00' },
-    { view: 'ranking'     as ViewType, icon: Trophy,      label: 'Ranking',          desc: 'Classificação da equipe',     color: '#fbbf24' },
-    { view: 'catalog'     as ViewType, icon: Library,     label: 'Treinamentos',     desc: 'Cursos e capacitação',        color: '#22c55e' },
-    { view: 'conta-corrente' as ViewType, icon: Wallet,   label: 'Conta Corrente',   desc: 'Saques e comissões',          color: '#f59e0b' },
+    { view: 'proposals'      as ViewType, icon: FileText,   label: 'Propostas',         desc: 'Ver e cadastrar propostas' },
+    { view: 'simulator'      as ViewType, icon: Calculator, label: 'Simulador',         desc: 'Simular operações' },
+    { view: 'production'     as ViewType, icon: TrendingUp, label: 'Análise detalhada', desc: 'Relatórios e gráficos' },
+    { view: 'ranking'        as ViewType, icon: Trophy,     label: 'Ranking',           desc: 'Classificação da equipe' },
+    { view: 'catalog'        as ViewType, icon: Library,    label: 'Treinamentos',      desc: 'Cursos e capacitação' },
+    { view: 'conta-corrente' as ViewType, icon: Wallet,     label: 'Conta Corrente',    desc: 'Saques e comissões' },
   ];
 
   const funnel = !stats?.proposals ? [] : [
     { label: 'Digitadas',  count: stats.proposals.typed       || 0, status: 'Digitada'   },
-    { label: 'Em Análise', count: stats.proposals.in_analysis || 0, status: 'Em análise' },
+    { label: 'Em análise', count: stats.proposals.in_analysis || 0, status: 'Em análise' },
     { label: 'Aprovadas',  count: stats.proposals.approved    || 0, status: 'Aprovada'   },
     { label: 'Pagas',      count: stats.proposals.paid        || 0, status: 'Paga'       },
     { label: 'Canceladas', count: stats.proposals.cancelled   || 0, status: 'Cancelada'  },
@@ -106,205 +97,161 @@ export function Dashboard({ user, onNavigate, isAdmin = false }: DashboardProps)
   const totalFunnel = funnel.reduce((s, f) => s + f.count, 0);
 
   return (
-    <div className="min-h-screen p-4 sm:p-8 max-w-6xl mx-auto" style={{ color: 'var(--text-1)' }}>
+    <div className="page">
 
-      {/* Header */}
-      <div className="mb-8 animate-fade-up flex items-start justify-between gap-4 flex-wrap">
+      <header className="page-header">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <div className="live-dot" />
-            <span className="text-xs font-medium" style={{ color: '#C6FF00' }}>Sistema ativo</span>
-          </div>
-          <h1 className="text-2xl sm:text-[28px] font-bold leading-tight" style={{ color: 'var(--text-1)' }}>
-            {greeting}, <span className="text-gradient-teal">{firstName}</span> 👋
-          </h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
-            Aqui está o resumo da sua produção este mês.
-          </p>
+          <h1 className="page-title">{greeting}, {firstName}</h1>
+          <p className="page-subtitle">Resumo da sua produção neste mês.</p>
         </div>
-        <div
-          className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl self-center"
-          style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border-1)' }}
-        >
-          <Calendar className="w-4 h-4" style={{ color: '#C6FF00' }} />
-          <span className="text-xs font-medium num" style={{ color: 'var(--text-2)' }}>{todayLabel}</span>
-        </div>
-      </div>
+        <span className="hidden sm:inline-flex items-center gap-2 text-[13px]" style={{ color: 'var(--text-3)' }}>
+          <Calendar className="w-4 h-4" /> {todayLabel}
+        </span>
+      </header>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+      {/* Indicadores — uma régua só, o mês em destaque */}
+      <section className="card kpi-strip mb-8 animate-fade-up" aria-label="Indicadores do mês">
         {loading
           ? Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="stat-card rounded-2xl p-5 animate-pulse" style={{ animationDelay: `${i * 60}ms` }}>
-              <div className="h-3 rounded w-1/2 mb-4" style={{ background: 'rgba(255,255,255,0.06)' }} />
-              <div className="h-7 rounded w-3/4 mb-2" style={{ background: 'rgba(255,255,255,0.06)' }} />
-              <div className="h-2 rounded w-1/2" style={{ background: 'rgba(255,255,255,0.04)' }} />
+            <div key={i} className="kpi-cell">
+              <div className="skeleton h-3 w-1/2 mb-3" />
+              <div className="skeleton h-7 w-3/4 mb-2" />
+              <div className="skeleton h-2.5 w-1/3" />
             </div>
           ))
-          : [
-            <KpiCard key="hoje"   label="Produção Hoje"  numValue={stats?.today?.value || 0}        sub={`${stats?.today?.count || 0} propostas pagas`} icon={Activity}   color="#C6FF00" delay={0}   />,
-            <KpiCard key="mes"    label="Este Mês"       numValue={stats?.month?.value || 0}        sub={`${stats?.month?.count || 0} pagas`}           icon={DollarSign} color="#22c55e" delay={60}  />,
-            <KpiCard key="ticket" label="Ticket Médio"   numValue={stats?.avg_ticket || 0}          sub="por proposta paga"                             icon={BarChart2}  color="#a78bfa" delay={120} />,
-            isAdmin
-              ? <KpiCard key="best" label="Melhor Vendedor" textValue={stats?.best_broker?.full_name?.split(' ')[0] || '—'} sub={`${stats?.best_broker?.points || 0} pts`} icon={Trophy}  color="#fbbf24" delay={180} />
-              : <KpiCard key="comm" label="Minha Comissão"  numValue={stats?.my_commission_total || 0} sub={`#${stats?.my_position || '—'} no ranking`}  icon={Percent}   color="#60a5fa" delay={180} />,
-          ]
+          : <>
+            <KpiCell label="Produção do mês" numValue={stats?.month?.value || 0} sub={`${stats?.month?.count || 0} propostas pagas`} primary />
+            <KpiCell label="Produção hoje"   numValue={stats?.today?.value || 0} sub={`${stats?.today?.count || 0} propostas pagas`} delay={60} />
+            <KpiCell label="Ticket médio"    numValue={stats?.avg_ticket || 0}   sub="por proposta paga" delay={120} />
+            {isAdmin
+              ? <KpiCell label="Melhor vendedor" textValue={stats?.best_broker?.full_name?.split(' ')[0] || '—'} sub={`${stats?.best_broker?.points || 0} pontos`} />
+              : <KpiCell label="Minha comissão"  numValue={stats?.my_commission_total || 0} sub={stats?.my_position ? `${stats.my_position}º no ranking` : 'Sem posição no ranking'} delay={180} />}
+          </>
         }
-      </div>
+      </section>
 
-      {/* Quick actions */}
-      <div className="mb-8 animate-fade-up" style={{ animationDelay: '200ms' }}>
-        <h2 className="text-sm font-bold mb-4" style={{ color: 'var(--text-1)' }}>Acesso rápido</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {quickActions.map(({ view, icon: Icon, label, desc, color }, i) => (
-            <button key={view} onClick={() => onNavigate(view)}
-              className="glass-card rounded-2xl p-4 text-left group transition-all hover:scale-[1.02] animate-fade-up"
-              style={{ border: '1px solid var(--card-border)', animationDelay: `${220 + i * 40}ms` }}>
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all group-hover:scale-110"
-                  style={{ background: `${color}15`, border: `1px solid ${color}25` }}>
-                  <Icon className="w-4 h-4" style={{ color }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{label}</p>
-                  <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-3)' }}>{desc}</p>
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 flex-shrink-0 opacity-0 group-hover:opacity-60 transition-all translate-x-0 group-hover:translate-x-1" style={{ color: 'var(--text-3)' }} />
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Saídas do Mês — admin only */}
-      {isAdmin && !loading && stats?.saidas_mes && (
-        <div className="mb-8 animate-fade-up" style={{ animationDelay: '420ms' }}>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>Saídas do Mês</h2>
-            <button onClick={() => onNavigate('admin-conta-corrente')} className="flex items-center gap-1 text-xs font-medium" style={{ color: '#f87171' }}>
-              Ver detalhes <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+        {/* Atalhos */}
+        <section aria-labelledby="atalhos">
+          <h2 id="atalhos" className="section-title mb-3">Atalhos</h2>
+          <div className="card divide-y" style={{ borderColor: 'var(--card-border)' }}>
+            {quickActions.map(({ view, icon: Icon, label, desc }) => (
+              <button
+                key={view}
+                onClick={() => onNavigate(view)}
+                className="group w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white/[0.03] first:rounded-t-[12px] last:rounded-b-[12px]"
+                style={{ borderColor: 'var(--border-1)' }}
+              >
+                <span className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-2)' }}>
+                  <Icon className="w-4 h-4" style={{ color: 'var(--text-2)' }} />
+                </span>
+                <span className="flex-1 min-w-0">
+                  <span className="block text-sm font-medium" style={{ color: 'var(--text-1)' }}>{label}</span>
+                  <span className="block text-[13px]" style={{ color: 'var(--text-3)' }}>{desc}</span>
+                </span>
+                <ArrowRight className="w-4 h-4 flex-shrink-0 transition-transform group-hover:translate-x-0.5" style={{ color: 'var(--text-4)' }} />
+              </button>
+            ))}
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="rounded-2xl p-4" style={{ background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.18)', boxShadow: 'var(--shadow-card)' }}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>Comissão Paga Corretores</p>
-                  <p className="text-xl font-black num" style={{ color: '#f87171' }}>{fmtR(stats.saidas_mes.comissao_paga.total)}</p>
-                  <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{stats.saidas_mes.comissao_paga.count} pagamento{stats.saidas_mes.comissao_paga.count !== 1 ? 's' : ''} este mês</p>
-                </div>
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)' }}>
-                  <TrendingDown className="w-4 h-4" style={{ color: '#f87171' }} />
-                </div>
+        </section>
+
+        <div className="space-y-8 min-w-0">
+          {/* Status das propostas */}
+          {funnel.length > 0 && totalFunnel > 0 && (
+            <section aria-labelledby="funil">
+              <div className="flex items-center justify-between mb-3">
+                <h2 id="funil" className="section-title">Propostas do mês por status</h2>
+                <button onClick={() => onNavigate('production')} className="flex items-center gap-1 text-[13px] font-medium hover:underline" style={{ color: 'var(--text-2)' }}>
+                  Ver análise <ArrowRight className="w-3.5 h-3.5" />
+                </button>
               </div>
-            </div>
-            <div className="rounded-2xl p-4" style={{ background: 'rgba(251,146,60,0.06)', border: '1px solid rgba(251,146,60,0.18)', boxShadow: 'var(--shadow-card)' }}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>Despesas</p>
-                  <p className="text-xl font-black num" style={{ color: '#fb923c' }}>{fmtR(stats.saidas_mes.despesas.total)}</p>
-                  <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{stats.saidas_mes.despesas.count} lançamento{stats.saidas_mes.despesas.count !== 1 ? 's' : ''} este mês</p>
-                </div>
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(251,146,60,0.1)', border: '1px solid rgba(251,146,60,0.2)' }}>
-                  <Receipt className="w-4 h-4" style={{ color: '#fb923c' }} />
-                </div>
-              </div>
-              {stats.saidas_mes.despesas_por_banco?.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-3 pt-3" style={{ borderTop: '1px solid rgba(251,146,60,0.15)' }}>
-                  {stats.saidas_mes.despesas_por_banco.map((ub: { id: string; nome: string; total: number; count: number }) => (
-                    <span key={ub.id} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px]"
-                      style={{ background: 'rgba(251,146,60,0.1)', border: '1px solid rgba(251,146,60,0.2)' }}>
-                      <span style={{ color: 'var(--text-3)' }}>{ub.nome}</span>
-                      <span className="font-bold num" style={{ color: '#fb923c' }}>{fmtR(ub.total)}</span>
-                    </span>
+              <div className="card card-pad">
+                {/* barra empilhada: proporção de cada status */}
+                <div className="flex h-2.5 rounded-full overflow-hidden gap-[2px] mb-5" role="img" aria-label="Distribuição por status">
+                  {funnel.filter(f => f.count > 0).map(f => (
+                    <div key={f.status} style={{ flexGrow: f.count, background: STATUS_COLORS[f.status] || '#475569' }} />
                   ))}
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Mini funnel */}
-      {funnel.length > 0 && totalFunnel > 0 && (
-        <div className="animate-fade-up" style={{ animationDelay: '480ms' }}>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>Status das Propostas — Este Mês</h2>
-            <button onClick={() => onNavigate('production')} className="flex items-center gap-1 text-xs font-medium" style={{ color: '#C6FF00' }}>
-              Ver análise completa <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-          <div className="rounded-2xl p-5" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
-            <div className="space-y-3">
-              {funnel.map((f, i) => {
-                const pct = totalFunnel > 0 ? (f.count / totalFunnel) * 100 : 0;
-                const color = STATUS_COLORS[f.status] || '#475569';
-                return (
-                  <div key={f.status} className="funnel-row">
-                    <div className="flex justify-between text-xs mb-1.5">
-                      <div className="flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
-                        <span style={{ color: 'var(--text-2)' }}>{f.label}</span>
+                <div className="space-y-2.5">
+                  {funnel.map((f, i) => {
+                    const pct = totalFunnel > 0 ? (f.count / totalFunnel) * 100 : 0;
+                    const color = STATUS_COLORS[f.status] || '#475569';
+                    return (
+                      <div key={f.status} className="funnel-row grid grid-cols-[1fr_auto_3rem] items-center gap-3 text-[13px]">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="w-2 h-2 rounded-sm" style={{ background: color }} />
+                            <span style={{ color: 'var(--text-2)' }}>{f.label}</span>
+                          </div>
+                          <AnimBar pct={pct} color={color} delay={300 + i * 60} />
+                        </div>
+                        <span className="num font-medium text-right" style={{ color: 'var(--text-1)' }}>{f.count}</span>
+                        <span className="num text-right" style={{ color: 'var(--text-3)' }}>{pct.toFixed(0)}%</span>
                       </div>
-                      <span className="num font-semibold" style={{ color: 'var(--text-2)' }}>
-                        {f.count} <span style={{ color: 'var(--text-3)' }}>({pct.toFixed(0)}%)</span>
-                      </span>
-                    </div>
-                    <AnimBar pct={pct} color={color} delay={600 + i * 80} />
-                  </div>
-                );
-              })}
-            </div>
-            <div className="mt-4 pt-4 flex justify-between text-xs" style={{ borderTop: '1px solid var(--card-border)' }}>
-              <span style={{ color: 'var(--text-3)' }}>Total de propostas</span>
-              <span className="font-bold num" style={{ color: 'var(--text-1)' }}>{totalFunnel}</span>
-            </div>
-          </div>
-        </div>
-      )}
+                    );
+                  })}
+                </div>
+                <div className="mt-4 pt-3 flex justify-between text-[13px]" style={{ borderTop: '1px solid var(--border-1)' }}>
+                  <span style={{ color: 'var(--text-3)' }}>Total</span>
+                  <span className="font-semibold num" style={{ color: 'var(--text-1)' }}>{totalFunnel}</span>
+                </div>
+              </div>
+            </section>
+          )}
 
-      {/* Estado vazio — nenhuma proposta ainda */}
-      {!loading && totalFunnel === 0 && (
-        <div className="animate-fade-up" style={{ animationDelay: '360ms' }}>
-          <div
-            className="rounded-2xl p-8 sm:p-10 text-center relative overflow-hidden"
-            style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}
-          >
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{ background: 'radial-gradient(circle at 50% 0%, rgba(198,255,0,0.08), transparent 60%)' }}
-            />
-            <div className="relative">
-              <div
-                className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 animate-float"
-                style={{ background: 'rgba(198,255,0,0.1)', border: '1px solid rgba(198,255,0,0.22)', boxShadow: 'var(--glow-md)' }}
-              >
-                <Sparkles className="w-7 h-7" style={{ color: '#C6FF00' }} />
-              </div>
-              <h3 className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>
-                Tudo pronto para começar!
-              </h3>
-              <p className="text-sm mt-1.5 max-w-md mx-auto leading-relaxed" style={{ color: 'var(--text-3)' }}>
-                Você ainda não tem produção registrada este mês. Assim que suas propostas forem cadastradas, seus indicadores e o funil de status aparecem aqui automaticamente.
-              </p>
-              <div className="flex items-center justify-center gap-2.5 mt-5 flex-wrap">
-                <button
-                  onClick={() => onNavigate('proposals')}
-                  className="btn-cyber px-5 py-2.5 rounded-xl text-sm flex items-center gap-2"
-                >
-                  <FileText className="w-4 h-4" /> Criar primeira proposta
-                </button>
-                <button
-                  onClick={() => onNavigate('simulator')}
-                  className="btn-ghost px-5 py-2.5 rounded-xl text-sm flex items-center gap-2"
-                >
-                  <Calculator className="w-4 h-4" /> Abrir simulador
+          {/* Saídas do mês — só admin */}
+          {isAdmin && !loading && stats?.saidas_mes && (
+            <section aria-labelledby="saidas">
+              <div className="flex items-center justify-between mb-3">
+                <h2 id="saidas" className="section-title">Saídas do mês</h2>
+                <button onClick={() => onNavigate('admin-conta-corrente')} className="flex items-center gap-1 text-[13px] font-medium hover:underline" style={{ color: 'var(--text-2)' }}>
+                  Ver detalhes <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
-            </div>
-          </div>
+              <div className="card grid sm:grid-cols-2 sm:divide-x" style={{ borderColor: 'var(--card-border)' }}>
+                <div className="p-5" style={{ borderColor: 'var(--border-1)' }}>
+                  <p className="kpi-label flex items-center gap-1.5"><TrendingDown className="w-3.5 h-3.5" /> Comissão paga a corretores</p>
+                  <p className="kpi-value" style={{ color: 'var(--neg)' }}>{fmtR(stats.saidas_mes.comissao_paga.total)}</p>
+                  <p className="text-[13px] mt-1" style={{ color: 'var(--text-3)' }}>{stats.saidas_mes.comissao_paga.count} pagamento{stats.saidas_mes.comissao_paga.count !== 1 ? 's' : ''}</p>
+                </div>
+                <div className="p-5 border-t sm:border-t-0" style={{ borderColor: 'var(--border-1)' }}>
+                  <p className="kpi-label flex items-center gap-1.5"><Receipt className="w-3.5 h-3.5" /> Despesas</p>
+                  <p className="kpi-value" style={{ color: '#FB923C' }}>{fmtR(stats.saidas_mes.despesas.total)}</p>
+                  <p className="text-[13px] mt-1" style={{ color: 'var(--text-3)' }}>{stats.saidas_mes.despesas.count} lançamento{stats.saidas_mes.despesas.count !== 1 ? 's' : ''}</p>
+                  {stats.saidas_mes.despesas_por_banco?.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {stats.saidas_mes.despesas_por_banco.map((ub: { id: string; nome: string; total: number; count: number }) => (
+                        <span key={ub.id} className="badge badge-neutral">
+                          {ub.nome} <span className="num font-semibold" style={{ color: 'var(--text-1)' }}>{fmtR(ub.total)}</span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Estado vazio — nenhuma proposta ainda */}
+          {!loading && totalFunnel === 0 && (
+            <section className="card">
+              <div className="empty-state">
+                <FileText />
+                <strong>Nenhuma produção neste mês</strong>
+                <p className="max-w-sm">Cadastre uma proposta e os indicadores e o status aparecem aqui.</p>
+                <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
+                  <button onClick={() => onNavigate('proposals')} className="btn btn-primary">
+                    <FileText className="w-4 h-4" /> Cadastrar proposta
+                  </button>
+                  <button onClick={() => onNavigate('simulator')} className="btn btn-secondary">
+                    <Calculator className="w-4 h-4" /> Abrir simulador
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -76,7 +76,7 @@ export function RenewOverlay({ status, loginEmail, caktoEmail, firstPayment }: P
           <div style={{ fontFamily: ANTON, fontSize: 46, lineHeight: 1, color: '#F4F4F4' }}>
             {PLAN_PRICE}<span style={{ fontSize: 18, opacity: 0.7 }}>/mês</span>
           </div>
-          <div className="mt-1 text-[11px] font-bold uppercase tracking-widest" style={{ fontFamily: MONO, color: '#6B6B6B' }}>
+          <div className="mt-1 text-xs font-medium" style={{ fontFamily: MONO, color: '#6B6B6B' }}>
             Assinatura mensal · Cancele quando quiser
           </div>
         </div>
@@ -86,7 +86,7 @@ export function RenewOverlay({ status, loginEmail, caktoEmail, firstPayment }: P
           <div className="mt-6 mx-auto max-w-md rounded-2xl p-5 text-left" style={{ background: 'rgba(198,255,0,0.06)', border: '2px solid rgba(198,255,0,0.4)', boxShadow: '0 0 30px rgba(198,255,0,0.12)' }}>
             <div className="flex items-center gap-2 mb-2" style={{ color: VOLT }}>
               <Mail className="w-4 h-4" />
-              <span className="text-[12px] font-bold uppercase tracking-wide" style={{ fontFamily: MONO }}>{firstPayment ? 'Seu primeiro pagamento' : 'E-mail de pagamento'}</span>
+              <span className="text-[12px] font-bold" style={{ fontFamily: MONO }}>{firstPayment ? 'Seu primeiro pagamento' : 'E-mail de pagamento'}</span>
             </div>
             <p className="text-[13px] leading-relaxed mb-2" style={{ color: '#CBD5E1' }}>
               Confirme o <strong style={{ color: '#fff' }}>e-mail que você vai usar no pagamento</strong> pra vincular à sua conta.
@@ -116,7 +116,7 @@ export function RenewOverlay({ status, loginEmail, caktoEmail, firstPayment }: P
               <div className="w-full max-w-md rounded-2xl px-4 py-4" style={{ background: 'rgba(198,255,0,0.08)', border: '2px solid rgba(198,255,0,0.45)', boxShadow: '0 0 30px rgba(198,255,0,0.12)' }}>
                 <div className="flex items-center justify-center gap-2" style={{ color: VOLT }}>
                   <Check className="w-4 h-4" strokeWidth={3} />
-                  <span className="text-[11px] font-bold uppercase tracking-widest" style={{ fontFamily: MONO }}>E-mail vinculado</span>
+                  <span className="text-xs font-medium" style={{ fontFamily: MONO }}>E-mail vinculado</span>
                 </div>
                 <div className="text-center text-[17px] font-bold mt-1 break-all" style={{ color: '#F4F4F4', fontFamily: MONO }}>{caktoEmail || email}</div>
                 <p className="text-center text-[12px] mt-2 leading-snug" style={{ color: '#c7d38f' }}>

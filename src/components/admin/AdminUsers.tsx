@@ -48,7 +48,7 @@ function CreateUserModal({ onClose, onCreate, lojas }: {
 
         <form onSubmit={submit} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Nome completo</label>
+            <label className="block text-xs font-medium text-ink-3 text-ink-3 mb-1">Nome completo</label>
             <input
               type="text"
               value={name}
@@ -59,7 +59,7 @@ function CreateUserModal({ onClose, onCreate, lojas }: {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Email</label>
+            <label className="block text-xs font-medium text-ink-3 text-ink-3 mb-1">Email</label>
             <input
               type="email"
               value={email}
@@ -70,7 +70,7 @@ function CreateUserModal({ onClose, onCreate, lojas }: {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Senha</label>
+            <label className="block text-xs font-medium text-ink-3 text-ink-3 mb-1">Senha</label>
             <div className="relative">
               <input
                 type={showPwd ? 'text' : 'password'}
@@ -78,16 +78,16 @@ function CreateUserModal({ onClose, onCreate, lojas }: {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 dark:border-dk-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand bg-white dark:bg-dk-surface text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 pr-10 text-sm border border-line dark:border-dk-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand bg-surface-card dark:bg-dk-surface text-ink-1 text-ink-1"
                 placeholder="Mínimo 6 caracteres"
               />
-              <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-3 hover:text-ink-1">
                 {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Função</label>
+            <label className="block text-xs font-medium text-ink-3 text-ink-3 mb-1">Função</label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as 'user' | 'admin')}
@@ -99,7 +99,7 @@ function CreateUserModal({ onClose, onCreate, lojas }: {
           </div>
           {lojas.length > 0 && (
             <div>
-              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Loja</label>
+              <label className="block text-xs font-medium text-ink-3 text-ink-3 mb-1">Loja</label>
               <select value={lojaId} onChange={e => setLojaId(e.target.value)}
                 className="input-cyber w-full px-3 py-2.5 text-sm rounded-xl">
                 <option value="">Sem loja</option>
@@ -169,7 +169,7 @@ function ChangePasswordModal({ userName, onClose, onSave }: {
             <X className="w-5 h-5" />
           </button>
         </div>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Nova senha para <span className="font-medium text-gray-800 dark:text-gray-200">{userName}</span></p>
+        <p className="text-sm text-ink-3 text-ink-3 mb-4">Nova senha para <span className="font-medium text-ink-1 text-ink-1">{userName}</span></p>
         <form onSubmit={submit} className="space-y-4">
           <div className="relative">
             <input
@@ -179,10 +179,10 @@ function ChangePasswordModal({ userName, onClose, onSave }: {
               required
               minLength={6}
               autoFocus
-              className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 dark:border-dk-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand bg-white dark:bg-dk-surface text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 pr-10 text-sm border border-line dark:border-dk-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand bg-surface-card dark:bg-dk-surface text-ink-1 text-ink-1"
               placeholder="Mínimo 6 caracteres"
             />
-            <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-3 hover:text-ink-1">
               {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
@@ -239,11 +239,11 @@ function ArchiveConfirmModal({ userName, isUnarchive, onClose, onConfirm }: {
             <X className="w-5 h-5" />
           </button>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+        <p className="text-sm text-ink-2 text-ink-3 mb-1">
           {isUnarchive ? 'Reativar o usuário' : 'Tem certeza que deseja arquivar'}
         </p>
-        <p className="text-sm font-semibold text-gray-900 dark:text-white mb-4">{userName}?</p>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mb-5">
+        <p className="text-sm font-semibold text-ink-1 text-ink-1 mb-4">{userName}?</p>
+        <p className="text-xs text-ink-3 text-ink-3 mb-5">
           {isUnarchive
             ? 'O usuário voltará a ter acesso ao sistema.'
             : 'O usuário perderá o acesso ao sistema. Você pode reativá-lo depois.'}
@@ -301,12 +301,12 @@ function EditUserModal({ user, onClose, onSave }: {
         </div>
         <form onSubmit={submit} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Nome completo</label>
+            <label className="block text-xs font-medium text-ink-3 text-ink-3 mb-1">Nome completo</label>
             <input value={name} onChange={e => setName(e.target.value)} required
               className="input-cyber w-full px-3 py-2.5 text-sm rounded-xl" placeholder="Nome do usuário" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Email</label>
+            <label className="block text-xs font-medium text-ink-3 text-ink-3 mb-1">Email</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
               className="input-cyber w-full px-3 py-2.5 text-sm rounded-xl" placeholder="email@empresa.com" />
           </div>
@@ -380,7 +380,7 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
   }
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="page">
       {showCreate && (
         <CreateUserModal
           onClose={() => setShowCreate(false)}
@@ -411,10 +411,10 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
         />
       )}
 
-      <div className="flex items-center justify-between mb-6 animate-fade-up">
+      <div className="page-header">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Gestão de Usuários</h1>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
+          <h1 className="page-title">Gestão de Usuários</h1>
+          <p className="page-subtitle">
             {users.length} usuário{users.length !== 1 ? 's' : ''} {showArchived ? 'arquivado' : 'ativo'}{users.length !== 1 ? 's' : ''}
           </p>
         </div>
@@ -446,14 +446,14 @@ export function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
         }}
       >
         <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="data-table ">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
               {['Usuário', 'Loja', 'Função', 'Matrículas', 'Cadastro', ''].map(h => {
                 const sortable = !!SORT_FIELDS[h]; const active = sortCol === h;
                 return (
                   <th key={h} onClick={sortable ? () => handleSort(h) : undefined}
-                    className="text-left px-5 py-3.5 text-[10px] font-bold uppercase tracking-widest"
+                    className="text-left px-5 py-3.5 text-xs font-medium"
                     style={{ color: active ? '#C6FF00' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
                     {h}{sortable && <span className="ml-1 opacity-60">{active ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
                   </th>

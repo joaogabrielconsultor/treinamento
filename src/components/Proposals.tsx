@@ -712,31 +712,31 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
   const avgTicket    = paidProps.length > 0 ? totalPaid / paidProps.length : 0;
 
   const allCards = [
-    { key: 'total',     label: 'Total',          value: filtered.length,                  color: '#60a5fa', fmt: 'num' },
-    { key: 'pagas',     label: 'Pagas',           value: paidProps.length,                color: '#4ade80', fmt: 'num' },
-    { key: 'analise',   label: 'Em Análise',      value: analysisProps.length,            color: '#fbbf24', fmt: 'num' },
-    { key: 'cancelada', label: 'Canceladas',      value: cancelledProps.length,           color: '#f87171', fmt: 'num' },
-    { key: 'volume',    label: 'Volume Pago',     value: formatCurrency(totalPaid),       color: '#C6FF00', fmt: 'str' },
-    { key: 'vtotal',    label: 'Volume Total',    value: formatCurrency(totalVolume),     color: '#C6FF00', fmt: 'str' },
-    { key: 'comissao',  label: 'Minha Comissão',  value: formatCurrency(totalComissao),   color: '#a78bfa', fmt: 'str' },
-    { key: 'pendente',  label: 'Comiss. Pend.',   value: formatCurrency(pendingComissao), color: '#fb923c', fmt: 'str' },
-    { key: 'ticket',    label: 'Ticket Médio',    value: formatCurrency(avgTicket),       color: '#38bdf8', fmt: 'str' },
-    { key: 'pontos',    label: 'Meus Pontos',     value: `${totalPoints} pts`,            color: '#fbbf24', fmt: 'str' },
+    { key: 'total',     label: 'Total',          value: filtered.length,                  color: 'var(--text-1)', fmt: 'num' },
+    { key: 'pagas',     label: 'Pagas',           value: paidProps.length,                color: 'var(--pos)', fmt: 'num' },
+    { key: 'analise',   label: 'Em Análise',      value: analysisProps.length,            color: 'var(--warn)', fmt: 'num' },
+    { key: 'cancelada', label: 'Canceladas',      value: cancelledProps.length,           color: 'var(--neg)', fmt: 'num' },
+    { key: 'volume',    label: 'Volume Pago',     value: formatCurrency(totalPaid),       color: 'var(--accent)', fmt: 'str' },
+    { key: 'vtotal',    label: 'Volume Total',    value: formatCurrency(totalVolume),     color: 'var(--text-1)', fmt: 'str' },
+    { key: 'comissao',  label: 'Minha Comissão',  value: formatCurrency(totalComissao),   color: 'var(--text-1)', fmt: 'str' },
+    { key: 'pendente',  label: 'Comiss. Pend.',   value: formatCurrency(pendingComissao), color: 'var(--warn)', fmt: 'str' },
+    { key: 'ticket',    label: 'Ticket Médio',    value: formatCurrency(avgTicket),       color: 'var(--text-1)', fmt: 'str' },
+    { key: 'pontos',    label: 'Meus Pontos',     value: `${totalPoints} pts`,            color: 'var(--text-1)', fmt: 'str' },
   ];
   const visibleCards = isAdmin
     ? allCards
     : allCards.filter(c => !['pendente'].includes(c.key));
 
   return (
-    <div className="p-4 w-full" style={{ color: 'var(--text-1)' }}>
+    <div className="page" style={{ maxWidth: 1680 }}>
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-5 animate-fade-up">
+      <div className="page-header">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>{isAdmin ? 'Propostas' : 'Minhas Propostas'}</h1>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{filtered.length} de {proposals.length} propostas</p>
+          <h1 className="page-title">{isAdmin ? 'Propostas' : 'Minhas Propostas'}</h1>
+          <p className="page-subtitle">{filtered.length} de {proposals.length} propostas</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button onClick={() => load()} className="flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl btn-ghost">
             <RefreshCw className="w-3.5 h-3.5" /> Atualizar
           </button>
@@ -770,7 +770,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
         <div className="mb-4 p-4 rounded-2xl animate-fade-up"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Colunas visíveis</p>
+            <p className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Colunas visíveis</p>
             <div className="flex gap-2">
               <button onClick={() => { const s = new Set(ALL_COL_KEYS); setVisibleCols(s); localStorage.setItem('proposals_visible_cols', JSON.stringify([...s])); }}
                 className="text-xs px-2 py-1 rounded-lg btn-ghost">Todas</button>
@@ -794,7 +794,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
 
       {/* ── Cards ── */}
       <div className="mb-2 flex items-center gap-2">
-        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Período:</span>
+        <span className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Período:</span>
         <span className="text-[11px] font-semibold px-2 py-0.5 rounded-lg" style={{ background: 'rgba(198,255,0,0.1)', color: '#C6FF00', border: '1px solid rgba(198,255,0,0.2)' }}>
           {datePreset === 'all' ? 'Todos os registros' :
            datePreset === 'custom' && dateFrom && dateTo
@@ -806,10 +806,10 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
         <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>{proposals.length} proposta{proposals.length !== 1 ? 's' : ''} carregada{proposals.length !== 1 ? 's' : ''}</span>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-5">
-        {visibleCards.map((c, i) => (
-          <div key={c.key} className="stat-card rounded-xl p-4 animate-fade-up" style={{ animationDelay: `${i * 40}ms` }}>
-            <p className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-3)' }}>{c.label}</p>
-            <p className="text-base font-black num" style={{ color: c.color }}>{c.value}</p>
+        {visibleCards.map((c) => (
+          <div key={c.key} className="stat-card rounded-xl px-4 py-3.5">
+            <p className="text-xs font-medium mb-1.5" style={{ color: 'var(--text-3)' }}>{c.label}</p>
+            <p className="text-lg font-semibold num tracking-tight" style={{ color: c.color }}>{c.value}</p>
           </div>
         ))}
       </div>
@@ -886,7 +886,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-3">
             {/* Status */}
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-3)' }}>Status</label>
+              <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-3)' }}>Status</label>
               <div className="relative">
                 <ChevronDown className="absolute right-2 top-2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
                 <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
@@ -898,7 +898,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
             </div>
             {/* Banco */}
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-3)' }}>Banco</label>
+              <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-3)' }}>Banco</label>
               <div className="relative">
                 <ChevronDown className="absolute right-2 top-2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
                 <select value={filterBankId} onChange={e => setFilterBankId(e.target.value)}
@@ -910,7 +910,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
             </div>
             {/* Convênio */}
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-3)' }}>Convênio</label>
+              <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-3)' }}>Convênio</label>
               <div className="relative">
                 <ChevronDown className="absolute right-2 top-2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
                 <select value={filterConvenioId} onChange={e => setFilterConvenioId(e.target.value)}
@@ -922,7 +922,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
             </div>
             {/* Produto */}
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-3)' }}>Produto</label>
+              <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-3)' }}>Produto</label>
               <div className="relative">
                 <ChevronDown className="absolute right-2 top-2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
                 <select value={filterProductId} onChange={e => setFilterProductId(e.target.value)}
@@ -935,7 +935,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
             {/* Corretor (admin only) */}
             {isAdmin && (
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-3)' }}>Corretor</label>
+                <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-3)' }}>Corretor</label>
                 <input value={filterUserSearch} onChange={e => setFilterUserSearch(e.target.value)}
                   placeholder="Nome ou e-mail..."
                   className="input-cyber w-full px-2 py-2 text-xs rounded-lg" />
@@ -943,20 +943,20 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
             )}
             {/* Valor mín */}
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-3)' }}>Valor mín (R$)</label>
+              <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-3)' }}>Valor mín (R$)</label>
               <input type="number" min="0" value={filterMinValue} onChange={e => setFilterMinValue(e.target.value)}
                 placeholder="0,00" className="input-cyber w-full px-2 py-2 text-xs rounded-lg" />
             </div>
             {/* Valor máx */}
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-3)' }}>Valor máx (R$)</label>
+              <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-3)' }}>Valor máx (R$)</label>
               <input type="number" min="0" value={filterMaxValue} onChange={e => setFilterMaxValue(e.target.value)}
                 placeholder="Sem limite" className="input-cyber w-full px-2 py-2 text-xs rounded-lg" />
             </div>
             {/* Liberação */}
             {isAdmin && (
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-3)' }}>Edição corretor</label>
+                <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-3)' }}>Edição corretor</label>
                 <div className="relative">
                   <ChevronDown className="absolute right-2 top-2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
                   <select value={filterLocked} onChange={e => setFilterLocked(e.target.value as '' | 'locked' | 'unlocked')}
@@ -1038,7 +1038,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
         <div className="rounded-2xl overflow-hidden animate-fade-up"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)', animationDelay: '100ms' }}>
           <div className="overflow-x-auto">
-            <table className="text-xs" style={{ tableLayout: 'auto', width: '100%', minWidth: '900px' }}>
+            <table className="data-table" style={{ tableLayout: 'auto', minWidth: '900px' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                   {isAdmin && (
@@ -1058,12 +1058,12 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                     const isActive = sortCol === h;
                     return (
                       <th key={h} onClick={sortable ? () => handleSort(h) : undefined}
-                        className="text-left px-3 py-3 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap select-none"
-                        style={{ color: isActive ? '#C6FF00' : 'var(--text-2)', cursor: sortable ? 'pointer' : 'default', minWidth: h === '' ? '70px' : undefined }}>
+                        className={`whitespace-nowrap select-none ${['Valor', 'Comissão', 'Pts'].includes(h) ? 'th-num' : ''}`}
+                        style={{ color: isActive ? 'var(--text-1)' : undefined, cursor: sortable ? 'pointer' : 'default', minWidth: h === '' ? '70px' : undefined }}>
                         <span className="inline-flex items-center gap-0.5">
                           {h}
                           {sortable && (
-                            <span style={{ fontSize: '8px', opacity: isActive ? 1 : 0.4, marginLeft: '2px' }}>
+                            <span style={{ fontSize: '9px', opacity: isActive ? 1 : 0.35, marginLeft: '3px', color: isActive ? 'var(--accent)' : undefined }}>
                               {isActive && sortDir === 'asc' ? '▲' : isActive && sortDir === 'desc' ? '▼' : '⇅'}
                             </span>
                           )}
@@ -1078,7 +1078,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                   const sd = statusDefs.find(s => s.name === p.status);
                   const sc = SC_MAP[sd?.color || 'blue'] || SC_MAP.blue;
                   return (
-                    <tr key={p.id} className="table-row-cyber" style={{ background: selected.has(p.id) ? 'rgba(198,255,0,0.06)' : undefined }}>
+                    <tr key={p.id} style={{ background: selected.has(p.id) ? 'var(--accent-soft)' : undefined }}>
                       {isAdmin && (
                         <td className="px-2 py-2">
                           <input type="checkbox" checked={selected.has(p.id)}
@@ -1095,15 +1095,15 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                           </button>
                         </td>
                       )}
-                      {visibleCols.has('Proposta') && <td className="px-3 py-2.5 font-mono num whitespace-nowrap" style={{ color: 'var(--text-2)', fontSize: '11px' }}>{p.proposal_number || '—'}</td>}
-                      {visibleCols.has('Corretor') && <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: 'var(--text-2)', fontSize: '11px' }}>{p.user_name || p.user_email || '—'}</td>}
-                      {visibleCols.has('Cliente') && <td className="px-3 py-2.5 font-semibold whitespace-nowrap" style={{ color: 'var(--text-1)', fontSize: '12px' }}>{p.client_name}</td>}
-                      {visibleCols.has('CPF') && <td className="px-3 py-2.5 font-mono whitespace-nowrap" style={{ color: 'var(--text-2)', fontSize: '11px' }}>{p.client_cpf || '—'}</td>}
-                      {visibleCols.has('Convênio') && <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: 'var(--text-2)', fontSize: '11px' }}>{p.convenio_name || p.convenio || '—'}</td>}
-                      {visibleCols.has('Banco') && <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: 'var(--text-2)', fontSize: '11px' }}>{p.bank_name || p.bank || '—'}</td>}
-                      {visibleCols.has('Tabela') && <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: 'var(--text-2)', fontSize: '11px' }}>{p.table_name || '—'}</td>}
-                      {visibleCols.has('Valor') && <td className="px-3 py-2.5 font-bold num whitespace-nowrap" style={{ color: 'var(--text-1)' }}>{formatCurrency(Number(p.value))}</td>}
-                      {visibleCols.has('Produto') && <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: 'var(--text-2)', fontSize: '11px' }}>{p.product_name || p.product || '—'}</td>}
+                      {visibleCols.has('Proposta') && <td className="px-3 py-2.5 font-mono num whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{p.proposal_number || '—'}</td>}
+                      {visibleCols.has('Corretor') && <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{p.user_name || p.user_email || '—'}</td>}
+                      {visibleCols.has('Cliente') && <td className="px-3 py-2.5 font-semibold whitespace-nowrap" style={{ color: 'var(--text-1)' }}>{p.client_name}</td>}
+                      {visibleCols.has('CPF') && <td className="px-3 py-2.5 font-mono whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{p.client_cpf || '—'}</td>}
+                      {visibleCols.has('Convênio') && <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{p.convenio_name || p.convenio || '—'}</td>}
+                      {visibleCols.has('Banco') && <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{p.bank_name || p.bank || '—'}</td>}
+                      {visibleCols.has('Tabela') && <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{p.table_name || '—'}</td>}
+                      {visibleCols.has('Valor') && <td className="px-3 py-2.5 font-semibold num td-num" style={{ color: 'var(--text-1)' }}>{formatCurrency(Number(p.value))}</td>}
+                      {visibleCols.has('Produto') && <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{p.product_name || p.product || '—'}</td>}
                       {visibleCols.has('Status') && (
                         <td className="px-3 py-2.5 whitespace-nowrap">
                           {isAdmin ? (
@@ -1123,12 +1123,12 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                         </td>
                       )}
                       {visibleCols.has('Dt. Digit.') && (
-                        <td className="px-3 py-2.5 num whitespace-nowrap" style={{ color: 'var(--text-2)', fontSize: '11px' }}>
+                        <td className="px-3 py-2.5 num whitespace-nowrap" style={{ color: 'var(--text-2)' }}>
                           {p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '—'}
                         </td>
                       )}
                       {visibleCols.has('Dt. Status') && (
-                        <td className="px-2 py-2 num whitespace-nowrap" style={{ color: 'var(--text-3)', fontSize: '10px' }}>
+                        <td className="px-2 py-2 num whitespace-nowrap" style={{ color: 'var(--text-3)' }}>
                           {isMaster && editStatusDateId === p.id ? (
                             <div className="flex items-center gap-1">
                               <input type="date" value={editStatusDateVal} onChange={e => setEditStatusDateVal(e.target.value)}
@@ -1159,14 +1159,14 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                         </td>
                       )}
                       {visibleCols.has('Comissão') && (
-                        <td className="px-3 py-2.5 whitespace-nowrap">
+                        <td className="px-3 py-2.5 td-num">
                           {Number(p.comissao_valor) > 0
                             ? <span className="font-bold num" style={{ color: p.status === 'Paga' ? '#4ade80' : '#facc15', fontSize: '11px' }}>{formatCurrency(Number(p.comissao_valor))}</span>
                             : <span style={{ color: 'var(--text-3)' }}>—</span>}
                         </td>
                       )}
                       {visibleCols.has('Pts') && (
-                        <td className="px-2 py-2">
+                        <td className="px-3 py-2 td-num">
                           {p.points_earned > 0
                             ? <span className="font-bold num" style={{ color: '#fbbf24', fontSize: '10px' }}>+{p.points_earned}</span>
                             : <span style={{ color: 'var(--text-3)' }}>—</span>}
@@ -1358,7 +1358,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                 <div>
                   <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-3)' }}>{importPreview.length} linha(s) — prévia das primeiras 10:</p>
                   <div className="rounded-xl overflow-hidden overflow-x-auto max-h-56" style={{ border: '1px solid var(--card-border)' }}>
-                    <table className="w-full text-xs" style={{ minWidth: '600px' }}>
+                    <table className="data-table text-[13px]" style={{ minWidth: '600px' }}>
                       <thead><tr style={{ background: 'var(--card-border)' }}>
                         {['Proposta','Cliente','Corretor','Banco','Valor','Status'].map(h => (
                           <th key={h} className="px-3 py-2 text-left font-semibold" style={{ color: 'var(--text-3)' }}>{h}</th>
@@ -1465,7 +1465,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                 <input type="date" value={form.created_at} onChange={e => setForm(f => ({ ...f, created_at: e.target.value }))} className={inp} />
               </Field>
               <Field label="Produto" error={errors.product_id}>
-                <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-ink-3 pointer-events-none" />
                   <select value={form.product_id} onChange={e => setForm(f => ({ ...f, product_id: e.target.value }))} className={`${inp} appearance-none pr-8`}>
                     <option value="">Selecione o produto</option>
                     {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -1473,7 +1473,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                 </div>
               </Field>
               <Field label="Convênio" error={errors.convenio_id}>
-                <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-ink-3 pointer-events-none" />
                   <select value={form.convenio_id} onChange={e => setForm(f => ({ ...f, convenio_id: e.target.value }))} className={`${inp} appearance-none pr-8`}>
                     <option value="">Selecione o convênio</option>
                     {convenios.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -1481,7 +1481,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                 </div>
               </Field>
               <Field label="Banco" error={errors.bank_id}>
-                <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-ink-3 pointer-events-none" />
                   <select value={form.bank_id} onChange={e => setForm(f => ({ ...f, bank_id: e.target.value }))}
                     disabled={!form.convenio_id || loadingBanks} className={`${inp} appearance-none pr-8 disabled:opacity-50`}>
                     <option value="">{loadingBanks ? 'Carregando...' : 'Selecione o banco'}</option>
@@ -1490,7 +1490,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                 </div>
               </Field>
               <Field label="Tabela financeira" error={errors.table_id}>
-                <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-ink-3 pointer-events-none" />
                   <select value={form.table_id} onChange={e => setForm(f => ({ ...f, table_id: e.target.value }))}
                     disabled={!form.bank_id || loadingTables} className={`${inp} appearance-none pr-8 disabled:opacity-50`}>
                     <option value="">{loadingTables ? 'Carregando...' : 'Selecione a tabela'}</option>
@@ -1500,7 +1500,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
               </Field>
               {usuariosBanco.length > 0 && (
                 <Field label="Usuário banco">
-                  <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-ink-3 pointer-events-none" />
                     <select value={form.usuario_banco_id} onChange={e => setForm(f => ({ ...f, usuario_banco_id: e.target.value }))} className={`${inp} appearance-none pr-8`}>
                       <option value="">Nenhum</option>
                       {usuariosBanco.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
@@ -1511,7 +1511,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
               {isAdmin && (
                 <>
                   <Field label="Status">
-                    <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-ink-3 pointer-events-none" />
                       <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className={`${inp} appearance-none pr-8`}>
                         {statusDefs.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
                       </select>
@@ -1530,7 +1530,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                 <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--card-border)' }}>
                   {isMaster && (
                     <div className="mb-4">
-                      <p className="text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2" style={{ color: '#a78bfa' }}>
+                      <p className="text-xs font-medium mb-3 flex items-center gap-2" style={{ color: '#a78bfa' }}>
                         <User className="w-3.5 h-3.5" /> Transferir Corretor
                       </p>
                       <div className="relative">
@@ -1546,7 +1546,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                       </div>
                     </div>
                   )}
-                  <p className="text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2" style={{ color: '#C6FF00' }}>
+                  <p className="text-xs font-medium mb-3 flex items-center gap-2" style={{ color: '#C6FF00' }}>
                     <DollarSign className="w-3.5 h-3.5" /> Comissões desta proposta
                   </p>
                   <div className="grid grid-cols-2 gap-4">
@@ -1631,7 +1631,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                     <input type="date" value={form.created_at} onChange={e => setForm(f => ({ ...f, created_at: e.target.value }))} className={inp} />
                   </Field>
                   <Field label="Produto" error={errors.product_id}>
-                    <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-ink-3 pointer-events-none" />
                       <select value={form.product_id} onChange={e => setForm(f => ({ ...f, product_id: e.target.value }))} className={`${inp} appearance-none pr-8`}>
                         <option value="">{products.length === 0 ? 'Nenhum produto cadastrado' : 'Selecione o produto'}</option>
                         {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -1643,7 +1643,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
               {step === 2 && (
                 <>
                   <Field label="Convênio" error={errors.convenio_id}>
-                    <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-ink-3 pointer-events-none" />
                       <select value={form.convenio_id} onChange={e => setForm(f => ({ ...f, convenio_id: e.target.value }))} className={`${inp} appearance-none pr-8`}>
                         <option value="">Selecione o convênio</option>
                         {convenios.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -1651,7 +1651,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                     </div>
                   </Field>
                   <Field label="Banco" error={errors.bank_id}>
-                    <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-ink-3 pointer-events-none" />
                       <select value={form.bank_id} onChange={e => setForm(f => ({ ...f, bank_id: e.target.value }))}
                         disabled={!form.convenio_id || loadingBanks} className={`${inp} appearance-none pr-8 disabled:opacity-50`}>
                         <option value="">{!form.convenio_id ? 'Selecione o convênio primeiro' : loadingBanks ? 'Carregando...' : banks.length === 0 ? 'Nenhum banco disponível' : 'Selecione o banco'}</option>
@@ -1660,7 +1660,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                     </div>
                   </Field>
                   <Field label="Tabela financeira" error={errors.table_id}>
-                    <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-ink-3 pointer-events-none" />
                       <select value={form.table_id} onChange={e => setForm(f => ({ ...f, table_id: e.target.value }))}
                         disabled={!form.bank_id || loadingTables} className={`${inp} appearance-none pr-8 disabled:opacity-50`}>
                         <option value="">{!form.bank_id ? 'Selecione o banco primeiro' : loadingTables ? 'Carregando...' : tables.length === 0 ? 'Nenhuma tabela disponível' : 'Selecione a tabela'}</option>
@@ -1686,7 +1686,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                           ) : null}
                           {corPct > 0 && (
                             <div className="rounded-xl p-3 space-y-2" style={{ background: 'rgba(198,255,0,0.06)', border: '1px solid rgba(198,255,0,0.2)' }}>
-                              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#C6FF00' }}>Simulação de Comissão</p>
+                              <p className="text-xs font-medium" style={{ color: '#C6FF00' }}>Simulação de Comissão</p>
                               <div className={`grid gap-2 ${isAdmin ? 'grid-cols-2' : 'grid-cols-1'}`}>
                                 {isAdmin && (
                                   <div>
@@ -1708,7 +1708,7 @@ export function Proposals({ prefill, onClearPrefill, onFormClosed, isAdmin = fal
                   </Field>
                   {!editId && usuariosBanco.length > 0 && (
                     <Field label="Usuário banco">
-                      <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                      <div className="relative"><ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-ink-3 pointer-events-none" />
                         <select value={form.usuario_banco_id} onChange={e => setForm(f => ({ ...f, usuario_banco_id: e.target.value }))} className={`${inp} appearance-none pr-8`}>
                           <option value="">Nenhum</option>
                           {usuariosBanco.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}

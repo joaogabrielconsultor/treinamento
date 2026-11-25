@@ -361,15 +361,15 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
   const pendingSaques = saques.filter(s => s.status === 'Pendente').length;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto" style={{ color: 'var(--text-1)' }}>
+    <div className="page">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 animate-fade-up">
+      <div className="page-header">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Wallet className="w-5 h-5" style={{ color: '#C6FF00' }} />
-            <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Conta Corrente — Admin</h1>
+            <Wallet className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--text-3)' }} />
+            <h1 className="page-title">Conta Corrente — Admin</h1>
           </div>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Gerencie comissões e solicitações de saque</p>
+          <p className="page-subtitle">Gerencie comissões e solicitações de saque</p>
         </div>
         <button onClick={() => { load(); loadSaques(); loadDespesas(); }} className="flex items-center gap-2 px-3.5 py-2 text-xs rounded-xl btn-ghost">
           <RefreshCw className="w-3.5 h-3.5" /> Atualizar
@@ -466,14 +466,14 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
             </div>
           ) : (
             <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
-              <table className="w-full text-sm">
+              <table className="data-table text-sm">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                     {['Corretor','Chave PIX','Valor','Status','Data','Ações'].map(h => {
                       const sortable = !!SAQUE_SORT_FIELDS[h]; const active = saqueSortCol === h;
                       return (
                         <th key={h} onClick={sortable ? () => handleSaqueSort(h) : undefined}
-                          className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest"
+                          className="text-left px-4 py-3.5 text-xs font-medium"
                           style={{ color: active ? '#C6FF00' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
                           {h}{sortable && <span className="ml-1 opacity-60">{active ? (saqueSortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
                         </th>
@@ -597,7 +597,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                 </div>
                 <div className="flex flex-col gap-4">
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--text-3)' }}>Loja</label>
+                    <label className="text-xs font-semibold mb-1.5 block" style={{ color: 'var(--text-3)' }}>Loja</label>
                     <div className="relative">
                       <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-3)' }} />
                       <select
@@ -611,7 +611,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--text-3)' }}>Pago de (Usuário Banco)</label>
+                    <label className="text-xs font-semibold mb-1.5 block" style={{ color: 'var(--text-3)' }}>Pago de (Usuário Banco)</label>
                     <div className="relative">
                       <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: 'var(--text-3)' }} />
                       <select
@@ -625,7 +625,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--text-3)' }}>Descrição</label>
+                    <label className="text-xs font-semibold mb-1.5 block" style={{ color: 'var(--text-3)' }}>Descrição</label>
                     <input
                       type="text"
                       placeholder="Ex: Pagamento de aluguel, material..."
@@ -636,7 +636,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs font-semibold uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--text-3)' }}>Valor (R$)</label>
+                      <label className="text-xs font-semibold mb-1.5 block" style={{ color: 'var(--text-3)' }}>Valor (R$)</label>
                       <input
                         type="text"
                         placeholder="0,00"
@@ -647,7 +647,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--text-3)' }}>Data</label>
+                      <label className="text-xs font-semibold mb-1.5 block" style={{ color: 'var(--text-3)' }}>Data</label>
                       <input
                         type="date"
                         value={despesaForm.data}
@@ -686,13 +686,13 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
               {saldoLojas.filter(l => l.total_empresa_recebido > 0 || l.total_despesas > 0).length > 0 && (
                 <div className="rounded-2xl overflow-hidden mb-6" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
                   <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
-                    <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Saldo por Loja</h2>
+                    <h2 className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Saldo por Loja</h2>
                   </div>
-                  <table className="w-full text-sm">
+                  <table className="data-table text-sm">
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                         {['Loja', 'Emp. Recebido', 'Despesas', 'Saldo'].map(h => (
-                          <th key={h} className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>{h}</th>
+                          <th key={h} className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-3)' }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -728,14 +728,14 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                 </div>
               ) : (
                 <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)' }}>
-                  <table className="w-full text-sm">
+                  <table className="data-table text-sm">
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                         {['Data', 'Loja', 'Pago de', 'Descrição', 'Valor', 'Lançado por', ...(isMaster ? [''] : [])].map(h => {
                           const sortable = !!DESP_SORT_FIELDS[h]; const active = despSortCol === h;
                           return (
                             <th key={h} onClick={sortable ? () => handleDespSort(h) : undefined}
-                              className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest"
+                              className="text-left px-4 py-3.5 text-xs font-medium"
                               style={{ color: active ? '#C6FF00' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
                               {h}{sortable && <span className="ml-1 opacity-60">{active ? (despSortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
                             </th>
@@ -806,7 +806,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
           <div key={c.label} className="rounded-2xl p-4 animate-fade-up" style={{ background: c.bg, border: `1px solid ${c.border}`, boxShadow: 'var(--shadow-card)', animationDelay: `${i * 50}ms` }}>
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>{c.label}</p>
+                <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-3)' }}>{c.label}</p>
                 <p className="text-xl font-black num" style={{ color: c.color }}>{c.value}</p>
                 <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{c.sub}</p>
               </div>
@@ -823,9 +823,9 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
         <div className="rounded-2xl overflow-hidden mb-6 animate-fade-up"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)', animationDelay: '80ms' }}>
           <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
-            <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Resumo por Corretor</h2>
+            <h2 className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Resumo por Corretor</h2>
           </div>
-          <table className="w-full text-sm">
+          <table className="data-table text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                 {([
@@ -837,7 +837,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                   { label: 'Emp. Recebida',   tip: 'Comissão da empresa já recebida.' },
                   { label: 'Total Corretor',  tip: 'Soma do que o corretor tem a receber + já recebeu.' },
                 ] as const).map(({ label, tip }) => (
-                  <th key={label} className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>
+                  <th key={label} className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-3)' }}>
                     {tip ? (
                       <span className="inline-flex items-center gap-1 group relative cursor-default">
                         {label}
@@ -919,9 +919,9 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
         <div className="rounded-2xl overflow-hidden mb-6 animate-fade-up"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)', animationDelay: '90ms' }}>
           <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
-            <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Resumo por Usuário Banco</h2>
+            <h2 className="text-xs font-medium" style={{ color: 'var(--text-3)' }}>Resumo por Usuário Banco</h2>
           </div>
-          <table className="w-full text-sm">
+          <table className="data-table text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                 {([
@@ -932,7 +932,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                   { label: 'Emp. Recebida',   tip: 'Comissão da empresa já recebida nesta conta bancária.' },
                   { label: 'Total Corretor',  tip: 'Soma de tudo que o corretor tem a receber + já recebeu nesta conta.' },
                 ] as const).map(({ label, tip }) => (
-                  <th key={label} className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>
+                  <th key={label} className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-3)' }}>
                     {tip ? (
                       <span className="inline-flex items-center gap-1 group relative cursor-default">
                         {label}
@@ -1040,7 +1040,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
         <div className="rounded-2xl overflow-hidden animate-fade-up"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-card)', animationDelay: '140ms' }}>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="data-table text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                   <th className="px-4 py-3.5 w-10">
@@ -1051,7 +1051,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                     const sortable = !!COMM_SORT[h]; const active = commSortCol === h;
                     return (
                       <th key={h} onClick={sortable ? () => handleCommSort(h) : undefined}
-                        className="text-left px-4 py-3.5 text-[10px] font-bold uppercase tracking-widest"
+                        className="text-left px-4 py-3.5 text-xs font-medium"
                         style={{ color: active ? '#C6FF00' : 'var(--text-3)', cursor: sortable ? 'pointer' : 'default', userSelect: 'none' }}>
                         {h}{sortable && <span className="ml-1 opacity-60">{active ? (commSortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
                       </th>
@@ -1107,7 +1107,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                           <div>
                             <span className="font-bold text-sm num" style={{ color: '#4ade80' }}>{fmtBRL(Number(p.comissao_valor))}</span>
                             {p.comissao_corretor_override != null && (
-                              <p className="text-[10px]" style={{ color: '#94a3b8' }}>override</p>
+                              <p className="text-[10px]" style={{ color: 'var(--text-2)' }}>override</p>
                             )}
                           </div>
                         ) : <span style={{ color: 'var(--text-3)' }}>—</span>}
@@ -1126,7 +1126,7 @@ export function AdminContaCorrente({ isMaster = false }: { isMaster?: boolean })
                           <div>
                             <span className="font-bold text-sm num" style={{ color: '#a78bfa' }}>{fmtBRL(Number(p.comissao_empresa_valor))}</span>
                             {p.comissao_empresa_override != null && (
-                              <p className="text-[10px]" style={{ color: '#94a3b8' }}>override</p>
+                              <p className="text-[10px]" style={{ color: 'var(--text-2)' }}>override</p>
                             )}
                           </div>
                         ) : <span style={{ color: 'var(--text-3)' }}>—</span>}

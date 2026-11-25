@@ -50,13 +50,13 @@ function TabelaMargem({ titulo, itens, cor }: { titulo: string; itens: MargemIte
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${cor.border}`, background: cor.bg }}>
       <div className="px-4 py-2.5" style={{ background: `${cor.accent}12`, borderBottom: `1px solid ${cor.border}` }}>
-        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: cor.accent }}>{titulo}</span>
+        <span className="text-xs font-medium" style={{ color: cor.accent }}>{titulo}</span>
       </div>
-      <table className="w-full">
+      <table className="data-table ">
         <thead>
           <tr style={{ borderBottom: `1px solid ${cor.border}` }}>
             <th className="px-4 py-2 text-left text-xs font-semibold" style={{ color: 'var(--text-3)' }}>Produto</th>
-            <th className="px-4 py-2 text-right text-xs font-semibold" style={{ color: 'var(--text-3)' }}>Valor (R$)</th>
+            <th className="px-4 py-2 text-right text-xs font-semibold th-num" style={{ color: 'var(--text-3)' }}>Valor (R$)</th>
           </tr>
         </thead>
         <tbody>
@@ -294,14 +294,14 @@ export function ConsultaMargem({ isAdmin }: { isAdmin: boolean }) {
   const sessaoInativa = !isAdmin && sessaoAtiva === false;
 
   return (
-    <div className="p-8 max-w-3xl mx-auto" style={{ color: 'var(--text-1)' }}>
+    <div className="page page-narrow">
       <div className="flex items-center gap-3 mb-8 animate-fade-up">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(198,255,0,0.1)', border: '1px solid rgba(198,255,0,0.2)' }}>
           <Search className="w-4 h-4" style={{ color: '#C6FF00' }} />
         </div>
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Consulta de Margem</h1>
-          <p className="text-xs" style={{ color: 'var(--text-3)' }}>Portal do Consignado SP</p>
+          <h1 className="page-title">Consulta de Margem</h1>
+          <p className="page-subtitle">Portal do Consignado SP</p>
         </div>
       </div>
 

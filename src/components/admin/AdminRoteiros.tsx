@@ -108,15 +108,15 @@ export function AdminRoteiros({ isMaster = false }: { isMaster?: boolean }) {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="page page-narrow">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#1a2e4a' }}>
             <BookOpen className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-100">Roteiros Operacionais</h1>
-            <p className="text-xs text-slate-500 mt-0.5">{items.length} roteiro{items.length !== 1 ? 's' : ''} cadastrado{items.length !== 1 ? 's' : ''}</p>
+            <h1 className="page-title">Roteiros Operacionais</h1>
+            <p className="page-subtitle">{items.length} roteiro{items.length !== 1 ? 's' : ''} cadastrado{items.length !== 1 ? 's' : ''}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -176,7 +176,7 @@ export function AdminRoteiros({ isMaster = false }: { isMaster?: boolean }) {
                   </a>
                   <button
                     onClick={() => openEdit(r)}
-                    className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-dk-surface text-gray-400 hover:text-gray-600 transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-surface-hover dark:hover:bg-dk-surface text-ink-3 hover:text-ink-1 transition-colors"
                     title="Editar"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
@@ -184,7 +184,7 @@ export function AdminRoteiros({ isMaster = false }: { isMaster?: boolean }) {
                   {isMaster && (
                     <button
                       onClick={() => del(r.id)}
-                      className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors"
+                      className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-ink-3 hover:text-red-500 transition-colors"
                       title="Excluir"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
